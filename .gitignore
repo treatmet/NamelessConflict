@@ -9,3 +9,5 @@ package.json
 package-lock.json
 website
 .vscode
+start-nodejs-PC.bat
+start-nodejs-PC-game.bat
