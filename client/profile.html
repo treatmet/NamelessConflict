@@ -1,0 +1,208 @@
+<head>
+	<html style="background-color: #303030;"><head>
+	<link href='https://fonts.googleapis.com/css?family=Armata' rel='stylesheet'>
+	<link href='https://fonts.googleapis.com/css?family=Changa' rel='stylesheet'>
+	<link href='https://fonts.googleapis.com/css?family=Electrolize' rel='stylesheet'>
+	<link href='https://fonts.googleapis.com/css?family=Iceberg' rel='stylesheet'>
+	<link href='https://fonts.googleapis.com/css?family=Iceland' rel='stylesheet'>
+	<link type="text/css" rel="stylesheet" href="/client/style/style.css">
+	
+	<!--AUTH-->
+
+	<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script> 
+	<script src="/client/js/amazon-cognito-auth.min.js"></script>
+	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script> 
+	<script src="/client/js/amazon-cognito-identity.min.js"></script>   
+	<script src="https://apis.google.com/js/platform.js" async defer></script>
+	<meta name="google-signin-client_id" content="1028026572877-som86lnjg647590thv3bs64ht6hu7lel.apps.googleusercontent.com">
+		
+</head>
+
+<body style="margin: 0px;overflow-y: hidden;overflow-x: hidden;">
+{{header}}
+    
+<div style="display:none;" id="mainContent">
+	<div id="sectionTitles">
+		<div id="sectionTitle1" class="sectionTitle">{{username}}</div>
+		<div id="sectionTitle2" class="sectionTitle3">Progress</div>
+		<div id="sectionTitle3" class="sectionTitle3">Customize</div>
+	</div>
+
+
+	<!--PAGE COLUMNS-->
+	<div id="playerProfile" class="columnSection">
+		<div id="invitePlayerButtons" style="display:none;">
+			<button id="addFriendButton" class="RWButton" style="display:none;" onclick="addFriendButtonClick()">Add as Friend</button>
+			<button id="removeFriendButton" class="RWButton" style="display:none;" onclick="removeFriendButtonClick()">✓ Friends</button>
+			<button id="inviteToPartyButton" class="RWButton" style="display:none;" onclick="inviteToPartyButtonClick()">Invite to Party</button>
+			<button id="kickFromPartyButton" class="RWButton" style="display:none;" onclick="kickFromPartyButtonClick()">Kick from Party</button>
+		</div>
+		<div id="playerRankIcon">
+			<img src="/client/img/ranks/full-size/{{rank}}.png">
+		</div>
+		<div id="playerRating">
+			{{rankFullName}}
+		</div>
+		<div id="playerLevel">
+			Level {{playerLevel}} 
+		</div>
+		<br>
+
+		<table class="statsTable">
+			<tr>
+				<th>Rating</th>
+				<td>{{rating}}</td>
+			</tr>
+			<tr>
+				<th>Experience</th>
+				<td>{{experience}}</td>
+			</tr>
+		</table>
+		<br>
+		<table class="statsTable">
+			<tr>
+				<th>Kills</th>
+				<td>{{kills}}</td>
+			</tr>
+			<tr>
+				<th>Captures</th>
+				<td>{{captures}}</td>
+			</tr>
+			<tr>
+				<th>Deaths</th>
+				<td>{{deaths}}</td>
+			</tr>
+			<tr>
+				<th>Betrayals</th>
+				<td>{{benedicts}}</td>
+			</tr>
+			<tr>
+				<th>Steals</th>
+				<td>{{steals}}</td>
+			</tr>
+			<tr>
+				<th>Returns</th>
+				<td>{{returns}}</td>
+			</tr>
+			<tr>
+				<th>Games Played</th>
+				<td>{{gamesPlayed}}</td>
+			</tr>
+			<tr>
+				<th>Games Won</th>
+				<td>{{gamesWon}}</td>
+			</tr>
+			<tr>
+				<th>Games Lost</th>
+				<td>{{gamesLost}}</td>
+			</tr>
+		</table>
+		<br>
+		<table class="statsTable">
+			<tr>
+				<th>Date Joined</th>
+				<td>{{dateJoined}}</td>
+			</tr>
+		</table>
+
+		<div id="updateUserForm" style="display:none">
+			<button id="editUserButton" class="RWButton" style="display:none" onclick="editUserButtonClick()">Edit User Profile</button>
+			<div id="updateUserTextBoxes" style="display:none">
+				<div id="editUserPasswordText" style="display: block;">First, enter password: </div>
+				<div>
+					<input id="oldPasswordText" onblur="onBlur(this)" type="text" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)">
+				</div>
+				<div id="updateFields">
+					<div id="editUserFieldText">
+						Select field you would like to change:
+					</div>
+					<button id="editUsernameButton" class="RWButton" onclick="editUsernameButtonClick()">Username</button>
+					<input id="newUsernameText" onblur="onBlur(this)" maxlength="20" autocomplete="off" type="text" value="Username" class="textBox" onclick="newUserNameClick()" onfocus="newUserNameClick()" style="display: none;">
+					<br>
+					<button id="editPasswordButton" class="RWButton" onclick="editPasswordButtonClick()">Password</button>
+					<div id="passys" style="display: inline-block;">
+						<input id="newPasswordText" onblur="onBlur(this)" autocomplete="off" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;">
+						<input id="newPasswordText2" onblur="onBlur(this)" autocomplete="off" value="Password Confirm" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;"> 
+					</div>
+					<br>
+					<input id="newEmailText" onblur="onBlur(this)" type="text" value="Email" class="textBox" onclick="newEmailClick()" onfocus="newEmailClick()">
+					<label id="updateInfo"></label>
+				</div>
+				<button id="editUserConfirmButton" class="RWButton" onclick="editUserConfirmButtonClick()">Confirm</button>
+				<button id="editUserCancelButton" class="RWButton" onclick="editUserCancelButtonClick()">Cancel</button>
+			</div>
+		</div>
+
+
+	</div>
+
+	<div id="progressColumn" class="columnSection">
+		<div id="progressColumnContent">
+			<div class="progressBarText">
+				Pts to Next Rank: {{ratingToNext}}
+			</div>
+			<div id="ratingBarDiv">
+				<div class="progressBar" id="ratingBar">
+					<div id="ratingProgress" style="width:{{rankProgressPercent}}%;">
+					</div>
+				</div>
+			</div>
+			<br>
+			<div class="progressBarText">
+				Exp to Next Level: {{expToNext}}
+			</div>
+			<div id="experienceBarDiv">
+				<div class="progressBar" id="experienceBar">
+					<div id="experienceProgress" style="width:{{levelProgressPercent}}%;">
+					</div>
+				</div>
+			</div>
+			<br>
+			<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+		</div>
+	</div>
+	<div id="customizationColumn" class="columnSection">
+		Aesthetic player customizations coming soon.
+	</div>
+
+</div>
+
+
+
+
+
+<!-------CANVAS-------->
+<div id="canvasDiv" style="display:none; margin: auto; width: 1100px; margin-top: 8px;">	
+	<canvas id="ctx" width="1100" height="900" style="border:2px solid #000000;background-color: #131313;"></canvas>
+	<!--<canvas id="ctx2" width="1100" height="900" style="border: 2px solid rgb(0, 0, 0);margin: -2px;position: absolute; top: 5px;"></canvas> -->
+
+	<div id="chat-window" style="width: 400px; position:absolute; margin-top: -200px;">
+		<div id="chat-text" style="overflow:hidden; width:400px; height:170px; color: white; 
+		text-shadow: 1px 0px 1px #333, 1px 0px 1px #333, 0px 1px 1px #333, 0px -1px 1px #333, -1px -1px 0px #333, 1px -1px 0px #333, -1px 1px 0px #333, 1px 1px 0px #333;		
+		padding-left: 5px;
+		">
+		<!---HARDER TEXT OUTLINE:text-shadow: -1px 0px 0 #333, 1px 0px 0 #333, 0px 1px 0 #333, 0px -1px 0 #333, -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333, 1px 1px 0 #333; -->
+		<!---SOFTER TEXT OUTLINE: text-shadow: 1px 0px 1px #333, 1px 0px 1px #333, 0px 1px 1px #333, 0px -1px 1px #333, -1px -1px 0px #333, 1px -1px 0px #333, -1px 1px 0px #333, 1px 1px 0px #333; -->
+			<div></div>
+		</div>
+		<form id="chat-form" style="padding-left: 5px;">
+			<input id="chat-input" type="text" maxlength="50" autocomplete="off" style="display:none; width:300px; background: rgba(255, 255, 255, 0.18);
+			color: white; 
+			text-shadow: 1px 0px 1px #444, 1px 0px 1px #444, 0px 1px 1px #444, 0px -1px 1px #444, -1px -1px 0px #444, 1px -1px 0px #444, -1px 1px 0px #444, 1px 1px 0px #444;
+			">
+		</form>
+	</div> <!--End Chat Window -->
+
+</div> <!--End Canvas -->
+
+<div id="bottom"></div>
+
+<div id="newDiv" style="margin: auto; width: 200px;">
+	<!--<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>-->
+	<script src="/client/js/socket.io-1.4.5.js"></script>
+	<script src="/client/js/howler.core.js"></script>
+	<script src="/client/js/cognito.js"></script>
+	<script src="/client/js/code.js"></script>	
+</div>
+
+</body></html>
