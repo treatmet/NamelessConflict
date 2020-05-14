@@ -8,3 +8,4 @@ config.ini
 package.json
 package-lock.json
 website
+.vscode
