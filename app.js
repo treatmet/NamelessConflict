@@ -178,6 +178,7 @@ const cloakDrag = 0.5; //Walking speed multiplier when cloaked
 const cloakInitializeSpeed = 0.02;
 const cloakDeinitializeSpeed = 0.1;
 const playerMaxHealth = 175;
+const AfkFramesAllowed = 60 * 60; //seconds (translated to frames)
 
 //Weapons config
 var bulletRange = 19 * 75;
@@ -1002,9 +1003,8 @@ var getJoinableServer = function(options, cb){
 							usersToRemove.push(u);
 						}
 					}
-					for (var u = 0; u < usersToRemove.length; u++){
-						incomingUsers.splice(usersToRemove[u], 1);
-					}
+					incomingUsers = removeIndexesFromArray(incomingUsers, usersToRemove);
+
 					incomingUsers.push.apply(incomingUsers, [{cognitoSub:options.cognitoSub, timestamp:new Date()}]); //Merge 2 arrays
 					
 					var obj = {incomingUsers:incomingUsers};
@@ -2355,8 +2355,9 @@ io.sockets.on('connection', function(socket){
 		if (gameOver == false && pregame == false && Player.list[socket.id] && Player.list[socket.id].rating > matchWinLossRatingBonus){
 			//dbUserUpdate("inc", Player.list[socket.id].cognitoSub, {rating: -matchWinLossRatingBonus});
 		}
+		Player.onDisconnect(socket); //Deletes from Player.list
 		delete SOCKET_LIST[socket.id];
-		Player.onDisconnect(socket);
+		
 		sendSocketListToServerDb();
 	});
 
@@ -3134,7 +3135,13 @@ var Player = function(id, cognitoSub, name){
 		if (self.firing <= 0 && !self.pressingShift && self.fireRate <= 0 && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight)){
 			Discharge(self);
 		}
-		if (self.fireRate > 0){self.fireRate--;}
+		if (self.fireRate > 0){
+			self.fireRate--;
+			if (self.bufferReload && self.fireRate <= 0){
+				self.bufferReload = false;
+				reload(self.id);				
+			}
+		}
 		
 		//If currently holding an arrow key, be aiming in that direction 
 		if (self.aiming < 45 && self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === false){				
@@ -3300,6 +3307,9 @@ var Player = function(id, cognitoSub, name){
 		if (self.healDelay <= 0 && self.health < 100 && self.health > 0){
 			self.health++;
 			updatePlayerList.push({id:self.id,property:"health",value:self.health});
+			if (self.health >= 100){
+				self.lastEnemyToHit = 0;
+			}
 			self.healDelay += healRate;
 		}
 		if (self.healDelay > 0){self.healDelay--;}
@@ -3820,7 +3830,7 @@ var Player = function(id, cognitoSub, name){
 			}
 		}//End check if gametype is ctf
 		
-		////// RELOADING ////////
+		////// RELOADING ///////////////////////////////////////////////////////////////////////////
 		if (self.reloading > 0){
 			self.reloading--;
 			if (self.reloading <= 0) {
@@ -3869,6 +3879,18 @@ var Player = function(id, cognitoSub, name){
 				}
 			}
 		}		
+		////////////AFK/MISC///////////////////
+		if (typeof self.afk === 'undefined'){
+		 self.afk = AfkFramesAllowed;
+		}
+		else if (self.afk >= 0){
+			self.afk--;
+		}
+		else { //Boot em
+			socket.emit('reloadHomePage');
+			socket.disconnect();
+		}
+		
 	}//End engine()
 
 	self.respawn = function(){
@@ -3987,8 +4009,6 @@ var Player = function(id, cognitoSub, name){
 				x:Thug.list[b].x,
 				y:Thug.list[b].y,
 				health:Thug.list[b].health,
-				legHeight:Thug.list[b].legHeight,
-				legSwingForward:Thug.list[b].legSwingForward,
 				team:Thug.list[b].team,
 				rotation:Thug.list[b].rotation,
 			};
@@ -4193,6 +4213,9 @@ Player.onConnect = function(socket, cognitoSub, name){
 	socket.on('keyPress', function(data){
 		if (!Player.list[socket.id]){
 			return;
+		}
+		else {
+			Player.list[socket.id].afk = AfkFramesAllowed;
 		}
 		if (player.health > 0){
 			var discharge = false;
@@ -4635,8 +4658,13 @@ function reload(playerId){
 			updatePlayerList.push({id:playerId,property:"reloading",value:Player.list[playerId].reloading});
 		}					
 		else if (Player.list[playerId].weapon == 4){
-			Player.list[playerId].reloading = 30;
-			updatePlayerList.push({id:playerId,property:"reloading",value:Player.list[playerId].reloading});
+			if (Player.list[playerId].fireRate > 0){
+				Player.list[playerId].bufferReload = true;
+			}
+			else {
+				Player.list[playerId].reloading = 30;
+				updatePlayerList.push({id:playerId,property:"reloading",value:Player.list[playerId].reloading});
+			}
 		}					
 	}	
 }
@@ -5092,6 +5120,9 @@ function hit(target, shootingDir, distance, shooterId){
 		}
 		
 		if (target.team && target.health){
+			if (target.team != Player.list[shooterId].team){
+				target.lastEnemyToHit = shooterId; //For betrayal/Suicide detection
+			}
 			
 			//Player stagger and cloak interruption stuff
 			if (Player.list[target.id]){
@@ -5430,7 +5461,10 @@ function getPlayerFromCognitoSub(searchingCognitoSub){
 function kill(target, shootingDir, shooterId){
 		
 	if (shooterId != 0){
-		if (target.team != Player.list[shooterId].team){
+		if (target.team != Player.list[shooterId].team || (target.lastEnemyToHit && target.lastEnemyToHit != 0)){
+			if ((target.lastEnemyToHit && target.lastEnemyToHit != 0) && target.team == Player.list[shooterId].team){
+				shooterId = target.lastEnemyToHit; //Give kill credit to last enemy that hit the player (if killed by own team or self)
+			}
 			if (Player.list[target.id]){
 				if (gametype == "slayer" && gameOver == false){
 					killScore(Player.list[shooterId].team);
@@ -5451,7 +5485,7 @@ function kill(target, shootingDir, shooterId){
 				playerEvent(shooterId, "killThug");
 			}
 		}
-		else {
+		else { //Killed by own team or self AND no last enemy to hit
 			playerEvent(shooterId, "benedict");
 		}
 	}
@@ -5740,6 +5774,12 @@ var Thug = function(id, team, x, y){
 			}
 		}
 	}//End self.swinglegs
+	self.standThereAwkwardly = function(){
+		if (self.legHeight != 45){
+			self.legHeight = 45;
+			updateThugList.push({id:self.id,property:"legHeight",value:self.legHeight});
+		}
+	}
 	
 	self.checkForDeathAndRespawn = function(){
 		if (self.health <= 0){		
@@ -5751,15 +5791,6 @@ var Thug = function(id, team, x, y){
 			}
 		}
 	}
-	
-	self.standThereAwkwardly = function(){
-		if (self.legHeight != 45){
-			self.legHeight = 45;
-			updateThugList.push({id:self.id,property:"legHeight",value:self.legHeight});
-		}
-	}
-	
-	
 }//End Thug
 
 
@@ -6459,6 +6490,13 @@ function checkForUnhealthyServers(){
 		}
 	});
 }
+					
+function removeIndexesFromArray(array, indexes){
+	for (var i = 0; i < indexes.length; i++){
+		array.splice(indexes[i], 1);
+	}
+	return array;
+}
 
 function syncServerWithDatabase(){	
 	if (myIP == ""){
@@ -6486,6 +6524,20 @@ function syncServerWithDatabase(){
 			}	
 			else {
 				dbGameServerUpdate();
+				
+				//Check for stale incoming users
+				var incomingUsers = res[0].incomingUsers || [];
+				var usersToRemove = [];
+				var miliInterval = (staleOnlineTimestampThreshold /2 * 1000); //Stale incoming player threshold is half of online timestamp threshold
+				var thresholdDate = new Date(Date.now() - miliInterval);
+
+				for (var u = 0; u < incomingUsers.length; u++){
+					if (incomingUsers[u].timestamp > thresholdDate){
+						usersToRemove.push(u);
+					}
+				}
+				incomingUsers = removeIndexesFromArray(incomingUsers, usersToRemove);				
+				dbGameServerUpdateParams({incomingUsers:incomingUsers});
 			}			
 		}
 		else {

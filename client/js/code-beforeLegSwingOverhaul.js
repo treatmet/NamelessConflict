@@ -188,11 +188,11 @@ socket.on('pingResponse', function (socketId){
 	}		
 });
 
-if (!serverHomePage)
-	var serverHomePage = "/";
-		
 socket.on('populateLoginPage', function(leaderboard, pcModeValue){
 	//Leaderboard
+	if (!serverHomePage)
+		var serverHomePage = "/";
+		
 	leaderboard = leaderboard.replace(/{{serverHomePage}}/g, serverHomePage);
 	if (document.getElementById('tablePrint')){
 		document.getElementById('tablePrint').innerHTML = leaderboard;	
@@ -208,11 +208,6 @@ socket.on('populateLoginPage', function(leaderboard, pcModeValue){
 	if (document.getElementById("homeLink")){
 		document.getElementById("homeLink").href = serverHomePage;
 	}
-});
-
-socket.on('reloadHomePage', function(){
-	log("AFK beyond time limit, rerouting back to home");
-	window.location.href = serverHomePage;
 });
 
 var blinkOn = false;
@@ -714,13 +709,15 @@ var Player = function(id){
 		width:94,
 		reloading:0,
 		triggerTapLimitTimer:0,
+		legsSwinging:0,
+		legHeight: 47,
+		legSwingForward:false,
 	}
 	Player.list[id] = self;
 }
 Player.list = {};
 
 socket.on('removePlayer', function(id){
-	logg("REMOVING PLAYER: " + id);
 	if (Player.list[id]){
 		delete Player.list[id];
 	}
@@ -884,7 +881,7 @@ function showCanvas() {
 for (var i=0; i<chatText.childNodes[i].length; i++){
 		chatText.childNodes[i].remove();
 }
-chatText.innerHTML = '<div class="chatElement">Welcome to RW3000!</div>';
+chatText.innerHTML = '<div>Welcome to RW3000!</div>';
 
 socket.on('addToChat', function(data, playerId){
 var color = "#FFFFFF";
@@ -903,14 +900,12 @@ socket.on('addMessageToChat', function(text){
 	addToChat(text, "#FFFFFF");
 });
 
-var maxChatMessages = 9;
-
 function addToChat(data, color){
 	var nodes = chatText.childNodes.length;
-	for (var i=0; i<nodes - (maxChatMessages - 1); i++){
+	for (var i=0; i<nodes - 6; i++){
 		chatText.childNodes[i].remove();
 	}
-	chatText.innerHTML = chatText.innerHTML + '<div class="chatElement" style="color:' + color + ';">' + data + '</div>';
+	chatText.innerHTML = chatText.innerHTML + '<div style="color:' + color + ';">' + data + '</div>';	
 	chatStale = 0;			
 }
 
@@ -999,6 +994,16 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		}
 		
 ////////////Put future client updates after this line /////////////////
+	
+		//Tell legs to keep swinging if player is moving
+		if (playerDataPack[i].property == "x" || playerDataPack[i].property == "y"){
+			if (Player.list[playerDataPack[i].id].legsSwinging == 0){
+				Player.list[playerDataPack[i].id].legSwingForward = true;
+				Player.list[playerDataPack[i].id].legHeight = 47;
+			}
+			Player.list[playerDataPack[i].id].legsSwinging = 3;
+		}
+	
 	
 		//Play punch sfx if boosting gets halted (contact)
 		if (playerDataPack[i].property == "boosting" && playerDataPack[i].value == -1 && !mute){
@@ -1254,6 +1259,9 @@ socket.on('updateInit',function(playerPack, thugPack, pickupPack, blockPack, mis
 		}
 		if (Player.list[playerPack[i].id]){
 			//Keeps certain values from being overwritten by server
+			playerPack[i].legSwingForward = Player.list[playerPack[i].id].legSwingForward; 
+			playerPack[i].legsSwinging = Player.list[playerPack[i].id].legsSwinging; 
+			playerPack[i].legHeight = Player.list[playerPack[i].id].legHeight; 		
 			Player.list[playerPack[i].id] = playerPack[i];
 		}
 		else {
@@ -1847,7 +1855,7 @@ function drawLegs(){
 		
 			//Calculate LegSwing
 			if (!Player.list[i].legHeight){
-				Player.list[i].legHeight = 1;
+			Player.list[i].legHeight = 1;
 			}
 			if (Player.list[i].walkingDir != 0){
 				if (Player.list[i].legSwingForward == true){
@@ -1866,13 +1874,19 @@ function drawLegs(){
 					Player.list[i].legHeight = 94; 
 				}
 			}
-			else if(Player.list[i].walkingDir == 0 || isNaN(Player.list[i].walkingDir)){ //No movement input
+			
+			//No movement input
+			if(Player.list[i].legsSwinging <= 0 || isNaN(Player.list[i].legsSwinging)){
 				Player.list[i].legHeight = 1;
-				Player.list[i].legSwingForward = true;
-				continue; //If not moving, don't draw legs
+				continue;
+			}
+			else {
+				Player.list[i].legsSwinging--;
 			}
 		
 			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 - drawDistance < cameraY + canvasHeight){
+				if (Player.list[i].walkingDir == 0){Player.list[i].legHeight = 1; continue;} //If not moving, don't draw legs
+
 				var legs = Img.whitePlayerLegs;
 				if (Player.list[i].legHeight < 0 && Player.list[i].team == "white"){legs = Img.whitePlayerLegs2;}			
 				else if (Player.list[i].legHeight >= 0 && Player.list[i].team == "black"){legs = Img.blackPlayerLegs;}
@@ -2403,7 +2417,7 @@ function drawTorsos(){
 	} //End player for loop
 }
 
-function drawThugs(){ //TODO!!! Rouge image of thug appears after attacking (What?)
+function drawThugs(){ //TODO!!! Rouge image of thug appears after attacking
 	for (var i in Thug.list){
 		if (Thug.list[i].health > 0){
 			if (Thug.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Thug.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Thug.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Thug.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){				
@@ -2423,15 +2437,13 @@ function drawThugs(){ //TODO!!! Rouge image of thug appears after attacking (Wha
 						if (Thug.list[i].legHeight < 0){legs = Img.whiteThugLegs2;}
 						thugImg = Img.whiteThugTorso;
 					}
-					//Draw Legs
-					
 					drawImage(legs, -thugImg.width/2 * zoom, -Thug.list[i].legHeight/2 * zoom, thugImg.width * zoom, Thug.list[i].legHeight * zoom);
-					
-					//Draw Torso
-					ctx.rotate(Thug.list[i].legHeight/400); //Rotate shoulders a bit based on leg's gait
+					ctx.rotate(Thug.list[i].legHeight/400);
 						drawImage(thugImg, -thugImg.width/2 * zoom, -thugImg.height/2 * zoom, thugImg.width * zoom, thugImg.height * zoom);
 					ctx.rotate(-Thug.list[i].legHeight/400);
 
+				//ctx.rotate(-Thug.list[i].rotation);
+				//ctx.translate(-(centerX + Thug.list[i].x * zoom - myPlayer.x * zoom), -(centerY + Thug.list[i].y * zoom - myPlayer.y * zoom)); //Center camera on controlled player				
                 ctx.restore();
 			}
 		}
@@ -2865,7 +2877,6 @@ function drawUILayer(){
 	drawBloodyBorder();
 	drawInformation();
 	drawHUD();
-	ctx.font = 'bold 11px Electrolize';
 	drawChat();
 	drawStatOverlay();
 	drawTopScoreboard();
@@ -2889,9 +2900,9 @@ function drawInformation(){
 		//Version and debug text label1 //debug lable1
 
 		//fillText("Health:" + Player.list[myPlayer.id].health, 5, 35); //debug
-		//fillText("walkingDir:" + Player.list[myPlayer.id].walkingDir, 5, 35); //debug
-		//fillText("legSwingForward:" + Player.list[myPlayer.id].legSwingForward, 5, 55); //debug
-		//fillText("LegHeight:" + Player.list[myPlayer.id].legHeight, 5, 75); //debug
+		fillText("walkingDir:" + Player.list[myPlayer.id].walkingDir, 5, 35); //debug
+		fillText("legSwingForward:" + Player.list[myPlayer.id].legSwingForward, 5, 55); //debug
+		fillText("LegHeight:" + Player.list[myPlayer.id].legHeight, 5, 75); //debug
 	}
 }
 

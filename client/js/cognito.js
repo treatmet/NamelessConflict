@@ -151,6 +151,10 @@ function getJoinableServer(options){
 			if (data.server){//Redirect
 				window.location.href = 'http://' + data.server + getJoinParams();
 			}
+			else {
+				alert(data.msg);
+				window.location.href = serverHomePage;
+			}
 		});
 	}
 	else {

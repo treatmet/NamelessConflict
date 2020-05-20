@@ -678,4 +678,8 @@ table.statsTable {
   100% { transform: rotate(360deg); }
 }
 
+.chatElement{
+	white-space: nowrap;
+	font-size: 15px;
+}
 
