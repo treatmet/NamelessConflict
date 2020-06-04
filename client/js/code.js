@@ -5,7 +5,7 @@ var socket = io();
 
 //-----------------Config----------------------
 var version = "v 0.4.4"; //Post cognito
-var clientTimeoutSeconds = 600;
+var clientTimeoutSeconds = 60000;
 
 var screenShakeScale = 0.5;
 var drawDistance = 10; 
@@ -21,8 +21,9 @@ var shiftCamOffSet = 450;
 var shiftDiagCamOffSet = 325;
 var zoom = 0.75;
 
-var maxCloakStrength = 0.99;
-var BODY_AGE = 1500;
+const maxCloakStrength = 0.99;
+const maxAlliedCloakOpacity = .2; 
+const BODY_AGE = 1500;
 
 var shopEnabled = false;
 
@@ -52,6 +53,8 @@ var chatForm = document.getElementById("chat-form");
 var chatStale = 0;
 
 var	showStatOverlay = false;
+
+var spectatingPlayerId = "";
 
 var canvasDiv = document.getElementById("canvasDiv"); 
 var signIn = document.getElementById("logIn"); 
@@ -200,7 +203,7 @@ socket.on('populateLoginPage', function(leaderboard, pcModeValue){
 	pcMode = pcModeValue;
 	
 	if (pcModeValue == 2){
-		document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>GangWars</a>";
+		document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>NamelessConflict</a>";
 	}
 	else {
 		document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>RaceWar</a>";
@@ -211,9 +214,18 @@ socket.on('populateLoginPage', function(leaderboard, pcModeValue){
 });
 
 socket.on('reloadHomePage', function(){
-	log("AFK beyond time limit, rerouting back to home");
 	window.location.href = serverHomePage;
 });
+
+socket.on('redirect', function(url){
+	window.location.href = url;
+});
+
+socket.on('redirectToGame', function(url){
+	url = url + getJoinParams();
+	window.location.href = url;
+});
+
 
 var blinkOn = false;
 socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
@@ -326,6 +338,8 @@ Img.statOverlay = new Image();
 Img.statOverlay.src = "/client/img/stat-overlay.png";
 Img.statArrow = new Image();
 Img.statArrow.src = "/client/img/arrow.png";
+Img.statCamera = new Image();
+Img.statCamera.src = "/client/img/cameraIconScoreboard.png";
 Img.mute = new Image();
 Img.mute.src = "/client/img/mute.png";
 Img.yellow = new Image();
@@ -338,6 +352,8 @@ Img.lightYellow = new Image();
 Img.lightYellow.src = "/client/img/light-yellow.png";
 Img.redLaser = new Image();
 Img.redLaser.src = "/client/img/red-pixel-trans.png";
+Img.spectatingOverlay = new Image();
+Img.spectatingOverlay.src = "/client/img/spectating-overlay.png";
 
 
 Img.redFlash = new Image();
@@ -664,6 +680,8 @@ sfxDecharge.volume(.6);
 var sfxBoost = new Howl({src: ['/client/sfx/boost5.mp3']});
 var sfxBoostEmpty = new Howl({src: ['/client/sfx/boostEmpty.mp3']});
 sfxBoostEmpty.volume(1);
+var sfxCloak = new Howl({src: ['/client/sfx/cloak2.mp3']});
+sfxCloak.volume(.6);
 
 var sfxNextGameTimer = new Howl({src: ['/client/sfx/haloStartBeeps.mp3']});
 var sfxLevelUp = new Howl({src: ['/client/sfx/gsLevelUp.mp3']});
@@ -718,6 +736,60 @@ var Player = function(id){
 	Player.list[id] = self;
 }
 Player.list = {};
+var orderedPlayerList = [];
+
+function updateOrderedPlayerList(){
+	var blackPlayers = [];
+	var whitePlayers = [];		
+	for (var a in Player.list){
+		if (Player.list[a].team == "white"){
+			whitePlayers.push(Player.list[a]);
+		}
+		else if (Player.list[a].team == "black"){
+			blackPlayers.push(Player.list[a]);
+		}
+	}
+	whitePlayers.sort(compare);
+	blackPlayers.sort(compare);
+	whitePlayers.push.apply(whitePlayers, blackPlayers);	
+	orderedPlayerList = whitePlayers;
+}
+
+function getNextOrderedPlayer(playerId, previous){ //previous is a bool designating if requesting previous player (true) or next player (false)
+	console.log("getNextOrderedPlayer previous?(" + previous + ") - " + playerId);
+	console.log(orderedPlayerList);
+	for (var p = 0; p < orderedPlayerList.length; p++){
+		if (orderedPlayerList[p].id == playerId){
+			if (previous){
+				if (typeof orderedPlayerList[p-1] != 'undefined'){
+					spectatingPlayerId = orderedPlayerList[p-1].id;
+					return;
+				}
+				else if (typeof orderedPlayerList[orderedPlayerList.length-1] != 'undefined'){ //last in the player list
+					spectatingPlayerId = orderedPlayerList[orderedPlayerList.length-1].id;
+					return;
+				}
+			}
+			else { ////!previous
+				if (typeof orderedPlayerList[p+1] != 'undefined'){
+					spectatingPlayerId = orderedPlayerList[p+1].id;
+					return;
+				}
+				else if (typeof orderedPlayerList[0] != 'undefined'){
+					spectatingPlayerId = orderedPlayerList[0].id;
+					return;
+				}
+			}
+		}
+	}
+	if (typeof orderedPlayerList[0] != 'undefined'){
+		spectatingPlayerId = orderedPlayerList[0].id;
+		return;
+	}
+	else {
+		spectatingPlayerId = ""; //Center map
+	}	
+}
 
 socket.on('removePlayer', function(id){
 	logg("REMOVING PLAYER: " + id);
@@ -924,7 +996,8 @@ chatForm.onsubmit = function(e){
 }
 
 socket.on('sfx', function(sfx){
-	eval(sfx + ".play();");	
+	if (!mute)
+		eval(sfx + ".play();");	
 });
 
 
@@ -1010,7 +1083,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 				vol = 1;
 			else if (vol < 0 && vol >= -.1)
 				vol = 0.01;
-			else if (vol < -.1)
+			if (vol < -.1 || mute)
 				vol = 0;
 			sfxPunch.volume(vol);
 			sfxPunch.play();
@@ -1029,7 +1102,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 				vol = 1;
 			else if (vol < 0 && vol >= -.1)
 				vol = 0.01;
-			else if (vol < -.1)
+			if (vol < -.1 || mute)
 				vol = 0;
 			sfxBagGrab.volume(vol);
 			sfxBagGrab.play();
@@ -1045,7 +1118,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 				vol = 1;
 			else if (vol < 0 && vol >= -.1)
 				vol = 0.01;
-			else if (vol < -.1)
+			if (vol < -.1 || mute)
 				vol = 0;
 			if (Player.list[playerDataPack[i].id].weapon == 1){
 				sfxPistolReload.volume(vol);
@@ -1073,7 +1146,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		}
 		
 		//play equip sfx AND reset triggerTapLimitTimer
-		if (playerDataPack[i].property == "weapon" && !mute){
+		if (playerDataPack[i].property == "weapon"){
 			var dx1 = myPlayer.x - Player.list[playerDataPack[i].id].x;
 			var dy1 = myPlayer.y - Player.list[playerDataPack[i].id].y;
 			var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
@@ -1082,7 +1155,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 				vol = 1;
 			else if (vol < 0 && vol >= -.1)
 				vol = 0.01;
-			else if (vol < -.1)
+			if (vol < -.1 || mute)
 				vol = 0;
 			if (playerDataPack[i].value == 1){
 				sfxPistolEquip.volume(vol);
@@ -1120,7 +1193,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 			if (debugUpdates){
 				logg("Update pickup:" + pickupDataPack[i].id + " x:" + pickupDataPack[i].x + " y:" + pickupDataPack[i].y + " type:" + pickupDataPack[i].type + " amount:" + pickupDataPack[i].amount + " width:" + pickupDataPack[i].width + " height:" + pickupDataPack[i].height);
 			}
-			if (pickupDataPack[i].respawnTimer == 0){
+			if (pickupDataPack[i].respawnTimer == 0 && !mute){
 				sfxWeaponDrop.play();
 			}
 				
@@ -1176,7 +1249,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 					vol = 1;
 				else if (vol < 0 && vol >= -.1)
 					vol = 0.01;
-				else if (vol < -.1)
+				if (vol < -.1 || mute)
 					vol = 0;
 				sfxBoost.volume(vol);
 				sfxBoost.play();
@@ -1342,21 +1415,19 @@ socket.on('updateInit',function(playerPack, thugPack, pickupPack, blockPack, mis
 
 function endGame(){
 	if (!mute){
-		sfxStealGood.play();
-	}
-		
-	//Conditional win sfx
-	if ((myPlayer.team == "white" && whiteScore > blackScore) || (myPlayer.team == "black" && blackScore > whiteScore)){
-		if (!mute){
-			sfxVictoryMusic.play();
+		sfxStealGood.play();		
+		//Conditional win sfx
+		if ((myPlayer.team == "white" && whiteScore > blackScore) || (myPlayer.team == "black" && blackScore > whiteScore)){
+			if (!mute){
+				sfxVictoryMusic.play();
+			}
 		}
-	}
-	else {
-		if (!mute){
-			sfxDefeatMusic.play();
+		else {
+			if (!mute){
+				sfxDefeatMusic.play();
+			}
 		}
-	}
-	
+	}	
 }
 
 function calculateShopMechanics(){
@@ -1499,7 +1570,7 @@ function updateCamera(){
 	}	
 	cameraX = myPlayer.x * zoom - centerX; //This defines the upper-left XY coord of the camera. For camera center, add canvasWidth/2 and canvasHeight/2
 	cameraY = myPlayer.y * zoom - centerY;
-	
+
 	screenShake();
 }
 
@@ -1639,7 +1710,6 @@ function drawMapElementsOnMapCanvas(){
 function drawMapCanvas(){
 	var drawX = centerX - myPlayer.x * zoom;
 	var drawY = centerY - myPlayer.y * zoom;
-	
 	ctx.drawImage(m_canvas, drawX, drawY);
 }
 
@@ -1843,7 +1913,7 @@ function drawMissingBags(){
 function drawLegs(){
 	normalShadow();
 	for (var i in Player.list) {
-		if (Player.list[i].health > 0){
+		if (Player.list[i].health > 0 && Player.list[i].team != "none"){
 		
 			//Calculate LegSwing
 			if (!Player.list[i].legHeight){
@@ -2072,7 +2142,7 @@ function drawBags(){
 function drawTorsos(){
 		
 	for (var i in Player.list) {		
-		if (Player.list[i].health > 0){
+		if (Player.list[i].health > 0 && Player.list[i].team != "none"){
 			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){
 				normalShadow();
 				var img = Img.whitePlayerPistol;
@@ -2290,7 +2360,7 @@ function drawTorsos(){
 									img = Img.whitePlayerSGReloading1;
 								}
 							}
-							if (Player.list[i].reloading == 20){								
+							if (Player.list[i].reloading == 20 && !mute){								
 								var randy = randomInt(0,2);
 								if (randy == 0){
 									sfxSGReload1.play();
@@ -2369,7 +2439,7 @@ function drawTorsos(){
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					//if (0.1 > (1 - 0.98)){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
-					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > 0.75){ctx.globalAlpha = 0.25;}
+					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
 					drawImage(img,-img.width/2 * zoom, (-img.height/2+5) * zoom, img.width * zoom, img.height * zoom);	//Draw torso		
 					ctx.globalAlpha = 1;
 					
@@ -2685,14 +2755,14 @@ function drawPlayerTags(){
 			var playerUsername = Player.list[i].name.substring(0, 15);
 			ctx.save();
             ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
-				if (Player.list[i].health > 0 && !(Player.list[i].cloakEngaged == true && Player.list[i].team != Player.list[myPlayer.id].team)){
+				if (Player.list[i].health > 0 && Player.list[i].team != "none" && !(Player.list[i].cloakEngaged == true && Player.list[i].team != Player.list[myPlayer.id].team)){
 					ctx.shadowColor = "white";
 					ctx.shadowOffsetX = 0; 
 					ctx.shadowOffsetY = 0;
 					ctx.shadowBlur = 3;
 					ctx.fillText(playerUsername,0, -Img.whitePlayerPistol.height/2 * zoom); //Draw myPlayer name above head, draw username, draw names			
 				}			
-				if (Player.list[i].chat && Player.list[i].chatDecay > 0 && !(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
+				if (Player.list[i].team != "none" && Player.list[i].chat && Player.list[i].chatDecay > 0 && !(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
 					if (Player.list[i].chat.length > 0){
 						smallCenterShadow();
 						ctx.font = '16px Electrolize';
@@ -2862,9 +2932,14 @@ function drawShop(){
 }
 
 function drawUILayer(){	
-	drawBloodyBorder();
+	if (myPlayer.team != "none"){
+		drawBloodyBorder();
+		drawHUD();
+	}
+	else if(!showStatOverlay){
+		drawSpectatingInfo();
+	}
 	drawInformation();
-	drawHUD();
 	ctx.font = 'bold 11px Electrolize';
 	drawChat();
 	drawStatOverlay();
@@ -2872,6 +2947,64 @@ function drawUILayer(){
 	drawPostGameProgress();
 	drawGameEventText();
 	drawMute();
+}
+
+function drawSpectatingInfo(){
+	//Draw spectating info
+	var spectatingText = "";
+	if (typeof Player.list[spectatingPlayerId] != 'undefined'){
+		spectatingText = "Spectating " + Player.list[spectatingPlayerId].name + " (score: " + Player.list[spectatingPlayerId].cashEarnedThisGame + ")";
+	}
+	else if (spectatingPlayerId == "bagRed"){
+		if (pcMode == 2){
+			spectatingText = "Spectating Red's Bag";
+		}
+		else {
+			spectatingText = "Spectating Whites' Bag";
+		}
+	}
+	else if (spectatingPlayerId == "bagBlue"){
+		if (pcMode == 2){
+			spectatingText = "Spectating Blue's Bag";
+		}
+		else {
+			spectatingText = "Spectating Blacks' Bag";
+		}
+	}
+	else {
+		spectatingText = "Spectating...";
+	}
+		
+	drawImage(Img.spectatingOverlay, -1, -1, canvasWidth, canvasHeight); 
+	smallCenterShadow();
+	ctx.fillStyle="#FFFFFF";
+	ctx.font = 'bold 30px Electrolize';
+	ctx.lineWidth = 4;
+	strokeAndFillText(spectatingText,canvasWidth/2,775);
+	strokeAndFillText("Waiting for current game to finish. You will join the next game.",canvasWidth/2,100);		
+	ctx.font = 'bold 15px Electrolize';
+	ctx.lineWidth = 3;
+	strokeAndFillText("Use the arrow keys to switch targets",canvasWidth/2,800);		
+}
+
+function updateSpectatingView(){ //updates spectating camera
+	updateOrderedPlayerList();
+	if (spectatingPlayerId == "bagBlue" && gametype == "ctf"){
+		myPlayer.x = bagBlue.x;
+		myPlayer.y = bagBlue.y;		
+	}
+	else if (spectatingPlayerId == "bagRed" && gametype == "ctf"){
+		myPlayer.x = bagRed.x;
+		myPlayer.y = bagRed.y;
+	}
+	else if (typeof Player.list[spectatingPlayerId] != 'undefined' && Player.list[spectatingPlayerId].team != "none"){
+		myPlayer.x = Player.list[spectatingPlayerId].x;
+		myPlayer.y = Player.list[spectatingPlayerId].y;		
+	}
+	else {
+		myPlayer.x = mapWidth/2;
+		myPlayer.y = mapHeight/2;			
+	}
 }
 
 function drawInformation(){
@@ -3639,6 +3772,7 @@ function drawGameEventText(){
 // STAT OVERLAY scoreboard
 function drawStatOverlay(){	
 	noShadow();
+		
 	if (gameOver){
 		showStatOverlay = true;		
 	}
@@ -3680,16 +3814,18 @@ function drawStatOverlay(){
 				blackPlayers.push(Player.list[a]);
 			}
 		}
-		blackPlayers.sort(compare);
 		whitePlayers.sort(compare);
+		blackPlayers.sort(compare);
 		
 		var whiteScoreY = 237;
 		var blackScoreY = 482; //245 difference in these 2
 		var scoreboardPlayerNameGap = 29;
 		for (var a in blackPlayers){
 			ctx.textAlign="left";			
-			if (blackPlayers[a].id == myPlayer.id){
-				drawImage(Img.statArrow, 123, blackScoreY - 13);	
+			if (blackPlayers[a].id == myPlayer.id || (myPlayer.team == "none" && spectatingPlayerId == blackPlayers[a].id)){
+				var arrowIcon = Img.statArrow;
+				if (myPlayer.team == "none"){arrowIcon = Img.statCamera;}
+				drawImage(arrowIcon, 123, blackScoreY - 13); //scoreboard arrow
 				ctx.fillStyle="#FFFFFF";
 			}
 			else {
@@ -3704,7 +3840,7 @@ function drawStatOverlay(){
 			else {
 				strokeAndFillText("$"+blackPlayers[a].cashEarnedThisGame,439,blackScoreY);
 			}
-			if (blackPlayers[a].id == myPlayer.id){ctx.fillStyle="#FFFFFF";}
+			if (blackPlayers[a].id == myPlayer.id || (myPlayer.team == "none" && spectatingPlayerId == blackPlayers[a].id)){ctx.fillStyle="#FFFFFF";}
 			else {ctx.fillStyle="#AAAAAA";}
 			
 			var kdSpread = blackPlayers[a].kills - blackPlayers[a].deaths;
@@ -3724,8 +3860,10 @@ function drawStatOverlay(){
 		
 		for (var a in whitePlayers){
 			ctx.textAlign="left";
-			if (whitePlayers[a].id == myPlayer.id){
-				drawImage(Img.statArrow, 123, whiteScoreY - 13);	
+			if (whitePlayers[a].id == myPlayer.id || (myPlayer.team == "none" && spectatingPlayerId == whitePlayers[a].id)){
+				var arrowIcon = Img.statArrow;
+				if (myPlayer.team == "none"){arrowIcon = Img.statCamera;}
+				drawImage(arrowIcon, 123, whiteScoreY - 13);	
 				ctx.fillStyle="#FFFFFF";
 			}
 			else {
@@ -3740,7 +3878,7 @@ function drawStatOverlay(){
 			else {
 				strokeAndFillText("$"+whitePlayers[a].cashEarnedThisGame,439,whiteScoreY);
 			}
-			if (whitePlayers[a].id == myPlayer.id){ctx.fillStyle="#FFFFFF";}
+			if (whitePlayers[a].id == myPlayer.id || (myPlayer.team == "none" && spectatingPlayerId == whitePlayers[a].id)){ctx.fillStyle="#FFFFFF";}
 			else {ctx.fillStyle="#AAAAAA";}
 			
 			var kdSpread = whitePlayers[a].kills - whitePlayers[a].deaths;
@@ -3847,6 +3985,9 @@ function drawEverything(){
 	if (myPlayer.name == "" || !Player.list[myPlayer.id])
 		return;
 
+	if (myPlayer.team == "none")
+		updateSpectatingView();
+
 	updateCamera();	
 	noShadow();
 	ctx.clearRect(0,0,canvasWidth,canvasHeight); //Clears previous frame
@@ -3941,7 +4082,7 @@ socket.on('sprayBloodOntoTarget', function(data){
 			vol = 1;
 		else if (vol < 0 && vol >= -.1)
 			vol = 0.01;
-		else if (vol < -.1)
+		if (vol < -.1 || mute)
 			vol = 0;
 
 		
@@ -4008,49 +4149,47 @@ socket.on('shootUpdate', function(shotData){
 		var shot = Shot(shotData.id);
 		newShot = true;
 	}
-	if (!mute){		
-		//Distance calc for volume
-		var dx1 = myPlayer.x - Player.list[shotData.id].x;
-		var dy1 = myPlayer.y - Player.list[shotData.id].y;
-		var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-		var vol = Math.round((1 - (dist1 / 1000)) * 100)/100;
-		if (vol < 0 && vol >= -.1)
-			vol = 0.01;
-		else if (vol < -.1)
-			vol = 0;
-		if (Player.list[shotData.id].weapon == 3 && newShot == true){
-			sfxMG.volume(vol * .35);
-			sfxMG.play();
-			if (shotData.id == myPlayer.id && Player.list[shotData.id].MGClip <= 7){
-				sfxClick.volume(vol);
-				sfxClick.play();
-			}
+	//Distance calc for volume
+	var dx1 = myPlayer.x - Player.list[shotData.id].x;
+	var dy1 = myPlayer.y - Player.list[shotData.id].y;
+	var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+	var vol = Math.round((1 - (dist1 / 1000)) * 100)/100;
+	if (vol < 0 && vol >= -.1)
+		vol = 0.01;
+	if (vol < -.1 || mute)
+		vol = 0;
+	if (Player.list[shotData.id].weapon == 3 && newShot == true){
+		sfxMG.volume(vol * .35);
+		sfxMG.play();
+		if (shotData.id == myPlayer.id && Player.list[shotData.id].MGClip <= 7){
+			sfxClick.volume(vol);
+			isfxClick.play();
 		}
-		else if (Player.list[shotData.id].weapon == 2 && newShot == true) {
-			sfxDP.volume(vol);
-			sfxDP.play();
-			if (shotData.id == myPlayer.id && Player.list[shotData.id].DPClip <= 5){
-				sfxClick.volume(vol);
-				sfxClick.play();
-			}
+	}
+	else if (Player.list[shotData.id].weapon == 2 && newShot == true) {
+		sfxDP.volume(vol);
+		sfxDP.play();
+		if (shotData.id == myPlayer.id && Player.list[shotData.id].DPClip <= 5){
+			sfxClick.volume(vol);
+			sfxClick.play();
 		}
-		else if (Player.list[shotData.id].weapon == 1 && newShot == true) {
-			sfxPistol.volume(vol);
-			sfxPistol.play();
-			if (shotData.id == myPlayer.id && Player.list[shotData.id].PClip <= 5){
-				sfxClick.volume(vol);
-				sfxClick.play();
-			}
+	}
+	else if (Player.list[shotData.id].weapon == 1 && newShot == true) {
+		sfxPistol.volume(vol);
+		sfxPistol.play();
+		if (shotData.id == myPlayer.id && Player.list[shotData.id].PClip <= 5){
+			sfxClick.volume(vol);
+			sfxClick.play();
 		}
-		else if (Player.list[shotData.id].weapon == 4 && newShot == true) {
-			sfxSG.volume(vol);
-			sfxSG.play();
-			if (shotData.id == myPlayer.id && Player.list[shotData.id].SGClip <= 3){
-				sfxClick.volume(vol);
-				sfxClick.play();
-			}
-			Player.list[shotData.id].triggerTapLimitTimer = SGTriggerTapLimitTimer;
+	}
+	else if (Player.list[shotData.id].weapon == 4 && newShot == true) {
+		sfxSG.volume(vol);
+		sfxSG.play();
+		if (shotData.id == myPlayer.id && Player.list[shotData.id].SGClip <= 3){
+			sfxClick.volume(vol);
+			sfxClick.play();
 		}
+		Player.list[shotData.id].triggerTapLimitTimer = SGTriggerTapLimitTimer;
 	}
 	if (shotData.shootingDir){
 		Player.list[shotData.id].shootingDir = shotData.shootingDir;
@@ -4089,7 +4228,7 @@ function createBody(targetX, targetY, pushSpeed, shootingDir, bodyType){
 			vol = 1;
 		else if (vol < 0 && vol >= -.1)
 			vol = 0.01;
-		else if (vol < -.1)
+		if (vol < -.1 || mute)
 			vol = 0;
 	
 		sfxKill.volume(vol);
@@ -4150,48 +4289,77 @@ document.onkeydown = function(event){
 	if((event.keyCode === 38 || event.keyCode === 80) && chatInput.style.display == "none"){ //Up
 		//if (event.keyCode === 38)
 			//event.preventDefault();
-		myPlayer.pressingUp = true;
-		if (!shop.active){
-			socket.emit('keyPress',{inputId:38,state:true});
+		if (myPlayer.team != "none"){
+			myPlayer.pressingUp = true;
+			if (!shop.active){
+				socket.emit('keyPress',{inputId:38,state:true});
+			}
+			else {
+				purchase();
+			}
 		}
 		else {
-			purchase();
+			getNextOrderedPlayer(spectatingPlayerId, true);
 		}
 	}
 	if((event.keyCode === 39 || event.keyCode === 222) && chatInput.style.display == "none"){ //Right
 		//if (event.keyCode === 39)
 			//event.preventDefault();
-		myPlayer.pressingRight = true;
-		if (!shop.active){
-			socket.emit('keyPress',{inputId:39,state:true});
+		if (myPlayer.team != "none"){
+			myPlayer.pressingRight = true;
+			if (!shop.active){
+				socket.emit('keyPress',{inputId:39,state:true});
+			}
+			else if (shop.selection < 5) {
+				shop.selection++;
+				if (!mute)
+					sfxMenuMove.play();
+			}
 		}
-		else if (shop.selection < 5) {
-			shop.selection++;
-			if (!mute)
-				sfxMenuMove.play();
+		else {
+			if (spectatingPlayerId == "bagRed"){
+				spectatingPlayerId = "";
+			}
+			else {
+				spectatingPlayerId = "bagBlue";
+			}
 		}
-
 	}
 	if((event.keyCode === 40 || event.keyCode === 186) && chatInput.style.display == "none"){ //Down
 		//if (event.keyCode === 40)
 			//event.preventDefault();
-		myPlayer.pressingDown = true;
-		if (!shop.active){
-			socket.emit('keyPress',{inputId:40,state:true});
+		if (myPlayer.team != "none"){
+			myPlayer.pressingDown = true;
+			if (!shop.active){
+				socket.emit('keyPress',{inputId:40,state:true});
+			}
+		}
+		else {
+			getNextOrderedPlayer(spectatingPlayerId, false);
 		}
 	}
 	if((event.keyCode === 37 || event.keyCode === 76) && chatInput.style.display == "none"){ //Left
 		//if (event.keyCode === 37)
 			//event.preventDefault();
-		myPlayer.pressingLeft = true;
-		if (!shop.active){
-			socket.emit('keyPress',{inputId:37,state:true});
-		}
-		else if (shop.selection > 1) {
-			shop.selection--;
-			if (!mute)
-				sfxMenuMove.play();			
-		}
+		if (myPlayer.team != "none"){
+			myPlayer.pressingLeft = true;
+			if (!shop.active){
+				socket.emit('keyPress',{inputId:37,state:true});
+			}
+			else if (shop.selection > 1) {
+				shop.selection--;
+				if (!mute)
+					sfxMenuMove.play();			
+			}
+		}	
+		else {
+			if (spectatingPlayerId == "bagBlue"){
+				spectatingPlayerId = "";
+			}
+			else {
+				spectatingPlayerId = "bagRed";
+			}
+		}	
 	}		
 	if(event.keyCode === 32 && chatInput.style.display == "none" && !shop.active){ //Space
 		socket.emit('keyPress',{inputId:32,state:true});
@@ -4445,6 +4613,13 @@ setInterval(
 //Handy handy functions
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function removeIndexesFromArray(array, indexes){
+	for (var i = 0; i < indexes.length; i++){
+		array.splice(indexes[i], 1);
+	}
+	return array;
 }
 
 Object.size = function(obj) {

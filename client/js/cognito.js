@@ -74,7 +74,6 @@ function getTokenFromUrlParameterAndLogin(){
 			}
 			showServerLoginButtons();
             showAuthorizedLoginButtons();            
-			showServerList();
             setLocalStorage();
 			getRequests();
 			getOnlineFriendsAndParty();
@@ -90,8 +89,10 @@ function getTokenFromUrlParameterAndLogin(){
 
 function getJoinParams(){
 	var tokenParams = "?join=true";
-	tokenParams += "&cog_a=" + getCookie("cog_a");
-	tokenParams += "&cog_r=" + getCookie("cog_r");	
+	if (getCookie("cog_a").length > 0){
+		tokenParams += "&cog_a=" + getCookie("cog_a");
+		tokenParams += "&cog_r=" + getCookie("cog_r");	
+	}
 	return tokenParams;
 }
 
@@ -124,13 +125,17 @@ function autoPlayNow(){
 
 function playNow(){
 	var options = {};
-	options.partyId = partyId;
-	options.username = username;
+	//options.partyId = partyId; //Getting from DB
+	//options.username = username; //Getting from DB
 	//options.cognitoSub = cognitoSub; cognitoSub can be gathered by getting authenticated user
 	
 	$.post('/playNow', options, function(data,status){
 		console.log("Play Now response:");
 		console.log(data);		
+		if (!data.success){
+			alert(data.msg);
+			window.location.href = serverHomePage;
+		}
 	});
 }
 
@@ -148,8 +153,8 @@ function getJoinableServer(options){
 		$.post('/getJoinableServer', options, function(data,status){
 			console.log("Join Server response:");
 			console.log(data);		
-			if (data.server){//Redirect
-				window.location.href = 'http://' + data.server + getJoinParams();
+			if (data.server){
+				//Redirect happens on server side, do nothing here
 			}
 			else {
 				alert(data.msg);
@@ -160,18 +165,11 @@ function getJoinableServer(options){
 	else {
 		logg("ERROR: No server option provided");
 	}
-	/*
-	if (preferredUsername != "" && cognitoSub != ""){
-		socket.emit('signIntoGameServer', cognitoSub, preferredUsername);
-	}
-	*/
 }
 
 function localPlayNowClick(){
 	socket.emit('test', "123456");
-	//socket.emit('signIntoGameServer', "699815da-03e8-48ae-9b40-49387cc42a15", "Google_116733857384701001743");
-	//socket.emit('signIntoGameServer', "123456", "testuser");
-	
+
 	//window.location.href = '/?join=true';
 }
 
@@ -233,23 +231,53 @@ function getOnlineFriendsAndParty(){
 		/*
 		var data = {
 			partyId:"12345",
-			leader:{cognitoSub:"12345",username:"myguy"},
-			party:[{cognitoSub:"67890",username:"myman"}] //Party members other than you
+			party:[{cognitoSub:"67890",username:"myman",leader:true}] //Party members including you
 		};	
 		*/
 		console.log("getParty response:");
 		console.log(data);	
-		partyId = data.partyId;		
-		updatePartySectionHtml(data);		
-		updateKickInviteToPartyButtons(data);
-		if (data.leader.cognitoSub && data.leader.cognitoSub != cognitoSub){
+		
+		if (data && data.partyId){
+			partyId = data.partyId;
+		}
+		else {
+			alert("Error getting party data");
+			partyId = "";
+			return;
+		}
+		
+		var partyData = transformToUIPartyData(data);
+		
+		updatePartySectionHtml(partyData);		
+		updateKickInviteToPartyButtons(partyData);
+		if (partyData.leader.cognitoSub && partyData.leader.cognitoSub != cognitoSub){
 			show("serversHiddenMsg");
 			hide("serverList");
+		}
+		else {
+			showServerList();
 		}
 	});
 	
 	
 }
+
+function transformToUIPartyData(data){
+	var partyData = {
+		leader: {},
+		party: []
+	};
+	for (var p = 0; p < data.party.length; p++){
+		if (data.party[p].leader == true){
+			partyData.leader = data.party[p];
+		}
+		if (data.party[p].cognitoSub != cognitoSub && data.party[p].leader != true){
+			partyData.party.push(data.party[p]);
+		}
+	}
+	return partyData;
+}
+
 
 function updateKickInviteToPartyButtons(data){
 	var viewedProfileCognitoSub = getViewedProfileCognitoSub();
@@ -298,6 +326,7 @@ function updatePartySectionHtml(partyData){
 	var section = document.getElementById("partySection");	
 	var html = "";
 
+	section.style.display = 'unset';
 	if ((partyData.leader.cognitoSub == cognitoSub && partyData.party.length <= 0) || !partyData.leader.cognitoSub){
 		//Solo party
 		section.style.display = 'none';
@@ -305,7 +334,7 @@ function updatePartySectionHtml(partyData){
 	}	
 	else if (partyData.leader.cognitoSub == cognitoSub && partyData.party.length > 0){
 		//Party leader with party members
-		html += "<span>👑 Players in your party: </span>";			
+		html += "<span title='Party Leader'>👑 Players in your party: </span>";			
 		if (partyData.party.length > 0){
 			for (var i = 0; i < partyData.party.length; i++){
 				html += " <a href='" + serverHomePage + "user/" + partyData.party[i].cognitoSub + "'>" + partyData.party[i].username + "</a> ";
@@ -1014,4 +1043,26 @@ function submitPlayerSearch(e){
 	}
 	window.location.pathname = serverHomePage + "search/" + e.target.elements[0].value;
 }
+
+//EVERY 1 SECOND
+const headerRefreshSeconds = 10;
+var headerRefreshTicker = headerRefreshSeconds;
+setInterval( 
+	function(){	
+	
+		//Refresh header
+		if (document.getElementById("header").style.display != 'none' && cognitoSub.length > 0){
+			headerRefreshTicker--;
+			if (headerRefreshTicker < 1){
+				logg("Refreshing header");
+				getRequests();
+				getOnlineFriendsAndParty();
+				checkViewedProfileIsFriendOrParty();
+				
+				headerRefreshTicker = headerRefreshSeconds;
+			}
+		}
+	},
+	1000/1 //Ticks per second
+);
 

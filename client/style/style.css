@@ -148,6 +148,7 @@ div#titleText a {
     height: 26px;
     margin-top: 0px;
     padding-top: 2px;
+	font-weight: bold;
 }
 
 /*Friend/Party Invites*/
@@ -385,7 +386,7 @@ label#updateInfo {
 }
 
 #removeFriendButton {
-	background-color: #eada10;
+	background-color: #529eec;
 }
 
 #kickFromPartyButton {
@@ -447,12 +448,15 @@ div#playerRating {
     text-align: center;
     font-size: 20px;
     font-weight: 600;
-    line-height: 40px;
+    line-height: 30px;
+    background-color: #212121;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
 div#playerLevel {
     text-align: center;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
 }
 

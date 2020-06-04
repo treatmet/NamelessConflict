@@ -104,6 +104,7 @@ const staleRequestCheckInterval = 60; //Seconds
 const staleFriendRequestThreshold = 30; //Days
 const stalePartyRequestThreshold = 300; //Seconds
 
+const joinActiveGameThreshold = 0.8; //Percentage threshold for how far the game is allowed to be progressed and still accept incoming players
 
 
 var privateServer = false;
@@ -112,8 +113,6 @@ var serverNumber = 1;
 var serverName = "Server";
 var voteGametype = true;
 var voteMap = true;
-
-
 
 
 var timeBeforeNextGame = 60;
@@ -158,7 +157,7 @@ const shop = {
 
 
 //Player config player config
-const startingCash = 150;
+const startingCash = 0;
 const boostAmount = 23;
 const boostDecay = 1.9;
 var globalSpeed = 6;
@@ -178,7 +177,7 @@ const cloakDrag = 0.5; //Walking speed multiplier when cloaked
 const cloakInitializeSpeed = 0.02;
 const cloakDeinitializeSpeed = 0.1;
 const playerMaxHealth = 175;
-const AfkFramesAllowed = 60 * 60; //seconds (translated to frames)
+const AfkFramesAllowed = 6000 * 60; //seconds (translated to frames) //timeout
 
 //Weapons config
 var bulletRange = 19 * 75;
@@ -669,15 +668,17 @@ app.use(cookieParser());
 
 app.get('/', function(req, res) {
 	var pageData = {};
+	
 
 	getPublicServersFromDB(function(servers){
 		var serversHtml = "";
 		
 		for (let j = 0; j < servers.length; j++) {
 		
+			var currentPlayers = getCurrentPlayersFromUsers(servers[j].currentUsers).length;
 			//<div class="serverSelectButton" onclick="location.href='http://3.19.27.250:3004/?join=true';" style="cursor: pointer;">PlayersChoice_1_3004<br><span style="font-size: 12;text-shadow: none;">Deathmatch -- 0/14 Players</span></div>
-			var serverHtml = '<div class="serverSelectButton" onclick="getJoinableServer({server:\'' + servers[j].url + '\'})" style="cursor: pointer;">' + servers[j].serverName + '<br><span style="font-size: 12;text-shadow: none;">' + servers[j].gametype + ' -- ' + servers[j].currentPlayers + '/' + servers[j].maxPlayers + ' Players</span></div>';
-			//var serverHtml = '<a class="serverSelectLink" href="http://' + servers[j].url + '/?join=true" style="text-decoration: none;"><div class="serverSelectButton">' + servers[j].serverName + '<br><span style="font-size: 12;text-shadow: none;">' + servers[j].gametype + ' -- ' + servers[j].currentPlayers + '/' + servers[j].maxPlayers + ' Players</span></div></a>';
+			var serverHtml = '<div class="serverSelectButton" onclick="getJoinableServer({server:\'' + servers[j].url + '\'})" style="cursor: pointer;">' + servers[j].serverName + '<br><span style="font-size: 12;text-shadow: none;">' + servers[j].gametype + ' -- ' + currentPlayers + '/' + servers[j].maxPlayers + ' Players</span></div>';
+			//var serverHtml = '<a class="serverSelectLink" href="http://' + servers[j].url + '/?join=true" style="text-decoration: none;"><div class="serverSelectButton">' + servers[j].serverName + '<br><span style="font-size: 12;text-shadow: none;">' + servers[j].gametype + ' -- ' + currentPlayers + '/' + servers[j].maxPlayers + ' Players</span></div></a>';
 			
 			serversHtml += serverHtml;
 		}		
@@ -690,6 +691,8 @@ app.get('/', function(req, res) {
 		res.send(homePageContent);
 	});	
 });
+
+
 
 //Process command line arguments parameters params
 var port = 3000;
@@ -721,7 +724,7 @@ logg('Express server started on port ' + port + '.');
 var SOCKET_LIST = [];
 var S3StreamLogger = require('s3-streamlogger').S3StreamLogger;
 var s3stream = new S3StreamLogger({ bucket: config.s3LoggingBucket, access_key_id: config.awsAccessKeyId, secret_access_key: config.awsSecretAccessKey, name_format: isWebServer ? "WEBADMIN_" + port + ".txt" : "_" + port + ".txt"});
-reinitStream();
+//reinitStream();
 logg("----------------------SERVER STARTUP-----------------------");
 logg("If you are seeing this, then S3 connection established");
 
@@ -813,6 +816,32 @@ function reinitStream(){
 	logg("----------STREAMWRITER INITIALIZED WITH IP: " + myIP + "---------FOLDER: " + reinitYear + "_" + reinitMonth + "_" + reinitDate + "------------\r\n");		
 }
 
+function sendPartyToGameServer(party, targetServer) {
+	logg("function sendPartyToGameServer with this party:");
+	console.log(party);
+	for (var p = 0; p < party.length; p++){
+		var options = {
+			method: 'POST',
+			uri: 'http://' + party[p].serverUrl + '/sendPlayerToGameServer',
+			form: {
+				cognitoSub: party[p].cognitoSub,
+				targetServer: targetServer
+			}
+		};
+		 
+		logg("Attempting to summon party member [" + party[p].cognitoSub + "] on server [" + party[p].serverUrl + "]...");
+		request(options)
+			.then(function (parsedBody) {
+				// POST succeeded...
+				logg("SUCCESSFUL request for party member!");
+			})
+			.catch(function (err) {
+				// POST failed...
+				logg("ERROR summoning party member!");
+		});
+	}
+}
+
 
 /////////////////ROUTES CONTROLLERS ENDPOINTS/////////////////////////////////////////////////////////////
 
@@ -840,8 +869,8 @@ app.get('/user/:cognitoSub', function(req, res) {
 			pageData["header"] = fs.readFileSync(__dirname + '/client/header.html', 'utf8');
 
 			
-			logg("Requesting User Profile page with this data:");
-			logObj(pageData);
+			//logg("Requesting User Profile page with this data:");
+			//logObj(pageData);
 
 			var profilePageContent = fs.readFileSync(__dirname + '/client/profile.html', 'utf8');
 			profilePageContent = replaceValues(pageData, profilePageContent);
@@ -890,6 +919,23 @@ app.get('/search/:searchText', function(req, res) {
 	});	
 });
 
+app.post('/sendPlayerToGameServer', async function (req, res) {
+	/*req.body
+	{
+		cognitoSub: "1534523452345",
+		targetServer: "123.43.2345:3000"
+	}*/
+	log("HIT SEND PLAYER TO GAME SERVER ENDPOINT:");
+	console.log(req.body);
+	
+	for (var s in SOCKET_LIST){
+		if (SOCKET_LIST[s].cognitoSub == req.body.cognitoSub){
+			SOCKET_LIST[s].emit('redirectToGame', 'http://' + req.body.targetServer);
+		}
+	}
+	res.send({msg:"Request received"});
+});
+
 app.post('/playNow', async function (req, res) {
 	if (myUrl == ""){
 		logg("res.send: " + "Url for current server not set");
@@ -898,34 +944,32 @@ app.post('/playNow', async function (req, res) {
 	}
 	/*req.body
 	{
-		username: jimjeffries
-		partyId:'12345',
 	}*/
+	
 	var authorizedUser = await getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
 	
+
+	//Check if server is expecting this incoming user
 	var params = {url:myUrl, privateServer:false};
 	var approvedToJoinServer = false;
-	db.RW_SERV.find(params).sort({serverNumber: 1}, function(err,serv){ //Get list of candidate servers	
+	db.RW_SERV.find(params).sort({serverNumber: 1}, function(err,serv){
 		if (serv && serv[0]){
 			var incomingUsers = serv[0].incomingUsers || "[]";
 			for (var u = 0; u < incomingUsers.length; u++){
 				if (incomingUsers[u].cognitoSub == authorizedUser.cognitoSub){
 					approvedToJoinServer = true;
-					incomingUsers.splice(u, 1);
-					var obj = {incomingUsers:incomingUsers};
-					db.RW_SERV.update(params, {$set: obj}, {multi: true}, function () { //Remove incoming users
-						res.status(200);
-						logg("res.send: " + "Server " + myUrl + " welcomes you!");
-						res.send({msg:"Server " + myUrl + " welcomes you!"});
-						joinGame(authorizedUser.cognitoSub, req.body.username);
-						return;
-					});					
+					
+					res.status(200);
+					logg("res.send: " + "Server " + myUrl + " welcomes you!");
+					res.send({msg:"Server " + myUrl + " welcomes you!", success:true});
+					joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team); //Join game
+					return;
 				}
 			}	
 		}
 		if (!approvedToJoinServer){
 			logg("res.send: " + "Error: The server was not expecting you");
-			res.send({msg:"Error: The server was not expecting you"}); //Error
+			res.send({msg:"Error: The server was not expecting you", success:false}); //Error
 			return;
 		}
 	});
@@ -944,30 +988,43 @@ app.post('/getJoinableServer', async function (req, res) {
 		server:'127.0.0.1:3000',		
 	}*/
 
-	var party = [{cognitoSub:req.body.cognitoSub, url:myUrl}];
-	//Check if partyId is "". If it is, proceed with getJoinableServer() without party Lookup
-	//If partyId is cognitoSub, getServers with ips of users in party (exclude if in game)
+	var party = [];
+	getPartyForUser(req.body.cognitoSub, function(dbResults){
+		/*
+		var dbResults = {
+			leader:{}, //{cognitoSub:"12345",username:"myguy",serverUrl:serverUrl}
+			party:[]
+		};	
+		*/
+		party = dbResults.party;
+		
+		log("GOT PARTY:");
+		console.log(party);
 
-	var options = req.body;
-	options.party = party;
-	
-	log("getJoinableServer endpoint called with:");
-	console.log(req.body);
+		var options = req.body;
+		options.party = party;
+		
+		log("getJoinableServer endpoint called with:");
+		console.log("Server: " + req.body.server);
+		console.log("PARTY:");
+		console.log(options.party);
 
-	//If matchmaking request, return res immediately, and submit matchmaking ticket to db TODO
+		//If matchmaking request, return res immediately, and submit matchmaking ticket to db TODO
 
-	logg("Attempting to join server: " + req.body.server);
-	getJoinableServer(options, function(msg, joinableServer){
-		if (!joinableServer){
-			log("SENDING " + msg);
-			res.send({msg:msg, server:false});
-		}
-		else {
-			log("SENDING " + msg);
-			res.send({msg:msg, server:joinableServer});
-		}
-	});
-});
+		logg("Attempting to join server: " + req.body.server);
+		getJoinableServer(options, function(msg, joinableServer){
+			if (!joinableServer){
+				log("SENDING " + msg);
+				res.send({msg:msg, server:false});
+			}
+			else { //Join approved
+				log("SENDING PARTY TO SERVER: " + msg);
+				sendPartyToGameServer(party, req.body.server);
+				res.send({msg:msg, server:joinableServer});
+			}
+		}); //End getJoinableServer
+	}); //End getParty
+}); //End .post('/getJoinableServer
 
 var getJoinableServer = function(options, cb){
 	var joinableServer = "";
@@ -976,7 +1033,7 @@ var getJoinableServer = function(options, cb){
 	
 	if (options.server == "ctf" || options.server == "slayer"){ //Specific gametype
 		params = {gametype:options.server, privateServer:false};
-		cb("Found joinable server. Joining...", serv[i].url);
+		//cb("Found joinable server. Joining...", serv[i].url);
 		return;
 	}
 	else if (options.server.indexOf(':') > -1) { //Server IP provided
@@ -984,32 +1041,76 @@ var getJoinableServer = function(options, cb){
 		options.matchmaking = false;
 	}
 	
-	db.RW_SERV.find(params).sort({serverNumber: 1}, function(err,serv){ //Get list of candidate servers	
-		//Apply rules
-		if (serv && serv[0]){	
-			for (var i = 0; i < serv.length; i++){
+	db.RW_SERV.find(params).sort({serverNumber: 1}, function(err,serverResult){ //Get list of candidate servers	
+		var serv = serverResult;
+		if (typeof serv != 'undefined' && typeof serv[0] != 'undefined'){	
+			console.log("FOUND " + serv.length + " POSSIBLE SERVERS");
+			for (var i = 0; i < serv.length; i++){			
+				console.log("CHECKING OUT SERVER:" + serv[i].url + "");
 				if (!options.matchmaking){
-					//Run through rules
-					if (serv[i].currentPlayers + options.party.length > serv[i].maxPlayers){
+				
+					////////////////////RULES////////////////////////////////
+					
+					//Server full dis-qualifier
+					if (getCurrentPlayersFromUsers(serv[i].currentUsers) + options.party.length > serv[i].maxPlayers){
+						logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");
 						cb("Server full", false);
 						return;
 					}
 					
+					
+					//Determine if spectatingTeam
+					var team = "none";
 					var incomingUsers = serv[i].incomingUsers || [];
-					//incomingUsers = JSON.parse(incomingUsers);
-					var usersToRemove = [];
-					for (var u = 0; u < incomingUsers.length; u++){
-						if (incomingUsers[u].cognitoSub == options.cognitoSub){
-							usersToRemove.push(u);
+					var currentUsers = serv[i].currentUsers || [];
+					
+					console.log("Incoming users:");
+					console.log(incomingUsers);
+					console.log("Current users:");
+					console.log(currentUsers);
+					
+					
+					log("Percentage of match remaining: " + (serv[i].currentTimeLeft / serv[i].matchTime));
+					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold){ //Spectate - if percentage of match remaining is less than threshold
+						team = "none";
+					}
+					else { //Join team
+						var moreWhitePlayers = 0; 
+						for (var u in currentUsers){
+							if (currentUsers[u].team == "white"){moreWhitePlayers++;}
+							else if (currentUsers[u].team == "black"){moreWhitePlayers--;}
+						}
+						for (var s in incomingUsers){
+							var continueLoop = false;
+							for (var u in currentUsers){
+								if (incomingUsers[s].cognitoSub == currentUsers[u].cognitoSub){continueLoop = true;}
+							}
+							if (continueLoop)
+								continue;						
+							if (incomingUsers[s].team == "white"){moreWhitePlayers++;}
+							else if (incomingUsers[s].team == "black"){moreWhitePlayers--;}
+						}
+						
+						if (moreWhitePlayers <= 0){
+							team = "white";
+						}
+						else {
+							team = "black";
 						}
 					}
-					incomingUsers = removeIndexesFromArray(incomingUsers, usersToRemove);
-
-					incomingUsers.push.apply(incomingUsers, [{cognitoSub:options.cognitoSub, timestamp:new Date()}]); //Merge 2 arrays
+					log("TEAM I came up with is " + team);
+					//Set DB incoming Users
+					for (var p = 0; p < options.party.length; p++){
+						options.party[p].timestamp = new Date();
+						options.party[p].team = team;						
+					}
 					
+					//Before merging arrays, remove duplicate cognitoSubs from incomingUser
+					
+					incomingUsers.push.apply(incomingUsers, options.party); //Merge 2 arrays					
 					var obj = {incomingUsers:incomingUsers};
-					db.RW_SERV.update({url: serv[i].url}, {$set: obj}, {multi: true}, function () { //Set incoming Users
-						logg("DB: UPDATING incomingUsers: " + myUrl + " with: " + JSON.stringify(obj));
+					db.RW_SERV.update({url: serv[i].url}, {$set: obj}, {multi: true}, function () { 
+						logg("DB: UPDATING incomingUsers: " + serv[i].url + " with: " + JSON.stringify(obj));
 					});		
 					cb("Found joinable server. Joining...", serv[i].url);
 					return;
@@ -1019,9 +1120,8 @@ var getJoinableServer = function(options, cb){
 		cb("FAILED TO FIND JOINABLE SERVER", false);
 		return;
 	});
-	
-
 }
+
 
 app.post('/sendPlayerToGame', async function (req, res) {
 	console.log(req.body);
@@ -1037,9 +1137,9 @@ app.post('/logOut', async function (req, res) {
 });
 
 app.post('/getPlayerRelationship', async function (req, res) {
-	log("Get player Relationship endpoint called with:");
-	console.log("--BODY");
-	console.log(req.body);
+	//log("Get player Relationship endpoint called with:");
+	//console.log("--BODY");
+	//console.log(req.body);
 	getPlayerRelationshipFromDB(req.body, function(dbResults){
 		res.status(200);
 		res.send(dbResults);
@@ -1069,8 +1169,8 @@ app.post('/kickFromParty', async function (req, res) {
 	}		
 
 	db.RW_USER.update({partyId: req.body.cognitoSub, cognitoSub:req.body.targetCognitoSub}, {$set: {partyId:""}}, {multi: true}, function () {
-		logg("DB: Set: cognitoSub=" + req.body.cognitoSub + " with: ");
-		console.log('partyId:""');
+		//logg("DB: Set: cognitoSub=" + req.body.cognitoSub + " with: ");
+		//console.log('partyId:""');
 		res.status(200);
 		res.send({msg:"Kicked this user from party: " + req.body.targetCognitoSub});
 	});	
@@ -1109,26 +1209,25 @@ app.post('/requestResponse', async function (req, res) {
 					});
 				}
 				else if(req.body.type == "party") {
-					getParty(request.cognitoSub, true, function(partyDbResults){
+					getPartyForUser(request.cognitoSub, function(partyDbResults){
 						/*
 						var partyDbResults = {
-							leader:{}, //{cognitoSub:"12345",username:"myguy"}
+							partyId:"12345",
 							party:[]
 						};	
 						*/
 						log("2REQUEST RESPONSE ENDPOINT - FOUND PARTY WE ARE JOINING:");
-						console.log(partyDbResults);
-						if (partyDbResults.leader.cognitoSub){
-							getUserFromDB(request.targetCognitoSub, function(partyJoiner){
-								if (partyJoiner && partyJoiner.partyId && partyJoiner.partyId.length > 0 && partyJoiner.partyId != partyJoiner.cognitoSub){ //If in someone else's party and accepting a new party request
-									var re = new RegExp(partyJoiner.partyId,"g");
-									db.RW_USER.update({partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {$set: {partyId: ""}}, {multi: true}, function () {});
-								}
-								dbUserUpdate("set", authorizedUser.cognitoSub, {partyId:partyDbResults.leader.cognitoSub});
-								db.RW_REQUEST.remove({targetCognitoSub:request.targetCognitoSub, type:"party"}, function(err, obj) {});	//Remove all party requests targeted at the responder
-								db.RW_REQUEST.remove({targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, function(err, obj) {});	//Remove any mirrored requests (where both users request each other, but then one clicks accept)
-							});
-						}
+						//console.log(partyDbResults);
+						getUserFromDB(request.targetCognitoSub, function(partyJoiner){
+							if (partyJoiner && partyJoiner.partyId && partyJoiner.partyId.length > 0 && partyJoiner.partyId == partyJoiner.cognitoSub && partyJoiner.partyId != partyDbResults.partyId){ //If party leader of a previous party (which is NOT the party currently requested to join) and accepting a new party request
+								var re = new RegExp(partyJoiner.cognitoSub,"g");
+								db.RW_USER.update({partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {$set: {partyId: ""}}, {multi: true}, function () {}); //Disband the previous party
+							}
+							//log("dbUserUpdate - Party request accepted, joining party.");
+							dbUserUpdate("set", authorizedUser.cognitoSub, {partyId:partyDbResults.partyId});
+							db.RW_REQUEST.remove({targetCognitoSub:request.targetCognitoSub, type:"party"}, function(err, obj) {});	//Remove all party requests targeted at the responder
+							db.RW_REQUEST.remove({targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, function(err, obj) {});	//Remove any mirrored requests (where both users request each other, but then one clicks accept)
+						});
 					});					
 					res.status(200);
 					res.send({msg:"Joined player's party"});	
@@ -1145,6 +1244,15 @@ app.post('/requestResponse', async function (req, res) {
 	});
 });
 
+function getLeaderFromParty(partyData){
+	for (var p = 0; p < partyData.party.length; p++){
+		if (partyData.party[p].leader == true){
+			return partyData.party[p];
+		}
+	}
+	return false;
+}
+
 app.post('/leaveParty', async function (req, res) {
 	log("LEAVE PARTY ENDPOINT CALLED WITH:");
 	console.log("--BODY");
@@ -1152,16 +1260,16 @@ app.post('/leaveParty', async function (req, res) {
 
 	if (req.body.partyId == req.body.cognitoSub){
 		db.RW_USER.update({partyId: req.body.partyId}, {$set: {partyId:""}}, {multi: true}, function () {
-			logg("DB: Set: cognitoSub=" + req.body.cognitoSub + " with: ");
-			console.log('partyId:""');
+			//logg("DB: Set: cognitoSub=" + req.body.cognitoSub + " with: ");
+			//console.log('partyId:""');
 			res.status(200);
 			res.send({msg:"Ended Party " + req.body.partyId});
 		});	
 	}
 	else {
 		db.RW_USER.update({cognitoSub: req.body.cognitoSub}, {$set: {partyId:""}}, {multi: true}, function () {
-			logg("DB: Set: partyId=" + req.body.partyId + " with: ");
-			console.log('partyId:""');
+			//logg("DB: Set: partyId=" + req.body.partyId + " with: ");
+			//console.log('partyId:""');
 			res.status(200);
 			res.send({msg:"Left Party " + req.body.partyId});
 		});	
@@ -1217,9 +1325,9 @@ app.post('/upsertRequest', async function (req, res) {
 });
 
 app.post('/getOnlineFriends', async function (req, res) {
-	log("getOnlineFriends endpoint called with:");
-	console.log("--BODY");
-	console.log(req.body);
+	//log("getOnlineFriends endpoint called with:");
+	//console.log("--BODY");
+	//console.log(req.body);
 	
 	getOnlineFriends(req.body.cognitoSub, function(dbResults){
 		res.status(200);
@@ -1231,26 +1339,29 @@ app.post('/getOnlineFriends', async function (req, res) {
 		cognitoSub:cognitoSub
 	};*/
 app.post('/getParty', async function (req, res) {
-	log("getParty endpoint called with:");
-	console.log("--BODY");
-	console.log(req.body);
+	//log("getParty endpoint called with:");
+	//console.log("--BODY");
+	//console.log(req.body);
 	
-	getParty(req.body.cognitoSub, false, function(dbResults){
+	getPartyForUser(req.body.cognitoSub, function(dbResults){
 		/*
 		var dbResults = {
-			leader:{}, //{cognitoSub:"12345",username:"myguy"}
+			partyId:"12345",
 			party:[]
 		};	
 		*/
+		
+		//Create party endpoint result
+		
 		res.status(200);
 		res.send(dbResults);
 	});
 });
 
 app.post('/getRequests', async function (req, res) {
-	log("Get requests endpoint called with:");
-	console.log("--BODY");
-	console.log(req.body);
+	//log("Get requests endpoint called with:");
+	//console.log("--BODY");
+	//console.log(req.body);
 	
 	var response = {
 		friendRequests:[],
@@ -1280,12 +1391,12 @@ app.post('/validateToken', async function (req, res) {
 		result = await getTokenFromCodeAndValidate(code);
 	}
 	if (!result.cognitoSub && (req.cookies["cog_r"] || req.body.cog_r)){ //Otherwise, check for token in cookie and body
-		logg("COULDN'T GET TOKEN FROM CODE - ACCESSING COOKIES (or request body)");
+		//logg("COULDN'T GET TOKEN FROM CODE - ACCESSING COOKIES (or request body)");
 		
 		var tokens = {};
 		
 		if(req.body.cog_r && req.body.cog_r.length > 0) {
-			logg("Found token on request body. Ignoring cookies.");
+			//logg("Found token on request body. Ignoring cookies.");
 			tokens = {
 				access_token:req.body.cog_a,
 				id_token:req.body.cog_i,
@@ -1293,7 +1404,7 @@ app.post('/validateToken', async function (req, res) {
 			};
 		}
 		else if (req.cookies["cog_r"] && req.cookies["cog_r"].length > 0){
-			logg("Could not find code or tokens on request body. Trying site cookies...");
+			//logg("Could not find code or tokens on request body. Trying site cookies...");
 			tokens = {
 				access_token:req.cookies["cog_a"],
 				id_token:req.cookies["cog_i"],
@@ -1312,6 +1423,7 @@ app.post('/validateToken', async function (req, res) {
 	if (result && result.cognitoSub && result.username && result.refresh_token && result.access_token) {
 		//Success
 		updateOnlineTimestampForUser(result.cognitoSub);
+		updateServerUrlForUser(result.cognitoSub);
 		res.status(200);
 		res.cookie("cog_i", result.id_token, { httpOnly: httpOnlyCookies });
 		res.cookie("cog_a", result.access_token, { httpOnly: httpOnlyCookies });
@@ -1394,14 +1506,14 @@ app.post('/updateUsername', async function (req, res) {
 function dbUserUpdate(action, cognitoSub, obj) {
 	if (action == "set"){
 		db.RW_USER.update({cognitoSub: cognitoSub}, {$set: obj}, {multi: true}, function () {
-			logg("DB: Set: " + cognitoSub + " with: ");
+			logg("dbUserUpdate DB: Set: " + cognitoSub + " with: ");
 			console.log(obj);
 		});		
 	}
 	else if (action == "inc"){
 		db.RW_USER.update({cognitoSub: cognitoSub}, {$inc: obj}, {multi: true}, function () {
-			logg("DB: Increased: " + cognitoSub + " with: ");
-			console.log(obj);
+			//logg("DB: Increased: " + cognitoSub + " with: ");
+			//console.log(obj);
 		});	
 	}
 }
@@ -1411,8 +1523,8 @@ function setPartyIdIfEmpty(cognitoSub) {
 		if (res && res[0]){
 			if (!res[0].partyId || res[0].partyId == ""){
 				db.RW_USER.update({cognitoSub: cognitoSub}, {$set: {partyId:cognitoSub}}, {multi: true}, function () {
-					logg("DB: Set: " + cognitoSub + " with: ");
-					console.log("partyId:" + cognitoSub);
+					//logg("DB: Set: " + cognitoSub + " with: ");
+					//console.log("partyId:" + cognitoSub);
 				});						
 			}
 		}
@@ -1444,6 +1556,7 @@ function dbGameServerAdd(){
 	var healthCheckTimestamp = new Date();
 	var matchTime = (gameMinutesLength * 60) + gameSecondsLength;
 	var currentTimeLeft = (minutesLeft * 60) + secondsLeft;
+	if (pregame == true || gameOver == true){currentTimeLeft = matchTime;}
 	var currentHighestScore = 0;
 	if (blackScore > whiteScore){
 		currentHighestScore = blackScore;
@@ -1451,7 +1564,7 @@ function dbGameServerAdd(){
 	else {
 		currentHighestScore = whiteScore;
 	}
-	db.RW_SERV.insert({url:myUrl, serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, currentPlayers:getAllPlayersInGame(), healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore},	
+	db.RW_SERV.insert({url:myUrl, serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore},	
 		function(err, doc){
 			if (!err){
 				logg("New server added to RW_SERV: " + myUrl + " with timestamp: " + healthCheckTimestamp.toISOString());
@@ -1469,7 +1582,7 @@ function dbGameServerAddParams(url, number, name, priv, gt, max, voteGt, voteM){
 		return;
 		
 	var healthCheckTimestamp = new Date();
-	db.RW_SERV.insert({url:url, serverNumber:number, serverName:name,  privateServer:privateServer, currentPlayers:getAllPlayersInGame(), healthCheckTimestamp:healthCheckTimestamp, gametype:gt, maxPlayers:max, voteGametype:voteGt, voteMap:voteM},	
+	db.RW_SERV.insert({url:url, serverNumber:number, serverName:name,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gt, maxPlayers:max, voteGametype:voteGt, voteMap:voteM},	
 		function(err, doc){
 			if (!err){
 				logg("New server added to RW_SERV: " + url + " with timestamp: " + healthCheckTimestamp.toISOString());
@@ -1486,6 +1599,7 @@ function dbGameServerUpdate() {
 	var healthCheckTimestamp = new Date();
 	var matchTime = (gameMinutesLength * 60) + gameSecondsLength;
 	var currentTimeLeft = (minutesLeft * 60) + secondsLeft;
+	if (pregame == true || gameOver == true){currentTimeLeft = matchTime;}
 	var currentHighestScore = 0;
 	if (blackScore > whiteScore){
 		currentHighestScore = blackScore;
@@ -1493,10 +1607,12 @@ function dbGameServerUpdate() {
 	else {
 		currentHighestScore = whiteScore;
 	}
-	var obj = {serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, currentPlayers:getAllPlayersInGame(), healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore};
+
+	var obj = {serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:Player.list};
 	
-	db.RW_SERV.update({url: myUrl}, {$set: obj}, {multi: true}, function () {
-		//logg("DB: Set: " + myUrl + " with: " + obj);
+	db.RW_SERV.update({url: myUrl}, {$set: obj}, {upsert:true, multi: true}, function () {
+		//logg("dbGameServerUpdate DB: Set: " + myUrl + " with: ");
+		//console.log(obj);
 	});		
 }
 
@@ -1508,14 +1624,14 @@ function dbGameServerUpdateParams(obj) {
 
 function dbDiffServerUpdateParams(url, obj) {
 	db.RW_SERV.update({url: url}, {$set: obj}, {multi: true}, function () {
-		logg("DB: Set: " + url + " with: " + obj);
+		//logg("DB: Set: " + url + " with: " + obj);
 	});		
 }
 
 function dbGameServerRemove(){
 	db.RW_SERV.remove({ url: myUrl }, function(err, obj) {
 		if (!err){
-			logg("Server: " + myUrl + " successfully removed from database.");
+			//logg("Server: " + myUrl + " successfully removed from database.");
 		}
 	});
 }
@@ -1537,7 +1653,6 @@ var getPublicServersFromDB = function(cb){
 				var thisServer = {};
 					thisServer.url = res[i].url;
 					thisServer.serverName = res[i].serverName;
-					thisServer.currentPlayers = res[i].currentPlayers;
 					thisServer.gametype = res[i].gametype;
 					thisServer.maxPlayers = res[i].maxPlayers;
 					thisServer.voteGametype = res[i].voteGametype;
@@ -1718,7 +1833,7 @@ var upsertRequest = function(data,cb){
 }
 
 var getOnlineFriendsAndPartyFromDB = function(cognitoSub,cb){
-	log("searching for user: " + cognitoSub);
+	//log("searching for user: " + cognitoSub);
 	db.RW_FRIEND.find({cognitoSub:cognitoSub}, function(err,res){
 		var friends = [];
 		if (res && res[0]){
@@ -1731,7 +1846,7 @@ var getOnlineFriendsAndPartyFromDB = function(cognitoSub,cb){
 }
 
 var searchUserFromDB = function(searchText,cb){
-	log("searching for user with text: " + searchText);
+	//log("searching for user with text: " + searchText);
 	var re = new RegExp(searchText,"i");
 	db.RW_USER.find({USERNAME:re}).limit(50, function(err,res){
 		if (res && res[0]){
@@ -1747,12 +1862,13 @@ var searchUserFromDB = function(searchText,cb){
 
 
 var getUserFromDB = function(cognitoSub,cb){
-	log("searching for user: " + cognitoSub);
+	//log("searching for user: " + cognitoSub);
 	db.RW_USER.find({cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			var user = res[0];
 			user.username = res[0].USERNAME;
-			if (!user.partyId){
+			if (typeof user.partyId === 'undefined'){
+				//log("dbUserUpdate - No entry found for party in DB, setting to ''");
 				dbUserUpdate("set", user.cognitoSub, {partyId:""});
 			}
 			cb(user);
@@ -1817,14 +1933,20 @@ function updateOnlineTimestampForUser(cognitoSub){
 	});			
 }
 
+function updateServerUrlForUser(cognitoSub){
+	db.RW_USER.update({cognitoSub: cognitoSub}, {$set: {serverUrl: myUrl}}, {multi: true}, function () {
+		//logg("Updated player[" + cognitoSub + "] onlineTimestamp to " + newDate);
+	});			
+}
+
 
 var getOnlineFriends = function(cognitoSub, cb){
 	var onlineFriends = [];
 	
-	console.log("Searching DB for online friends of: " + cognitoSub);
+	//console.log("Searching DB for online friends of: " + cognitoSub);
 	db.RW_FRIEND.find({cognitoSub:cognitoSub}, function(err,friendRes){
 		var cognitoSubArray = [];
-		console.log("Friend DB results:");
+		//console.log("Friend DB results:");
 		//console.log(friendRes);
 		if (friendRes[0]){
 			for (let j = 0; j < friendRes.length; j++) {
@@ -1833,10 +1955,10 @@ var getOnlineFriends = function(cognitoSub, cb){
 			var miliInterval = (staleOnlineTimestampThreshold * 1000);
 			var thresholdDate = new Date(Date.now() - miliInterval);
 			var searchParams = { cognitoSub:{ $in: cognitoSubArray }, onlineTimestamp:{ $gt: thresholdDate } };
-			console.log("Searching DB for which of the above friends are online?");
+			//console.log("Searching DB for which of the above friends are online?");
 			db.RW_USER.find(searchParams, function(err,userRes){
-				console.log("Online friend result:");
-				console.log(userRes);
+				//console.log("Online friend result:");
+				//console.log(userRes);
 				if (userRes[0]){
 					for (let k = 0; k < userRes.length; k++) {
 						var user = userRes[k];
@@ -1852,79 +1974,116 @@ var getOnlineFriends = function(cognitoSub, cb){
 		}
 	});		
 }
-
-var getParty = function(cognitoSub, full, cb){
+// Returns: partyData (see below)
+var getPartyForUser = function(cognitoSub, cb){
 	var partyData = {
 		partyId:"",
-		leader:{}, //{cognitoSub:"12345",username:"myguy"}
-		party:[] //Party members other than you
+		party:[] //ALL Party members [{cognitoSub:partyRes[k].cognitoSub, username:partyRes[k].USERNAME, serverUrl:partyRes[k].serverUrl, leader:false}]
 	};	
-	
 	db.RW_USER.find({cognitoSub:cognitoSub}, function(err,userRes){
 		//console.log("PARTY get user DB results:");
 		//console.log(userRes);
-		if (userRes && userRes[0] && userRes[0].partyId){
-			//console.log("PARTY Searching DB for users with partyId: " + userRes[0].partyId);
-			var partyId = userRes[0].partyId;
-			partyData.partyId = partyId;
-			removePartyIfLeaderAbsent(cognitoSub, partyId);
-			
-			var miliInterval = (staleOnlineTimestampThreshold * 1000);
-			var thresholdDate = new Date(Date.now() - miliInterval);			
-			db.RW_USER.find({partyId:partyId, onlineTimestamp:{ $gt: thresholdDate }}, function(err,partyRes){
-				//console.log("PARTY Get all users with partyId DB results:");
-				//console.log(partyRes);
-				if (partyRes && partyRes[0]){
-					for (let k = 0; k < partyRes.length; k++) {
-						if (partyRes[k].cognitoSub == partyId){
-							//console.log("PARTY LEADER! partyRes[k].cognitoSub["+ partyRes[k].cognitoSub +" == partyId[" +partyId);
-							partyData.leader = {cognitoSub:partyRes[k].cognitoSub,username:partyRes[k].USERNAME};
+		if (userRes && userRes[0]){
+			partyData.partyId = cognitoSub; //Default the partyId to the requested User
+			if (userRes[0].partyId && userRes[0].partyId.length > 0){ //User is in a party
+				//console.log("PARTY Searching DB for users with partyId: " + userRes[0].partyId);
+				partyData.partyId = userRes[0].partyId;
+				kickOfflineFromParty(partyData.partyId, function(){
+					var miliInterval = (staleOnlineTimestampThreshold * 1000);
+					var thresholdDate = new Date(Date.now() - miliInterval);			
+					db.RW_USER.find({partyId:partyData.partyId, onlineTimestamp:{ $gt: thresholdDate }}, function(err2,partyRes){
+						//console.log("PARTY Get all users with partyId DB results:");
+						//console.log(partyRes);
+						if (partyRes && partyRes[0]){ //There is at least 1 person in the party
+							for (let k = 0; k < partyRes.length; k++) {
+								var partyMember = {cognitoSub:partyRes[k].cognitoSub, username:partyRes[k].USERNAME, serverUrl:partyRes[k].serverUrl, leader:false};
+								if (partyRes[k].cognitoSub == partyData.partyId){
+									partyMember.leader = true;
+								}							
+								partyData.party.push(partyMember);
+							}				
 						}
-						else if(partyRes[k].partyId){
-							if (partyRes[k].cognitoSub == cognitoSub && !full){ //skip yourself (we know you are in your own party)
-								//console.log("Don't add self as a follower of the party" + partyRes[k].cognitoSub);						
-								continue;
-							}							
-							//console.log("FOLLOWER! partyRes[k].cognitoSub["+ partyRes[k].cognitoSub +" != partyId[" +partyId);
-							partyData.party.push({cognitoSub:partyRes[k].cognitoSub, username:partyRes[k].USERNAME});
-						}
-					}				
-				}
+						cb(partyData);
+					});	
+				});
+			}
+			else { //User is not in a party
+				partyData.party = [{cognitoSub:cognitoSub, username:userRes[0].USERNAME, serverUrl:userRes[0].serverUrl, leader:true}];
 				cb(partyData);
-			});		
+			}
 		}
-		else {
+		else { //ERROR: USER NOT FOUND
 			cb(partyData);
 		}
 	});		
 }
 
-//Set user's party to blank if they are in a partyId where the partyId belongs to the CognitoSub of a user who is in another party
-//should also update this function to do this: !!!
-//If a bunch of people join a party, and then party disbands (everyone logs off). Later, if one person logs back in (will run /getParty, and therefore this function), that should reset all original party members to partyId = “” if they are not online.
-function removePartyIfLeaderAbsent(cognitoSub, partyId){
+var getPartyById = function(partyId, cb){
+	var partyData = {
+		partyId:partyId,
+		party:[] //ALL Party members [{cognitoSub:partyRes[k].cognitoSub, username:partyRes[k].USERNAME, serverUrl:partyRes[k].serverUrl, leader:false}]
+	};	
+	kickOfflineFromParty(partyData.partyId, function(){
+		var miliInterval = (staleOnlineTimestampThreshold * 1000);
+		var thresholdDate = new Date(Date.now() - miliInterval);			
+		db.RW_USER.find({partyId:partyData.partyId, onlineTimestamp:{ $gt: thresholdDate }}, function(err2,partyRes){
+			//console.log("PARTY Get all users with partyId DB results:");
+			//console.log(partyRes);
+			if (partyRes && partyRes[0]){ //There is at least 1 person in the party
+				for (let k = 0; k < partyRes.length; k++) {
+					var partyMember = {cognitoSub:partyRes[k].cognitoSub, username:partyRes[k].USERNAME, serverUrl:partyRes[k].serverUrl, leader:false};
+					if (partyRes[k].cognitoSub == partyData.partyId){
+						partyMember.leader = true;
+					}							
+					partyData.party.push(partyMember);
+				}				
+			}
+			cb(partyData);
+		});	
+	});
+}
+
+//If leader of the party is offline, set ALL party members party Id to '' (and return callback)
+//If party leader is online, 
+
+
+var kickOfflineFromParty = function(partyId, cb){
 	if (!partyId || partyId.length < 1){
 		return;
 	}
-	db.RW_USER.find({cognitoSub:partyId}, function(err,partyRes){
+	db.RW_USER.find({cognitoSub:partyId}, function(err,partyRes){ //First, analyze party leader
 		var miliInterval = (staleOnlineTimestampThreshold * 1000);
 		var thresholdDate = new Date(Date.now() - miliInterval);
-		if (partyRes && partyRes[0] && (partyRes[0].partyId != partyRes[0].cognitoSub || partyRes[0].onlineTimestamp < thresholdDate)){
-			db.RW_USER.update({partyId: partyId}, {$set: {partyId: ""}}, {multi: true}, function () {
-				logg("ERROR: User in a partyId where the 'leader' is in a different party or offline. Clearing all users with partyId: " + partyId);
+		if (partyRes && partyRes[0] && (partyRes[0].partyId != partyRes[0].cognitoSub || partyRes[0].onlineTimestamp < thresholdDate)){ //PartyId where the 'leader' is in a different party or offline. Clearing all users with partyId
+			db.RW_USER.update({partyId: partyId}, {$set: {partyId: ""}}, {multi: true}, function () { 
+				logg("PartyId where the 'leader' is in a different party or offline. Clearing party for ALL users with partyId: " + partyId);
+				cb();
 			});	
 		}
-	});		
+		else if(partyRes && partyRes[0] && partyRes[0].partyId == partyRes[0].cognitoSub && partyRes[0].onlineTimestamp >= thresholdDate){ //Valid party with online leader who is also in the party		
+			var searchParams = { partyId: partyId, onlineTimestamp:{ $lt: thresholdDate } };		
+			db.RW_USER.update(searchParams, {$set: {partyId: ""}}, {multi: true}, function () { 
+				logg("Valid, online party. Clearing all party members that are offline");
+				cb();
+			});				
+		}
+		else { //Catch all, do nothing
+			cb();
+		}
+	});					
 }
+
+
+
 
 var getFriendRequests = function(cognitoSub, cb){
 	var friendRequests = [];
 	
-	console.log("Searching DB for friend requests of: " + cognitoSub);
+	//console.log("Searching DB for friend requests of: " + cognitoSub);
 	db.RW_REQUEST.find({targetCognitoSub:cognitoSub, type:"friend"}, function(err,friendRes){
 		var cognitoSubArray = [];
-		console.log("Friend  request DB results:");
-		console.log(friendRes);
+		//console.log("Friend request DB results:");
+		//console.log(friendRes);
 		if (friendRes[0]){
 			for (let j = 0; j < friendRes.length; j++) {
 				friendRequests.push(friendRes[j]);
@@ -1937,11 +2096,11 @@ var getFriendRequests = function(cognitoSub, cb){
 var getPartyRequests = function(cognitoSub, cb){
 	var partyRequests = [];
 	
-	console.log("Searching DB for party requests of: " + cognitoSub);
+	//console.log("Searching DB for party requests of: " + cognitoSub);
 	db.RW_REQUEST.find({targetCognitoSub:cognitoSub, type:"party"}, function(err,partyRes){
 		var cognitoSubArray = [];
-		console.log("Party  request DB results:");
-		console.log(partyRes);
+		//console.log("Party  request DB results:");
+		//console.log(partyRes);
 		if (partyRes[0]){
 			for (let j = 0; j < partyRes.length; j++) {
 				partyRequests.push(partyRes[j]);
@@ -1954,8 +2113,8 @@ var getPartyRequests = function(cognitoSub, cb){
 var getRequestById = function(id, cb){
 	console.log("DB getRequestById: " + id);
 	db.RW_REQUEST.find({"_id": ObjectId(id)}, function(err,res){
-		console.log("getRequestById DB results:");
-		console.log(res);
+		//console.log("getRequestById DB results:");
+		//console.log(res);
 		if (res && res[0]){
 			cb(res[0]);			
 		}
@@ -2058,7 +2217,7 @@ async function getTokenFromCodeAndValidate(code){
 }
 
 async function validateTokenOrRefresh(tokens){
-	console.log("Validating token or refreshing..");
+	//console.log("Validating token or refreshing..");
 	var validationResponse = await validateToken(tokens.access_token); //sets username and cognitoSub
 
 	validationResponse.refresh_token = tokens.refresh_token;
@@ -2098,7 +2257,7 @@ async function validateToken(token) {
 		url: 'https://cognito-idp.us-east-2.amazonaws.com/us-east-2_SbevJL5zt/.well-known/jwks.json',
 		json: true
 	}, async function (error, response, body) {
-		log("STATUS CODE:" + response.statusCode);
+		//log("STATUS CODE:" + response.statusCode);
 		if (!error && response.statusCode === 200) {
 
 			//Step 1: Confirm the Structure of the JWT
@@ -2137,18 +2296,18 @@ async function validateToken(token) {
 						validateTokenResult = {fail:true, msg:"ERROR - Token does not have correct issuer (Cognito Pool ARN)"};
 						return;
 					}
-					logg("Valid Token! Returning...");
+					//logg("Valid Token! Returning...");
 
 					username = payload.username;
 					cognitoSub = payload.sub;
 					if (payload['cognito:groups']){
 						federatedUser = true;
-						log("Confirmed user is a federated account.");
+						//log("Confirmed user is a federated account.");
 					}
 
 					if (username != "" && cognitoSub != "") {
 						//SUCCESS
-						log("USERNAME SUCCESSFULLY GOT FROM TOKEN: " + username);
+						//log("USERNAME SUCCESSFULLY GOT FROM TOKEN: " + username);
 						
 						validateTokenResult = {
 							cognitoSub: cognitoSub,
@@ -2230,7 +2389,7 @@ function validateJWTSignatureAndGetPayload(keys, decodedJwt, token){
 				return null;
 			}
 			else {
-				logg("SUCCESS validateJWTSignaturePayload");
+				//logg("SUCCESS validateJWTSignaturePayload");
 				result = payload;
 			}
 		});
@@ -2256,12 +2415,12 @@ var addUser = function(cognitoSub, username, cb){
 	var date = today.getUTCFullYear()+'-'+(today.getUTCMonth()+1)+'-'+today.getUTCDate();
 
 	log(date);
-	db.RW_USER.insert({cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date},
+	db.RW_USER.insert({cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:''},
 		function(err){cb();});
 }
 
 function crash(){
-	CRASHGENERATED();
+	var newVar = alskdjf.thisIsUndefined;
 }
 
 function updateSocketAndServerDb(cognitoSub){
@@ -2302,9 +2461,24 @@ function sendSocketListToServerDb(){
 	}
 
 	db.RW_SERV.update({url: myUrl}, {$set: {currentUsers:currentUsers}}, {multi: true}, function () {
-		logg("Updated currentUsers in RW_SERV for " + myUrl + ":");
-		console.log(JSON.stringify(currentUsers));
+		//logg("Updated currentUsers in RW_SERV for " + myUrl + ":");
+		//console.log(JSON.stringify(currentUsers));
 	});
+}
+
+function getCurrentPlayersFromUsers(users){
+	var players = [];
+	
+	if (typeof users === "undefined"){
+		return players;
+	}
+	
+	for (var u = 0; u < users.length; u++){
+		if (users[u].team){
+			players.push(users[u]);
+		}
+	}
+	return players;
 }
 
 io.sockets.on('connection', function(socket){
@@ -2315,18 +2489,19 @@ io.sockets.on('connection', function(socket){
 	populateLoginPage(socket);
 	
 	socket.on('updateSocketInfo', function(cognitoSub){
-		console.log(">>>>>>>>>>>>>>>>>>>>>>>>>> Updating socket info. SOCKET LIST: " + SOCKET_LIST.length);
+		//console.log(">>>>>>>>>>>>>>>>>>>>>>>>>> Updating socket info. SOCKET LIST: " + SOCKET_LIST.length);
 		for (var s in SOCKET_LIST){ //Kill any existing duplicate logins with this user on this server
-			console.log("ID:" + SOCKET_LIST[s].id + " CognitoSub:" + SOCKET_LIST[s].cognitoSub);
+			//console.log("ID:" + SOCKET_LIST[s].id + " CognitoSub:" + SOCKET_LIST[s].cognitoSub);
 			if (SOCKET_LIST[s].cognitoSub == cognitoSub && SOCKET_LIST[s].id != socket.id){
 				SOCKET_LIST[s].disconnect();
 			}
 		}
 		socket.cognitoSub = cognitoSub;
-		logg("updateSocketInfo for cognitoSub: " + SOCKET_LIST[socket.id].cognitoSub);
+		//logg("updateSocketInfo for cognitoSub: " + SOCKET_LIST[socket.id].cognitoSub);
 		
 		updateSocketAndServerDb(cognitoSub);
-		dbGameServerUpdate();
+		if (!isWebServer)
+			dbGameServerUpdate();
 	});
 
 	socket.on('error', function(error){
@@ -2784,21 +2959,17 @@ io.sockets.on('connection', function(socket){
 		}
 		
 	});	
-	
-	socket.on('signIntoGameServer', function(cognitoSub, username){
-		joinGame(cognitoSub, username);			
-	});	
 }); //END socket.on(connection)
 
-function joinGame(cognitoSub, username){
+function joinGame(cognitoSub, username, team){
 	var socket = SOCKET_LIST[getSocketIdFromCognitoSub(cognitoSub)];
-	var players = getAllPlayersInGame();
-	if (players >= maxPlayers){
+	var players = getNumPlayersInGame();
+	if (players >= maxPlayers){ //Another redundant maxplayers check couldn't hurt, right?
 		socket.emit('signInResponse',{success:false,message:"SERVER FULL. Try again later, or try a different server."});								
 	}
 	else {
 		log("CognitoSub signing into game server: " + cognitoSub);
-		Player.onConnect(socket, cognitoSub, username);	
+		Player.onConnect(socket, cognitoSub, username, team);
 		dbGameServerUpdate();
 		socket.emit('signInResponse',{success:true,id:socket.id, mapWidth:mapWidth, mapHeight:mapHeight, whiteScore:whiteScore, blackScore:blackScore});
 	}	
@@ -2963,7 +3134,10 @@ function restartGame(){
 		SOCKET_LIST[i].emit('gameStart');
 	}	
 	sendSocketListToServerDb();
-	dbGameServerUpdate();
+	
+	if (!isWebServer)
+		dbGameServerUpdate();
+		
 }//End restartGame
 
 function ensureCorrectThugCount(){
@@ -3043,11 +3217,12 @@ function ensureCorrectThugCount(){
 
 
 //-----------------------PLAYER----------------------
-var Player = function(id, cognitoSub, name){
+var Player = function(id, cognitoSub, name, team){
 //Stuff that ONLY gets set on Player entry
 	var self = {
 		id:id,
 		cognitoSub:cognitoSub,
+		team:team,
 		name:name,
 		height:94,
 		width:94,
@@ -3070,18 +3245,6 @@ var Player = function(id, cognitoSub, name){
 		captures:0,	
 		rating:0,
 		experience:0
-	}
-	
-	var moreWhitePlayers = 0; //Number of white players more than black players -- if more black players, this will be negative
-	for (var i in Player.list){
-		if (Player.list[i].team == "white"){moreWhitePlayers++;}
-		if (Player.list[i].team == "black"){moreWhitePlayers--;}
-	}
-	if (moreWhitePlayers <= 0){
-		self.team = "white";
-	}
-	else {
-		self.team = "black";
 	}
 		
 	//Initialize Player
@@ -3883,7 +4046,7 @@ var Player = function(id, cognitoSub, name){
 		if (typeof self.afk === 'undefined'){
 		 self.afk = AfkFramesAllowed;
 		}
-		else if (self.afk >= 0){
+		else if (self.afk >= 0 && self.team != "none"){
 			self.afk--;
 		}
 		else { //Boot em
@@ -4065,15 +4228,17 @@ var Player = function(id, cognitoSub, name){
 		if (self.team == "white"){
 			teamName = "red";
 		}
-		else {
+		else if (self.team == "black"){
 			teamName = "blue";
 		}
 	}
-	sendChatToAll(self.name + " has joined the " + teamName + " team!");
+	if (teamName != "none")
+		sendChatToAll(self.name + " has joined the " + teamName + " team!");
+		
 	socket.emit('sendPlayerNameToClient',self.name);
-
 	
 	self.respawn();
+	
 	return self;
 } //End Player function
 
@@ -4206,8 +4371,8 @@ function gunSwap(player){
 	}
 }
 
-Player.onConnect = function(socket, cognitoSub, name){
-	var player = Player(socket.id, cognitoSub, name);
+Player.onConnect = function(socket, cognitoSub, name, team){
+	var player = Player(socket.id, cognitoSub, name, team);
 	ensureCorrectThugCount();
 
 	socket.on('keyPress', function(data){
@@ -4217,7 +4382,7 @@ Player.onConnect = function(socket, cognitoSub, name){
 		else {
 			Player.list[socket.id].afk = AfkFramesAllowed;
 		}
-		if (player.health > 0){
+		if (player.health > 0 && player.team != "none"){
 			var discharge = false;
 			if(data.inputId === 87){player.pressingW = data.state;}
 			else if(data.inputId === 68){player.pressingD = data.state;}
@@ -4269,7 +4434,6 @@ Player.onConnect = function(socket, cognitoSub, name){
 				player.pressingLeft = data.state;
 			}	
 			else if(data.inputId === 32){ //SPACE
-			
 				if ((player.pressingW || player.pressingD || player.pressingS || player.pressingA) && player.energy > 0 && player.boosting <= 0 && player.holdingBag == false){
 					if (player.cloakEngaged){
 						player.cloakEngaged = false;						
@@ -4320,6 +4484,7 @@ Player.onConnect = function(socket, cognitoSub, name){
 				else if ((!player.pressingW && !player.pressingD && !player.pressingS && !player.pressingA) && player.energy > 0){
 					if (!player.cloakEngaged){
 						player.cloakEngaged = true;
+						SOCKET_LIST[player.id].emit('sfx', "sfxCloak");
 					}
 					else if (player.cloakEngaged){
 						player.cloakEngaged = false;
@@ -4412,9 +4577,7 @@ Player.onConnect = function(socket, cognitoSub, name){
 				Discharge(player);				
 			}
 				
-		}//End health > 0 check for allowing input
-		
-		
+		}//End health > 0 check for allowing input		
 	}); //End Socket on Keypress
 	
 	
@@ -4488,8 +4651,6 @@ Player.onConnect = function(socket, cognitoSub, name){
 		}		
 		
 	});
-
-
 	
 }//End Player.onConnect
 
@@ -5409,7 +5570,7 @@ function calculateEndgameStats(){
 
 function updatePlayersRatingAndExpWithMongoRes(mongoRes){
 	var pCount = 0;
-	var totalPlayers = getAllPlayersInGame();
+	var totalPlayers = getNumPlayersInGame();
 	
 	for (var p in Player.list){
 		pCount++;
@@ -5425,7 +5586,7 @@ function updatePlayersRatingAndExpWithMongoRes(mongoRes){
 
 function updateSocketRatingAndExpWithMongoRes(mongoRes){
 	var pCount = 0;
-	var totalPlayers = getAllPlayersInGame();
+	var totalPlayers = getNumPlayersInGame();
 	
 	for (var p in Player.list){
 		pCount++;
@@ -5439,11 +5600,12 @@ function updateSocketRatingAndExpWithMongoRes(mongoRes){
 	}	
 }
 
-function getAllPlayersInGame(){
+function getNumPlayersInGame(){
 	var totalPlayers = 0;
 	for (var p in Player.list){
 		totalPlayers++;
 	}
+	
 	return totalPlayers;
 }
 
@@ -6339,13 +6501,14 @@ setInterval(
 			return;
 				
 		for (var i in Player.list){
-			Player.list[i].engine();
+			if (Player.list[i].team != "none")
+				Player.list[i].engine();
 		}		
 		for (var i in Thug.list){
 			Thug.list[i].engine();
 		}	
 		
-		var secondsLeftPlusZero = "" + secondsLeft;	
+		var secondsLeftPlusZero = "" + secondsLeft;
 		if (secondsLeft < 10){
 			secondsLeftPlusZero = "0" + secondsLeft;
 		}
@@ -6375,7 +6538,7 @@ setInterval(
 //------------------------------------------------------------------------------
 
 
-var secondsSinceLastServerSync = 0;
+var secondsSinceLastServerSync = syncServerWithDbInterval - 2;
 var secondsSinceOnlineTimestampUpdate = 0;
 var secondsSinceStaleRequestCheck = 0;
 var currentStreamingDay = new Date().getUTCDate();
@@ -6440,7 +6603,7 @@ setInterval(
 				checkForUnhealthyServers();
 			}
 			else {
-				syncServerWithDatabase();
+				syncGameServerWithDatabase();
 			}			
 			secondsSinceLastServerSync = 0;
 		}		
@@ -6490,15 +6653,15 @@ function checkForUnhealthyServers(){
 		}
 	});
 }
-					
+
 function removeIndexesFromArray(array, indexes){
-	for (var i = 0; i < indexes.length; i++){
-		array.splice(indexes[i], 1);
+	for (var i = indexes.length-1; i >= 0; i--){
+		array.splice(indexes[i],1);
 	}
 	return array;
 }
 
-function syncServerWithDatabase(){	
+function syncGameServerWithDatabase(){	
 	if (myIP == ""){
 		logg("WARNING - Unable to get server IP. Retrying in " + syncServerWithDbInterval + " seconds...");
 		return;
@@ -6508,15 +6671,23 @@ function syncServerWithDatabase(){
 		if (res && res[0]){
 			//log("Server " + myUrl + " present in IN_SERV. Grabbing server config...");
 			serverNumber = res[0].serverNumber;
-			serverName = res[0].serverName;
-			if (res[0].gametype == "slayer" || res[0].gametype == "ctf"){
-				gametype = res[0].gametype;
+			if (gametype == "ctf"){
+				serverName = "Capture_" + serverNumber + "_" + port;
+			}
+			else if (gametype == "slayer"){
+				serverName = "Deathmatch_" + serverNumber + "_" + port;
 			}
 			
-			//These values are overwritten by DB. Be sure to differentiate these from the ones that should be written to DB from server values
+			//serverName = res[0].serverName;
+
+			
+			//These source of truth are the DB. Be sure to differentiate these from the ones that should be written to DB from server values
 			maxPlayers = res[0].maxPlayers;
 			voteGametype = res[0].voteGametype;
 			voteMap = res[0].voteMap;
+			if (res[0].gametype == "slayer" || res[0].gametype == "ctf"){
+				gametype = res[0].gametype;
+			}
 			
 			var healthyTimestamp = new Date();
 			if (res[1]){ //More than one entry found for this URL. Remove all, and add just one.				
@@ -6531,17 +6702,22 @@ function syncServerWithDatabase(){
 				var miliInterval = (staleOnlineTimestampThreshold /2 * 1000); //Stale incoming player threshold is half of online timestamp threshold
 				var thresholdDate = new Date(Date.now() - miliInterval);
 
+
+				
 				for (var u = 0; u < incomingUsers.length; u++){
-					if (incomingUsers[u].timestamp > thresholdDate){
+					if (incomingUsers[u].timestamp < thresholdDate){
 						usersToRemove.push(u);
 					}
 				}
-				incomingUsers = removeIndexesFromArray(incomingUsers, usersToRemove);				
+				incomingUsers = removeIndexesFromArray(incomingUsers, usersToRemove);	
+
+			
 				dbGameServerUpdateParams({incomingUsers:incomingUsers});
 			}			
 		}
 		else {
 			//Server url does not exist
+			logg('Server does not exist');
 			db.RW_SERV.find().sort({serverNumber: -1}, function(err,res){
 				if (res && res[0]){
 					serverNumber = res[0].serverNumber;
