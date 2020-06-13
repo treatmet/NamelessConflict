@@ -319,6 +319,7 @@ div#updateUserForm {
     text-align: center;
     margin: 10px;
     margin-top: 30px;
+	background-color: #3a3a3a;
 }
 
 button#editUserButton {
@@ -414,9 +415,15 @@ button:hover {
 button#logOut {
     background-color: #529eec;;
 }
+button#logOutH {
+    background-color: #529eec;;
+}
 
 
 button#logIn {
+    background-color: #529eec;
+}
+button#logInH {
     background-color: #529eec;
 }
 
@@ -424,8 +431,16 @@ button#createAccount {
     background-color: #529eec;
 	margin-right: 5px;
 }
+button#createAccountH {
+    background-color: #529eec;
+	margin-right: 5px;
+}
 
 button#playNow {
+    background-color: #eada10;
+	margin-right: 5px;
+}
+button#playNowH {
     background-color: #eada10;
 	margin-right: 5px;
 }

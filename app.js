@@ -64,6 +64,8 @@ var io = require('socket.io')(serv,{});
 var os = require('os');
 var util = require('util')
 
+
+	
 process
   .on('unhandledRejection', (reason, p) => {
 	logg("--SERVER CRASH:Unhandled Rejection at Promise");
@@ -75,6 +77,8 @@ process
     logg(util.format(err));
     process.exit(1);
   });
+  
+
 
 //--------------------------------CONFIG-----------------------------------------------------
 var debug = true;
@@ -198,7 +202,7 @@ var SGPushSpeed = 12;
 
 var DPClipSize = 20;
 var MGClipSize = 45;
-var SGClipSize = 12;
+var SGClipSize = 6;
 	
 var pistolFireRateLimiter = true;	
 var pistolFireRate = 12;
@@ -425,6 +429,12 @@ function initializePickups(map){
 		Pickup(Math.random(), 5, 20, 2, 40, 25); //DP
 		Pickup(Math.random(), 37, 20, 2, 40, 25); //DP
 	}
+	else if (map == "three"){
+		bagRed.homeX = 5*75;
+		bagRed.homeY = 27*75;
+		bagBlue.homeX = 37*75;
+		bagBlue.homeY = 3*75;		
+	}	
 	else if (map == "close"){
 		bagRed.homeX = 5*75;
 		bagRed.homeY = 17*75;
@@ -585,6 +595,28 @@ function initializeBlocks(map){
 		Block(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
 		Block(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
 	}
+	else if (map == "three"){
+		mapWidth = 20*75;
+		mapHeight = 15*75;
+		
+		//Spawn areas
+		spawnXminBlack = mapWidth - 700;
+		spawnXmaxBlack = mapWidth - 10;
+		spawnYminBlack = 1*75;
+		spawnYmaxBlack = 20*75;
+		spawnXminWhite = 10;
+		spawnXmaxWhite = 700;
+		spawnYminWhite = 8*75;
+		spawnYmaxWhite = 29*75;
+		
+		Block(10, (mapHeight/75) - (mapHeight/75)/1.5, 1, (mapHeight/75)/1.5, "normal");	
+		Block(31, 0, 1, (mapHeight/75)/1.5, "normal");	
+
+		Block(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
+		Block(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
+		Block(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
+		Block(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
+	}		
 	else if (map == "close"){
 		mapWidth = 8*75;
 		mapHeight = 8*75;
@@ -649,11 +681,104 @@ function initializeBlocks(map){
 //-------------------------------------------------------------------------------------
 logg('Initializing...');
 
-///MongoDB
+//////////////////MONGODB and DB ACCESS FUNCTIONS///////////////////////////////////////////////////////
 var db = mongojs(config.mongoDbLocation, ['RW_USER','RW_USER_PROG','RW_SERV','RW_FRIEND', 'RW_REQUEST']);
 
+/////////////////////DB FUNCTIONS////////////////////////////// dbfunctions.js
+var dbUpdateAwait = function(table, action, searchObj, updateObj, cb){
+	if (action == "set"){
+		db[table].update(searchObj, {$set: updateObj}, {multi: true}, function (err, res, status) {
+			if (!err){
+				logg("DB: " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj));
+				cb(false, res.n);
+			}
+			else {
+				logg("DB ERROR - " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj) + " ERROR MESSAGE: " + err);	
+				cb("Error updating " + table, 0);
+			}
+		});		
+	}
+	else if (action == "ups"){
+		db[table].update(searchObj, {$set: updateObj}, {upsert:true, multi: true}, function (err, res, status) {
+			if (!err){
+				logg("DB: " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj));
+				cb(false, res.n);
+			}
+			else {
+				logg("DB ERROR - " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj) + " ERROR MESSAGE: " + err);	
+				cb("Error updating " + table, 0);
+			}
+		});		
+	}
+	else if (action == "inc"){
+		db[table].update(searchObj, {$inc: updateObj}, {multi: true}, function (err, res, status) {
+			if (!err){
+				logg("DB: " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj));
+				cb(false, res.n);
+			}
+			else {
+				logg("DB ERROR - " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj) + " ERROR MESSAGE: " + err);			
+				cb("Error updating " + table, 0);
+			}
+		});	
+	}	
+	else if (action == "rem"){
+		db[table].remove(searchObj, function(err, result) {
+			if (!err){
+				if (result.deletedCount > 0)
+					logg("DB: " + result.deletedCount + " document(s) deleted - " + JSON.stringify(searchObj));
+				cb(false, result.deletedCount);
+			}
+			else {
+				logg("DB ERROR - " + table + " " + action + " - " + JSON.stringify(searchObj) + " ERROR MESSAGE: " + err);		
+				cb("Error updating " + table, 0);
+			}
+		});		
+	}
+}
+
+var dbFindAwait = function(table, searchObj, cb){
+	dbFindOptionsAwait(table, searchObj, {sort:{},limit:100}, async function(err, res){
+		if (!err){
+			cb(false, res);
+		}
+	});
+}
+
+var dbFindOptionsAwait = function(table, searchObj, options, cb){
+	/*
+	options
+	{sort:{experience: -1},limit:100}
+	*/
+	
+	if (typeof options === 'undefined'){
+		options = {sort:{},limit:100};
+	}
+	if (typeof options.sort === 'undefined'){
+		options.sort = {};
+	}
+	if (typeof options.limit === 'undefined'){
+		options.limit = 100;
+	}
+	
+	db[table].find(searchObj).limit(options.limit).sort(options.sort, function(err,res){
+		if (!err){
+			if (typeof res === 'undefined'){
+				res = [];
+			}
+			cb(false, res);			
+		}
+		else {		
+			logg("DB ERROR - dbFindAwait() - " + table + " - " + JSON.stringify(searchObj) + " ERROR MESSAGE: " + err);
+			cb("Error Searching " + table, []);
+		}		
+	});
+}
+
+
+
 logg("testing db");
-db.RW_USER.find({USERNAME:"testuser"}, function(err,res){
+dbFindAwait("RW_USER", {USERNAME:"testuser"}, async function(err, res){
 	if (res && res[0]){
 		logg("DB SUCCESS! found testuser");
 	}
@@ -663,6 +788,7 @@ db.RW_USER.find({USERNAME:"testuser"}, function(err,res){
 });
 
 app.use('/client',express.static(__dirname + '/client'));
+app.use('/',express.static(__dirname + '/'));
 app.use(express.urlencoded({extended: true})); // to support URL-encoded bodies
 app.use(cookieParser());
 
@@ -687,7 +813,7 @@ app.get('/', function(req, res) {
 		
 		var homePageContent = fs.readFileSync(__dirname + '/client/home.html', 'utf8');
 		homePageContent = replaceValues(pageData, homePageContent);
-				
+		
 		res.send(homePageContent);
 	});	
 });
@@ -717,6 +843,11 @@ function processArgs(){
 		}
 	}
 }
+var serverHomePage = "/";
+if (!isLocal)
+	serverHomePage = "https://rw.treatmetcalf.com/";
+
+
 serv.listen(port);
 logg('Express server started on port ' + port + '.');
 
@@ -886,9 +1017,7 @@ app.get('/user/:cognitoSub', function(req, res) {
 		}
 	});	
 });
-
-var serverHomePage = "/";
-//var serverHomePage = "https://rw.treatmetcalf.com/";
+	
 app.get('/search/:searchText', function(req, res) {
 	var searchText = req.params.searchText;		
 	
@@ -952,7 +1081,8 @@ app.post('/playNow', async function (req, res) {
 	//Check if server is expecting this incoming user
 	var params = {url:myUrl, privateServer:false};
 	var approvedToJoinServer = false;
-	db.RW_SERV.find(params).sort({serverNumber: 1}, function(err,serv){
+	
+	dbFindOptionsAwait("RW_SERV", params, {sort:{serverNumber: 1}}, async function(err, serv){	
 		if (serv && serv[0]){
 			var incomingUsers = serv[0].incomingUsers || "[]";
 			for (var u = 0; u < incomingUsers.length; u++){
@@ -963,14 +1093,13 @@ app.post('/playNow', async function (req, res) {
 					logg("res.send: " + "Server " + myUrl + " welcomes you!");
 					res.send({msg:"Server " + myUrl + " welcomes you!", success:true});
 					joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team); //Join game
-					return;
+					break;
 				}
 			}	
 		}
 		if (!approvedToJoinServer){
 			logg("res.send: " + "Error: The server was not expecting you");
 			res.send({msg:"Error: The server was not expecting you", success:false}); //Error
-			return;
 		}
 	});
 });
@@ -1026,6 +1155,8 @@ app.post('/getJoinableServer', async function (req, res) {
 	}); //End getParty
 }); //End .post('/getJoinableServer
 
+
+//This will be overhauled greatly with matchmaking, don't lose too much sleep over its current state
 var getJoinableServer = function(options, cb){
 	var joinableServer = "";
 	var unfavorableServers = [];
@@ -1033,15 +1164,15 @@ var getJoinableServer = function(options, cb){
 	
 	if (options.server == "ctf" || options.server == "slayer"){ //Specific gametype
 		params = {gametype:options.server, privateServer:false};
-		//cb("Found joinable server. Joining...", serv[i].url);
-		return;
+		cb("ERROR - Matchmaking not yet implemented", false);
+		//return;
 	}
 	else if (options.server.indexOf(':') > -1) { //Server IP provided
 		params = {url:options.server, privateServer:false};
 		options.matchmaking = false;
 	}
 	
-	db.RW_SERV.find(params).sort({serverNumber: 1}, function(err,serverResult){ //Get list of candidate servers	
+	dbFindOptionsAwait("RW_SERV", params, {sort:{serverNumber: 1}}, async function(err, serverResult){	
 		var serv = serverResult;
 		if (typeof serv != 'undefined' && typeof serv[0] != 'undefined'){	
 			console.log("FOUND " + serv.length + " POSSIBLE SERVERS");
@@ -1055,9 +1186,8 @@ var getJoinableServer = function(options, cb){
 					if (getCurrentPlayersFromUsers(serv[i].currentUsers) + options.party.length > serv[i].maxPlayers){
 						logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");
 						cb("Server full", false);
-						return;
+						continue;
 					}
-					
 					
 					//Determine if spectatingTeam
 					var team = "none";
@@ -1098,30 +1228,33 @@ var getJoinableServer = function(options, cb){
 							team = "black";
 						}
 					}
-					log("TEAM I came up with is " + team);
 					//Set DB incoming Users
 					for (var p = 0; p < options.party.length; p++){
 						options.party[p].timestamp = new Date();
-						options.party[p].team = team;						
+						options.party[p].team = team;
+						incomingUsers = removeCognitoSubFromArray(incomingUsers, options.party[p].cognitoSub); //Before merging arrays, remove duplicate cognitoSubs from incomingUser
 					}
-					
-					//Before merging arrays, remove duplicate cognitoSubs from incomingUser
 					
 					incomingUsers.push.apply(incomingUsers, options.party); //Merge 2 arrays					
 					var obj = {incomingUsers:incomingUsers};
-					db.RW_SERV.update({url: serv[i].url}, {$set: obj}, {multi: true}, function () { 
-						logg("DB: UPDATING incomingUsers: " + serv[i].url + " with: " + JSON.stringify(obj));
-					});		
-					cb("Found joinable server. Joining...", serv[i].url);
-					return;
+					var selectedServer = i;
+					dbUpdateAwait("RW_SERV", "set", {url: serv[selectedServer].url}, obj, async function(err2, res){
+						if (!err2){
+							logg("DB: UPDATING incomingUsers: " + serv[selectedServer].url + " with: " + JSON.stringify(obj));
+							cb("Found joinable server. Joining...", serv[selectedServer].url);
+						}
+						else {
+							cb("FAILED TO UPDATE INCOMING USERS", false);
+						}
+					});							
 				}				
 			}
 		}
-		cb("FAILED TO FIND JOINABLE SERVER", false);
-		return;
+		else {
+			cb("FAILED TO FIND JOINABLE SERVER", false);
+		}
 	});
 }
-
 
 app.post('/sendPlayerToGame', async function (req, res) {
 	console.log(req.body);
@@ -1167,12 +1300,18 @@ app.post('/kickFromParty', async function (req, res) {
 		res.send({msg:errorMsg});
 		return;
 	}		
-
-	db.RW_USER.update({partyId: req.body.cognitoSub, cognitoSub:req.body.targetCognitoSub}, {$set: {partyId:""}}, {multi: true}, function () {
-		//logg("DB: Set: cognitoSub=" + req.body.cognitoSub + " with: ");
-		//console.log('partyId:""');
-		res.status(200);
-		res.send({msg:"Kicked this user from party: " + req.body.targetCognitoSub});
+	dbUpdateAwait("RW_USER", "set", {partyId: req.body.cognitoSub, cognitoSub:req.body.targetCognitoSub}, {partyId:""}, async function(err, res){
+		if (!err){
+			//logg("DB: Set: cognitoSub=" + req.body.cognitoSub + " with: ");
+			//console.log('partyId:""');
+			res.status(200);
+			res.send({msg:"Kicked this user from party: " + req.body.targetCognitoSub});
+		}
+		else {
+			logg("DB ERROR: Failed to update" + req.body.cognitoSub);
+			res.status(200);
+			res.send({msg:"Failed to kick from party " + req.body.targetCognitoSub});			
+		}
 	});	
 });
 
@@ -1200,7 +1339,7 @@ app.post('/requestResponse', async function (req, res) {
 			else {
 				//Perform accept operation							
 				if(req.body.type == "friend") {
-					upsertFriend({cognitoSub:request.targetCognitoSub, targetCognitoSub:request.cognitoSub}, function(dbResults){
+					upsertFriend({cognitoSub:authorizedUser.cognitoSub, targetCognitoSub:request.cognitoSub}, function(dbResults){
 						if (!dbResults.error){
 							removeRequestById(req.body.id);
 						}
@@ -1218,15 +1357,15 @@ app.post('/requestResponse', async function (req, res) {
 						*/
 						log("2REQUEST RESPONSE ENDPOINT - FOUND PARTY WE ARE JOINING:");
 						//console.log(partyDbResults);
-						getUserFromDB(request.targetCognitoSub, function(partyJoiner){
+						getUserFromDB(authorizedUser.cognitoSub, function(partyJoiner){
 							if (partyJoiner && partyJoiner.partyId && partyJoiner.partyId.length > 0 && partyJoiner.partyId == partyJoiner.cognitoSub && partyJoiner.partyId != partyDbResults.partyId){ //If party leader of a previous party (which is NOT the party currently requested to join) and accepting a new party request
 								var re = new RegExp(partyJoiner.cognitoSub,"g");
-								db.RW_USER.update({partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {$set: {partyId: ""}}, {multi: true}, function () {}); //Disband the previous party
+								dbUpdateAwait("RW_USER", "set", {partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {partyId: ""}, async function(err, res){}); //Disband the previous party							
 							}
 							//log("dbUserUpdate - Party request accepted, joining party.");
 							dbUserUpdate("set", authorizedUser.cognitoSub, {partyId:partyDbResults.partyId});
-							db.RW_REQUEST.remove({targetCognitoSub:request.targetCognitoSub, type:"party"}, function(err, obj) {});	//Remove all party requests targeted at the responder
-							db.RW_REQUEST.remove({targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, function(err, obj) {});	//Remove any mirrored requests (where both users request each other, but then one clicks accept)
+							dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, res){}); //Remove all party requests targeted at the responder
+							dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, res){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
 						});
 					});					
 					res.status(200);
@@ -1258,18 +1397,14 @@ app.post('/leaveParty', async function (req, res) {
 	console.log("--BODY");
 	console.log(req.body);
 
-	if (req.body.partyId == req.body.cognitoSub){
-		db.RW_USER.update({partyId: req.body.partyId}, {$set: {partyId:""}}, {multi: true}, function () {
-			//logg("DB: Set: cognitoSub=" + req.body.cognitoSub + " with: ");
-			//console.log('partyId:""');
+	if (req.body.partyId == req.body.cognitoSub){ //Leaving a party that user is the leader of (disband ALL party members' partyId)
+		dbUpdateAwait("RW_USER", "set", {partyId: req.body.partyId}, {partyId:""}, async function(err, userRes){
 			res.status(200);
 			res.send({msg:"Ended Party " + req.body.partyId});
 		});	
 	}
-	else {
-		db.RW_USER.update({cognitoSub: req.body.cognitoSub}, {$set: {partyId:""}}, {multi: true}, function () {
-			//logg("DB: Set: partyId=" + req.body.partyId + " with: ");
-			//console.log('partyId:""');
+	else { //Leaving someone else's party
+		dbUpdateAwait("RW_USER", "set", {cognitoSub: req.body.cognitoSub}, {partyId:""}, async function(err, userRes){
 			res.status(200);
 			res.send({msg:"Left Party " + req.body.partyId});
 		});	
@@ -1297,7 +1432,7 @@ app.post('/upsertRequest', async function (req, res) {
 	console.log(req.body);
 	
 	if (req.body.type == "friend"){
-		db.RW_FRIEND.find({cognitoSub:req.body.targetCognitoSub, friendCognitoSub:req.body.cognitoSub}, function(err,friendRes){ //Make sure they're not already a friend
+		dbFindAwait("RW_FRIEND", {cognitoSub:req.body.targetCognitoSub, friendCognitoSub:req.body.cognitoSub}, function(err,friendRes){ //Make sure they're not already a friend
 			if (friendRes[0]){
 				res.status(200);
 				res.send("Already friends!");				
@@ -1435,6 +1570,8 @@ app.post('/validateToken', async function (req, res) {
 			ip:myIP,
 			port:port,
 			isWebServer:isWebServer,
+			isLocal:isLocal,
+			pcMode:pcMode,
 			/* ///may not need to send these if cookies httpOnly = false works !!!
 			cog_i:result.id_token,
 			cog_a:result.access_token,
@@ -1447,6 +1584,9 @@ app.post('/validateToken', async function (req, res) {
 		res.status(200);
 		if (result){
 			httpResult = {
+				isWebServer:isWebServer,
+				isLocal:isLocal,
+				pcMode:pcMode,
 				msg:result.msg || "(unhandled error)"
 			};
 		}
@@ -1477,7 +1617,7 @@ app.post('/updateUsername', async function (req, res) {
 	
 	var goodToUpdateUsername = false;
 	try {
-		db.RW_USER.find({USERNAME:updateNewUsername}, function(err,result){
+		dbFindAwait("RW_USER", {USERNAME:updateNewUsername}, function(err,result){
 			if (result && result[0]){
 				if (allowDuplicateUsername){
 					goodToUpdateUsername = true;
@@ -1489,7 +1629,7 @@ app.post('/updateUsername', async function (req, res) {
 				goodToUpdateUsername = true;
 			}		
 			if (goodToUpdateUsername){
-				db.RW_USER.update({cognitoSub: updateCognitoSub}, {$set: {USERNAME: updateNewUsername}}, {multi: true}, function () {
+				dbUpdateAwait("RW_USER", "set", {cognitoSub: updateCognitoSub}, {USERNAME: updateNewUsername}, async function(err, updateRes){
 					res.send({msg:"Updated username to " + updateNewUsername});
 				});			
 			}
@@ -1500,29 +1640,31 @@ app.post('/updateUsername', async function (req, res) {
 	}
 });
 
+///////////////////////////////////////////Controller Helper Functions/////////////////////////////////////////
 
-/////////////////////DB FUNCTIONS////////////////////////////// dbfunctions.js
+function removeCognitoSubFromArray(incomingUsers, cognitoSub){
+	var updatedIncomingUsers = [];
+	
+	for (var u = 0; u < incomingUsers.length; u++){
+		if (typeof incomingUsers[u].cognitoSub != 'undefined' && incomingUsers[u].cognitoSub != cognitoSub){
+			updatedIncomingUsers.push(incomingUsers[u]);
+		}
+	}
+	
+	return updatedIncomingUsers;
+}
+
 //updateUser update user
 function dbUserUpdate(action, cognitoSub, obj) {
-	if (action == "set"){
-		db.RW_USER.update({cognitoSub: cognitoSub}, {$set: obj}, {multi: true}, function () {
-			logg("dbUserUpdate DB: Set: " + cognitoSub + " with: ");
-			console.log(obj);
-		});		
-	}
-	else if (action == "inc"){
-		db.RW_USER.update({cognitoSub: cognitoSub}, {$inc: obj}, {multi: true}, function () {
-			//logg("DB: Increased: " + cognitoSub + " with: ");
-			//console.log(obj);
-		});	
-	}
+	dbUpdateAwait("RW_USER", action, {cognitoSub: cognitoSub}, obj, async function(err, obj){
+	});		
 }
 
 function setPartyIdIfEmpty(cognitoSub) {
-	db.RW_USER.find({cognitoSub:cognitoSub}, function(err,res){
+	dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			if (!res[0].partyId || res[0].partyId == ""){
-				db.RW_USER.update({cognitoSub: cognitoSub}, {$set: {partyId:cognitoSub}}, {multi: true}, function () {
+				dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {partyId:cognitoSub}, async function(err, obj){
 					//logg("DB: Set: " + cognitoSub + " with: ");
 					//console.log("partyId:" + cognitoSub);
 				});						
@@ -1532,70 +1674,19 @@ function setPartyIdIfEmpty(cognitoSub) {
 }
 
 function dbGameServerRemoveAndAdd(){
-	db.RW_SERV.remove({ url: myUrl }, function(err, obj) {
+	dbUpdateAwait("RW_SERV", "rem", {url: myUrl}, {}, async function(err, obj){
 		if (!err){
-			logg("document(s) deleted");
-			dbGameServerAdd();
+			dbGameServerUpdate();
 		}
 	});
-}
-
-function dbGameServerRemoveAndAddParams(url, number, name, priv, gt, max, voteGt, voteM){
-	db.RW_SERV.remove({ url: url }, function(err, obj) {
-		if (!err){
-			logg("document(s) deleted");
-			dbGameServerAdd(url, number, name, priv, gt, max, voteGt, voteM);
-		}
-	});
-}
-
-function dbGameServerAdd(){
-	if (!myUrl || myUrl == "")
-		return;
-		
-	var healthCheckTimestamp = new Date();
-	var matchTime = (gameMinutesLength * 60) + gameSecondsLength;
-	var currentTimeLeft = (minutesLeft * 60) + secondsLeft;
-	if (pregame == true || gameOver == true){currentTimeLeft = matchTime;}
-	var currentHighestScore = 0;
-	if (blackScore > whiteScore){
-		currentHighestScore = blackScore;
-	}
-	else {
-		currentHighestScore = whiteScore;
-	}
-	db.RW_SERV.insert({url:myUrl, serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore},	
-		function(err, doc){
-			if (!err){
-				logg("New server added to RW_SERV: " + myUrl + " with timestamp: " + healthCheckTimestamp.toISOString());
-			}
-			else {
-				logg("ERROR when adding server to RW_SERV: " + myUrl);
-				logg(err);
-			}
-		}
-	);
-}
-
-function dbGameServerAddParams(url, number, name, priv, gt, max, voteGt, voteM){
-	if (!url || url == "")
-		return;
-		
-	var healthCheckTimestamp = new Date();
-	db.RW_SERV.insert({url:url, serverNumber:number, serverName:name,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gt, maxPlayers:max, voteGametype:voteGt, voteMap:voteM},	
-		function(err, doc){
-			if (!err){
-				logg("New server added to RW_SERV: " + url + " with timestamp: " + healthCheckTimestamp.toISOString());
-			}
-			else {
-				logg("ERROR when adding server to RW_SERV: " + url);
-				logg(err);
-			}
-		}
-	);
 }
 
 function dbGameServerUpdate() {
+	if (!myUrl || myUrl == ""){
+		logg("ERROR - NO SERVER URL - NOT READY TO SYNC WITH DB");
+		return;
+	}
+		
 	var healthCheckTimestamp = new Date();
 	var matchTime = (gameMinutesLength * 60) + gameSecondsLength;
 	var currentTimeLeft = (minutesLeft * 60) + secondsLeft;
@@ -1610,43 +1701,15 @@ function dbGameServerUpdate() {
 
 	var obj = {serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:Player.list};
 	
-	db.RW_SERV.update({url: myUrl}, {$set: obj}, {upsert:true, multi: true}, function () {
+	dbUpdateAwait("RW_SERV", "ups", {url: myUrl}, obj, async function(err, res){
 		//logg("dbGameServerUpdate DB: Set: " + myUrl + " with: ");
 		//console.log(obj);
 	});		
 }
 
-function dbGameServerUpdateParams(obj) {
-	db.RW_SERV.update({url: myUrl}, {$set: obj}, {multi: true}, function () {
-		//logg("DB: Set: " + myUrl + " with: " + obj);
-	});		
-}
-
-function dbDiffServerUpdateParams(url, obj) {
-	db.RW_SERV.update({url: url}, {$set: obj}, {multi: true}, function () {
-		//logg("DB: Set: " + url + " with: " + obj);
-	});		
-}
-
-function dbGameServerRemove(){
-	db.RW_SERV.remove({ url: myUrl }, function(err, obj) {
-		if (!err){
-			//logg("Server: " + myUrl + " successfully removed from database.");
-		}
-	});
-}
-
-function dbGameServerRemove(url){
-	db.RW_SERV.remove({ url: url }, function(err, obj) {
-		if (!err){
-			logg("Server: " + url + " successfully removed from database.");
-		}
-	});
-}
-
 var getPublicServersFromDB = function(cb){
 	var servers = [];
-	db.RW_SERV.find({privateServer:false}, function(err,res){
+	dbFindAwait("RW_SERV", {privateServer:false}, function(err,res){
 		if (res && res[0]){
 				
 			for (var i = 0; i < res.length; i++){
@@ -1686,7 +1749,7 @@ var getPlayerRelationshipFromDB = function(data,cb){
 	}
 	try {
 		//log("searching for user: " + data.callerCognitoSub);
-		db.RW_FRIEND.find({cognitoSub:data.callerCognitoSub}, function(err,friendRes){
+		dbFindAwait("RW_FRIEND", {cognitoSub:data.callerCognitoSub}, function(err,friendRes){
 			if (friendRes[0]){
 				for (let j = 0; j < friendRes.length; j++) {
 					if (friendRes[j].friendCognitoSub == data.targetCognitoSub){
@@ -1726,7 +1789,7 @@ var upsertFriend = function(data,cb){
 	var result = {};
 	try {
 		//log("searching for user: " + data.cognitoSub);
-		db.RW_FRIEND.find({cognitoSub:data.cognitoSub}, function(err,friendRes){
+		dbFindAwait("RW_FRIEND", {cognitoSub:data.cognitoSub}, function(err,friendRes){
 			if (friendRes[0]){
 				for (let j = 0; j < friendRes.length; j++) {
 					if (friendRes[j].friendCognitoSub == data.targetCognitoSub){
@@ -1738,19 +1801,17 @@ var upsertFriend = function(data,cb){
 				}
 			}
 			if (result.status != "present"){
-				db.RW_FRIEND.insert({cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub, timestamp:new Date()},	
-					function(err, doc){
-						if (!err){
-							logg("New friend added to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub);
-							cb({status:"added"});
-						}
-						else {
-							logg("ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub);
-							logg(err);
-							cb({error:"ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub});
-						}
+				dbUpdateAwait("RW_FRIEND", "ups", {cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub}, {cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub, timestamp:new Date()}, async function(err, doc){
+					if (!err){
+						logg("New friend added to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub);
+						cb({status:"added"});
 					}
-				);				
+					else {
+						logg("ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub);
+						logg(err);
+						cb({error:"ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub});
+					}
+				});				
 			}
 		});
 	}
@@ -1767,7 +1828,7 @@ function removeFriend(data){
 	};*/
 	try {
 		logg("Removing friendship: " + data.cognitoSub + " friends with " + data.targetCognitoSub);
-		db.RW_FRIEND.remove({cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub}, function(err,friendRes){
+		dbUpdateAwait("RW_FRIEND", "rem", {cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub}, {}, async function(err, res){
 		});
 	}
 	catch(e) {
@@ -1784,7 +1845,7 @@ function removeRequest(data){
 	try {
 		logg("Removing request:");
 		console.log(data);
-		db.RW_REQUEST.remove(data, function(err,res){
+		dbUpdateAwait("RW_REQUEST", "rem", data, {}, async function(err, res){
 		});
 	}
 	catch(e) {
@@ -1805,25 +1866,23 @@ var upsertRequest = function(data,cb){
 	try {
 		log("searching for request: ");
 		logObj(data);
-		db.RW_REQUEST.find({cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, function(err,friendRes){
+		dbFindAwait("RW_REQUEST", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, function(err,friendRes){
 			if (friendRes[0]){
 				logg("REQUEST ALREADY EXISTS SPAMMER, exiting");
 				cb(false);
 			}
 			else {
-				db.RW_REQUEST.insert({cognitoSub:data.cognitoSub, username:data.username, targetCognitoSub:data.targetCognitoSub, type:data.type, timestamp:new Date()},	
-					function(err, doc){
-						if (!err){
-							logg("New request added to RW_REQUEST: " + data.cognitoSub + "," + data.targetCognitoSub + "," + data.type);
-							cb({status:"added"});
-						}
-						else {
-							logg("ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub);
-							logg(err);
-							cb({error:"ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub});
-						}
+				dbUpdateAwait("RW_REQUEST", "ups", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, {cognitoSub:data.cognitoSub, username:data.username, targetCognitoSub:data.targetCognitoSub, type:data.type, timestamp:new Date()}, async function(err, doc){
+					if (!err){
+						logg("New request added to RW_REQUEST: " + data.cognitoSub + "," + data.targetCognitoSub + "," + data.type);
+						cb({status:"added"});
 					}
-				);				
+					else {
+						logg("ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub);
+						logg(err);
+						cb({error:"ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub});
+					}
+				});				
 			}
 		});
 	}
@@ -1834,7 +1893,7 @@ var upsertRequest = function(data,cb){
 
 var getOnlineFriendsAndPartyFromDB = function(cognitoSub,cb){
 	//log("searching for user: " + cognitoSub);
-	db.RW_FRIEND.find({cognitoSub:cognitoSub}, function(err,res){
+	dbFindAwait("RW_FRIEND", {cognitoSub:cognitoSub}, function(err,res){
 		var friends = [];
 		if (res && res[0]){
 			for (let j = 0; j < res.length; j++) {
@@ -1848,7 +1907,7 @@ var getOnlineFriendsAndPartyFromDB = function(cognitoSub,cb){
 var searchUserFromDB = function(searchText,cb){
 	//log("searching for user with text: " + searchText);
 	var re = new RegExp(searchText,"i");
-	db.RW_USER.find({USERNAME:re}).limit(50, function(err,res){
+	dbFindOptionsAwait("RW_USER", {USERNAME:re}, {limit:50}, async function(err, res){	
 		if (res && res[0]){
 			var users = res;
 			console.log(users);
@@ -1863,12 +1922,11 @@ var searchUserFromDB = function(searchText,cb){
 
 var getUserFromDB = function(cognitoSub,cb){
 	//log("searching for user: " + cognitoSub);
-	db.RW_USER.find({cognitoSub:cognitoSub}, function(err,res){
+	dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			var user = res[0];
 			user.username = res[0].USERNAME;
 			if (typeof user.partyId === 'undefined'){
-				//log("dbUserUpdate - No entry found for party in DB, setting to ''");
 				dbUserUpdate("set", user.cognitoSub, {partyId:""});
 			}
 			cb(user);
@@ -1886,15 +1944,15 @@ var getAllPlayersFromDB = function(cb){
 		cognitoSubsInGame.push(Player.list[i].cognitoSub);
 	}
 	
-	var searchParams = { cognitoSub: { $in: cognitoSubsInGame } };
-	db.RW_USER.find(searchParams, function(err,res){
+	var searchParams = { cognitoSub: { $in: cognitoSubsInGame } };	
+	dbFindAwait("RW_USER", searchParams, async function(err, res){
 		if (res && res[0]){
 			cb(res);
 		}
 		else {
 			cb(false);
 		}
-	});
+	});		
 }
 
 var getAllUsersOnServer = function(cb){
@@ -1904,7 +1962,7 @@ var getAllUsersOnServer = function(cb){
 	}
 	
 	var searchParams = { cognitoSub: { $in: cognitoSubs } };
-	db.RW_USER.find(searchParams, function(err,res){
+	dbFindAwait("RW_USER", searchParams, async function(err, res){
 		if (res && res[0]){
 			cb(res);
 		}
@@ -1917,26 +1975,29 @@ var getAllUsersOnServer = function(cb){
 
 function updateOnlineTimestampForUsers(){
 	for(var i in SOCKET_LIST){
-		if (SOCKET_LIST[i].cognitoSub){
-			var newDate = new Date();
-			db.RW_USER.update({cognitoSub: SOCKET_LIST[i].cognitoSub}, {$set: {onlineTimestamp: newDate}}, {multi: true}, function () {
-				//logg("Updated player[" + SOCKET_LIST[i].cognitoSub + "] onlineTimestamp to " + newDate);
-			});			
+		if (SOCKET_LIST[i].cognitoSub){			
+			updateOnlineTimestampForUser(SOCKET_LIST[i].cognitoSub);
 		}
 	}	
 }
 
 function updateOnlineTimestampForUser(cognitoSub){
-	var newDate = new Date();
-	db.RW_USER.update({cognitoSub: cognitoSub}, {$set: {onlineTimestamp: newDate}}, {multi: true}, function () {
+	var newDate = new Date();	
+	dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {onlineTimestamp: newDate}, async function(err, res){
+		if (err){
+			logg("DB ERROR - updateOnlineTimestampForUser() - RW_USER.update: " + err);
+		}	
 		//logg("Updated player[" + cognitoSub + "] onlineTimestamp to " + newDate);
-	});			
+	});		
 }
 
 function updateServerUrlForUser(cognitoSub){
-	db.RW_USER.update({cognitoSub: cognitoSub}, {$set: {serverUrl: myUrl}}, {multi: true}, function () {
+	dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {serverUrl: myUrl}, async function(err, res){
+		if (err){
+			logg("DB ERROR - updateServerUrlForUser() - RW_USER.update: " + err);
+		}		
 		//logg("Updated player[" + cognitoSub + "] onlineTimestamp to " + newDate);
-	});			
+	});
 }
 
 
@@ -1944,7 +2005,11 @@ var getOnlineFriends = function(cognitoSub, cb){
 	var onlineFriends = [];
 	
 	//console.log("Searching DB for online friends of: " + cognitoSub);
-	db.RW_FRIEND.find({cognitoSub:cognitoSub}, function(err,friendRes){
+	
+	dbFindAwait("RW_FRIEND", {cognitoSub:cognitoSub}, async function(err, friendRes){
+		if (err){
+			logg("DB ERROR - getOnlineFriends() - RW_FRIEND.find: " + err);
+		}	
 		var cognitoSubArray = [];
 		//console.log("Friend DB results:");
 		//console.log(friendRes);
@@ -1956,7 +2021,10 @@ var getOnlineFriends = function(cognitoSub, cb){
 			var thresholdDate = new Date(Date.now() - miliInterval);
 			var searchParams = { cognitoSub:{ $in: cognitoSubArray }, onlineTimestamp:{ $gt: thresholdDate } };
 			//console.log("Searching DB for which of the above friends are online?");
-			db.RW_USER.find(searchParams, function(err,userRes){
+			dbFindAwait("RW_USER", searchParams, async function(err2, userRes){
+				if (err2){
+					logg("DB ERROR - getOnlineFriends() - RW_USER.find: " + err2);
+				}
 				//console.log("Online friend result:");
 				//console.log(userRes);
 				if (userRes[0]){
@@ -1967,20 +2035,27 @@ var getOnlineFriends = function(cognitoSub, cb){
 					}						
 				}
 				cb(onlineFriends);
-			});			
+			});						
 		}
 		else {
 			cb(onlineFriends);
 		}
-	});		
+
+	});
+	
+	
 }
-// Returns: partyData (see below)
+// Returns: partyData (see below)  -- !!!! TODO Should look up the user, then if they have a party call getPartyById, otherwise call getPartyById with cognitoSub
 var getPartyForUser = function(cognitoSub, cb){
 	var partyData = {
 		partyId:"",
 		party:[] //ALL Party members [{cognitoSub:partyRes[k].cognitoSub, username:partyRes[k].USERNAME, serverUrl:partyRes[k].serverUrl, leader:false}]
 	};	
-	db.RW_USER.find({cognitoSub:cognitoSub}, function(err,userRes){
+	
+	dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, async function(err,userRes){
+		if (err){
+			logg("DB ERROR - getPartyForUser()1 - RW_USER.find: " + err);
+		}
 		//console.log("PARTY get user DB results:");
 		//console.log(userRes);
 		if (userRes && userRes[0]){
@@ -1990,8 +2065,11 @@ var getPartyForUser = function(cognitoSub, cb){
 				partyData.partyId = userRes[0].partyId;
 				kickOfflineFromParty(partyData.partyId, function(){
 					var miliInterval = (staleOnlineTimestampThreshold * 1000);
-					var thresholdDate = new Date(Date.now() - miliInterval);			
-					db.RW_USER.find({partyId:partyData.partyId, onlineTimestamp:{ $gt: thresholdDate }}, function(err2,partyRes){
+					var thresholdDate = new Date(Date.now() - miliInterval);	
+					dbFindAwait("RW_USER", {partyId:partyData.partyId, onlineTimestamp:{ $gt: thresholdDate }}, async function(err2,partyRes){
+						if (err2){
+							logg("DB ERROR - getPartyForUser()2 - RW_USER.find: " + err2);
+						}
 						//console.log("PARTY Get all users with partyId DB results:");
 						//console.log(partyRes);
 						if (partyRes && partyRes[0]){ //There is at least 1 person in the party
@@ -2004,7 +2082,7 @@ var getPartyForUser = function(cognitoSub, cb){
 							}				
 						}
 						cb(partyData);
-					});	
+					});					
 				});
 			}
 			else { //User is not in a party
@@ -2025,8 +2103,12 @@ var getPartyById = function(partyId, cb){
 	};	
 	kickOfflineFromParty(partyData.partyId, function(){
 		var miliInterval = (staleOnlineTimestampThreshold * 1000);
-		var thresholdDate = new Date(Date.now() - miliInterval);			
-		db.RW_USER.find({partyId:partyData.partyId, onlineTimestamp:{ $gt: thresholdDate }}, function(err2,partyRes){
+		var thresholdDate = new Date(Date.now() - miliInterval);		
+
+		dbFindAwait("RW_USER", {partyId:partyData.partyId, onlineTimestamp:{ $gt: thresholdDate }}, async function(err, partyRes){
+			if (err){
+				logg("DB ERROR - getPartyById() - RW_USER.find: " + err);
+			}
 			//console.log("PARTY Get all users with partyId DB results:");
 			//console.log(partyRes);
 			if (partyRes && partyRes[0]){ //There is at least 1 person in the party
@@ -2039,7 +2121,7 @@ var getPartyById = function(partyId, cb){
 				}				
 			}
 			cb(partyData);
-		});	
+		});
 	});
 }
 
@@ -2051,26 +2133,37 @@ var kickOfflineFromParty = function(partyId, cb){
 	if (!partyId || partyId.length < 1){
 		return;
 	}
-	db.RW_USER.find({cognitoSub:partyId}, function(err,partyRes){ //First, analyze party leader
+
+	dbFindAwait("RW_USER", {cognitoSub:partyId}, async function(err, partyRes){
+		if (err){
+			logg("DB ERROR - kickOfflineFromParty()1 - RW_USER.update: " + err);
+		}
 		var miliInterval = (staleOnlineTimestampThreshold * 1000);
 		var thresholdDate = new Date(Date.now() - miliInterval);
 		if (partyRes && partyRes[0] && (partyRes[0].partyId != partyRes[0].cognitoSub || partyRes[0].onlineTimestamp < thresholdDate)){ //PartyId where the 'leader' is in a different party or offline. Clearing all users with partyId
-			db.RW_USER.update({partyId: partyId}, {$set: {partyId: ""}}, {multi: true}, function () { 
+			dbUpdateAwait("RW_USER", "set", {partyId: partyId}, {partyId: ""}, async function(err2, res1){
+				if (err2){
+					logg("DB ERROR - kickOfflineFromParty()1 - RW_USER.update: " + err2);
+				}
 				logg("PartyId where the 'leader' is in a different party or offline. Clearing party for ALL users with partyId: " + partyId);
-				cb();
-			});	
-		}
-		else if(partyRes && partyRes[0] && partyRes[0].partyId == partyRes[0].cognitoSub && partyRes[0].onlineTimestamp >= thresholdDate){ //Valid party with online leader who is also in the party		
-			var searchParams = { partyId: partyId, onlineTimestamp:{ $lt: thresholdDate } };		
-			db.RW_USER.update(searchParams, {$set: {partyId: ""}}, {multi: true}, function () { 
-				logg("Valid, online party. Clearing all party members that are offline");
 				cb();
 			});				
 		}
+		else if(partyRes && partyRes[0] && partyRes[0].partyId == partyRes[0].cognitoSub && partyRes[0].onlineTimestamp >= thresholdDate){ //Valid party with online leader who is also in the party		
+			var searchParams = { partyId: partyId, onlineTimestamp:{ $lt: thresholdDate } };		
+						
+			dbUpdateAwait("RW_USER", "set", searchParams, {partyId: ""}, async function(err3, res2){
+				if (err3){
+					logg("DB ERROR - kickOfflineFromParty()2 - RW_USER.update: " + err3);
+				}
+				logg("Valid, online party. Clearing all party members that are offline");
+				cb();
+			});	
+		}
 		else { //Catch all, do nothing
 			cb();
-		}
-	});					
+		}	
+	});
 }
 
 
@@ -2080,7 +2173,10 @@ var getFriendRequests = function(cognitoSub, cb){
 	var friendRequests = [];
 	
 	//console.log("Searching DB for friend requests of: " + cognitoSub);
-	db.RW_REQUEST.find({targetCognitoSub:cognitoSub, type:"friend"}, function(err,friendRes){
+	dbFindAwait("RW_REQUEST", {targetCognitoSub:cognitoSub, type:"friend"}, async function(err, friendRes){
+		if (err){
+			logg("DB ERROR - getFriendRequests() - RW_REQUEST.find: " + err);
+		}
 		var cognitoSubArray = [];
 		//console.log("Friend request DB results:");
 		//console.log(friendRes);
@@ -2090,14 +2186,17 @@ var getFriendRequests = function(cognitoSub, cb){
 			}						
 		}
 		cb(friendRequests);
-	});		
+	});	
 }
 
 var getPartyRequests = function(cognitoSub, cb){
 	var partyRequests = [];
 	
 	//console.log("Searching DB for party requests of: " + cognitoSub);
-	db.RW_REQUEST.find({targetCognitoSub:cognitoSub, type:"party"}, function(err,partyRes){
+	dbFindAwait("RW_REQUEST", {targetCognitoSub:cognitoSub, type:"party"}, async function(err, partyRes){
+		if (err){
+			logg("DB ERROR - getPartyRequests() - RW_REQUEST.find: " + err);
+		}
 		var cognitoSubArray = [];
 		//console.log("Party  request DB results:");
 		//console.log(partyRes);
@@ -2112,23 +2211,27 @@ var getPartyRequests = function(cognitoSub, cb){
 
 var getRequestById = function(id, cb){
 	console.log("DB getRequestById: " + id);
-	db.RW_REQUEST.find({"_id": ObjectId(id)}, function(err,res){
-		//console.log("getRequestById DB results:");
-		//console.log(res);
-		if (res && res[0]){
+	
+	dbFindAwait("RW_REQUEST", {"_id": ObjectId(id)}, async function(err, res){
+		if (err){
+			logg("DB ERROR - getRequestById() - RW_REQUEST.find: " + err);
+			cb(false);
+		}	
+		else if (!err && typeof res != 'undefined' && res[0]){
 			cb(res[0]);			
 		}
 		else {
 			cb(false);
 		}		
-	});		
+	});	
 }
 
 function removeRequestById(id){
 	console.log("DB Removing request by id: " + id);
-	db.RW_REQUEST.remove({"_id": ObjectId(id)}, function(err, obj) {
-		if (!err){
-			logg("document(s) deleted");
+
+	dbUpdateAwait("RW_REQUEST", "rem", {"_id": ObjectId(id)}, {}, async function(err, res){
+		if (err){
+			logg("DB ERROR - removeRequestById() - RW_REQUEST.remove: " + err);
 		}
 	});
 }
@@ -2138,16 +2241,24 @@ function removeStaleFriendRequests(){
 	var miliInterval = (staleFriendRequestThreshold * 1000 * 60 * 60 * 24);
 	var thresholdDate = new Date(Date.now() - miliInterval);
 	var searchParams = { type:"friend", timestamp:{ $lt: thresholdDate } };
-	db.RW_REQUEST.remove(searchParams, function(err, obj) {	
-	});	
+
+	dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
+		if (err){
+			logg("DB ERROR - removeStaleFriendRequests() - RW_REQUEST.remove: " + err);
+		}
+	});
 }
 
 function removeStalePartyRequests(){
 	var miliInterval = (stalePartyRequestThreshold * 1000);
 	var thresholdDate = new Date(Date.now() - miliInterval);
 	var searchParams = { type:"party", timestamp:{ $lt: thresholdDate } };
-	db.RW_REQUEST.remove(searchParams, function(err, obj) {	
-	});	
+	
+	dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
+		if (err){
+			logg("DB ERROR - removeStalePartyRequests() - RW_REQUEST.remove: " + err);
+		}
+	});
 }
 
 
@@ -2179,13 +2290,18 @@ const expectedIss = 'https://cognito-idp.us-east-2.amazonaws.com/us-east-2_SbevJ
 
 async function getTokenFromCodeAndValidate(code){
 	var error = false;
+	var redirectUri = 'https://rw.treatmetcalf.com/';
+	
+	if (isLocal)
+		redirectUri = 'https://rw2.treatmetcalf.com/';
+	
 
     const url='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/oauth2/token';
 	const body = {
 		grant_type:'authorization_code',
 		code:code,
 		client_id:cognitoClientId,
-		redirect_uri:'https://rw.treatmetcalf.com/'
+		redirect_uri:redirectUri
 	};
 	
 	var formBody = Object.keys(body).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(body[key])).join('&');
@@ -2414,9 +2530,14 @@ var addUser = function(cognitoSub, username, cb){
 	var today = new Date();
 	var date = today.getUTCFullYear()+'-'+(today.getUTCMonth()+1)+'-'+today.getUTCDate();
 
-	log(date);
-	db.RW_USER.insert({cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:''},
-		function(err){cb();});
+	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:''};
+
+	dbUpdateAwait("RW_USER", "ups", {cognitoSub:cognitoSub}, obj, async function(err, res){
+		if (err){
+			logg("DB ERROR - addUser() - RW_USER.insert: " + err);
+		}	
+		cb();
+	});
 }
 
 function crash(){
@@ -2459,10 +2580,8 @@ function sendSocketListToServerDb(){
 			team:SOCKET_LIST[s].team
 		});
 	}
-
-	db.RW_SERV.update({url: myUrl}, {$set: {currentUsers:currentUsers}}, {multi: true}, function () {
-		//logg("Updated currentUsers in RW_SERV for " + myUrl + ":");
-		//console.log(JSON.stringify(currentUsers));
+	
+	dbUpdateAwait("RW_SERV", "set", {url: myUrl}, {currentUsers:currentUsers}, async function(err, res){
 	});
 }
 
@@ -2788,12 +2907,16 @@ io.sockets.on('connection', function(socket){
 			map = "thepit";
 			restartGame();
 		}
+		else if (data == "three" || data == "third"){
+			map = "three";
+			restartGame();
+		}
 		else if (data == "map2"){
 			map = "map2";
 			restartGame();
 		}
 		else if (data == "stats" || data == "stat"){
-			db.RW_USER.find({cognitoSub:Player.list[socket.id].cognitoSub}, function(err,res){
+			dbFindAwait("RW_USER", {cognitoSub:Player.list[socket.id].cognitoSub}, async function(err, res){
 				if (res && res[0]){
 					socket.emit('addToChat', 'Cash Earned:' + res[0].experience + ' Kills:' + res[0].kills + ' Deaths:' + res[0].deaths + ' Benedicts:' + res[0].benedicts + ' Captures:' + res[0].captures + ' Steals:' + res[0].steals + ' Returns:' + res[0].returns + ' Games Played:' + res[0].gamesPlayed + ' Wins:' + res[0].gamesWon + ' Losses:' + res[0].gamesLost + ' TPM Rating:' + res[0].rating);	
 				}
@@ -3012,7 +3135,8 @@ function populateLoginPage(socket){
 
 	//Populate Leaderboard Table
 	var leaderboard= "<table class='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";
-	db.RW_USER.find().limit(100).sort({experience: -1}, function(err,res){
+	
+	dbFindOptionsAwait("RW_USER", {"USERNAME":{$exists:true}}, {sort:{experience: -1},limit:100}, async function(err, res){
 		if (res && res[0]){
 			for (var i = 0; i < res.length; i++){
 				if (res[i].USERNAME){
@@ -3020,17 +3144,17 @@ function populateLoginPage(socket){
 				}
 				else {
 					logg("ERROR ACQUIRING USERNAME:");
-					logg(res[i]);
+					console.log(res[i]);
 				}
 			}		
 			leaderboard+="</table>";
-			//Send PC Setting and update homepage title
 			socket.emit('populateLoginPage', leaderboard, pcMode);
 		}
 		else {
 			logg('ERROR finding players in database.');
-		}
-	}); //Limit the results	
+			leaderboard+="</table>";
+			socket.emit('populateLoginPage', leaderboard, pcMode);		}
+	});	
 }
 
 function sendChatToAll(text){
@@ -3043,7 +3167,7 @@ function sendChatToAll(text){
 //Unused, but could be a nice function in the future
 function getPlayerRatingAndExperience(id){
 	var cognitoSub = Player.list[id].cognitoSub;
-	db.RW_USER.find({cognitoSub:cognitoSub}, function(err,res){
+	dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			var rating = res[0].rating;
 			if (rating == undefined || rating == null || isNaN(rating)){rating = 0;}
@@ -4072,6 +4196,8 @@ var Player = function(id, cognitoSub, name, team){
 		self.rechargeDelay = 0;
 		self.healDelay = 0;
 
+
+		
 		self.speed = 0;
 		self.stagger = 0;
 		self.hasBattery = 1;
@@ -4080,6 +4206,7 @@ var Player = function(id, cognitoSub, name, team){
 		self.spree = 0;
 		self.multikill = 0;
 		self.multikillTimer = 0;
+		self.lastEnemyToHit = 0;
 		
 		self.firing = 0; //0-3; 0 = not firing
 		self.aiming = 0;
@@ -5624,7 +5751,7 @@ function kill(target, shootingDir, shooterId){
 		
 	if (shooterId != 0){
 		if (target.team != Player.list[shooterId].team || (target.lastEnemyToHit && target.lastEnemyToHit != 0)){
-			if ((target.lastEnemyToHit && target.lastEnemyToHit != 0) && target.team == Player.list[shooterId].team){
+			if ((target.lastEnemyToHit && target.lastEnemyToHit != 0 && typeof Player.list[target.lastEnemyToHit] != 'undefined') && target.team == Player.list[shooterId].team){
 				shooterId = target.lastEnemyToHit; //Give kill credit to last enemy that hit the player (if killed by own team or self)
 			}
 			if (Player.list[target.id]){
@@ -6638,19 +6765,29 @@ setInterval(
 
 function checkForUnhealthyServers(){
 	//logg("Checking for dead servers on server DB...");	
-	db.RW_SERV.find().sort({serverNumber: 1}, function(err,res){
+	dbFindOptionsAwait("RW_SERV", {}, {sort:{serverNumber: 1}}, async function(err, res){
 		if (res && res[0]){
 			for (var i = 0; i < res.length; i++){
 				var serverLastHealthCheck = new Date(res[i].healthCheckTimestamp);
+											
 				var acceptableLastHealthCheckTime = new Date();
 				acceptableLastHealthCheckTime.setSeconds(acceptableLastHealthCheckTime.getUTCSeconds() - serverHealthCheckTimestampThreshold);
 				//Should delete url:null here as well !!!!
-				if (serverLastHealthCheck < acceptableLastHealthCheckTime){
-					logg("DEAD SERVER FOUND: " + res[i].url + ". [" + serverLastHealthCheck.toISOString() + " is less than " + acceptableLastHealthCheckTime.toISOString() + ". Current time is " + new Date().toISOString() + "] Removing...");
-					dbGameServerRemove(res[i].url);
+				if (serverLastHealthCheck < acceptableLastHealthCheckTime || typeof res[i].healthCheckTimestamp === 'undefined'){
+					if (typeof res[i].healthCheckTimestamp === 'undefined'){
+						logg("DEAD SERVER FOUND: " + res[i].url + ". [No set healthCheckTimestamp] Removing...");					
+					}
+					else {
+						logg("DEAD SERVER FOUND: " + res[i].url + ". [" + serverLastHealthCheck.toISOString() + " is less than " + acceptableLastHealthCheckTime.toISOString() + ". Current time is " + new Date().toISOString() + "] Removing...");
+					}					
+					dbUpdateAwait("RW_SERV", "rem", { url: res[i].url }, {}, async function(err2, obj){
+						if (!err2){
+							logg("Server: " + res[i].url + " successfully removed from database.");
+						}
+					});										
 				}
 			}					
-		}
+		}	
 	});
 }
 
@@ -6667,7 +6804,8 @@ function syncGameServerWithDatabase(){
 		return;
 	}
 	//logg("Syncing server with Database...");
-	db.RW_SERV.find({url:myUrl}, function(err,res){
+	
+	dbFindAwait("RW_SERV", {url:myUrl}, async function(err, res){
 		if (res && res[0]){
 			//log("Server " + myUrl + " present in IN_SERV. Grabbing server config...");
 			serverNumber = res[0].serverNumber;
@@ -6699,7 +6837,7 @@ function syncGameServerWithDatabase(){
 				//Check for stale incoming users
 				var incomingUsers = res[0].incomingUsers || [];
 				var usersToRemove = [];
-				var miliInterval = (staleOnlineTimestampThreshold /2 * 1000); //Stale incoming player threshold is half of online timestamp threshold
+				var miliInterval = (staleOnlineTimestampThreshold /4 * 1000); //Stale incoming player threshold is a quarter of online timestamp threshold
 				var thresholdDate = new Date(Date.now() - miliInterval);
 
 
@@ -6712,13 +6850,15 @@ function syncGameServerWithDatabase(){
 				incomingUsers = removeIndexesFromArray(incomingUsers, usersToRemove);	
 
 			
-				dbGameServerUpdateParams({incomingUsers:incomingUsers});
+				dbUpdateAwait("RW_SERV", "set", {url: myUrl}, {incomingUsers:incomingUsers}, async function(err, res){
+					//logg("DB: Set: " + myUrl + " with: " + obj);
+				});	
 			}			
 		}
 		else {
 			//Server url does not exist
 			logg('Server does not exist');
-			db.RW_SERV.find().sort({serverNumber: -1}, function(err,res){
+			dbFindOptionsAwait("RW_SERV", {}, {sort:{serverNumber: -1}}, async function(err, res){		
 				if (res && res[0]){
 					serverNumber = res[0].serverNumber;
 					serverNumber++;						
@@ -6753,10 +6893,10 @@ function syncGameServerWithDatabase(){
 					serverName = "PlayersChoice_" + serverNumber + "_" + port;
 				}
 				console.log("ADDING SERVER WITH NO PARAMS");
-				dbGameServerAdd();
+				dbGameServerUpdate();			
 			});
-		}
-	});
+		}	
+	});	
 }
 
 //------------------------------------------------------------------------------
@@ -6909,31 +7049,31 @@ function randomInt(min,max)
 {
     return Math.floor(Math.random()*(max-min+1)+min);
 }
-function log(msg) {
-	msg = msg.toString();
+function log(msg) {	
 	if (debug){
-		var d = new Date();
-		var hours = d.getUTCHours();
-		if (hours <= 9){hours = "0" + hours;}
-		var minutes = d.getUTCMinutes();
-		if (minutes <= 9){minutes = "0" + minutes;}
-		var seconds = d.getUTCSeconds();
-		if (seconds <= 9){seconds = "0" + seconds;}
-		
-		var logMsgText = hours + ':' + minutes + '.' + seconds + '> ' + msg;
-		console.log(logMsgText);	
-		if (s3stream){
-			s3stream.write(logMsgText+'\r\n');
-		}
+		logg(msg);
 	}
 }
 
 function logObj(obj){
 	if (debug){
-		log(util.format(obj));
+		logg(util.format(obj));
 	}
 }
 
 function logg(msg) {
-	log(msg);
+	msg = msg.toString();
+	var d = new Date();
+	var hours = d.getUTCHours();
+	if (hours <= 9){hours = "0" + hours;}
+	var minutes = d.getUTCMinutes();
+	if (minutes <= 9){minutes = "0" + minutes;}
+	var seconds = d.getUTCSeconds();
+	if (seconds <= 9){seconds = "0" + seconds;}
+	
+	var logMsgText = hours + ':' + minutes + '.' + seconds + '> ' + msg;
+	console.log(logMsgText);	
+	if (s3stream){
+		s3stream.write(logMsgText+'\r\n');
+	}	
 }

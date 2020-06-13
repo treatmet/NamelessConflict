@@ -4,7 +4,7 @@ var debugText = true;
 var socket = io();
 
 //-----------------Config----------------------
-var version = "v 0.4.4"; //Post cognito
+var version = "v 0.4.5"; //Post cognito
 var clientTimeoutSeconds = 60000;
 
 var screenShakeScale = 0.5;
@@ -66,7 +66,6 @@ var timeLimit = true; //true for time limit victory condition, false if score li
 var minutesLeft = "9";
 var secondsLeft = "99";
 var nextGameTimer = 0;
-var pcMode = 1;
 var	ping = 999;
 
 var lowGraphicsMode = true;
@@ -190,26 +189,12 @@ socket.on('pingResponse', function (socketId){
 		waitingOnPing = false;
 	}		
 });
-
-if (!serverHomePage)
-	var serverHomePage = "/";
 		
 socket.on('populateLoginPage', function(leaderboard, pcModeValue){
 	//Leaderboard
 	leaderboard = leaderboard.replace(/{{serverHomePage}}/g, serverHomePage);
 	if (document.getElementById('tablePrint')){
 		document.getElementById('tablePrint').innerHTML = leaderboard;	
-	}
-	pcMode = pcModeValue;
-	
-	if (pcModeValue == 2){
-		document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>NamelessConflict</a>";
-	}
-	else {
-		document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>RaceWar</a>";
-	}
-	if (document.getElementById("homeLink")){
-		document.getElementById("homeLink").href = serverHomePage;
 	}
 });
 
@@ -956,7 +941,7 @@ function showCanvas() {
 for (var i=0; i<chatText.childNodes[i].length; i++){
 		chatText.childNodes[i].remove();
 }
-chatText.innerHTML = '<div class="chatElement">Welcome to RW3000!</div>';
+chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to the Nameless Conflict!</div>';
 
 socket.on('addToChat', function(data, playerId){
 var color = "#FFFFFF";
@@ -2435,9 +2420,8 @@ function drawTorsos(){
 					}
 					
 					//Actually draw the torso
-					//if (Player.list[i].cloak > 0){noShadow();}
+					//if (Player.list[i].cloak > 0.98){noShadow();}
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
-					//if (0.1 > (1 - 0.98)){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
 					drawImage(img,-img.width/2 * zoom, (-img.height/2+5) * zoom, img.width * zoom, img.height * zoom);	//Draw torso		
@@ -2975,7 +2959,7 @@ function drawSpectatingInfo(){
 		spectatingText = "Spectating...";
 	}
 		
-	drawImage(Img.spectatingOverlay, -1, -1, canvasWidth, canvasHeight); 
+	drawImage(Img.spectatingOverlay, -5, -5, canvasWidth + 10, canvasHeight + 10); 
 	smallCenterShadow();
 	ctx.fillStyle="#FFFFFF";
 	ctx.font = 'bold 30px Electrolize';
@@ -4163,7 +4147,7 @@ socket.on('shootUpdate', function(shotData){
 		sfxMG.play();
 		if (shotData.id == myPlayer.id && Player.list[shotData.id].MGClip <= 7){
 			sfxClick.volume(vol);
-			isfxClick.play();
+			sfxClick.play();
 		}
 	}
 	else if (Player.list[shotData.id].weapon == 2 && newShot == true) {
@@ -4580,7 +4564,7 @@ document.onkeyup = function(event){
 //EVERY 1 SECOND
 setInterval( 
 	function(){
-		clientTimeoutTicker--;
+		//clientTimeoutTicker--;
 		if (clientTimeoutTicker < clientTimeoutSeconds - 5){
 			logg("No server messages detected, " + clientTimeoutTicker + " until timeout");
 		}

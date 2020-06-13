@@ -2,17 +2,13 @@ const cognitoClientId = '70ru3b3jgosqa5fpre6khrislj';
 const cognitoPoolId = 'us-east-2_SbevJL5zt';
 var cognitoSub = "";
 var username = "";
-var preferredUsername = "";
 var partyId = "";
 var federatedUser = false;
 var pageLoaded = false;
 var autoJoinGame = "false";
+var pcMode = 1;
 
-var serverHomePage = "/";
-//var serverHomePage = "https://rw.treatmetcalf.com/";
-
-
-
+var serverHomePage = "https://rw.treatmetcalf.com/";
 
 //includeHTMLHeader();
 initializePage();
@@ -50,23 +46,36 @@ function getTokenFromUrlParameterAndLogin(){
     $.post(validateTokenEndpoint, data, function(data,status){
         console.log("validateToken response:");
         console.log(data);
+				
+		var redirectUri = "https://rw.treatmetcalf.com/";
+		if (data.isLocal == true){
+			serverHomePage = "/";
+			redirectUri = "https://rw2.treatmetcalf.com/";
+		}
+		document.getElementById("logInH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
+		document.getElementById("createAccountH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
+		document.getElementById("logIn").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
+		document.getElementById("createAccount").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
+		
+		pcMode = data.pcMode;
+		if (data.pcMode == 2){
+			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>NamelessConflict</a>";
+		}
+		else {
+			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>RaceWar</a>";
+		}
+		if (document.getElementById("homeLink")){
+			document.getElementById("homeLink").href = serverHomePage;
+		}		
+		
+		
         if (data && data.username){
             //Successful Auth
             cognitoSub = data.cognitoSub;
 			console.log('emmiting updateSocketInfo');
 			socket.emit('updateSocketInfo', cognitoSub);
-            username = data.username;
-            preferredUsername = data.username;
+            username = data.username;		
 			
-			//Update buttons to have auth tokens in url parameters !!!!REMOVE THIS SECTION - we have moved from links to buttons
-			var serverSelectLinks = document.getElementsByClassName("serverSelectLink");
-			if (getCookie("cog_a").length > 0){
-				for (let s = 0; s < serverSelectLinks.length; s++) {
-					var tokenParams = getJoinParams();
-					serverSelectLinks[s].href = serverSelectLinks[s].href.replace(/\?join=true/g,tokenParams);
-				}
-			}
-
             federatedUser = data.federatedUser;
   		
 			if (!data.isWebServer){
@@ -213,6 +222,7 @@ function showServerList(){
 	if (document.getElementById("serverList")){
 		document.getElementById("serverList").style.display = "unset";
 	}
+	hide("serversHiddenMsg");
 }
 
 function getOnlineFriendsAndParty(){	
@@ -234,8 +244,8 @@ function getOnlineFriendsAndParty(){
 			party:[{cognitoSub:"67890",username:"myman",leader:true}] //Party members including you
 		};	
 		*/
-		console.log("getParty response:");
-		console.log(data);	
+		//console.log("getParty response:");
+		//console.log(data);	
 		
 		if (data && data.partyId){
 			partyId = data.partyId;
@@ -302,6 +312,8 @@ function updateKickInviteToPartyButtons(data){
 	}
 }
 
+
+
 function updateOnlineFriendsSectionHtml(friends){
 	var section = document.getElementById("onlineFriendsSection");
 	var html = "<span>Online friends [" + friends.length + "]";	
@@ -310,6 +322,7 @@ function updateOnlineFriendsSectionHtml(friends){
 		for (var i = 0; i < friends.length; i++){
 			html += " <a href='" + serverHomePage + "user/" + friends[i].cognitoSub + "'>" + friends[i].username + "</a> "
 		}
+		section.style.display = "";
 	}
 	else {
 		section.style.display = "none"; //Hide online friends section in case of zero friends online
@@ -372,8 +385,8 @@ function getRequests(){
 		];
 		*/
 		updateRequestsSectionHtml(data);
-		console.log("getRequests response:");
-		console.log(data);		
+		//console.log("getRequests response:");
+		//console.log(data);		
 	});
 }
 
@@ -537,10 +550,10 @@ function showLocalElements(){
 }
 
 function showDefaultLoginButtons(){
-    document.getElementById("createAccount").style.display = "";
-    document.getElementById("logIn").style.display = "";
-    document.getElementById("playNow").style.display = "none";
-    document.getElementById("logOut").style.display = "none";
+    document.getElementById("createAccountH").style.display = "";
+    document.getElementById("logInH").style.display = "";
+    document.getElementById("playNowH").style.display = "none";
+    document.getElementById("logOutH").style.display = "none";
     if (document.getElementById('userWelcomeText')){
         document.getElementById('userWelcomeText').style.display = "none";
 	}
@@ -549,12 +562,12 @@ function showDefaultLoginButtons(){
 
 
 function showAuthorizedLoginButtons(){
-    document.getElementById("createAccount").style.display = "none";
-    document.getElementById("logIn").style.display = "none";
-    document.getElementById("playNow").style.display = "";
-    document.getElementById("logOut").style.display = "";
+    document.getElementById("createAccountH").style.display = "none";
+    document.getElementById("logInH").style.display = "none";
+    document.getElementById("playNowH").style.display = "";
+    document.getElementById("logOutH").style.display = "";
     if (document.getElementById('userWelcomeText')){
-        var printedUsername = preferredUsername.substring(0,15);
+        var printedUsername = username.substring(0,15);
         if (printedUsername.includes("Facebook_") || printedUsername.includes("Google_") && !getUrl().includes(cognitoSub)){
             printedUsername += " - (click here to update username)"
         }
@@ -632,6 +645,7 @@ function editUserButtonClick(){
 			document.getElementById('editUserFieldText').innerHTML = 'You may change the following:';
         }
         document.getElementById('editUserButton').style.display = 'none';
+		document.getElementById('statsTables').style.display = 'none';
         document.getElementById('updateUserTextBoxes').style.display = '';
     }
 }
@@ -742,6 +756,7 @@ function editUserCancelButtonClick(){
     resetEditUserElements();
     document.getElementById('editUserButton').style.display = '';
     document.getElementById('updateUserTextBoxes').style.display = 'none';
+    document.getElementById('statsTables').style.display = '';
 
     document.getElementById('newUsernameText').style.display = 'none';
     document.getElementById('editUsernameButton').style.display = '';
@@ -1054,7 +1069,7 @@ setInterval(
 		if (document.getElementById("header").style.display != 'none' && cognitoSub.length > 0){
 			headerRefreshTicker--;
 			if (headerRefreshTicker < 1){
-				logg("Refreshing header");
+				//logg("Refreshing header");
 				getRequests();
 				getOnlineFriendsAndParty();
 				checkViewedProfileIsFriendOrParty();
