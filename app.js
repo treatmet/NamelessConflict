@@ -230,7 +230,7 @@ const pushMaxSpeed = 35;
 const allowBagWeapons = false;
 
 //thug Config
-const spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
+var spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
 const thugSightDistance = 600;
 const thugHealth = 80;
 const thugDamage = 50;
@@ -805,16 +805,9 @@ app.get('/', function(req, res) {
 
 	getPublicServersFromDB(function(servers){
 		var serversHtml = "";
+		servers.sort(compareCurrentPlayerSize);
 		
 		for (let j = 0; j < servers.length; j++) {
-		
-			log("I FIGHT FOR THE USERSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS FULL SERVER");
-			console.log(servers[j]);
-			log("I FIGHT FOR THE USERSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS currentUsers");
-			console.log(servers[j].currentUsers);
-
-		
-		
 			var currentPlayers = getCurrentPlayersFromUsers(servers[j].currentUsers).length;
 			//<div class="serverSelectButton" onclick="location.href='http://3.19.27.250:3004/?join=true';" style="cursor: pointer;">PlayersChoice_1_3004<br><span style="font-size: 12;text-shadow: none;">Deathmatch -- 0/14 Players</span></div>
 			var serverHtml = '<div class="serverSelectButton" onclick="getJoinableServer({server:\'' + servers[j].url + '\'})" style="cursor: pointer;">' + servers[j].serverName + '<br><span style="font-size: 12;text-shadow: none;">' + servers[j].gametype + ' -- ' + currentPlayers + '/' + servers[j].maxPlayers + ' Players</span></div>';
@@ -866,15 +859,19 @@ serv.listen(port);
 logg('Express server started on port ' + port + '.');
 
 if (port == "3001"){
+	gametype = "ctf";
 	maxPlayers = 14;
 }
 else if (port == "3002"){
-	maxPlayers = 14;
-}
-else if (port == "3003"){
+	gametype = "ctf";
 	maxPlayers = 8;
 }
+else if (port == "3003"){
+	gametype = "slayer";
+	maxPlayers = 14;
+}
 else if (port == "3004"){
+	gametype = "slayer";
 	maxPlayers = 8;
 }
 
@@ -1227,14 +1224,13 @@ var getJoinableServer = function(options, cb){
 					var incomingUsers = serv[i].incomingUsers || [];
 					var currentUsers = serv[i].currentUsers || [];
 					
+					/*
 					console.log("Incoming users:");
 					console.log(incomingUsers);
 					console.log("Current users:");
 					console.log(currentUsers);
-					
-					
 					log("Percentage of match remaining: " + (serv[i].currentTimeLeft / serv[i].matchTime));
-					
+					*/
 					
 
 					var moreWhitePlayers = 0; 
@@ -1260,7 +1256,17 @@ var getJoinableServer = function(options, cb){
 						team = "black";
 					}
 					
-					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers)){ //Spectate - if percentage of match remaining is less than threshold
+					/*
+					console.log("!!!!!!!!!!!!!!!SPECTATE?????????????????????");
+					var matchRemaining = (serv[i].currentTimeLeft / serv[i].matchTime);
+					var possibleTeamDifference = Math.abs(Math.abs(moreWhitePlayers) - options.party.length);					
+					console.log("(REMAINING TIME) IS " + matchRemaining + " LESS THAN " + joinActiveGameThreshold);
+					console.log("(CURRENT PLAYERS) IS " + getCurrentPlayersFromUsers(serv[i].currentUsers).length + " GREATER THAN OR EQUAL TO 2?");
+					console.log("(POSSIBLE TEAM DIFF) IS " + possibleTeamDifference + " GREATER THAN OR EQUAL TO " + Math.abs(moreWhitePlayers));
+					console.log("(IS IT NOT PREGAME?) " + pregame);
+					*/
+					
+					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 2 && !pregame){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
 						team = "none";
 					}
 					
@@ -1735,10 +1741,10 @@ function dbGameServerUpdate() {
 	
 	
 	if (gametype == "ctf"){
-		serverName += "CTF" + " [" + port.substring(1,port.length) + "]";
+		serverName += "CTF" + " [" + port.substring(1) + "]";
 	}
 	else if (gametype == "slayer"){
-		serverName += "Deathmatch" + " [" + port.substring(1,port.length) + "]";
+		serverName += "Deathmatch" + " [" + port.substring(1) + "]";
 	}
 
 	
@@ -3254,6 +3260,27 @@ function changeTeams(playerId){
 		sendSocketListToServerDb();
 		Player.list[playerId].respawn();	
 		dbGameServerUpdate();
+		
+		//Abandon party
+		if (Player.list[playerId].partyId == Player.list[playerId].cognitoSub){ //Leaving a party that user is the leader of (disband ALL party members' partyId)
+			for (var p in Player.list){
+				if (Player.list[p].partyId == Player.list[playerId].partyId){
+					Player.list[p].partyId = Player.list[p].cognitoSub;
+				}
+			}
+			dbUpdateAwait("RW_USER", "set", {partyId: Player.list[playerId].partyId}, {partyId:""}, async function(err, userRes){
+			});	
+		}
+		else { //Leaving someone else's party
+			Player.list[playerId].partyId = Player.list[playerId].cognitoSub;
+			dbUpdateAwait("RW_USER", "set", {cognitoSub: Player.list[playerId].cognitoSub}, {partyId:""}, async function(err, userRes){
+			});	
+		}
+
+		
+		
+		
+		
 	}
 }
 
@@ -3386,7 +3413,7 @@ function restartGame(){
 		}
 		var addedToParty = false;
 		for (var p = 0; p < parties.length; p++){
-			if (Player.list[l].partyId == parties[p].partyId && Player.list[l].partyId.length > 0){
+			if (typeof Player.list[l].partyId != 'undefined' && Player.list[l].partyId == parties[p].partyId && Player.list[l].partyId.length > 0){
 				parties[p].partySize++;
 				parties[p].playerIds.push(Player.list[l].id);
 				addedToParty = true;
@@ -3414,7 +3441,7 @@ function restartGame(){
 					continue;
 				Player.list[parties[q].playerIds[r]].team = "white";
 				moreWhitePlayers++;
-				console.log("Party to white team:");
+				console.log("Player from this Spectating Party to white team:");
 				console.log(parties[q]);
 			}
 		}
@@ -3424,13 +3451,125 @@ function restartGame(){
 					continue;
 				Player.list[parties[q].playerIds[r]].team = "black";
 				moreWhitePlayers--;
-				console.log("Party to black team:");
+				console.log("Player from this Spectating Party to black team:");
 				console.log(parties[q]);
 			}
 		}
 	}
 	
 	/////////////////////////////////////////////////////////////////////////////
+	
+	/////////REBALANCE TEAMS////////////////////////////////////////////////////
+	
+	console.log("REBALANCING TEAMS1: Teams are off by " + Math.abs(moreWhitePlayers));
+	
+	if (Math.abs(moreWhitePlayers) > 1){
+	
+		//Get parties
+		var inGameParties = [];
+		var whiteParties = [];
+		var blackParties = [];
+		
+		for (var l in Player.list){
+			var addedToParty = false;
+			for (var p = 0; p < inGameParties.length; p++){
+				if (typeof Player.list[l].partyId != 'undefined' && Player.list[l].partyId == inGameParties[p].partyId && Player.list[l].partyId.length > 0){
+					inGameParties[p].partySize++;
+					inGameParties[p].playerIds.push(Player.list[l].id);
+					addedToParty = true;
+					break;
+				}
+			}
+			if (!addedToParty && typeof Player.list[l].id != 'undefined'){
+				var newParty = {partyId: Player.list[l].partyId, partySize: 1, playerIds: [Player.list[l].id]};
+				inGameParties.push(newParty);
+			}
+		}		
+		inGameParties.sort(comparePartySize);		
+		
+		for (var gp = 0; gp < inGameParties.length; gp++){
+			if (Player.list[inGameParties[gp].playerIds[0]].team == "white"){
+				whiteParties.push(inGameParties[gp]);
+			}
+			else if (Player.list[inGameParties[gp].playerIds[0]].team == "black"){
+				blackParties.push(inGameParties[gp]);
+			}
+		}	
+		whiteParties.sort(comparePartySize);
+		blackParties.sort(comparePartySize);
+		/*
+			[
+				{
+					partyId: "123456",
+					partySize: 1,
+					playerIds: ["1234"]
+				},
+				{
+					partyId: "123456",
+					partySize: 1,
+					playerIds: ["1234"]
+				}			
+			]
+		*/
+		
+		var biggerTeamsParties = blackParties;		
+		if (moreWhitePlayers > 0){
+		console.log("REBALANCING TEAMS1.5: WHITE PARTIES BIGGER!");
+			biggerTeamsParties = whiteParties;
+		}
+		else {
+		console.log("REBALANCING TEAMS1.5: BLACK PARTIES BIGGER");
+		}
+		
+		
+		console.log("REBALANCING TEAMS2.1: Parties in game, asc size:");
+		console.log(biggerTeamsParties);
+
+		
+		//Assign players to new teams if it makes them more balanced
+		for (var q = 0; q < biggerTeamsParties.length; q++){
+			var howClose = Math.abs(Math.abs(moreWhitePlayers) - biggerTeamsParties[q].partySize*2);
+			console.log("REBALANCING TEAMS2.2: ANALYZING THIS PARTY:");
+			console.log(biggerTeamsParties[q]);
+			console.log("REBALANCING TEAMS2.3: THIS PARTY CAN MAKE THE TEAMS THIS CLOSE: " + howClose + ". IS THAT BETTER THAN CURRENT DISPARITY: " + Math.abs(moreWhitePlayers));
+			if (howClose < Math.abs(moreWhitePlayers)){
+				
+				if (moreWhitePlayers < 0){
+					for (var r = 0; r < biggerTeamsParties[q].playerIds.length; r++){
+					
+						console.log("REBALANCING TEAMS3: ADDING THIS GUY: " + biggerTeamsParties[q].playerIds[r] + " FROM THIS PARTY " + biggerTeamsParties[q].partyId);
+					
+						if (typeof Player.list[biggerTeamsParties[q].playerIds[r]] === 'undefined')
+							continue;
+						Player.list[biggerTeamsParties[q].playerIds[r]].team = "white";
+						moreWhitePlayers -= 2;
+						console.log("Player from this Party to white team:");
+						console.log(biggerTeamsParties[q]);
+					}
+				}
+				else {
+					for (var r = 0; r < biggerTeamsParties[q].playerIds.length; r++){
+						console.log("REBALANCING TEAMS3: ADDING THIS GUY: " + biggerTeamsParties[q].playerIds[r] + " FROM THIS PARTY " + biggerTeamsParties[q].partyId + " [" + q + "," + r);
+						if (typeof Player.list[biggerTeamsParties[q].playerIds[r]] === 'undefined')
+							continue;
+						Player.list[biggerTeamsParties[q].playerIds[r]].team = "black";
+						moreWhitePlayers -=2;
+						console.log("Player from this Party to black team:");
+						console.log(biggerTeamsParties[q]);
+					}
+				}				
+				
+				
+				
+			}
+			console.log("REBALANCING TEAMS ARE WE EVEN NOW? " + Math.abs(moreWhitePlayers));
+			if (Math.abs(moreWhitePlayers) <= 1){
+				console.log("YES");
+				break;
+			}			
+		}
+	}
+	
 	
 	
 	gameOver = false;
@@ -3608,6 +3747,7 @@ var Player = function(id, cognitoSub, name, team, partyId){
 		pressingS:false,		
 		pressingA:false,
 		pressingShift:false,
+		shootingDir:1,
 
 		cash:startingCash,
 		cashEarnedThisGame:0,
@@ -3629,6 +3769,7 @@ var Player = function(id, cognitoSub, name, team, partyId){
 	updatePlayerList.push({id:self.id,property:"steals",value:self.steals});
 	updatePlayerList.push({id:self.id,property:"returns",value:self.returns});
 	updatePlayerList.push({id:self.id,property:"captures",value:self.captures});
+	updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
 	
 
 	var socket = SOCKET_LIST[id];
@@ -4750,9 +4891,7 @@ function gunSwap(player){
 Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 	var player = Player(socket.id, cognitoSub, name, team, partyId);
 	ensureCorrectThugCount();
-	if (pregame == true && getNumPlayersInGame() >= 4){
-		restartGame();
-	}
+
 
 	socket.on('keyPress', function(data){
 		if (!Player.list[socket.id]){
@@ -5681,7 +5820,7 @@ function hit(target, shootingDir, distance, shooterId){
 				}
 			}
 		
-			//CALCULATE DAMAGE
+			//CALCULATE DAMAGE damage calculation
 			var targetDistance = getDistance(target, Player.list[shooterId]);
 			
 			//Facing attacker (lowest damage)
@@ -7013,6 +7152,10 @@ setInterval(
 			else {
 				syncGameServerWithDatabase();
 			}			
+			if (pregame == true && getNumPlayersInGame() >= 4){
+				restartGame();
+			}
+
 			secondsSinceLastServerSync = 0;
 		}		
 		
@@ -7042,6 +7185,7 @@ setInterval(
 	},
 	1000/1 //Ticks per second
 );
+
 
 
 function checkForUnhealthyServers(){
@@ -7098,7 +7242,7 @@ function syncGameServerWithDatabase(){
 			//voteGametype = res[0].voteGametype;
 			//voteMap = res[0].voteMap;
 			if (res[0].gametype == "slayer" || res[0].gametype == "ctf"){
-				gametype = res[0].gametype;
+				//gametype = res[0].gametype;
 			}
 			
 			var healthyTimestamp = new Date();
@@ -7159,15 +7303,32 @@ function comparePartySize(a,b) { //order
   return 0;
 }
 
+function comparePartySizeAsc(a,b) { //order
+  if (a.partySize > b.partySize)
+    return 1;
+  if (a.partySize < b.partySize)
+    return -1;
+  return 0;
+}
+
 function compareCurrentPlayerSize(a,b) { //order
 	var aCurrentPlayers = getCurrentPlayersFromUsers(a.currentUsers).length;
 	var bCurrentPlayers = getCurrentPlayersFromUsers(b.currentUsers).length;
-
+	
+	var aPort = a.url.substring(a.url.length - 4);
+	var bPort = b.url.substring(b.url.length - 4);
+	
+	
   if (aCurrentPlayers < bCurrentPlayers)
     return 1;
-  if (aCurrentPlayers > bCurrentPlayers)
+  else if (aCurrentPlayers > bCurrentPlayers)
     return -1;
-  return 0;
+  else if (aPort < bPort)
+    return -1;
+  else if (aPort > bPort)
+    return 1;
+  else
+	return 0;
 }
 
 function parseINIString(data){

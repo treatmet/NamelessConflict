@@ -42,7 +42,7 @@ function getTokenFromUrlParameterAndLogin(){
 		cog_r:cog_r
     };
 	
-    $.post(validateTokenEndpoint, data, function(data,status){
+    $.post(validateTokenEndpoint, data, function(data,status){ //validation
         console.log("validateToken response:");
         console.log(data);
 				
@@ -85,6 +85,7 @@ function getTokenFromUrlParameterAndLogin(){
 			if (!data.isWebServer){
 				autoJoinGame = getUrlParam("join", "false");
 			}
+			updateProfileLink();
 			showServerLoginButtons();
             showAuthorizedLoginButtons();            
             setLocalStorage();
@@ -122,6 +123,13 @@ window.addEventListener('load', function () {
 	pageLoaded = true;
 	autoPlayNow();	
 })
+
+function updateProfileLink(){
+	if (document.getElementById("menuRightLink")){
+		var link = serverHomePage + "user/" + cognitoSub;
+		document.getElementById("menuRightLink").innerHTML = '<a href="' + link + '" style="" class="elecText" id="profileLink">' + "Profile" + '&gt;</a>';
+	}
+}
 
 function focusPlayerSearchPageBox(){
 	if (document.getElementById("playerSearchPageBox")){

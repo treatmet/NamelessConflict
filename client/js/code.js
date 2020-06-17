@@ -933,7 +933,8 @@ function showCanvas() {
 	canvasDiv.style.backgroundColor="rgb(21,21,21)";
 	document.getElementById("header").style.display = 'none';
 	document.getElementById("mainContent").style.display = 'none';
-	document.getElementById("leftMenu").style.display = 'inline-block';
+	document.getElementById("leftMenu").style.display = 'inline-block';	
+	document.getElementById("rightMenu").style.display = 'inline-block';
 
 }
 
@@ -1570,7 +1571,7 @@ function updateCamera(){
 }
 
 function screenShake(){
-	if (screenShakeCounter > 0) {
+	if (screenShakeCounter >= 0) {
 		if (screenShakeCounter == 8){
 			centerX -= 10 * screenShakeScale;
 		}
@@ -1601,6 +1602,14 @@ function screenShake(){
 		else if (screenShakeCounter == 1){
 			centerX -= 7 * screenShakeScale;
 			centerY += 3 * screenShakeScale;
+		}
+		else if (screenShakeCounter == 1){
+			centerX -= 7 * screenShakeScale;
+			centerY += 3 * screenShakeScale;
+		}
+		else if (screenShakeCounter == 0 && !myPlayer.pressingShift){
+			centerX = targetCenterX;
+			centerY = targetCenterY;
 		}
 		screenShakeCounter--;
 	}
@@ -3015,15 +3024,14 @@ function drawInformation(){
 		ctx.fillStyle="#FFFFFF";
 		ctx.font = 'bold 14px Electrolize';
 		ctx.textAlign="left";
-		fillText(version + "  |  ping:" + ping, 5, 15);
 
-		var pickupCount = 0;
-		for (var p in Pickup.list){
-			pickupCount++;
-		}
 		//Version and debug text label1 //debug lable1
 
-		//fillText("Health:" + Player.list[myPlayer.id].health, 5, 35); //debug
+		if (showStatOverlay == true){
+			fillText("Health:" + Player.list[myPlayer.id].health, 5, 35); //debug
+			fillText(version + "  |  ping:" + ping, 5, 15);
+
+		}
 		//fillText("walkingDir:" + Player.list[myPlayer.id].walkingDir, 5, 35); //debug
 		//fillText("legSwingForward:" + Player.list[myPlayer.id].legSwingForward, 5, 55); //debug
 		//fillText("LegHeight:" + Player.list[myPlayer.id].legHeight, 5, 75); //debug
@@ -3200,7 +3208,7 @@ function drawTopScoreboard(){
 			if (parseInt(minutesLeft)*60 + parseInt(secondsLeft) <= 60 && timeLimit){
 				ctx.fillStyle="red";
 			}
-			ctx.lineWidth=6;
+			ctx.lineWidth=5;
 			ctx.font = clockHeight + 'px Electrolize';	
 			strokeAndFillText(minutesLeft + ":" + secondsLeft, canvasWidth/2, (clockHeight + (clockHeight/2 + 16))/2);
 		}
@@ -3899,14 +3907,6 @@ function drawStatOverlay(){
 			whiteScoreY += scoreboardPlayerNameGap;
 		}	
 		//controls
-		if (!gameOver){
-			smallCenterShadow();
-			ctx.fillStyle="#FFFFFF";
-			ctx.lineWidth = 4;
-			strokeAndFillText("CONTROLS",canvasWidth/2,675);
-			strokeAndFillText("Arrow Keys:Shoot,  WASD:Move,  SPACE:Dash(while moving)/Cloak(while still)",canvasWidth/2,700);
-			strokeAndFillText("R:Reload,  1-3/Q:Choose Weapon,  SHIFT:Look",canvasWidth/2,725);
-		}
 	}
 }
 
@@ -4619,6 +4619,7 @@ setInterval(
 		if (clientTimeoutTicker < 1){
 			logg("ERROR: Server Timeout. Reloading page...");
 			disconnect();
+			location.reload();
 			clientTimeoutTicker = clientTimeoutSeconds;
 		}
 		
@@ -4695,12 +4696,29 @@ function stopStopwatch(){
 
 function disconnect(){
 	socket.disconnect();
-	location.reload();
 }
 
 window.onbeforeunload = function(){
+	if ((myPlayer.team == "white" || myPlayer.team == "black") && (!gameOver && !pregame)){
+		return "warn";
+	}
+	else {
+		disconnect();
+	}
+};
+
+window.onunload = function(){
   disconnect();
 };
+
+window.addEventListener("beforeunload", function (e) {
+	if (myPlayer.team == "white" || myPlayer.team == "black" && (!gameOver && !pregame)){
+		return "warn";
+	}
+	else {
+		disconnect();
+	}
+});
 
 function randomInt(min,max)
 {
