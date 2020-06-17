@@ -1,11 +1,12 @@
+
 var debugTimer = 60;
 var debugText = true;
 //'use strict';
-var socket = io();
+
 
 //-----------------Config----------------------
 var version = "v 0.4.5"; //Post cognito
-var clientTimeoutSeconds = 60000;
+
 
 var screenShakeScale = 0.5;
 var drawDistance = 10; 
@@ -57,7 +58,6 @@ var	showStatOverlay = false;
 var spectatingPlayerId = "";
 
 var canvasDiv = document.getElementById("canvasDiv"); 
-var signIn = document.getElementById("logIn"); 
 
 var map = "map2";
 var gametype = "ctf";
@@ -72,7 +72,9 @@ var lowGraphicsMode = true;
 var noShadows = false;
 
 //Initialize client-side code variables
-var clientTimeoutTicker = clientTimeoutSeconds;
+
+
+
 function normalShadow() {
 	if (noShadows){
 		noShadow();
@@ -296,7 +298,7 @@ var suddenDeath = false;
 
 var healthFlashTimer = 100;
 
-logg('Connected to server.');
+logg('Client initialization');
 //----------------Loading Images----------------
 var Img = {};
 Img.block = new Image();
@@ -630,7 +632,6 @@ var sfxTimeWarning = new Howl({src: ['/client/sfx/30sec.mp3']});
 sfxTimeWarning.volume(.7);
 var sfxSuddenDeath = new Howl({src: ['/client/sfx/suddenDeath.mp3']});
 
-
 var sfxPistolReload = new Howl({src: ['/client/sfx/pistolReload.mp3']});
 var sfxDPReload = new Howl({src: ['/client/sfx/DPReload.mp3']});
 var sfxMGReload = new Howl({src: ['/client/sfx/MGReload.mp3']});
@@ -741,8 +742,6 @@ function updateOrderedPlayerList(){
 }
 
 function getNextOrderedPlayer(playerId, previous){ //previous is a bool designating if requesting previous player (true) or next player (false)
-	console.log("getNextOrderedPlayer previous?(" + previous + ") - " + playerId);
-	console.log(orderedPlayerList);
 	for (var p = 0; p < orderedPlayerList.length; p++){
 		if (orderedPlayerList[p].id == playerId){
 			if (previous){
@@ -908,14 +907,16 @@ socket.on('gameStart', function(){
 	suddenDeath = false;
 	gameStartAlpha = 1.0;
 	suddenDeathAlpha = 1.0;
+	document.getElementById("voteMenu").style.display = 'none';
 	sfxDefeatMusic.volume(.3);
 	sfxVictoryMusic.volume(.3);
 	sfxVictoryMusic.stop();
 	sfxDefeatMusic.stop();
-
+	sfxProgressBar.stop();
 	drawMapElementsOnMapCanvas();
 	drawBlocksOnBlockCanvas();
 	resetPostGameProgressVars();
+
 
 	/*
 	for (var i=0; i<chatText.childNodes.length; i++){
@@ -932,7 +933,7 @@ function showCanvas() {
 	canvasDiv.style.backgroundColor="rgb(21,21,21)";
 	document.getElementById("header").style.display = 'none';
 	document.getElementById("mainContent").style.display = 'none';
-	document.getElementById("homeLink").style.display = 'inline-block';
+	document.getElementById("leftMenu").style.display = 'inline-block';
 
 }
 
@@ -1265,6 +1266,15 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		gameOver = miscPack.gameOver;
 		if (miscPack.gameOver == true){
 			endGame();
+			document.getElementById("voteMenu").style.display = '';
+			document.getElementById("voteCTF").disabled = false;
+			document.getElementById("voteDeathmatch").disabled = false;	
+			document.getElementById("voteLongest").disabled = false;
+			document.getElementById("voteCrik").disabled = false;
+			document.getElementById("voteThePit").disabled = false;				
+		}
+		else if (miscPack.gameOver == false){
+			document.getElementById("voteMenu").style.display = 'none';
 		}
 		if (debugUpdates){
 			logg("GameOver:" + miscPack.gameOver);
@@ -1407,7 +1417,7 @@ function endGame(){
 				sfxVictoryMusic.play();
 			}
 		}
-		else {
+		else if(myPlayer.team != "none"){
 			if (!mute){
 				sfxDefeatMusic.play();
 			}
@@ -2920,7 +2930,7 @@ function drawUILayer(){
 		drawBloodyBorder();
 		drawHUD();
 	}
-	else if(!showStatOverlay){
+	else {
 		drawSpectatingInfo();
 	}
 	drawInformation();
@@ -2936,8 +2946,13 @@ function drawUILayer(){
 function drawSpectatingInfo(){
 	//Draw spectating info
 	var spectatingText = "";
+	
+	if (gametype != "ctf" && (spectatingPlayerId == "bagRed" || spectatingPlayerId == "bagBlue")){
+		spectatingPlayerId = "";
+	}
+	
 	if (typeof Player.list[spectatingPlayerId] != 'undefined'){
-		spectatingText = "Spectating " + Player.list[spectatingPlayerId].name + " (score: " + Player.list[spectatingPlayerId].cashEarnedThisGame + ")";
+		spectatingText = "Spectating " + Player.list[spectatingPlayerId].name + " [cash: " + Player.list[spectatingPlayerId].cashEarnedThisGame + "]";
 	}
 	else if (spectatingPlayerId == "bagRed"){
 		if (pcMode == 2){
@@ -2960,15 +2975,18 @@ function drawSpectatingInfo(){
 	}
 		
 	drawImage(Img.spectatingOverlay, -5, -5, canvasWidth + 10, canvasHeight + 10); 
-	smallCenterShadow();
-	ctx.fillStyle="#FFFFFF";
-	ctx.font = 'bold 30px Electrolize';
-	ctx.lineWidth = 4;
-	strokeAndFillText(spectatingText,canvasWidth/2,775);
-	strokeAndFillText("Waiting for current game to finish. You will join the next game.",canvasWidth/2,100);		
-	ctx.font = 'bold 15px Electrolize';
-	ctx.lineWidth = 3;
-	strokeAndFillText("Use the arrow keys to switch targets",canvasWidth/2,800);		
+	
+	if(!showStatOverlay){
+		smallCenterShadow();
+		ctx.fillStyle="#FFFFFF";
+		ctx.font = 'bold 30px Electrolize';
+		ctx.lineWidth = 4;
+		strokeAndFillText(spectatingText,canvasWidth/2,775);
+		strokeAndFillText("Waiting for current game to finish. You will join the next game.",canvasWidth/2,100);		
+		ctx.font = 'bold 15px Electrolize';
+		ctx.lineWidth = 3;
+		strokeAndFillText("Use the arrow keys to switch targets",canvasWidth/2,800);		
+	}
 }
 
 function updateSpectatingView(){ //updates spectating camera
@@ -3161,27 +3179,28 @@ function drawTopScoreboard(){
 			
 		ctx.fillStyle="#FFFFFF";
 		ctx.font = '28px Electrolize';
-		ctx.lineWidth=5;
+		ctx.lineWidth=4;
 		
 		if (clockHeight >= 30){clockHeight -= 5;}
 		if (clockHeight < 30){clockHeight = 30;}
 		
 		if (timeLimit == false && scoreToWin > 0){
-			ctx.font = 20 + 'px Electrolize';	
-			strokeAndFillText("To " + scoreToWin, canvasWidth/2, 23);
+			ctx.font = 16 + 'px Electrolize';	
+			strokeAndFillText("First to " + scoreToWin, canvasWidth/2, 23);
 		}
 		else if (timeLimit == true){
-			ctx.font = 20 + 'px Electrolize';
+			ctx.font = 16 + 'px Electrolize';
 			if (gameOver == false && secondsLeft == 0 && minutesLeft == 0){
 				ctx.fillStyle="red";
 				strokeAndFillText("SD", canvasWidth/2, 53);
 			}
 			else if (scoreToWin > 0){
-				strokeAndFillText("To " + scoreToWin, canvasWidth/2, 53);
+				strokeAndFillText("First to " + scoreToWin, canvasWidth/2, 53);
 			}
 			if (parseInt(minutesLeft)*60 + parseInt(secondsLeft) <= 60 && timeLimit){
 				ctx.fillStyle="red";
 			}
+			ctx.lineWidth=6;
 			ctx.font = clockHeight + 'px Electrolize';	
 			strokeAndFillText(minutesLeft + ":" + secondsLeft, canvasWidth/2, (clockHeight + (clockHeight/2 + 16))/2);
 		}
@@ -3189,8 +3208,8 @@ function drawTopScoreboard(){
 	
 	//Top scoreboard Score Numbers
 	ctx.fillStyle="#FFFFFF";
-	ctx.font = '36px Electrolize';
 	ctx.lineWidth=6;
+	ctx.font = '36px Electrolize';
 	if (whiteScoreHeight >= 36){whiteScoreHeight -= 7;}
 	if (whiteScoreHeight < 36){whiteScoreHeight = 36;}
 	ctx.font = whiteScoreHeight + 'px Electrolize';
@@ -3295,7 +3314,7 @@ function resetPostGameProgressVars(){
 }
 
 function drawPostGameProgress(){
-	if (gameOver == true && postGameReady == true){
+	if (gameOver == true && postGameReady == true && myPlayer.team != "none"){
 		if (postGameProgressCounter != postGameProgressDelay){
 			postGameProgressCounter++;
 		}
@@ -3703,7 +3722,7 @@ function drawGameEventText(){
 			}
 
 			ctx.lineWidth=12;
-			if (whiteScore > blackScore || whiteScore < blackScore && gameOver == true){
+			if ((whiteScore > blackScore || whiteScore < blackScore) && gameOver == true && myPlayer.team != "none"){
 				var actualVictoryPumpSize = victoryPumpSize;
 
 				victoryPumpSize -= 1;
@@ -4471,6 +4490,7 @@ document.onkeydown = function(event){
 	}
 	
 	if(event.keyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing
+	getNewTip();
 		console.log("TESTING BUTTON");
 		ctx.beginPath();
 		if (Player.list[myPlayer.id]){
@@ -4561,6 +4581,34 @@ document.onkeyup = function(event){
 
 }
 
+var tips = [
+	"Cloaked enemies are only 99% invisible. If you stop moving, they are easier to spot.",
+	"Shooting a cloaked enemy will make them visible and cause extra damage. Try shooting places you think they may be hiding.",
+	"Careful not to use up all your energy. It will take longer to recharge. If the energy bar is red, using another boost will deplete it.",
+	"You can party up with friends by searching their username on the homepage.",
+	"Attack with teammates. There is strength in numbers.",
+	"You are slower while carrying the bag. Try throwing it ahead of yourself with [Space]. However, this will deplete almost all your energy.",
+	"If you’re dying a lot, try sticking with your teammates and using them as meat shields.",
+	"Shooting enemies in the back does much more damage. Use cloak to get behind unsuspecting enemies.",
+	"If you are running away from a deadly situation, make an effort to stay away from the 8 angles the enemy can shoot.",
+	" Controlling powerups is key to victory. Be aware of the powerups’ spawn timers.",
+	"Press [Enter] to use chat and taunt your foes!",
+	"Stand still and press [Space] to use cloak. Press [Space] while moving to boost.",
+	"For best game performance, close all other browser tabs and applications."
+];
+
+function getNewTip(){
+	if (document.getElementById("tipContent")){
+		var newTip = tips[randomInt(0, tips.length-1)];
+		document.getElementById("tipContent").innerHTML = newTip;
+	}
+}
+
+var clientTimeoutSeconds = 60000;
+var clientTimeoutTicker = clientTimeoutSeconds;
+var newTipSeconds = 45;
+var newTipTicker = newTipSeconds;
+
 //EVERY 1 SECOND
 setInterval( 
 	function(){
@@ -4573,6 +4621,17 @@ setInterval(
 			disconnect();
 			clientTimeoutTicker = clientTimeoutSeconds;
 		}
+		
+		if (document.getElementById("leftMenu").style.display != 'none'){
+			newTipTicker--;
+			if (newTipTicker < 1){
+				newTipTicker = newTipSeconds;
+				getNewTip();
+			}
+			
+		}
+
+		
 	},
 	1000/1 //Ticks per second
 );
@@ -4638,6 +4697,10 @@ function disconnect(){
 	socket.disconnect();
 	location.reload();
 }
+
+window.onbeforeunload = function(){
+  disconnect();
+};
 
 function randomInt(min,max)
 {

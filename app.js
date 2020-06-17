@@ -108,8 +108,7 @@ const staleRequestCheckInterval = 60; //Seconds
 const staleFriendRequestThreshold = 30; //Days
 const stalePartyRequestThreshold = 300; //Seconds
 
-const joinActiveGameThreshold = 0.8; //Percentage threshold for how far the game is allowed to be progressed and still accept incoming players
-
+const joinActiveGameThreshold = 0.5; //Percentage threshold for how far the game is allowed to be progressed and still accept incoming players
 
 var privateServer = false;
 var scoreToWin = 0;
@@ -117,9 +116,15 @@ var serverNumber = 1;
 var serverName = "Server";
 var voteGametype = true;
 var voteMap = true;
+var ctfVotes = 0;
+var slayerVotes = 0;
+var thePitVotes = 0;
+var longestVotes = 0;
+var crikVotes = 0;
+var voteMapIds = [];
+var voteGametypeIds = [];
 
-
-var timeBeforeNextGame = 60;
+var timeBeforeNextGame = 60; //newGameTimer
 var pcMode = 2; //1 = no, 2= yes
 
 
@@ -196,41 +201,41 @@ var damageScale = 1;
 	var SGSideDamage = 30;
 	var SGBackDamage = 60;
 
-var SGRange = 310;
-var SGCloseRangeDamageScale = 4;
-var SGPushSpeed = 12;
+const SGRange = 310;
+const SGCloseRangeDamageScale = 4;
+const SGPushSpeed = 12;
 
-var DPClipSize = 20;
-var MGClipSize = 45;
-var SGClipSize = 6;
-	
-var pistolFireRateLimiter = true;	
-var pistolFireRate = 12;
-var DPFireRate = 12;
-var MGFireRate = 5;
-var SGFireRate = 50;
+const DPClipSize = 20;
+const MGClipSize = 45;
+const SGClipSize = 6;
 
-var maxSGAmmo = 24;
-var maxDPAmmo = 40;
-var maxMGAmmo = 90;
+const pistolFireRateLimiter = true;	
+const pistolFireRate = 12;
+const DPFireRate = 12;
+const MGFireRate = 5;
+const SGFireRate = 50;
 
+const maxSGAmmo = 24;
+const maxDPAmmo = 40;
+const maxMGAmmo = 90;
 
-var staggerScale = 0.60;
-var staggerTime = 20;
+const cloakBonusDamage = 20;
 
-var damagePushScale = 2;
-var pushMaxSpeed = 35;
+const staggerScale = 0.60;
+const staggerTime = 20;
 
-var allowBagWeapons = false;
+const damagePushScale = 2;
+const pushMaxSpeed = 35;
 
+const allowBagWeapons = false;
 
-//Thug Config
-var spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
-var thugSightDistance = 600;
-var thugHealth = 80;
-var thugDamage = 50;
-var thugSpeed = 4;
-var thugAttackDelay = 30;
+//thug Config
+const spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
+const thugSightDistance = 600;
+const thugHealth = 80;
+const thugDamage = 50;
+const thugSpeed = 4;
+const thugAttackDelay = 30;
 var thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are wiped off map (for performance concerns)
 
 //Bot Config
@@ -293,6 +298,8 @@ var blackScore = 0;
 
 var pregame = true;
 var gameOver = false;
+
+
 
 var updatePlayerList = [];
 var updateThugList = [];
@@ -801,6 +808,13 @@ app.get('/', function(req, res) {
 		
 		for (let j = 0; j < servers.length; j++) {
 		
+			log("I FIGHT FOR THE USERSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS FULL SERVER");
+			console.log(servers[j]);
+			log("I FIGHT FOR THE USERSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS currentUsers");
+			console.log(servers[j].currentUsers);
+
+		
+		
 			var currentPlayers = getCurrentPlayersFromUsers(servers[j].currentUsers).length;
 			//<div class="serverSelectButton" onclick="location.href='http://3.19.27.250:3004/?join=true';" style="cursor: pointer;">PlayersChoice_1_3004<br><span style="font-size: 12;text-shadow: none;">Deathmatch -- 0/14 Players</span></div>
 			var serverHtml = '<div class="serverSelectButton" onclick="getJoinableServer({server:\'' + servers[j].url + '\'})" style="cursor: pointer;">' + servers[j].serverName + '<br><span style="font-size: 12;text-shadow: none;">' + servers[j].gametype + ' -- ' + currentPlayers + '/' + servers[j].maxPlayers + ' Players</span></div>';
@@ -851,6 +865,18 @@ if (!isLocal)
 serv.listen(port);
 logg('Express server started on port ' + port + '.');
 
+if (port == "3001"){
+	maxPlayers = 14;
+}
+else if (port == "3002"){
+	maxPlayers = 14;
+}
+else if (port == "3003"){
+	maxPlayers = 8;
+}
+else if (port == "3004"){
+	maxPlayers = 8;
+}
 
 var SOCKET_LIST = [];
 var S3StreamLogger = require('s3-streamlogger').S3StreamLogger;
@@ -1091,8 +1117,8 @@ app.post('/playNow', async function (req, res) {
 					
 					res.status(200);
 					logg("res.send: " + "Server " + myUrl + " welcomes you!");
-					res.send({msg:"Server " + myUrl + " welcomes you!", success:true});
-					joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team); //Join game
+					res.send({msg:"Server " + myUrl + " welcomes you!", success:true});					
+					joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team, incomingUsers[u].partyId); //Join game
 					break;
 				}
 			}	
@@ -1121,8 +1147,8 @@ app.post('/getJoinableServer', async function (req, res) {
 	getPartyForUser(req.body.cognitoSub, function(dbResults){
 		/*
 		var dbResults = {
-			leader:{}, //{cognitoSub:"12345",username:"myguy",serverUrl:serverUrl}
-			party:[]
+			partyId:"", 
+			party:[] //{cognitoSub:"12345",username:"myguy",serverUrl:serverUrl}
 		};	
 		*/
 		party = dbResults.party;
@@ -1148,7 +1174,7 @@ app.post('/getJoinableServer', async function (req, res) {
 			}
 			else { //Join approved
 				log("SENDING PARTY TO SERVER: " + msg);
-				sendPartyToGameServer(party, req.body.server);
+				sendPartyToGameServer(party, joinableServer);
 				res.send({msg:msg, server:joinableServer});
 			}
 		}); //End getJoinableServer
@@ -1171,9 +1197,15 @@ var getJoinableServer = function(options, cb){
 		params = {url:options.server, privateServer:false};
 		options.matchmaking = false;
 	}
+	else if (options.server.indexOf('any') > -1) { //Server IP provided
+		//params = {privateServer:false};
+		params = {privateServer:false};
+		options.matchmaking = false;
+	}
 	
 	dbFindOptionsAwait("RW_SERV", params, {sort:{serverNumber: 1}}, async function(err, serverResult){	
-		var serv = serverResult;
+		var serv = serverResult.sort(compareCurrentPlayerSize);
+		
 		if (typeof serv != 'undefined' && typeof serv[0] != 'undefined'){	
 			console.log("FOUND " + serv.length + " POSSIBLE SERVERS");
 			for (var i = 0; i < serv.length; i++){			
@@ -1185,7 +1217,8 @@ var getJoinableServer = function(options, cb){
 					//Server full dis-qualifier
 					if (getCurrentPlayersFromUsers(serv[i].currentUsers) + options.party.length > serv[i].maxPlayers){
 						logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");
-						cb("Server full", false);
+						if (options.server.indexOf(':') > -1)
+							cb("Server full", false);
 						continue;
 					}
 					
@@ -1201,37 +1234,41 @@ var getJoinableServer = function(options, cb){
 					
 					
 					log("Percentage of match remaining: " + (serv[i].currentTimeLeft / serv[i].matchTime));
-					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold){ //Spectate - if percentage of match remaining is less than threshold
+					
+					
+
+					var moreWhitePlayers = 0; 
+					for (var u in currentUsers){
+						if (currentUsers[u].team == "white"){moreWhitePlayers++;}
+						else if (currentUsers[u].team == "black"){moreWhitePlayers--;}
+					}
+					for (var s in incomingUsers){
+						var continueLoop = false;
+						for (var u in currentUsers){
+							if (incomingUsers[s].cognitoSub == currentUsers[u].cognitoSub){continueLoop = true;}
+						}
+						if (continueLoop)
+							continue;						
+						if (incomingUsers[s].team == "white"){moreWhitePlayers++;}
+						else if (incomingUsers[s].team == "black"){moreWhitePlayers--;}
+					}
+					
+					if (moreWhitePlayers <= 0){
+						team = "white";
+					}
+					else {
+						team = "black";
+					}
+					
+					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers)){ //Spectate - if percentage of match remaining is less than threshold
 						team = "none";
 					}
-					else { //Join team
-						var moreWhitePlayers = 0; 
-						for (var u in currentUsers){
-							if (currentUsers[u].team == "white"){moreWhitePlayers++;}
-							else if (currentUsers[u].team == "black"){moreWhitePlayers--;}
-						}
-						for (var s in incomingUsers){
-							var continueLoop = false;
-							for (var u in currentUsers){
-								if (incomingUsers[s].cognitoSub == currentUsers[u].cognitoSub){continueLoop = true;}
-							}
-							if (continueLoop)
-								continue;						
-							if (incomingUsers[s].team == "white"){moreWhitePlayers++;}
-							else if (incomingUsers[s].team == "black"){moreWhitePlayers--;}
-						}
-						
-						if (moreWhitePlayers <= 0){
-							team = "white";
-						}
-						else {
-							team = "black";
-						}
-					}
+					
 					//Set DB incoming Users
 					for (var p = 0; p < options.party.length; p++){
 						options.party[p].timestamp = new Date();
 						options.party[p].team = team;
+						options.party[p].partyId = options.partyId;						
 						incomingUsers = removeCognitoSubFromArray(incomingUsers, options.party[p].cognitoSub); //Before merging arrays, remove duplicate cognitoSubs from incomingUser
 					}
 					
@@ -1246,7 +1283,9 @@ var getJoinableServer = function(options, cb){
 						else {
 							cb("FAILED TO UPDATE INCOMING USERS", false);
 						}
-					});							
+					});	
+					if (options.server.indexOf('any') > -1)
+						break;
 				}				
 			}
 		}
@@ -1263,7 +1302,6 @@ app.post('/sendPlayerToGame', async function (req, res) {
 
 app.post('/logOut', async function (req, res) {
 	log("Logging out user");
-	res.cookie("cog_i", "", { httpOnly: httpOnlyCookies });
 	res.cookie("cog_a", "", { httpOnly: httpOnlyCookies });
 	res.cookie("cog_r", "", { httpOnly: httpOnlyCookies });
 	res.send({msg:"Logout - Successfully removed auth cookies"});
@@ -1534,7 +1572,6 @@ app.post('/validateToken', async function (req, res) {
 			//logg("Found token on request body. Ignoring cookies.");
 			tokens = {
 				access_token:req.body.cog_a,
-				id_token:req.body.cog_i,
 				refresh_token:req.body.cog_r
 			};
 		}
@@ -1542,7 +1579,6 @@ app.post('/validateToken', async function (req, res) {
 			//logg("Could not find code or tokens on request body. Trying site cookies...");
 			tokens = {
 				access_token:req.cookies["cog_a"],
-				id_token:req.cookies["cog_i"],
 				refresh_token:req.cookies["cog_r"]
 			};			
 		}
@@ -1560,7 +1596,6 @@ app.post('/validateToken', async function (req, res) {
 		updateOnlineTimestampForUser(result.cognitoSub);
 		updateServerUrlForUser(result.cognitoSub);
 		res.status(200);
-		res.cookie("cog_i", result.id_token, { httpOnly: httpOnlyCookies });
 		res.cookie("cog_a", result.access_token, { httpOnly: httpOnlyCookies });
 		res.cookie("cog_r", result.refresh_token, { httpOnly: httpOnlyCookies });
 		httpResult = {
@@ -1572,11 +1607,6 @@ app.post('/validateToken', async function (req, res) {
 			isWebServer:isWebServer,
 			isLocal:isLocal,
 			pcMode:pcMode,
-			/* ///may not need to send these if cookies httpOnly = false works !!!
-			cog_i:result.id_token,
-			cog_a:result.access_token,
-			cog_r:result.refresh_token,
-			*/
 			msg:result.msg || "(no response message)"
 		};
 	}
@@ -1686,7 +1716,32 @@ function dbGameServerUpdate() {
 		logg("ERROR - NO SERVER URL - NOT READY TO SYNC WITH DB");
 		return;
 	}
-		
+	
+	serverName = "";
+	
+	if (maxPlayers >= 14){
+		serverName = "BigTeam ";
+	}
+	else if (maxPlayers == 8){
+		serverName = "4v4 ";
+	}	
+	else if (maxPlayers == 6){
+		serverName = "3v3 ";
+	}	
+	else if (maxPlayers == 10){
+		serverName = "5v5 ";
+	}	
+
+	
+	
+	if (gametype == "ctf"){
+		serverName += "CTF" + " [" + port.substring(1,port.length) + "]";
+	}
+	else if (gametype == "slayer"){
+		serverName += "Deathmatch" + " [" + port.substring(1,port.length) + "]";
+	}
+
+	
 	var healthCheckTimestamp = new Date();
 	var matchTime = (gameMinutesLength * 60) + gameSecondsLength;
 	var currentTimeLeft = (minutesLeft * 60) + secondsLeft;
@@ -1699,7 +1754,23 @@ function dbGameServerUpdate() {
 		currentHighestScore = whiteScore;
 	}
 
-	var obj = {serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:Player.list};
+
+
+	var currentUsers = [];
+	for (var s in SOCKET_LIST){
+		currentUsers.push({
+			socketId:SOCKET_LIST[s].id,
+			cognitoSub:SOCKET_LIST[s].cognitoSub,
+			username:SOCKET_LIST[s].username,
+			partyId:SOCKET_LIST[s].partyId,
+			rating:SOCKET_LIST[s].rating,
+			experience:SOCKET_LIST[s].experience,
+			team:SOCKET_LIST[s].team
+		});
+	}
+	
+	console.log(currentUsers);
+	var obj = {serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:currentUsers};
 	
 	dbUpdateAwait("RW_SERV", "ups", {url: myUrl}, obj, async function(err, res){
 		//logg("dbGameServerUpdate DB: Set: " + myUrl + " with: ");
@@ -1713,21 +1784,15 @@ var getPublicServersFromDB = function(cb){
 		if (res && res[0]){
 				
 			for (var i = 0; i < res.length; i++){
-				var thisServer = {};
-					thisServer.url = res[i].url;
-					thisServer.serverName = res[i].serverName;
-					thisServer.gametype = res[i].gametype;
-					thisServer.maxPlayers = res[i].maxPlayers;
-					thisServer.voteGametype = res[i].voteGametype;
-					thisServer.voteMap = res[i].voteMap;
-				if (thisServer.gametype == "ctf"){
-					thisServer.gametype = "CTF";
+
+				if (res[i].gametype == "ctf"){
+					res[i].gametype = "CTF";
 				}
-				else if (thisServer.gametype == "slayer"){
-					thisServer.gametype = "Deathmatch";
+				else if (res[i].gametype == "slayer"){
+					res[i].gametype = "Deathmatch";
 				}
 
-				servers.push(thisServer);
+				servers.push(res[i]);
 			}		
 			
 			cb(servers);
@@ -2278,7 +2343,6 @@ function getSocketIdFromCognitoSub(cognitoSub){
 async function getAuthorizedUser(cookies){
 	var tokens = {
 		access_token:cookies["cog_a"],
-		id_token:cookies["cog_i"],
 		refresh_token:cookies["cog_r"]
 	};			
 	
@@ -2607,6 +2671,45 @@ io.sockets.on('connection', function(socket){
 	logg('Client has connected (ID:' + socket.id + ')');	
 	populateLoginPage(socket);
 	
+	socket.on('voteEndgame', function(socketId, voteType, vote){
+		console.log("GOT VOTE: " + socketId + " " + voteType + " " + vote);
+		if (voteType == "gametype"){
+			for (var i = 0; i < voteGametypeIds.length; i++){
+				if (voteGametypeIds[i] == socketId){ //Player has already voted
+					return;
+				}				
+			}			
+			if (vote == "ctf"){
+				ctfVotes++;
+				voteGametypeIds.push(socketId);
+			}
+			else if (vote == "slayer"){
+				slayerVotes++;
+				voteGametypeIds.push(socketId);
+			}
+		}
+		else if (voteType == "map"){
+			for (var i = 0; i < voteMapIds.length; i++){
+				if (voteMapIds[i] == socketId){ //Player has already voted
+					return;
+				}				
+			}			
+			if (vote == "thepit"){
+				thePitVotes++;
+				voteMapIds.push(socketId);
+			}
+			else if (vote == "longest"){
+				longestVotes++;
+				voteMapIds.push(socketId);
+			}
+			else if (vote == "crik"){
+				crikVotes++;
+				voteMapIds.push(socketId);
+			}
+		}	
+	});
+
+	
 	socket.on('updateSocketInfo', function(cognitoSub){
 		//console.log(">>>>>>>>>>>>>>>>>>>>>>>>>> Updating socket info. SOCKET LIST: " + SOCKET_LIST.length);
 		for (var s in SOCKET_LIST){ //Kill any existing duplicate logins with this user on this server
@@ -2616,7 +2719,7 @@ io.sockets.on('connection', function(socket){
 			}
 		}
 		socket.cognitoSub = cognitoSub;
-		//logg("updateSocketInfo for cognitoSub: " + SOCKET_LIST[socket.id].cognitoSub);
+		logg("updateSocketInfo for cognitoSub: " + SOCKET_LIST[socket.id].cognitoSub);
 		
 		updateSocketAndServerDb(cognitoSub);
 		if (!isWebServer)
@@ -2817,7 +2920,7 @@ io.sockets.on('connection', function(socket){
 			gametype = "ctf";
 			restartGame();
 		}
-		else if (data == "time" || data == "timelimit"){
+		else if (data == "time" || data == "timelimit" || data == "notime"){
 			if (gameMinutesLength == 0 && gameSecondsLength == 0){
 				gameMinutesLength = 5;
 				gameSecondsLength = 0;
@@ -2838,7 +2941,7 @@ io.sockets.on('connection', function(socket){
 			gameSecondsLength = 0;
 			restartGame();
 		}
-		else if (data == "time5"){
+		else if (data == "time5" || data ==  "5min"){
 			gameMinutesLength = 5;
 			gameSecondsLength = 0;
 			restartGame();
@@ -2897,7 +3000,15 @@ io.sockets.on('connection', function(socket){
 			scoreToWin = 50;
 			restartGame();
 		}
-
+		else if (data == "score75" || data == "to75"){
+			scoreToWin = 75;
+			restartGame();
+		}
+		else if (data == "score100" || data == "to100"){
+			scoreToWin = 100;
+			restartGame();
+		}
+		
 		//maps
 		else if (data == "longest"){
 			map = "longest";
@@ -2970,6 +3081,10 @@ io.sockets.on('connection', function(socket){
 			minutesLeft = 1;
 			secondsLeft = 0;
 		}
+		else if (data == "30sec"){
+			minutesLeft = 0;
+			secondsLeft = 30;
+		}
 		else if (data == "1min1sec"){
 			minutesLeft = 1;
 			secondsLeft = 1;
@@ -3017,15 +3132,24 @@ io.sockets.on('connection', function(socket){
 
 			log("PLAYER ID = " + Player.list[socket.id].id + "PLAYER NAME = " + Player.list[socket.id].name + " TEAM: " + Player.list[socket.id].team);
 			if (Player.list[socket.id] && Player.list[socket.id].team == "white"){
-				if (gametype == "ctf")
+				if (gametype == "ctf"){
 					capture("white");
+				}
+				else if (gametype == "slayer"){
+					whiteScore += 100;
+				}
 			}
 			else if (Player.list[socket.id] && Player.list[socket.id].team == "black"){
-				if (gametype == "ctf")
+				if (gametype == "ctf"){
 					capture("black");
+				}
+				else if (gametype == "slayer"){
+					blackScore += 100;
+				}
 			}
 			minutesLeft = 0;
 			secondsLeft = 0;
+			
 		}
 		else if (data == "loset"){
 			whiteScore = 0;
@@ -3084,15 +3208,17 @@ io.sockets.on('connection', function(socket){
 	});	
 }); //END socket.on(connection)
 
-function joinGame(cognitoSub, username, team){
+function joinGame(cognitoSub, username, team, partyId){
 	var socket = SOCKET_LIST[getSocketIdFromCognitoSub(cognitoSub)];
+	socket.team = team;
+	socket.partyId = partyId;
 	var players = getNumPlayersInGame();
 	if (players >= maxPlayers){ //Another redundant maxplayers check couldn't hurt, right?
 		socket.emit('signInResponse',{success:false,message:"SERVER FULL. Try again later, or try a different server."});								
 	}
 	else {
-		log("CognitoSub signing into game server: " + cognitoSub);
-		Player.onConnect(socket, cognitoSub, username, team);
+		log("Player signing into game server - cognitoSub: " + cognitoSub + " username: " + username + " team: " + team + " partyId: " + partyId);
+		Player.onConnect(socket, cognitoSub, username, team, partyId);
 		dbGameServerUpdate();
 		socket.emit('signInResponse',{success:true,id:socket.id, mapWidth:mapWidth, mapHeight:mapHeight, whiteScore:whiteScore, blackScore:blackScore});
 	}	
@@ -3117,12 +3243,12 @@ function changeTeams(playerId){
 		if (Player.list[playerId].team == "white"){
 			Player.list[playerId].team = "black";
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:Player.list[playerId].team});
-			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE BLACK TEAM.');
+			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
 		}
 		else if (Player.list[playerId].team == "black"){
 			Player.list[playerId].team = "white";
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:Player.list[playerId].team});
-			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE WHITE TEAM.');
+			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
 		}
 		SOCKET_LIST[playerId].team = Player.list[playerId].team;
 		sendSocketListToServerDb();
@@ -3136,7 +3262,7 @@ function populateLoginPage(socket){
 	//Populate Leaderboard Table
 	var leaderboard= "<table class='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";
 	
-	dbFindOptionsAwait("RW_USER", {"USERNAME":{$exists:true}}, {sort:{experience: -1},limit:100}, async function(err, res){
+	dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}]}, {sort:{experience: -1},limit:100}, async function(err, res){
 		if (res && res[0]){
 			for (var i = 0; i < res.length; i++){
 				if (res[i].USERNAME){
@@ -3184,7 +3310,129 @@ function getPlayerRatingAndExperience(id){
 }
 */
 
-function restartGame(){	
+function rebalanceTeams(){
+	var targetTeamScore = 1000; //This is the target score (cashEarnedThisGame in CTF, K/D in slayer) for each team
+	var targetTeamSize = 3.5; //If there are 7 total players
+	
+	//First take biggest party and put them on white
+	//Take next biggest party
+
+	//Get parties
+	//Get party average cashEarnedThisGame in CTF, K/D in slayer
+	//
+
+}
+
+function restartGame(){
+
+	if (ctfVotes > slayerVotes && gametype == "slayer"){
+		scoreToWin = 3;
+		gametype = "ctf";
+	}
+	else if (ctfVotes < slayerVotes && gametype == "ctf"){
+		scoreToWin = 50;
+		gametype = "slayer";
+	}
+	
+	if (thePitVotes > longestVotes && thePitVotes > crikVotes){
+		map = "thepit";
+	}
+	else if (longestVotes > thePitVotes && longestVotes > crikVotes){
+		map = "longest";
+	}
+	else if (crikVotes > thePitVotes && crikVotes > longestVotes){
+		map = "crik";
+	}	
+
+	ctfVotes = 0;
+	slayerVotes = 0;
+	thePitVotes = 0;
+	longestVotes = 0;
+	crikVotes = 0;
+	voteMapIds = [];
+	voteGametypeIds = [];	
+
+	/////////////////////////////Assign team to spectators
+	
+	//First, get the current team sizes
+	var moreWhitePlayers = 0; 
+	for (var p in Player.list){
+		if (Player.list[p].team == "white"){moreWhitePlayers++;}
+		else if (Player.list[p].team == "black"){moreWhitePlayers--;}
+	}
+	
+	console.log("/////////////////////////////////////////////////////////////////////////////////////");
+	console.log("moreWhitePlayers: " + moreWhitePlayers);
+	//Then get the parties, ordered by party size
+	var parties = [];	
+	/*
+	[
+		{
+			partyId: "123456",
+			partySize: 2,
+			playerIds: ["1234","5678"]
+		},
+		{
+			partyId: "123456",
+			partySize: 1,
+			playerIds: ["1234"]
+		}
+
+	]
+	*/	
+	for (var l in Player.list){
+		if (Player.list[l].team != "none"){ //only process spectators
+			continue;
+		}
+		var addedToParty = false;
+		for (var p = 0; p < parties.length; p++){
+			if (Player.list[l].partyId == parties[p].partyId && Player.list[l].partyId.length > 0){
+				parties[p].partySize++;
+				parties[p].playerIds.push(Player.list[l].id);
+				addedToParty = true;
+				break;
+			}
+		}
+		if (!addedToParty && typeof Player.list[l].id != 'undefined'){
+			var newParty = {partyId: Player.list[l].partyId, partySize: 1, playerIds: [Player.list[l].id]};
+			parties.push(newParty);
+		}
+	}
+	parties.sort(comparePartySize);
+
+	
+	console.log("PARTIES:");
+	console.log(parties);	
+	console.log("PLAYERS:");
+	console.log(Player.list);
+	
+	//Assign team to spectating parties
+	for (var q = 0; q < parties.length; q++){
+		if (moreWhitePlayers <= 0){
+			for (var r = 0; r < parties[q].playerIds.length; r++){
+				if (typeof Player.list[parties[q].playerIds[r]] === 'undefined')
+					continue;
+				Player.list[parties[q].playerIds[r]].team = "white";
+				moreWhitePlayers++;
+				console.log("Party to white team:");
+				console.log(parties[q]);
+			}
+		}
+		else {
+			for (var r = 0; r < parties[q].playerIds.length; r++){
+				if (typeof Player.list[parties[q].playerIds[r]] === 'undefined')
+					continue;
+				Player.list[parties[q].playerIds[r]].team = "black";
+				moreWhitePlayers--;
+				console.log("Party to black team:");
+				console.log(parties[q]);
+			}
+		}
+	}
+	
+	/////////////////////////////////////////////////////////////////////////////
+	
+	
 	gameOver = false;
 	pregame = false;
 
@@ -3341,13 +3589,14 @@ function ensureCorrectThugCount(){
 
 
 //-----------------------PLAYER----------------------
-var Player = function(id, cognitoSub, name, team){
+var Player = function(id, cognitoSub, name, team, partyId){
 //Stuff that ONLY gets set on Player entry
 	var self = {
 		id:id,
 		cognitoSub:cognitoSub,
 		team:team,
 		name:name,
+		partyId:partyId,
 		height:94,
 		width:94,
 		pressingUp:false,
@@ -3594,13 +3843,13 @@ var Player = function(id, cognitoSub, name, team){
 		if (self.healDelay <= 0 && self.health < 100 && self.health > 0){
 			self.health++;
 			updatePlayerList.push({id:self.id,property:"health",value:self.health});
-			if (self.health >= 100){
-				self.lastEnemyToHit = 0;
-			}
 			self.healDelay += healRate;
 		}
+		if (self.health >= 100){
+			self.lastEnemyToHit = 0;
+		}
 		if (self.healDelay > 0){self.healDelay--;}
-		
+
 	/////////////////////// ENERGY /////////////////////
 		if (self.rechargeDelay <= 0 && self.energy < (100 * self.hasBattery)){
 			self.energy++;
@@ -4498,9 +4747,12 @@ function gunSwap(player){
 	}
 }
 
-Player.onConnect = function(socket, cognitoSub, name, team){
-	var player = Player(socket.id, cognitoSub, name, team);
+Player.onConnect = function(socket, cognitoSub, name, team, partyId){
+	var player = Player(socket.id, cognitoSub, name, team, partyId);
 	ensureCorrectThugCount();
+	if (pregame == true && getNumPlayersInGame() >= 4){
+		restartGame();
+	}
 
 	socket.on('keyPress', function(data){
 		if (!Player.list[socket.id]){
@@ -4782,7 +5034,7 @@ Player.onConnect = function(socket, cognitoSub, name, team){
 }//End Player.onConnect
 
 function pickupPickup(playerId, pickupId){
-	if (Pickup.list[pickupId].type == 1){
+	if (Pickup.list[pickupId].type == 1){ //MD
 		if (Player.list[playerId].health < 100){
 			Player.list[playerId].health += Pickup.list[pickupId].amount;
 			if (Player.list[playerId].health > 100){
@@ -4796,7 +5048,7 @@ function pickupPickup(playerId, pickupId){
 			return;
 		}
 	}
-	else if (Pickup.list[pickupId].type == 2){
+	else if (Pickup.list[pickupId].type == 2){ //DP
 		if (Player.list[playerId].holdingBag == false && Player.list[playerId].weapon == 1){
 			if (Player.list[playerId].reloading > 0){
 				Player.list[playerId].reloading = 0;
@@ -4827,7 +5079,7 @@ function pickupPickup(playerId, pickupId){
 		}	
 		removePickup(pickupId);		
 	}
-	else if (Pickup.list[pickupId].type == 3){
+	else if (Pickup.list[pickupId].type == 3){ //MG
 		if (Player.list[playerId].holdingBag == false && Player.list[playerId].weapon == 1){
 			if (Player.list[playerId].reloading > 0){
 				Player.list[playerId].reloading = 0;
@@ -4858,7 +5110,7 @@ function pickupPickup(playerId, pickupId){
 		}	
 		removePickup(pickupId);		
 	}
-	else if (Pickup.list[pickupId].type == 4){
+	else if (Pickup.list[pickupId].type == 4){ //SG
 		if (Player.list[playerId].holdingBag == false && Player.list[playerId].weapon == 1){
 			if (Player.list[playerId].reloading > 0){
 				Player.list[playerId].reloading = 0;
@@ -4889,8 +5141,8 @@ function pickupPickup(playerId, pickupId){
 		}		
 		removePickup(pickupId);		
 	}
-	else if (Pickup.list[pickupId].type == 5 && Player.list[playerId].health < playerMaxHealth){
-		Player.list[playerId].health += Pickup.list[pickupId].amount;
+	else if (Pickup.list[pickupId].type == 5 && Player.list[playerId].health < playerMaxHealth){ //BA
+		Player.list[playerId].health = 100 + Pickup.list[pickupId].amount;
 		if (Player.list[playerId].health > playerMaxHealth){
 			Player.list[playerId].health = playerMaxHealth;
 		}
@@ -5407,10 +5659,12 @@ function hit(target, shootingDir, distance, shooterId){
 			}
 		}
 		
-		if (target.team && target.health){
+		if (target.team && target.health){			
 			if (target.team != Player.list[shooterId].team){
 				target.lastEnemyToHit = shooterId; //For betrayal/Suicide detection
 			}
+			
+			var damageInflicted = 0;
 			
 			//Player stagger and cloak interruption stuff
 			if (Player.list[target.id]){
@@ -5422,12 +5676,12 @@ function hit(target, shootingDir, distance, shooterId){
 				}
 				if (target.cloakEngaged){
 					target.cloakEngaged = false;
+					damageInflicted += cloakBonusDamage;
 					updatePlayerList.push({id:target.id,property:"cloakEngaged",value:target.cloakEngaged});
 				}
 			}
 		
 			//CALCULATE DAMAGE
-			var damageInflicted = 0;
 			var targetDistance = getDistance(target, Player.list[shooterId]);
 			
 			//Facing attacker (lowest damage)
@@ -5593,7 +5847,7 @@ function playerEvent(playerId, event){
 			updatePlayerList.push({id:playerId,property:"captures",value:Player.list[playerId].captures});
 			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-			if (minutesLeft > 0 && secondsLeft > 0){
+			if (!gameOver){
 				updateNotificationList.push({text:"+$" + captureCash + " - BAG CAPTURED!!",playerId:playerId});
 			}
 			dbUserUpdate("inc", Player.list[playerId].cognitoSub, {captures: 1});
@@ -6596,9 +6850,9 @@ function moveBags(){
 }
 
 function checkForGameOver(){
-	//GAME IS OVER, GAME END, ENDGAME GAMEOVER GAME OVER
-	//End by time
+	//GAME IS OVER, GAME END, ENDGAME GAMEOVER GAME OVER	
 	if (gameOver == false){	
+		//End by time
 		if ((secondsLeft <= 0 && minutesLeft <= 0) && (gameSecondsLength > 0 || gameMinutesLength > 0) && whiteScore != blackScore){ 
 			endGame();
 		}
@@ -6674,7 +6928,30 @@ setInterval(
 	function(){
 		if (pause == true)
 			return;
-	
+				
+		//Post game voting updates
+		if (gameOver == true){
+			console.log("SENDING DATA!!!!");
+			for (var i in SOCKET_LIST){
+				if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
+					continue;
+				}
+				
+				var socket = SOCKET_LIST[i];
+				
+				var votesData = {
+					ctfVotes:ctfVotes,
+					slayerVotes:slayerVotes,
+					thePitVotes:thePitVotes,
+					longestVotes:longestVotes, 
+					crikVotes:crikVotes,
+				};
+				console.log(votesData);
+				
+				socket.emit('votesUpdate',votesData);
+			}
+		}
+		
 		//Clock shit
 		if ((gameMinutesLength > 0 || gameSecondsLength > 0) && !gameOver){
 			if (!pregame){
@@ -6696,6 +6973,10 @@ setInterval(
 				secondsLeftPlusZero = "0" + secondsLeft.toString();
 			}		
 			for (var i in SOCKET_LIST){
+				if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
+					continue;
+				}
+
 				var socket = SOCKET_LIST[i];
 				socket.emit('sendClock',secondsLeftPlusZero, minutesLeft);
 			}
@@ -6782,7 +7063,7 @@ function checkForUnhealthyServers(){
 					}					
 					dbUpdateAwait("RW_SERV", "rem", { url: res[i].url }, {}, async function(err2, obj){
 						if (!err2){
-							logg("Server: " + res[i].url + " successfully removed from database.");
+							logg("Unhealthy Server successfully removed from database.");
 						}
 					});										
 				}
@@ -6809,20 +7090,13 @@ function syncGameServerWithDatabase(){
 		if (res && res[0]){
 			//log("Server " + myUrl + " present in IN_SERV. Grabbing server config...");
 			serverNumber = res[0].serverNumber;
-			if (gametype == "ctf"){
-				serverName = "Capture_" + serverNumber + "_" + port;
-			}
-			else if (gametype == "slayer"){
-				serverName = "Deathmatch_" + serverNumber + "_" + port;
-			}
 			
 			//serverName = res[0].serverName;
-
 			
 			//These source of truth are the DB. Be sure to differentiate these from the ones that should be written to DB from server values
-			maxPlayers = res[0].maxPlayers;
-			voteGametype = res[0].voteGametype;
-			voteMap = res[0].voteMap;
+			//maxPlayers = res[0].maxPlayers;
+			//voteGametype = res[0].voteGametype;
+			//voteMap = res[0].voteMap;
 			if (res[0].gametype == "slayer" || res[0].gametype == "ctf"){
 				gametype = res[0].gametype;
 			}
@@ -6867,31 +7141,6 @@ function syncGameServerWithDatabase(){
 					logg('There are no servers live');
 				}
 
-				//SERVER CONFIG BASED ON PORT
-				//string contains includes
-				if (port.toString().indexOf('01') > -1) {
-					serverName = "Capture_" + serverNumber + "_" + port;
-					gametype = "ctf";
-					voteGametype = false;
-				}
-				else if (port.toString().indexOf('02') > -1) {
-					serverName = "Deathmatch_" + serverNumber + "_" + port;
-					gametype = "slayer";
-					voteGametype = false;
-				}
-				else if (port.toString().indexOf('03') > -1) {
-					serverName = "PlayersChoice_" + serverNumber + "_" + port;
-					gametype = "ctf";
-					voteGametype = true;
-				}
-				else if (port.toString().indexOf('04') > -1) {
-					serverName = "PlayersChoice_" + serverNumber + "_" + port;
-					gametype = "slayer";
-					voteGametype = true;
-				}
-				else {
-					serverName = "PlayersChoice_" + serverNumber + "_" + port;
-				}
 				console.log("ADDING SERVER WITH NO PARAMS");
 				dbGameServerUpdate();			
 			});
@@ -6901,6 +7150,25 @@ function syncGameServerWithDatabase(){
 
 //------------------------------------------------------------------------------
 //Handy handy functions
+
+function comparePartySize(a,b) { //order
+  if (a.partySize < b.partySize)
+    return 1;
+  if (a.partySize > b.partySize)
+    return -1;
+  return 0;
+}
+
+function compareCurrentPlayerSize(a,b) { //order
+	var aCurrentPlayers = getCurrentPlayersFromUsers(a.currentUsers).length;
+	var bCurrentPlayers = getCurrentPlayersFromUsers(b.currentUsers).length;
+
+  if (aCurrentPlayers < bCurrentPlayers)
+    return 1;
+  if (aCurrentPlayers > bCurrentPlayers)
+    return -1;
+  return 0;
+}
 
 function parseINIString(data){
     var regex = {

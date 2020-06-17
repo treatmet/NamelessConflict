@@ -1,3 +1,4 @@
+var socket = io();
 const cognitoClientId = '70ru3b3jgosqa5fpre6khrislj';
 const cognitoPoolId = 'us-east-2_SbevJL5zt';
 var cognitoSub = "";
@@ -26,7 +27,6 @@ function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
 	var code = getUrlParam("code", "").substring(0,36);
 	var cog_a = getUrlParam("cog_a", "");
-	var cog_i = getUrlParam("cog_i", "");
 	var cog_r = getUrlParam("cog_r", "");
 	console.log("Got cog_a from url: " + cog_a);
 
@@ -39,10 +39,9 @@ function getTokenFromUrlParameterAndLogin(){
     const data = {
         code:code,
 		cog_a:cog_a,
-		cog_i:cog_i,
 		cog_r:cog_r
     };
-
+	
     $.post(validateTokenEndpoint, data, function(data,status){
         console.log("validateToken response:");
         console.log(data);
@@ -52,10 +51,15 @@ function getTokenFromUrlParameterAndLogin(){
 			serverHomePage = "/";
 			redirectUri = "https://rw2.treatmetcalf.com/";
 		}
-		document.getElementById("logInH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
-		document.getElementById("createAccountH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
-		document.getElementById("logIn").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
-		document.getElementById("createAccount").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
+		
+		if (document.getElementById("logInH")){
+			document.getElementById("logInH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
+			document.getElementById("createAccountH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
+		}
+		if (document.getElementById("logIn")){
+			document.getElementById("logIn").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
+			document.getElementById("createAccount").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
+		}
 		
 		pcMode = data.pcMode;
 		if (data.pcMode == 2){
@@ -94,6 +98,7 @@ function getTokenFromUrlParameterAndLogin(){
         }
 		removeUrlParams();
     });
+
 }
 
 function getJoinParams(){
@@ -231,8 +236,8 @@ function getOnlineFriendsAndParty(){
 		cognitoSub:cognitoSub
 	};
 	$.post('/getOnlineFriends', data, function(data,status){
-		console.log("getOnlineFriends response:");
-		console.log(data);		
+		//console.log("getOnlineFriends response:");
+		//console.log(data);		
 		updateOnlineFriendsSectionHtml(data);		
 	});
 	
@@ -928,19 +933,6 @@ function updatePreferredUsername(password, newUsername){
     });
 }
 
-function setLocalStorageAll(cog_a, cog_i, cog_r){
-    console.log(getCognitoUserPool().getCurrentUser());
-
-    var keyPrefix = 'CognitoIdentityServiceProvider.' + cognitoClientId;
-    var idTokenKey = keyPrefix + '.' + username + '.idToken';
-    var accessTokenKey = keyPrefix + '.' + username + '.accessToken';
-    var refreshTokenKey = keyPrefix + '.' + username + '.refreshToken';
-    var lastUserKey = keyPrefix + '.LastAuthUser';
-
-    localStorage.setItem(lastUserKey, username);
-}
-
-
 function ChangePassword(password, newPassword) {
     var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
         Username: username,
@@ -1056,8 +1048,50 @@ function submitPlayerSearch(e){
 		alert("Search must be at least 3 characters long.");
 		return;		
 	}
-	window.location.pathname = serverHomePage + "search/" + e.target.elements[0].value;
+	window.location.href = serverHomePage + "search/" + e.target.elements[0].value;
 }
+
+
+function voteCTF(){
+	socket.emit("voteEndgame", myPlayer.id, "gametype", "ctf");
+	document.getElementById("voteCTF").disabled = true;
+	document.getElementById("voteDeathmatch").disabled = true;	
+}
+
+function voteDeathmatch(){
+	socket.emit("voteEndgame", myPlayer.id, "gametype", "slayer");
+	document.getElementById("voteCTF").disabled = true;
+	document.getElementById("voteDeathmatch").disabled = true;	
+}
+
+function voteLongest(){
+	socket.emit("voteEndgame", myPlayer.id, "map", "longest");
+	document.getElementById("voteLongest").disabled = true;
+	document.getElementById("voteCrik").disabled = true;
+	document.getElementById("voteThePit").disabled = true;	
+}
+
+function voteThePit(){
+	socket.emit("voteEndgame", myPlayer.id, "map", "thepit");
+	document.getElementById("voteLongest").disabled = true;
+	document.getElementById("voteCrik").disabled = true;
+	document.getElementById("voteThePit").disabled = true;	
+}
+				
+function voteCrik(){
+	socket.emit("voteEndgame", myPlayer.id, "map", "crik");
+	document.getElementById("voteLongest").disabled = true;
+	document.getElementById("voteCrik").disabled = true;
+	document.getElementById("voteThePit").disabled = true;	
+}
+
+socket.on('votesUpdate', function(votesData){
+	document.getElementById("voteCTF").innerHTML = "CTF - [" + votesData.ctfVotes + "]";
+	document.getElementById("voteDeathmatch").innerHTML = "Deathmatch - [" + votesData.slayerVotes + "]";	
+	document.getElementById("voteLongest").innerHTML = "Longest - [" + votesData.longestVotes + "]";
+	document.getElementById("voteThePit").innerHTML = "The Pit - [" + votesData.thePitVotes + "]";	
+	document.getElementById("voteCrik").innerHTML = "Crik - [" + votesData.crikVotes + "]";
+});
 
 //EVERY 1 SECOND
 const headerRefreshSeconds = 10;

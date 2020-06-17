@@ -1,4 +1,5 @@
 <head>
+	<title>Nameless Conflict</title>
 	<html style="background-color: #303030;"><head>
 	<link href='https://fonts.googleapis.com/css?family=Armata' rel='stylesheet'>
 	<link href='https://fonts.googleapis.com/css?family=Changa' rel='stylesheet'>
@@ -21,7 +22,7 @@
     
 <div style="display:none;" id="mainContent">
 	<div id="sectionTitles">
-		<div id="sectionTitle1" class="sectionTitle">Play Now</div>
+		<div id="sectionTitle1" class="sectionTitle">Select Game</div>
 		<div id="sectionTitle2" class="sectionTitle2">Leaderboard</div>
 		<div id="sectionTitle3" class="sectionTitle2">Learn To Play</div>
 	</div>
@@ -81,15 +82,74 @@
 	</div>
 </div>
 
-<a href="https://rw.treatmetcalf.com" style="
-    float: left;
-    width: 20px;
-	display: none;
-" class="elecText" id="homeLink">&lt;Back</a>
+<!-----LEFT MENU----->
 
+
+<table class="leftMenu" id="leftMenu" style="display:none;">
+	<tbody>
+		<tr>
+			<td class="menuLeftLink"><a href="/" style="" class="elecText" id="homeLink">&lt;Back</a></td>		  
+		</tr>
+		<tr>
+			<td><br></td>
+		</tr>
+		
+		<tr>
+			<td><br></td>
+		</tr>
+
+
+
+		<tr>
+			<td>Tip:</td>
+		</tr>
+		<tr>
+			<td id="tipContent">For best game performance, close all other browser tabs and applications.</td>
+		</tr>		
+		
+
+		<tr>
+			<td>
+				<table class="leftMenu" id="voteMenu" style="display:none;">
+					<tbody>
+						<tr>
+							<td>Vote next game type:</td>
+						</tr>
+						<tr>
+							<td><button id="voteCTF" class="RWButton" style="" onclick="voteCTF()">CTF - [0]</button></td>
+						</tr>
+						<tr>
+							<td><button id="voteDeathmatch" class="RWButton" style="" onclick="voteDeathmatch()">Deathmatch - [0]</button></td>
+						</tr>
+						<tr>
+							<td><br></td>
+						</tr>
+						<tr>
+							<td>Vote next map:</td>
+						</tr>
+						<tr>
+							<td><button id="voteLongest" class="RWButton" style="" onclick="voteLongest()">Longest - [0]</button></td>
+						</tr>
+						<tr>
+							<td><button id="voteThePit" class="RWButton" style="" onclick="voteThePit()">The Pit - [0]</button></td>
+						</tr>								
+						<tr>
+							<td><button id="voteCrik" class="RWButton" style="display:none" onclick="voteCrik()">Crik - [0]</button></td>
+						</tr>								
+					</tbody>
+				</table>
+			</td>
+		</tr>		
+	</tbody>
+</table>
+
+
+
+
+		
 <!-------CANVAS-------->
 <div id="canvasDiv" style="display:none; margin: auto; width: 1100px; margin-top: 8px;">	
-	<canvas id="ctx" width="1100" height="900" style="border:2px solid #000000;background-color: #131313;"></canvas>
+	<canvas id="ctx" width="1100" height="900"></canvas>
 	<!--<canvas id="ctx2" width="1100" height="900" style="border: 2px solid rgb(0, 0, 0);margin: -2px;position: absolute; top: 5px;"></canvas> -->
 
 	<div id="chat-window" style="width: 400px; position:absolute; margin-top: -200px;">
