@@ -1,4 +1,0 @@
-mongoDbLocation=mongodb://RWsystem:RWPa55y3!@rw-database-shard-00-00-aywyv.mongodb.net:27017,rw-database-shard-00-01-aywyv.mongodb.net:27017,rw-database-shard-00-02-aywyv.mongodb.net:27017/RWAR?ssl=true&replicaSet=RW-Database-shard-0&authSource=admin&retryWrites=true
-awsAccessKeyId=AKIAJGQ7E7TD54SJQVNQ
-awsSecretAccessKey=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
-s3LoggingBucket=rw3000-logs
