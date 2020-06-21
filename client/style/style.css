@@ -319,7 +319,6 @@ div#updateUserForm {
     text-align: center;
     margin: 10px;
     margin-top: 30px;
-	background-color: #3a3a3a;
 }
 
 button#editUserButton {
@@ -458,6 +457,11 @@ button#playNow {
 }
 button#playNowH {
     background-color: #eada10;
+	margin-right: 5px;
+}
+
+button#feedbackH {
+    background-color: #ea9310;
 	margin-right: 5px;
 }
 
@@ -647,6 +651,7 @@ div#serversHiddenMsg {
 .leftMenu td#tipContent{
     font-weight: normal;
     height: 150px;
+	width: 215px;
     vertical-align: top;
 }
 

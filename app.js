@@ -200,7 +200,9 @@ var damageScale = 1;
 	var SGDamage = 30;
 	var SGSideDamage = 30;
 	var SGBackDamage = 60;
-
+	var friendlyFireDamageScale = 0.5;
+	var boostDamage = 50;
+	
 const SGRange = 310;
 const SGCloseRangeDamageScale = 4;
 const SGPushSpeed = 12;
@@ -249,6 +251,10 @@ var playerWhiteHomeX = 75;
 var playerWhiteHomeY = 75;
 var playerBlackHomeX = mapWidth - 75;
 var playerBlackHomeY = mapHeight - 75;
+var warp1X = 3.9 * 75;
+var warp1Y = 13 * 75;
+var warp2X = 48.1 * 75;
+var warp2Y = 13 * 75;
 
 var spawnXminBlack = 0;
 var spawnXmaxBlack = 0;
@@ -311,13 +317,13 @@ var updateMisc = {};
 //This belongs in a database... or in a museum
 var rankings = [
 	{rank:"bronze1",rating:0},
-	{rank:"bronze2",rating:200},
-	{rank:"bronze3",rating:400},
-	{rank:"silver1",rating:600},
-	{rank:"silver2",rating:800},
-	{rank:"silver3",rating:1000},
-	{rank:"gold1",rating:1200},
-	{rank:"gold2",rating:1400},
+	{rank:"bronze2",rating:100},
+	{rank:"bronze3",rating:200},
+	{rank:"silver1",rating:300},
+	{rank:"silver2",rating:500},
+	{rank:"silver3",rating:700},
+	{rank:"gold1",rating:1000},
+	{rank:"gold2",rating:1300},
 	{rank:"gold3",rating:1600},
 	{rank:"diamond",rating:2000},
 	{rank:"diamond2",rating:9999}
@@ -436,11 +442,23 @@ function initializePickups(map){
 		Pickup(Math.random(), 5, 20, 2, 40, 25); //DP
 		Pickup(Math.random(), 37, 20, 2, 40, 25); //DP
 	}
-	else if (map == "three"){
-		bagRed.homeX = 5*75;
-		bagRed.homeY = 27*75;
-		bagBlue.homeX = 37*75;
-		bagBlue.homeY = 3*75;		
+	else if (map == "crik"){
+		bagRed.homeX = 7*75;
+		bagRed.homeY = 13*75;
+		bagBlue.homeX = 45*75;
+		bagBlue.homeY = 13*75;
+
+		Pickup(Math.random(), 26.5, 4.5, 1, 50, 10); //MD
+		Pickup(Math.random(), 26.5, 22.5, 1, 50, 10); //MD
+		Pickup(Math.random(), 1, 13.5, 5, 75, 45); //Body Armor
+		Pickup(Math.random(), 52, 13.5, 5, 75, 45); //Body Armor
+		Pickup(Math.random(), 24, 26, 3, 135, 45); //MG
+		Pickup(Math.random(), 29, 1, 3, 135, 45); //MG
+		Pickup(Math.random(), 17, 6, 2, 40, 25); //DP
+		Pickup(Math.random(), 14, 22, 2, 40, 25); //DP		
+		Pickup(Math.random(), 39, 5, 2, 40, 25); //DP
+		Pickup(Math.random(), 36, 21, 2, 40, 25); //DP		
+		Pickup(Math.random(), 26.5, 13.5, 4, 24, 40); //SG
 	}	
 	else if (map == "close"){
 		bagRed.homeX = 5*75;
@@ -602,22 +620,71 @@ function initializeBlocks(map){
 		Block(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
 		Block(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
 	}
-	else if (map == "three"){
-		mapWidth = 20*75;
-		mapHeight = 15*75;
+	else if (map == "crik"){
+		mapWidth = 52*75;
+		mapHeight = 26*75;
 		
 		//Spawn areas
-		spawnXminBlack = mapWidth - 700;
-		spawnXmaxBlack = mapWidth - 10;
-		spawnYminBlack = 1*75;
-		spawnYmaxBlack = 20*75;
 		spawnXminWhite = 10;
-		spawnXmaxWhite = 700;
-		spawnYminWhite = 8*75;
-		spawnYmaxWhite = 29*75;
+		spawnXmaxWhite = mapWidth/2;
+		spawnYminWhite = 10;
+		spawnYmaxWhite = mapHeight - 10;
+		/////////////////////////////
+		spawnXminBlack = mapWidth/2;
+		spawnXmaxBlack = mapWidth - 10;
+		spawnYminBlack = 10;
+		spawnYmaxBlack = mapHeight - 10;
 		
-		Block(10, (mapHeight/75) - (mapHeight/75)/1.5, 1, (mapHeight/75)/1.5, "normal");	
-		Block(31, 0, 1, (mapHeight/75)/1.5, "normal");	
+			
+		//Blocks
+		//Block(40, 14, 2, 3, "normal");	
+		Block(40, 14, 2, 5.8, "normal");	
+		//Block(10, 9, 2, 3, "normal");	
+		Block(10, 6, 2, 6, "normal");	
+		Block(4, 11, 2, 1, "red");	
+		Block(4, 14, 2, 1, "red");	
+		Block(46, 11, 2, 1, "blue");	
+		Block(46, 14, 2, 1, "blue");	
+		Block(19, -0.5, 2, 2.5, "normal");	
+		Block(22, 1, 2, 1, "normal");	
+		Block(24, 1, 5.1, 1, "pushDown");
+		Block(29, -0.5, 23, 2.5, "normal");	
+		Block(17, 4, 1, 3, "red");	
+		Block(44, 3, 2, 2, "normal");	
+		Block(5,6, 8, 1, "red");	
+		Block(15, 6, 3, 1, "red");	
+		Block(34, 6, 13, 1, "blue");	
+		Block(17, 7, 1, 2.1, "pushRight");	
+		Block(24, 8, 1, 10, "pushLeft");	
+		Block(27, 8, 1, 10, "pushRight");	
+		Block(34, 7, 1, 2.1, "pushLeft");	
+		Block(46, 6, 1, 14, "blue");	
+		Block(14, 9, 1, 8, "normal");	
+		Block(17, 9, 1, 3, "red");	
+		Block(20, 8, 2, 3, "normal");	
+		Block(34, 9, 1, 3, "blue");	
+		Block(37, 9, 1, 8, "normal");	
+		Block(40, 9, 2, 3, "normal");	
+		Block(5, 6, 1, 14, "red");	
+		Block(10, 14, 2, 3, "normal");	
+		Block(17, 14, 1, 3, "red");	
+		Block(30, 15, 2, 3, "normal");	
+		Block(34, 14, 1, 3, "blue");	
+		Block(5, 19, 13, 1, "red");	
+		Block(17, 17, 1, 2, "pushRight");	
+		Block(34, 17, 1, 2.1, "pushLeft");	
+		Block(6, 21, 2, 2, "normal");	
+		Block(34, 19, 3, 1, "blue");	
+		Block(39, 19, 8, 1, "blue");	
+		Block(34, 19, 1, 3, "blue");	
+		Block(0, 24, 23, 2.4, "normal");	
+		Block(23, 24, 5.1, 1, "pushUp");	
+		Block(28, 24, 2, 1, "normal");	
+		Block(31, 24, 2, 2.5, "normal");	
+		
+		Block(4, 12, 1, 2, "warp1");	
+		Block(47, 12, 1, 2, "warp2");	
+
 
 		Block(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
 		Block(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
@@ -1256,17 +1323,14 @@ var getJoinableServer = function(options, cb){
 						team = "black";
 					}
 					
-					/*
 					console.log("!!!!!!!!!!!!!!!SPECTATE?????????????????????");
 					var matchRemaining = (serv[i].currentTimeLeft / serv[i].matchTime);
 					var possibleTeamDifference = Math.abs(Math.abs(moreWhitePlayers) - options.party.length);					
 					console.log("(REMAINING TIME) IS " + matchRemaining + " LESS THAN " + joinActiveGameThreshold);
 					console.log("(CURRENT PLAYERS) IS " + getCurrentPlayersFromUsers(serv[i].currentUsers).length + " GREATER THAN OR EQUAL TO 2?");
 					console.log("(POSSIBLE TEAM DIFF) IS " + possibleTeamDifference + " GREATER THAN OR EQUAL TO " + Math.abs(moreWhitePlayers));
-					console.log("(IS IT NOT PREGAME?) " + pregame);
-					*/
 					
-					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 2 && !pregame){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
+					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 2){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
 						team = "none";
 					}
 					
@@ -2759,9 +2823,7 @@ io.sockets.on('connection', function(socket){
 			//dbUserUpdate("inc", Player.list[socket.id].cognitoSub, {rating: -matchWinLossRatingBonus});
 		}
 		Player.onDisconnect(socket); //Deletes from Player.list
-		delete SOCKET_LIST[socket.id];
-		
-		sendSocketListToServerDb();
+		delete SOCKET_LIST[socket.id];		
 	});
 
 	socket.on('chat', function(data){
@@ -2776,13 +2838,22 @@ io.sockets.on('connection', function(socket){
 	//Server commands
 	socket.on('evalServer', function(data){
 		//socket = socketBak;
-		if(!allowServerCommands){return;}
 		if (!Player.list[socket.id]){return;}
+
+		if(!allowServerCommands){
+			if (data == "stopcmd" || data == "servercmd" || data == "servercommands"){
+				allowServerCommands = true;
+			}			
+			return;
+		}
 		
 		
 		logg("SERVER COMMAND:" + data);
 		log(data.substring(4));
-		if (data == "start" || data == "restart"){
+		if (data == "stopcmd" || data == "servercmd" || data == "servercommands"){
+			allowServerCommands = false;
+		}
+		else if (data == "startt" || data == "restartt"){
 			restartGame();
 		}
 		else if (data == "team1" || data == "teamsize1"){
@@ -2886,7 +2957,7 @@ io.sockets.on('connection', function(socket){
 			damageScale = 0.5;
 		}
 		//gametypes
-		else if (data == "slayer" || data == "deathmatch"){
+		else if (data == "slayert" || data == "deathmatcht"){
 			gametype = "slayer";
 			restartGame();
 		}
@@ -2899,8 +2970,8 @@ io.sockets.on('connection', function(socket){
 		}
 		else if (data == "slayer2"){
 			gametype = "slayer";
-			gameMinutesLength = 0;
-			gameSecondsLength = 0;
+			gameMinutesLength = 9;
+			gameSecondsLength = 59;
 			scoreToWin = 50;			
 			restartGame();
 		}
@@ -2918,15 +2989,11 @@ io.sockets.on('connection', function(socket){
 			scoreToWin = 3;			
 			restartGame();
 		}
-		else if (data == "ctf"){
+		else if (data == "ctft"){
 			gametype = "ctf";
 			restartGame();
 		}
-		else if (data == "ctf"){
-			gametype = "ctf";
-			restartGame();
-		}
-		else if (data == "time" || data == "timelimit" || data == "notime"){
+		else if (data == "timet" || data == "timelimit" || data == "notime"){
 			if (gameMinutesLength == 0 && gameSecondsLength == 0){
 				gameMinutesLength = 5;
 				gameSecondsLength = 0;
@@ -3024,8 +3091,8 @@ io.sockets.on('connection', function(socket){
 			map = "thepit";
 			restartGame();
 		}
-		else if (data == "three" || data == "third"){
-			map = "three";
+		else if (data == "crik" || data == "creek"){
+			map = "crik";
 			restartGame();
 		}
 		else if (data == "map2"){
@@ -3102,7 +3169,7 @@ io.sockets.on('connection', function(socket){
 		else if (data == "team" || data == "teams" || data == "change" || data == "switch" || data == "changeTeams" || data == "changeTeam"){
 			changeTeams(socket.id);
 		}
-		else if (data == "capture" || data == "score"){
+		else if (data == "capturet" || data == "scoret"){
 			if (Player.list[socket.id].team == "white"){
 				capture("white");
 			}
@@ -3350,37 +3417,7 @@ function rebalanceTeams(){
 
 }
 
-function restartGame(){
-
-	if (ctfVotes > slayerVotes && gametype == "slayer"){
-		scoreToWin = 3;
-		gametype = "ctf";
-	}
-	else if (ctfVotes < slayerVotes && gametype == "ctf"){
-		scoreToWin = 50;
-		gametype = "slayer";
-	}
-	
-	if (thePitVotes > longestVotes && thePitVotes > crikVotes){
-		map = "thepit";
-	}
-	else if (longestVotes > thePitVotes && longestVotes > crikVotes){
-		map = "longest";
-	}
-	else if (crikVotes > thePitVotes && crikVotes > longestVotes){
-		map = "crik";
-	}	
-
-	ctfVotes = 0;
-	slayerVotes = 0;
-	thePitVotes = 0;
-	longestVotes = 0;
-	crikVotes = 0;
-	voteMapIds = [];
-	voteGametypeIds = [];	
-
-	/////////////////////////////Assign team to spectators
-	
+function assignSpectatorsToTeam(assignEvenIfFull){
 	//First, get the current team sizes
 	var moreWhitePlayers = 0; 
 	for (var p in Player.list){
@@ -3388,8 +3425,6 @@ function restartGame(){
 		else if (Player.list[p].team == "black"){moreWhitePlayers--;}
 	}
 	
-	console.log("/////////////////////////////////////////////////////////////////////////////////////");
-	console.log("moreWhitePlayers: " + moreWhitePlayers);
 	//Then get the parties, ordered by party size
 	var parties = [];	
 	/*
@@ -3427,22 +3462,22 @@ function restartGame(){
 	}
 	parties.sort(comparePartySize);
 
-	
-	console.log("PARTIES:");
-	console.log(parties);	
-	console.log("PLAYERS:");
-	console.log(Player.list);
-	
+		
+	console.log("ATTEMPTING TO ADD SPECTATORS");
 	//Assign team to spectating parties
 	for (var q = 0; q < parties.length; q++){
+		var newGameZise=parties[q].partySize + getNumTeamPlayersInGame();
+		console.log("IF WE ADD YOU, IS NEW GAME SIZE(" + newGameZise + ") greater than maxPlayers (" + maxPlayers);
+		if (parties[q].partySize + getNumTeamPlayersInGame() > maxPlayers && !assignEvenIfFull)
+			continue;
+			
 		if (moreWhitePlayers <= 0){
 			for (var r = 0; r < parties[q].playerIds.length; r++){
 				if (typeof Player.list[parties[q].playerIds[r]] === 'undefined')
 					continue;
 				Player.list[parties[q].playerIds[r]].team = "white";
 				moreWhitePlayers++;
-				console.log("Player from this Spectating Party to white team:");
-				console.log(parties[q]);
+				Player.list[parties[q].playerIds[r]].respawn();
 			}
 		}
 		else {
@@ -3451,16 +3486,51 @@ function restartGame(){
 					continue;
 				Player.list[parties[q].playerIds[r]].team = "black";
 				moreWhitePlayers--;
-				console.log("Player from this Spectating Party to black team:");
-				console.log(parties[q]);
+				Player.list[parties[q].playerIds[r]].respawn();
 			}
 		}
 	}
+}
+
+function restartGame(){
+
+	if (ctfVotes > slayerVotes && gametype == "slayer"){
+		scoreToWin = 3;
+		gametype = "ctf";
+	}
+	else if (ctfVotes < slayerVotes && gametype == "ctf"){
+		scoreToWin = 50;
+		gametype = "slayer";
+	}
 	
-	/////////////////////////////////////////////////////////////////////////////
+	if (thePitVotes > longestVotes && thePitVotes > crikVotes){
+		map = "thepit";
+	}
+	else if (longestVotes > thePitVotes && longestVotes > crikVotes){
+		map = "longest";
+	}
+	else if (crikVotes > thePitVotes && crikVotes > longestVotes){
+		map = "crik";
+	}	
+
+	ctfVotes = 0;
+	slayerVotes = 0;
+	thePitVotes = 0;
+	longestVotes = 0;
+	crikVotes = 0;
+	voteMapIds = [];
+	voteGametypeIds = [];	
+
+	assignSpectatorsToTeam(true);
 	
 	/////////REBALANCE TEAMS////////////////////////////////////////////////////
 	
+	var moreWhitePlayers = 0; 
+	for (var p in Player.list){
+		if (Player.list[p].team == "white"){moreWhitePlayers++;}
+		else if (Player.list[p].team == "black"){moreWhitePlayers--;}
+	}
+
 	console.log("REBALANCING TEAMS1: Teams are off by " + Math.abs(moreWhitePlayers));
 	
 	if (Math.abs(moreWhitePlayers) > 1){
@@ -4244,11 +4314,11 @@ var Player = function(id, cognitoSub, name, team, partyId){
 				var ax1 = dx1/dist1;
 				var ay1 = dy1/dist1;
 				if (dist1 < 40){				
-					if (self.boosting > 0){
+					if (self.boosting > 0){  //melee boost collision bash
 						Player.list[i].pushSpeed = 20;
 						Player.list[i].pushDir = self.boostingDir;
 						if (self.team != Player.list[i].team){
-							Player.list[i].health -= 40;
+							Player.list[i].health -= boostDamage;
 						}
 						self.pushSpeed = 20;
 						self.boosting = -1;
@@ -4331,13 +4401,13 @@ var Player = function(id, cognitoSub, name, team, partyId){
 				var ay1 = dy1/dist1;
 				if (dist1 < 40){		
 
-					if (self.boosting > 0){
+					if (self.boosting > 0){ //melee boost collision bash
 						self.pushSpeed = 20;
 						self.boosting = -1;
 						updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
 						
 						if (self.team != Thug.list[i].team){
-							Thug.list[i].health -= 40;
+							Thug.list[i].health -= boostDamage;
 							updateThugList.push({id:Thug.list[i].id,property:"health",value:Thug.list[i].health})
 							sprayBloodOntoTarget(self.boostingDir, Thug.list[i].x, Thug.list[i].y, Thug.list[i].id);
 							Thug.list[i].attacking = thugAttackDelay;
@@ -4399,6 +4469,20 @@ var Player = function(id, cognitoSub, name, team, partyId){
 					self.x -= pushStrength;
 					if (self.x < Block.list[i].x){self.x = Block.list[i].x;}
 					updatePlayerList.push({id:self.id,property:"x",value:self.x});
+				}
+				else if (Block.list[i].type == "warp1"){
+					self.x = warp2X;
+					updatePlayerList.push({id:self.id,property:"x",value:self.x});
+					self.y = warp2Y;
+					updatePlayerList.push({id:self.id,property:"y",value:self.y});
+					SOCKET_LIST[self.id].emit('sfx', "sfxWarp");
+				}
+				else if (Block.list[i].type == "warp2"){
+					self.x = warp1X;
+					updatePlayerList.push({id:self.id,property:"x",value:self.x});
+					self.y = warp1Y;
+					updatePlayerList.push({id:self.id,property:"y",value:self.y});
+					SOCKET_LIST[self.id].emit('sfx', "sfxWarp");
 				}
 
 			}// End check if player is overlapping block
@@ -4741,7 +4825,7 @@ var Player = function(id, cognitoSub, name, team, partyId){
 
 	logg("Player " + self.name + " has entered the game.");
 	var teamName = self.team;
-	if (pcMode){
+	if (pcMode == 2){
 		if (self.team == "white"){
 			teamName = "red";
 		}
@@ -5280,7 +5364,7 @@ function pickupPickup(playerId, pickupId){
 		}		
 		removePickup(pickupId);		
 	}
-	else if (Pickup.list[pickupId].type == 5 && Player.list[playerId].health < playerMaxHealth){ //BA
+	else if (Pickup.list[pickupId].type == 5 && Player.list[playerId].health <= 100){ //BA
 		Player.list[playerId].health = 100 + Pickup.list[pickupId].amount;
 		if (Player.list[playerId].health > playerMaxHealth){
 			Player.list[playerId].health = playerMaxHealth;
@@ -5433,13 +5517,14 @@ Player.onDisconnect = function(socket){
 			}
 		}
 		sendChatToAll(Player.list[socket.id].name + " has disconnected.");
-		sendSocketListToServerDb();
 	}
 	delete Player.list[socket.id];
 	for(var i in SOCKET_LIST){
 		SOCKET_LIST[i].emit('removePlayer', socket.id);
 	}	
 	ensureCorrectThugCount();
+	sendSocketListToServerDb();
+	assignSpectatorsToTeam(false);
 }
 Player.update = function(){
 		var pack = [];
@@ -5829,23 +5914,26 @@ function hit(target, shootingDir, distance, shooterId){
 			else if (Player.list[shooterId].weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
 			else if (Player.list[shooterId].weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
 			
-			if (Player.list[target.id]){
-				if (target.shootingDir != (shootingDir + 4) && target.shootingDir != (shootingDir - 4) && target.shootingDir != (shootingDir + 5) && target.shootingDir != (shootingDir - 5) && target.shootingDir != (shootingDir + 3) && target.shootingDir != (shootingDir - 3) && target.team != Player.list[shooterId].team){
+			if (Player.list[target.id] && target.team != Player.list[shooterId].team){
+				if (target.shootingDir != (shootingDir + 4) && target.shootingDir != (shootingDir - 4) && target.shootingDir != (shootingDir + 5) && target.shootingDir != (shootingDir - 5) && target.shootingDir != (shootingDir + 3) && target.shootingDir != (shootingDir - 3)){
 					//Target is NOT facing shooter (within 3 angles)
 					if (Player.list[shooterId].weapon == 1){ damageInflicted += pistolSideDamage; } //Single Pistol
 					else if (Player.list[shooterId].weapon == 2){ damageInflicted += pistolSideDamage * 2; } //Double damage for double pistols
 					else if (Player.list[shooterId].weapon == 3){ damageInflicted += mgSideDamage; } //Damage for MG
 					else if (Player.list[shooterId].weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGSideDamage; } //Damage for SG
 				}
-				if (target.shootingDir == shootingDir && target.team != Player.list[shooterId].team){
+				if (target.shootingDir == shootingDir){
 					//Back Damage
 					if (Player.list[shooterId].weapon == 1){ damageInflicted += pistolBackDamage; } //Single Pistol
 					else if (Player.list[shooterId].weapon == 2){ damageInflicted += pistolBackDamage * 2; } //Double damage for double pistols
 					else if (Player.list[shooterId].weapon == 3){ damageInflicted += mgBackDamage; } //Damage for MG
 					else if (Player.list[shooterId].weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGBackDamage; } //Damage for SG
 				}
+			}			
+			else if (target.team == Player.list[shooterId].team){
+				damageInflicted *= friendlyFireDamageScale;
 			}
-
+			
 			damageInflicted = damageInflicted * damageScale; //Scale damage
 			target.health -= Math.floor(damageInflicted);
 			if (Player.list[target.id]){updatePlayerList.push({id:target.id,property:"health",value:target.health});}
@@ -6019,7 +6107,7 @@ function calculateTeamAvgRating(team){
 	else if (team == "black"){
 		enemyTeamAvgRating = blackTotalScore / blackPlayers;		
 	}
-	if (enemyTeamAvgRating == undefined || enemyTeamAvgRating == null || isNaN(enemyTeamAvgRating)){enemyTeamAvgRating = 10;}
+	if (enemyTeamAvgRating == undefined || enemyTeamAvgRating == null || isNaN(enemyTeamAvgRating)){enemyTeamAvgRating = -1;}
 	return enemyTeamAvgRating;
 }
 
@@ -6031,13 +6119,32 @@ function calculateEndgameStats(){
 			updatePlayersRatingAndExpWithMongoRes(mongoRes);		
 			var whiteAverageRating = calculateTeamAvgRating("white");
 			var blackAverageRating = calculateTeamAvgRating("black");
-
+			
+			if (whiteAverageRating == -1 && blackAverageRating != -1)
+				whiteAverageRating = blackAverageRating;
+			if (blackAverageRating == -1 && whiteAverageRating != -1)
+				blackAverageRating = whiteAverageRating;
+			
+			
+			
+			console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + whiteAverageRating);
+			console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + blackAverageRating);
+			
+			
 			for (var p in Player.list){
-				SOCKET_LIST[p].emit('sendLog', "Player in endgame loop...");
+				if (Player.list[p].team == "none")
+					continue;
+				
+				var gamesLostInc = 0;
+				var gamesWonInc = 0;
 				var ptsGained = 0;
+				
+				SOCKET_LIST[p].emit('sendLog', "Player in endgame loop...");
+
 				var enemyAverageRating = Player.list[p].team == "white" ? blackAverageRating : whiteAverageRating;
 				if ((Player.list[p].team == "white" && whiteScore > blackScore) || (Player.list[p].team == "black" && whiteScore < blackScore)){
 					//win
+					gamesWonInc++;
 					ptsGained = Math.round(matchWinLossRatingBonus + (enemyAverageRating - Player.list[p].rating)/enemySkillDifferenceDivider);
 					if (ptsGained < 1){ptsGained = 1;}		
 					logg(Player.list[p].name + " had " + Player.list[p].rating + " pts, and beat a team with " + enemyAverageRating + " pts. He gained " + ptsGained);
@@ -6045,6 +6152,7 @@ function calculateEndgameStats(){
 				}
 				else {
 					//loss
+					gamesLostInc++;
 					ptsGained = Math.round(-matchWinLossRatingBonus + (enemyAverageRating - Player.list[p].rating)/enemySkillDifferenceDivider);
 					if (ptsGained > -1){ptsGained = -1;}		
 					if (ptsGained < -20){ptsGained = -20;} //Loss cap		
@@ -6079,7 +6187,7 @@ function calculateEndgameStats(){
 				SOCKET_LIST[p].emit('sendLog', "engGameResults:");
 				SOCKET_LIST[p].emit('sendLog', endGameProgressResults);
 
-				dbUserUpdate("inc", Player.list[p].cognitoSub, {cash: Player.list[p].cashEarnedThisGame, experience: Player.list[p].cashEarnedThisGame, gamesLost: 1, gamesPlayed: 1, rating: ptsGained});
+				dbUserUpdate("inc", Player.list[p].cognitoSub, {cash: Player.list[p].cashEarnedThisGame, experience: Player.list[p].cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained});
 			}
 		}
 		else {
@@ -6123,6 +6231,16 @@ function updateSocketRatingAndExpWithMongoRes(mongoRes){
 function getNumPlayersInGame(){
 	var totalPlayers = 0;
 	for (var p in Player.list){
+		totalPlayers++;
+	}
+	
+	return totalPlayers;
+}
+
+function getNumTeamPlayersInGame(){ //getCurrentPlayers in game actual players
+	var totalPlayers = 0;
+	for (var p in Player.list){
+		if (Player.list[p].team == "white" || Player.list[p].team == "black")
 		totalPlayers++;
 	}
 	
@@ -6509,12 +6627,18 @@ function spawnSafely(entity){
 	if (entity.team == "black"){
 		var potentialX = 0;
 		var potentialY = 0;
-
-		for (var w = 0; w < 50; w++){
+		
+		for (var w = 0; w < 60; w++){
 			var safeToSpawn = true;
-
+			
 			potentialX = randomInt(spawnXminBlack,spawnXmaxBlack);
 			potentialY = randomInt(spawnYminBlack,spawnYmaxBlack);
+			
+			if (w > 30){
+				potentialX = randomInt(5,mapWidth);
+				potentialY = randomInt(5,mapHeight);			
+			}
+			
 			for (var i in Block.list){
 				if (potentialX >= Block.list[i].x && potentialX <= Block.list[i].x + Block.list[i].width && potentialY >= Block.list[i].y && potentialY <= Block.list[i].y + Block.list[i].height){																		
 					safeToSpawn = false;
@@ -6922,6 +7046,16 @@ function moveBags(){
 					if (bagBlue.x < Block.list[i].x){bagBlue.x = Block.list[i].x;}
 					updateMisc.bagBlue = bagBlue;
 				}
+				else if (Block.list[i].type == "warp1"){
+					bagBlue.x = warp2X;
+					bagBlue.y = warp2Y;
+					updateMisc.bagBlue = bagBlue;
+				}
+				else if (Block.list[i].type == "warp2"){
+					bagBlue.x = warp1X;
+					bagBlue.y = warp1Y;
+					updateMisc.bagBlue = bagBlue;
+				}
 			}// End check if bag is overlapping block
 		}//End Block.list loop		
 	}
@@ -6968,6 +7102,16 @@ function moveBags(){
 				else if (Block.list[i].type == "pushLeft"){
 					bagRed.x -= pushStrength;
 					if (bagRed.x < Block.list[i].x){bagRed.x = Block.list[i].x;}
+					updateMisc.bagRed = bagRed;
+				}
+				else if (Block.list[i].type == "warp1"){
+					bagRed.x = warp2X;
+					bagRed.y = warp2Y;
+					updateMisc.bagRed = bagRed;
+				}
+				else if (Block.list[i].type == "warp2"){
+					bagRed.x = warp1X;
+					bagRed.y = warp1Y;
 					updateMisc.bagRed = bagRed;
 				}
 
@@ -7070,7 +7214,6 @@ setInterval(
 				
 		//Post game voting updates
 		if (gameOver == true){
-			console.log("SENDING DATA!!!!");
 			for (var i in SOCKET_LIST){
 				if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
 					continue;

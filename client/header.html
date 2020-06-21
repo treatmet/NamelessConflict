@@ -3,6 +3,7 @@
 		<div id="titleText" style="display: inline-block; line-height: 35px;">
 			RW
 		</div>
+		
 		<form id="loginForm">
 			<div id="userWelcomeText" style="display: none;">Not logged in</div>
 			<input id="JWToken" type="text" value="" class="textBox" style="display: none; color: #8c8c8c;  margin:3px;">
@@ -10,6 +11,7 @@
 			<button id="logInH" class="RWButton" style="display: none" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://rw.treatmetcalf.com/';">Log In</button>
 			<button id="createAccountH" class="RWButton" style="display: none" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://rw.treatmetcalf.com/';">Create Account</button>
 			<button id="playNowH" class="RWButton" style="display: none" onclick="getJoinableServer({server:'any'})">Play Now!</button>
+			<button id="feedbackH" class="RWButton" style="display:unset" onclick="window.open('https://tinyurl.com/yar65nbe','_blank')">Give Feedback</button>
 			<button id="localPlayNow" class="RWButton" style="display: none" onclick="window.location.href = '/?join=true';">Local Server</button>
 		</form>
 	</div>

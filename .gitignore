@@ -5,8 +5,6 @@ public
 mongodb
 misc
 config.ini
-package.json
-package-lock.json
 website
 .vscode
 start-nodejs-PC.bat

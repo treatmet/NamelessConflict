@@ -10,6 +10,9 @@ var autoJoinGame = "false";
 var pcMode = 1;
 
 var serverHomePage = "https://rw.treatmetcalf.com/";
+if (window.location.href.indexOf("localhost") > -1)
+	serverHomePage = "/";
+
 
 //includeHTMLHeader();
 initializePage();
@@ -63,10 +66,10 @@ function getTokenFromUrlParameterAndLogin(){
 		
 		pcMode = data.pcMode;
 		if (data.pcMode == 2){
-			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>NamelessConflict</a>";
+			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
 		}
 		else {
-			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>RaceWar</a>";
+			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
 		}
 		if (document.getElementById("homeLink")){
 			document.getElementById("homeLink").href = serverHomePage;
@@ -557,7 +560,7 @@ function logOutClick(){
 function showLocalElements(){
   $(document).ready(function() {
     if (window.location.href.indexOf("localhost") > -1) {
-      document.getElementById("localPlayNow").style.display = "";
+      //document.getElementById("localPlayNow").style.display = "";
     }
   });
 }
@@ -651,11 +654,10 @@ function editUserButtonClick(){
             document.getElementById('newPasswordText').style.display = 'none';
             document.getElementById('newPasswordText2').style.display = 'none';
             document.getElementById('newEmailText').style.display = 'none';
-            document.getElementById('editUserFieldText').innerHTML = 'Update Username:';
             document.getElementById('newUsernameText').style.display = '';
             document.getElementById('editUsernameButton').style.display = 'none';
             document.getElementById('editPasswordButton').style.display = 'none';            
-			document.getElementById('editUserFieldText').innerHTML = 'You may change the following:';
+			document.getElementById('editUserFieldText').innerHTML = 'Update username:';
         }
         document.getElementById('editUserButton').style.display = 'none';
 		document.getElementById('statsTables').style.display = 'none';
@@ -1098,7 +1100,7 @@ socket.on('votesUpdate', function(votesData){
 	document.getElementById("voteDeathmatch").innerHTML = "Deathmatch - [" + votesData.slayerVotes + "]";	
 	document.getElementById("voteLongest").innerHTML = "Longest - [" + votesData.longestVotes + "]";
 	document.getElementById("voteThePit").innerHTML = "The Pit - [" + votesData.thePitVotes + "]";	
-	document.getElementById("voteCrik").innerHTML = "Crik - [" + votesData.crikVotes + "]";
+	document.getElementById("voteCrik").innerHTML = "Battle Creek - [" + votesData.crikVotes + "]";
 });
 
 //EVERY 1 SECOND

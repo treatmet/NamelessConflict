@@ -1,5 +1,5 @@
 <head>
-	<title>Nameless Conflict - User Profile</title>
+	<title>R-Wars - User Profile</title>
 	<html style="background-color: #303030;"><head>
 	<link href='https://fonts.googleapis.com/css?family=Armata' rel='stylesheet'>
 	<link href='https://fonts.googleapis.com/css?family=Changa' rel='stylesheet'>
@@ -49,6 +49,34 @@
 		</div>
 		<br>
 
+		<div id="updateUserForm" style="display:none">
+			<button id="editUserButton" class="RWButton" style="display:none" onclick="editUserButtonClick()">Edit User Profile</button>
+			<div id="updateUserTextBoxes" style="display:none">
+				<div id="editUserPasswordText" style="display: block;padding-top: 5px;">First, enter password: </div>
+				<div>
+					<input id="oldPasswordText" onblur="onBlur(this)" type="text" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)">
+				</div>
+				<div id="updateFields">
+					<div id="editUserFieldText" style="display: block;padding-top: 5px;">
+						Select field you would like to change:
+					</div>
+					<button id="editUsernameButton" class="RWButton" onclick="editUsernameButtonClick()">Username</button>
+					<input id="newUsernameText" onblur="onBlur(this)" maxlength="20" autocomplete="off" type="text" value="Username" class="textBox" onclick="newUserNameClick()" onfocus="newUserNameClick()" style="display: none;">
+					<br>
+					<button id="editPasswordButton" class="RWButton" onclick="editPasswordButtonClick()">Password</button>
+					<div id="passys" style="display: inline-block;">
+						<input id="newPasswordText" onblur="onBlur(this)" autocomplete="off" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;">
+						<input id="newPasswordText2" onblur="onBlur(this)" autocomplete="off" value="Password Confirm" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;"> 
+					</div>
+					<br>
+					<input id="newEmailText" onblur="onBlur(this)" type="text" value="Email" class="textBox" onclick="newEmailClick()" onfocus="newEmailClick()">
+					<label id="updateInfo"></label>
+				</div>
+				<button id="editUserConfirmButton" class="RWButton" onclick="editUserConfirmButtonClick()">Confirm</button>
+				<button id="editUserCancelButton" class="RWButton" onclick="editUserCancelButtonClick()">Cancel</button>
+			</div>
+		</div>
+		
 		<div id="statsTables">
 			<table class="statsTable">
 				<tr>
@@ -108,33 +136,7 @@
 			</table>
 		</div>
 		
-		<div id="updateUserForm" style="display:none">
-			<button id="editUserButton" class="RWButton" style="display:none" onclick="editUserButtonClick()">Edit User Profile</button>
-			<div id="updateUserTextBoxes" style="display:none">
-				<div id="editUserPasswordText" style="display: block;padding-top: 5px;">First, enter password: </div>
-				<div>
-					<input id="oldPasswordText" onblur="onBlur(this)" type="text" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)">
-				</div>
-				<div id="updateFields">
-					<div id="editUserFieldText" style="display: block;padding-top: 5px;">
-						Select field you would like to change:
-					</div>
-					<button id="editUsernameButton" class="RWButton" onclick="editUsernameButtonClick()">Username</button>
-					<input id="newUsernameText" onblur="onBlur(this)" maxlength="20" autocomplete="off" type="text" value="Username" class="textBox" onclick="newUserNameClick()" onfocus="newUserNameClick()" style="display: none;">
-					<br>
-					<button id="editPasswordButton" class="RWButton" onclick="editPasswordButtonClick()">Password</button>
-					<div id="passys" style="display: inline-block;">
-						<input id="newPasswordText" onblur="onBlur(this)" autocomplete="off" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;">
-						<input id="newPasswordText2" onblur="onBlur(this)" autocomplete="off" value="Password Confirm" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;"> 
-					</div>
-					<br>
-					<input id="newEmailText" onblur="onBlur(this)" type="text" value="Email" class="textBox" onclick="newEmailClick()" onfocus="newEmailClick()">
-					<label id="updateInfo"></label>
-				</div>
-				<button id="editUserConfirmButton" class="RWButton" onclick="editUserConfirmButtonClick()">Confirm</button>
-				<button id="editUserCancelButton" class="RWButton" onclick="editUserCancelButtonClick()">Cancel</button>
-			</div>
-		</div>
+
 
 
 	</div>

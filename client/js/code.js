@@ -32,7 +32,7 @@ var shopEnabled = false;
 var SGTriggerTapLimitTimer = 50;
 
 //Chat Config
-var hideChatTimer = 600;
+var hideChatTimer = 800;
 
 //-----------------Variables-------------------
 
@@ -315,6 +315,14 @@ Img.pushDownBlock = new Image();
 Img.pushDownBlock.src = "/client/img/blockPushDown.png";
 Img.pushLeftBlock = new Image();
 Img.pushLeftBlock.src = "/client/img/blockPushLeft.png";
+Img.warp1 = new Image();
+Img.warp1.src = "/client/img/beam1.png";
+Img.warp2 = new Image();
+Img.warp2.src = "/client/img/beam2.png";
+Img.warp3 = new Image();
+Img.warp3.src = "/client/img/beam3.png";
+Img.warp4 = new Image();
+Img.warp4.src = "/client/img/beam4.png";
 Img.tile = new Image();
 Img.tile.src = "/client/img/factory-floor.png";
 Img.tileWhite = new Image();
@@ -668,6 +676,7 @@ var sfxBoostEmpty = new Howl({src: ['/client/sfx/boostEmpty.mp3']});
 sfxBoostEmpty.volume(1);
 var sfxCloak = new Howl({src: ['/client/sfx/cloak2.mp3']});
 sfxCloak.volume(.6);
+var sfxWarp = new Howl({src: ['/client/sfx/warp.mp3']});
 
 var sfxNextGameTimer = new Howl({src: ['/client/sfx/haloStartBeeps.mp3']});
 var sfxLevelUp = new Howl({src: ['/client/sfx/gsLevelUp.mp3']});
@@ -943,7 +952,7 @@ function showCanvas() {
 for (var i=0; i<chatText.childNodes[i].length; i++){
 		chatText.childNodes[i].remove();
 }
-chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to the Nameless Conflict!</div>';
+chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to R-Wars!</div>';
 
 socket.on('addToChat', function(data, playerId){
 var color = "#FFFFFF";
@@ -1541,7 +1550,7 @@ function updateCamera(){
 	if(myPlayer.shootingDir == 8){targetCenterX = canvasWidth/2 + (diagCamOffSet + 50); targetCenterY = canvasHeight/2 + diagCamOffSet;}
 	if(myPlayer.health <= 0){targetCenterX = canvasWidth/2; targetCenterY = canvasHeight/2} //If ded
 	
-	if (!myPlayer.pressingShift && !shop.active){
+	if ((!myPlayer.pressingShift && !shop.active) || myPlayer.team == "none"){
 		targetCenterX = canvasWidth/2;
 		targetCenterY = canvasHeight/2;
 	}
@@ -1690,6 +1699,20 @@ function drawMapElementsOnMapCanvas(){
 					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
 				}
 				else if (y >= (tile.height * 3) * zoom && y <= (tile.height * 5) * zoom && x >= (mapWidth - tile.width * 3) * zoom){
+					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				}
+				else {
+					drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+				}				
+			}
+			else if (map == "crik"){
+				if (x >= (tile.width * 6) * zoom && x <= (tile.width * 6) * zoom && y >= (tile.height * 1) * zoom && y <= (tile.height * 5) * zoom){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				}
+				else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (mapWidth - tile.width * 4) * zoom && x <= (mapWidth - tile.width * 2) * zoom){
+					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				}
+				else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (tile.width * 1) * zoom && x <= (tile.width * 3) * zoom){
 					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
 				}
 				else {
@@ -2015,6 +2038,9 @@ function drawBlocksOnBlockCanvas(){
 		else if (Block.list[i].type == "blue"){
 			imgBlock = Img.blueBlock;
 		}
+		else if (Block.list[i].type == "warp1" || Block.list[i].type == "warp2"){
+			continue;
+		}
 		else if (Block.list[i].type == "pushUp"){
 			imgBlock = Img.pushUpBlock;
 			blockCtx.globalAlpha = 0.3;
@@ -2031,15 +2057,45 @@ function drawBlocksOnBlockCanvas(){
 			imgBlock = Img.pushLeftBlock;
 			blockCtx.globalAlpha = 0.3;
 		}
+		
 		drawImageOnBlockCanvas(imgBlock, Math.round((Block.list[i].x + 75) * zoom), Math.round((Block.list[i].y + 75) * zoom), Math.round(Block.list[i].width * zoom), Math.round(Block.list[i].height * zoom));				
 	}
 }
 
+var warpImageSwapper = 1;
 function drawBlockCanvas(){
 	//noShadow();
 	var drawX = centerX - (myPlayer.x + 75) * zoom;
 	var drawY = centerY - (myPlayer.y + 75) * zoom;
 	ctx.drawImage(block_canvas, drawX, drawY);
+	
+	//Draw warps every frame
+	if (map == "crik"){
+		warpImageSwapper++;
+		if (warpImageSwapper > 8){
+			warpImageSwapper = 1;
+		}
+		for (var i in Block.list) {
+		
+			if (centerX - myPlayer.x * zoom + Block.list[i].x * zoom > -Block.list[i].width * zoom - drawDistance && centerX - myPlayer.x * zoom + Block.list[i].x * zoom < canvasWidth + drawDistance && centerY - myPlayer.y * zoom + Block.list[i].y * zoom > -Block.list[i].height * zoom - drawDistance && centerY - myPlayer.y * zoom + Block.list[i].y * zoom < canvasHeight + drawDistance){
+				var imgBlock = Img.warp1;
+				if (Block.list[i].type == "warp1" || Block.list[i].type == "warp2"){
+					if (warpImageSwapper == 1 || warpImageSwapper == 2)
+						imgBlock = Img.warp1;
+					else if (warpImageSwapper == 3 || warpImageSwapper == 4)
+						imgBlock = Img.warp2;
+					else if (warpImageSwapper == 5 || warpImageSwapper == 6)
+						imgBlock = Img.warp3;
+					else if (warpImageSwapper == 7 || warpImageSwapper == 8)
+						imgBlock = Img.warp4;
+				}
+				else {
+					continue;
+				}
+				drawImage(imgBlock, centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom);
+			}		
+		}
+	}
 }
 
 function drawPickups(){	
@@ -2437,13 +2493,44 @@ function drawTorsos(){
 							}
 						}
 					}
+
+					/*
+					var dArr = [-1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1], // offset array
+					sd = 2,  // thickness scale
+					xd = -35.25,  // final position
+					yd = -31.5;
+						var xy = 0;
+						var yy = 0;
+
+					for(var itera = 0; itera < dArr.length; itera += 2){
+						
+						xy = xd + dArr[itera]*sd;
+						yy = yd + dArr[itera+1]*sd;
+						
+						//console.log("drawing x:" + xy + " y:" + yy);
+						
+						drawImage(img, xd + dArr[itera]*sd, yd + dArr[itera+1]*sd, img.width * zoom, img.height * zoom);
+						
+					}
+					
+					xy = -img.width/2 * zoom;
+					yy = (-img.height/2+5) * zoom;
+					
+					ctx.globalCompositeOperation = "source-in";
+					ctx.fillStyle = "blue";
+					ctx.fillRect(-50,-50,100,100);
+					
+					// draw original image in normal mode
+					ctx.globalCompositeOperation = "source-over";	
+					*/
 					
 					//Actually draw the torso
 					//if (Player.list[i].cloak > 0.98){noShadow();}
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
-					drawImage(img,-img.width/2 * zoom, (-img.height/2+5) * zoom, img.width * zoom, img.height * zoom);	//Draw torso		
+						
+					drawImage(img,-img.width/2 * zoom, (-img.height/2+5) * zoom, img.width * zoom, img.height * zoom);	//Draw torso	
 					ctx.globalAlpha = 1;
 					
 					//Player damage flashing over
@@ -3170,18 +3257,20 @@ function drawTopScoreboard(){
 		ctx.textAlign="center";
 		ctx.globalAlpha = 0.50;
 		if (pcMode == 2){
-			ctx.fillStyle="#2e3192"; //blue/black
+			ctx.fillStyle="#2e3192"; //blue
 		}
 		else {
 			ctx.fillStyle="#000000";
 		}
+		ctx.fillStyle="#2e3192"; //blue
 		ctx.fillRect((canvasWidth/2 - 25) + 70,0,50,50);
 		if (pcMode == 2){
-			ctx.fillStyle="#9e0b0f"; //red/white
+			ctx.fillStyle="#9e0b0f"; //red
 		}
 		else {
 			ctx.fillStyle="#FFFFFF";
 		}
+		ctx.fillStyle="#9e0b0f"; //red
 		ctx.fillRect((canvasWidth/2 - 25) - 70,0,50,50);
 		ctx.globalAlpha = 1.0;
 			
@@ -3802,6 +3891,17 @@ function drawStatOverlay(){
 			fillText("RED",125,200);
 			fillText("BLUE",125,445);			
 		}
+		else {
+			ctx.fillStyle="#9e0b0f"; //red/white
+			ctx.fillRect(120, 160, 283, 56); //drawrect draw rectangle
+			ctx.fillStyle="#2e3192"; //blue/black
+			ctx.fillRect(120, 405, 283, 56);
+			ctx.fillStyle="#FFFFFF";		
+			ctx.font = 'bold 45px Electrolize';
+			ctx.textAlign="left";
+			fillText("WHITES",125,200);
+			fillText("BLACKS",125,445);			
+		}
 
 		ctx.lineWidth=4;
 		if (gameOver){
@@ -3880,7 +3980,7 @@ function drawStatOverlay(){
 			else {
 				ctx.fillStyle="#AAAAAA";
 			}
-			strokeAndFillText(whitePlayers[a].name,143,whiteScoreY);
+			strokeAndFillText(whitePlayers[a].name.substring(0, 15),143,whiteScoreY);
 			ctx.textAlign="center";
 			ctx.fillStyle="#19BE44";
 			if (gameOver == false){
@@ -4594,6 +4694,8 @@ var tips = [
 	" Controlling powerups is key to victory. Be aware of the powerups’ spawn timers.",
 	"Press [Enter] to use chat and taunt your foes!",
 	"Stand still and press [Space] to use cloak. Press [Space] while moving to boost.",
+	"Boosting into your opponents will cause heavy damage if you can hit them.",
+	"Don't be racist.",
 	"For best game performance, close all other browser tabs and applications."
 ];
 
