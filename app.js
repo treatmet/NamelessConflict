@@ -4845,90 +4845,175 @@ var Player = function(id, cognitoSub, name, team, partyId){
 
 Player.list = [];
 
-function gunCycle(player){
+function gunCycle(player, forwards){
 	if (player.reloading > 0){
 		player.reloading = 0;
 		updatePlayerList.push({id:player.id,property:"reloading",value:player.reloading});				
 	}
-	if (player.weapon == 1){
-		if (player.DPAmmo > 0 || player.DPClip > 0) {
-			if (player.holdingBag == true && !allowBagWeapons) {
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
+	
+	if (forwards){
+		if (player.weapon == 1){
+			if (player.DPAmmo > 0 || player.DPClip > 0) {
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
+				}
+				else {
+					player.weapon = 2;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});						
+				}
 			}
+			else if (player.MGAmmo > 0 || player.MGClip > 0){
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
+				}
+				else {
+					player.weapon = 3;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+				}
+			}
+			else if (player.SGAmmo > 0 || player.SGClip > 0){
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
+				}
+				else {
+					player.weapon = 4;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+				}
+			}	
 			else {
-				player.weapon = 2;
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});						
-			}
-		}
-		else if (player.MGAmmo > 0 || player.MGClip > 0){
-			if (player.holdingBag == true && !allowBagWeapons) {
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
-			}
-			else {
-				player.weapon = 3;
+				player.weapon = 1;
 				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}
+			}		
 		}
-		else if (player.SGAmmo > 0 || player.SGClip > 0){
-			if (player.holdingBag == true && !allowBagWeapons) {
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
+		else if (player.weapon == 2){
+			if (player.MGAmmo > 0 || player.MGClip > 0){
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
+				}
+				else {
+					player.weapon = 3;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+				}
+			}
+			else if (player.SGAmmo > 0 || player.SGClip > 0){
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
+				}
+				else {
+					player.weapon = 4;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+				}
 			}
 			else {
-				player.weapon = 4;
+				player.weapon = 1;
 				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}
+			}		
 		}	
-		else {
+		else if (player.weapon == 3){
+			if (player.SGAmmo > 0 || player.SGClip > 0){
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
+				}
+				else {
+					player.weapon = 4;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+				}
+			}
+			else {
+				player.weapon = 1;
+				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+			}		
+		}		
+		else if (player.weapon == 4){
 			player.weapon = 1;
 			updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
 		}		
-	}
-	else if (player.weapon == 2){
-		if (player.MGAmmo > 0 || player.MGClip > 0){
-			if (player.holdingBag == true && !allowBagWeapons) {
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
-			}
-			else {
-				player.weapon = 3;
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}
-		}
-		else if (player.SGAmmo > 0 || player.SGClip > 0){
-			if (player.holdingBag == true && !allowBagWeapons) {
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
-			}
-			else {
-				player.weapon = 4;
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}
-		}
 		else {
 			player.weapon = 1;
 			updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-		}		
-	}	
-	else if (player.weapon == 3){
-		if (player.SGAmmo > 0 || player.SGClip > 0){
-			if (player.holdingBag == true && !allowBagWeapons) {
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
-			}
-			else {
-				player.weapon = 4;
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}
 		}
-		else {
-			player.weapon = 1;
-			updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-		}		
-	}		
-	else if (player.weapon == 4){
-		player.weapon = 1;
-		updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-	}		
+	}//forwards
 	else {
-		player.weapon = 1;
-		updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+		if (player.weapon == 1){
+			if (player.SGAmmo > 0 || player.SGClip > 0){
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
+				}
+				else {
+					player.weapon = 4;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+				}
+			}
+			else if (player.MGAmmo > 0 || player.MGClip > 0){
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
+				}
+				else {
+					player.weapon = 3;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+				}
+			}	
+			else if (player.DPAmmo > 0 || player.DPClip > 0) {
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
+				}
+				else {
+					player.weapon = 2;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});						
+				}
+			}
+			else {
+				player.weapon = 1;
+				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+			}		
+		}
+		else if (player.weapon == 4){
+			if (player.MGAmmo > 0 || player.MGClip > 0){
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
+				}
+				else {
+					player.weapon = 3;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+				}
+			}
+			else if (player.DPAmmo > 0 || player.DPClip > 0) {
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
+				}
+				else {
+					player.weapon = 2;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});						
+				}
+			}
+			else {
+				player.weapon = 1;
+				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+			}		
+		}	
+		else if (player.weapon == 3){
+			if (player.DPAmmo > 0 || player.DPClip > 0) {
+				if (player.holdingBag == true && !allowBagWeapons) {
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
+				}
+				else {
+					player.weapon = 2;
+					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});						
+				}
+			}
+			else {
+				player.weapon = 1;
+				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+			}		
+		}		
+		else if (player.weapon == 2){
+			player.weapon = 1;
+			updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+		}		
+		else {
+			player.weapon = 1;
+			updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
+		}
 	}
 }
 
@@ -5098,7 +5183,10 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 				}
 			}
 			else if (data.inputId == 81){ //Q
-				gunCycle(player);
+				gunCycle(player, false);
+			}
+			else if (data.inputId == 69){ //E
+				gunCycle(player, true);
 			}
 			else if (data.inputId == 82){ //R (or Ctrl)
 				reload(player.id);

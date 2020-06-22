@@ -114,21 +114,15 @@ function heavyCenterShadow() {
 	*/
 }
 function smallCenterShadow() {
-	noShadow();
-	return;
+	//noShadow();
+	//return;
+	//return;
 	
 	//Small center shadows disabled under all circumstances
-	/*
 	ctx.shadowColor = "black";
 	ctx.shadowOffsetX = 0; 
 	ctx.shadowOffsetY = 0;
-	if (lowGraphicsMode){
-		ctx.shadowBlur = 0;		
-	}
-	else {
-		ctx.shadowBlur = 3;
-	}
-	*/
+	ctx.shadowBlur = 3;
 }
 function largeCenterShadow() {
 	if (noShadows){
@@ -3107,7 +3101,7 @@ function updateSpectatingView(){ //updates spectating camera
 
 function drawInformation(){
 	if (!gameOver && debugText == true){
-		smallCenterShadow();
+		noShadow();
 		ctx.fillStyle="#FFFFFF";
 		ctx.font = 'bold 14px Electrolize';
 		ctx.textAlign="left";
@@ -3148,19 +3142,31 @@ function drawBloodyBorder(){
 function drawHUD(){
 	if (!gameOver){
 		var liftBottomHUD = 6;
-		largeCenterShadow();
+		smallCenterShadow();
 		
 		//Weapon selection (1,2,3,4) HUD//////////////
 		if (!gameOver){
-			drawImage(Img.weapon1Key, canvasWidth - 200, canvasHeight - 112 - liftBottomHUD, Img.weapon1Key.width*0.75, Img.weapon1Key.height*0.75);
+		
+			//Weapon selected highlight
+			ctx.globalAlpha = 0.3;
+			ctx.fillStyle="#FFFFFF";						
+			if (Player.list[myPlayer.id].weapon == 1){ ctx.fillRect(canvasWidth - 195, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75 - 10, Img.weapon1Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 2){ ctx.fillRect(canvasWidth - 150,canvasHeight - 130 - liftBottomHUD,Img.weapon2Key.width*0.75 - 10,Img.weapon2Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 3){ ctx.fillRect(canvasWidth - 108, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 4){ ctx.fillRect(canvasWidth - 55, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
+			ctx.globalAlpha = 1.0;
+
+
+			drawImage(Img.weapon1Key, canvasWidth - 200, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75, Img.weapon1Key.height*0.75);			
 			if (myPlayer.DPAmmo > 0 || myPlayer.DPClip > 0){
-				drawImage(Img.weapon2Key, canvasWidth - 155, canvasHeight - 112 - liftBottomHUD, Img.weapon2Key.width*0.75, Img.weapon2Key.height*0.75);
+
+				drawImage(Img.weapon2Key, canvasWidth - 155, canvasHeight - 130 - liftBottomHUD, Img.weapon2Key.width*0.75, Img.weapon2Key.height*0.75);
 			}
 			if (myPlayer.MGAmmo > 0 || myPlayer.MGClip > 0){
-				drawImage(Img.weapon3Key, canvasWidth - 108, canvasHeight - 112 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75);
+				drawImage(Img.weapon3Key, canvasWidth - 108, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75);
 			}
 			if (myPlayer.SGAmmo > 0 || myPlayer.SGClip > 0){
-				drawImage(Img.weapon4Key, canvasWidth - 55, canvasHeight - 112 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75);
+				drawImage(Img.weapon4Key, canvasWidth - 55, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75);
 			}
 		}
 
@@ -3198,41 +3204,53 @@ function drawHUD(){
 		if (Player.list[myPlayer.id].weapon == 1){
 			clipCount = Player.list[myPlayer.id].PClip;
 			ammoWidth = 136 - ((15 - Player.list[myPlayer.id].PClip) * 9);
-			ctx.drawImage(Img.ammo9mm, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 120, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+			ctx.drawImage(Img.ammo9mm, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		else if (Player.list[myPlayer.id].weapon == 2){
 			clipCount = Player.list[myPlayer.id].DPClip;
 			ammoCount = Player.list[myPlayer.id].DPAmmo;		
 			ammoWidth = 180 - ((20 - Player.list[myPlayer.id].DPClip) * 9) + 1;
-			ctx.drawImage(Img.ammoDP, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 120, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+			ctx.drawImage(Img.ammoDP, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		else if (Player.list[myPlayer.id].weapon == 3){
 			clipCount = Player.list[myPlayer.id].MGClip;
 			ammoCount = Player.list[myPlayer.id].MGAmmo;		
 			ammoWidth = 152 - ((30 - Player.list[myPlayer.id].MGClip) * 5);
-			ctx.drawImage(Img.ammoMG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 120, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+			ctx.drawImage(Img.ammoMG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		else if (Player.list[myPlayer.id].weapon == 4){
 			clipCount = Player.list[myPlayer.id].SGClip;
 			ammoCount = Player.list[myPlayer.id].SGAmmo;		
 			ammoWidth = 135 - ((12 - Player.list[myPlayer.id].SGClip) * 11);
-			ctx.drawImage(Img.ammoSG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 120, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+			ctx.drawImage(Img.ammoSG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
+		
+		//Draw separating line
+		ctx.strokeStyle = "#FFF";
+		ctx.lineWidth  = 1;
+		ctx.beginPath();
+		ctx.moveTo(canvasWidth - 202, canvasHeight - 54);
+		ctx.lineTo(canvasWidth - 202, canvasHeight - 14);
+		ctx.stroke();
 				
 		//Draw Ammmo Count
-		ctx.font = '36px Electrolize';
+		ctx.font = '72px Electrolize';
 		ctx.fillStyle="#FFFFFF";
 		ctx.lineWidth=4;
 		ctx.textAlign="right";
-		fillText(clipCount + "/",canvasWidth - 50, canvasHeight - 9 - liftBottomHUD);
+		fillText(clipCount + "/", canvasWidth - 65, canvasHeight - 13 - liftBottomHUD);
 		if (Player.list[myPlayer.id].weapon == 1){
-			drawImage(Img.infinity, canvasWidth - 50, canvasHeight - 26 - liftBottomHUD);		
+			drawImage(Img.infinity, canvasWidth - 77, canvasHeight - 44 - liftBottomHUD);		
 		}
 		else {
-			ctx.font = '22px Electrolize';
+			ctx.font = '44px Electrolize';
 			ctx.textAlign="left";
-			fillText(ammoCount,canvasWidth - 50, canvasHeight - 9 - liftBottomHUD);
+			fillText(ammoCount,canvasWidth - 70, canvasHeight - 9 - liftBottomHUD);
 		}
+
+		ctx.strokeStyle = "#000";
+		ctx.lineWidth  = 3;
+		
 	}
 }
 
@@ -4371,25 +4389,25 @@ document.onkeydown = function(event){
 			socket.emit('keyPress',{inputId:87,state:true});
 		}
 	}
-	if(event.keyCode === 68 && chatInput.style.display == "none"){ //D
+	else if(event.keyCode === 68 && chatInput.style.display == "none"){ //D
 		myPlayer.pressingD = true;
 		if (!shop.active){
 			socket.emit('keyPress',{inputId:68,state:true});
 		}
 	}
-	if(event.keyCode === 83 && chatInput.style.display == "none"){ //S
+	else if(event.keyCode === 83 && chatInput.style.display == "none"){ //S
 		myPlayer.pressingS = true;
 		if (!shop.active){
 			socket.emit('keyPress',{inputId:83,state:true});
 		}
 	}
-	if(event.keyCode === 65 && chatInput.style.display == "none"){ //A
+	else if(event.keyCode === 65 && chatInput.style.display == "none"){ //A
 		myPlayer.pressingA = true;
 		if (!shop.active){
 			socket.emit('keyPress',{inputId:65,state:true});
 		}
 	}		
-	if((event.keyCode === 38 || event.keyCode === 80) && chatInput.style.display == "none"){ //Up
+	else if((event.keyCode === 38 || event.keyCode === 80) && chatInput.style.display == "none"){ //Up
 		//if (event.keyCode === 38)
 			//event.preventDefault();
 		if (myPlayer.team != "none"){
@@ -4405,7 +4423,7 @@ document.onkeydown = function(event){
 			getNextOrderedPlayer(spectatingPlayerId, true);
 		}
 	}
-	if((event.keyCode === 39 || event.keyCode === 222) && chatInput.style.display == "none"){ //Right
+	else if((event.keyCode === 39 || event.keyCode === 222) && chatInput.style.display == "none"){ //Right
 		//if (event.keyCode === 39)
 			//event.preventDefault();
 		if (myPlayer.team != "none"){
@@ -4428,7 +4446,7 @@ document.onkeydown = function(event){
 			}
 		}
 	}
-	if((event.keyCode === 40 || event.keyCode === 186) && chatInput.style.display == "none"){ //Down
+	else if((event.keyCode === 40 || event.keyCode === 186) && chatInput.style.display == "none"){ //Down
 		//if (event.keyCode === 40)
 			//event.preventDefault();
 		if (myPlayer.team != "none"){
@@ -4441,7 +4459,7 @@ document.onkeydown = function(event){
 			getNextOrderedPlayer(spectatingPlayerId, false);
 		}
 	}
-	if((event.keyCode === 37 || event.keyCode === 76) && chatInput.style.display == "none"){ //Left
+	else if((event.keyCode === 37 || event.keyCode === 76) && chatInput.style.display == "none"){ //Left
 		//if (event.keyCode === 37)
 			//event.preventDefault();
 		if (myPlayer.team != "none"){
@@ -4464,7 +4482,7 @@ document.onkeydown = function(event){
 			}
 		}	
 	}		
-	if(event.keyCode === 32 && chatInput.style.display == "none" && !shop.active){ //Space
+	else if(event.keyCode === 32 && chatInput.style.display == "none" && !shop.active){ //Space
 		socket.emit('keyPress',{inputId:32,state:true});
 		if ((myPlayer.pressingW || myPlayer.pressingD || myPlayer.pressingS || myPlayer.pressingA) && Player.list[myPlayer.id].boosting == 0 && !mute){
 			if (!Player.list[myPlayer.id].holdingBag && Player.list[myPlayer.id].energy >= 1){
@@ -4476,43 +4494,41 @@ document.onkeydown = function(event){
 				sfxWhoosh.play();
 		}
 
-	}	
-	
-	if(event.keyCode === 81 && chatInput.style.display == "none" && !shop.active){ //Q
+	}		
+	else if(event.keyCode === 81 && chatInput.style.display == "none" && !shop.active){ //Q
 		socket.emit('keyPress',{inputId:81,state:true});
 	}	
-	if(event.keyCode === 82 && chatInput.style.display == "none" && !shop.active){ //R
+	else if(event.keyCode === 69 && chatInput.style.display == "none" && !shop.active){ //E
+		socket.emit('keyPress',{inputId:69,state:true});
+	}	
+	else if(event.keyCode === 82 && chatInput.style.display == "none" && !shop.active){ //R
 		socket.emit('keyPress',{inputId:82,state:true});
 	}
-	if(event.keyCode === 17 && chatInput.style.display == "none" && !shop.active){ //Ctrl
+	else if(event.keyCode === 17 && chatInput.style.display == "none" && !shop.active){ //Ctrl
 		event.preventDefault();
 		socket.emit('keyPress',{inputId:82,state:true});
 	}
-	if(event.keyCode === 16 && chatInput.style.display == "none"){ //Shift
+	else if(event.keyCode === 16 && chatInput.style.display == "none"){ //Shift
 		myPlayer.pressingShift = true;
 			camOffSet = shiftCamOffSet;
 			diagCamOffSet = shiftDiagCamOffSet;
 			camMaxSpeed = 300;
 		socket.emit('keyPress',{inputId:16,state:true});
 	}
-	if(event.keyCode === 69 && chatInput.style.display == "none" && !shop.active){ //E
-		socket.emit('keyPress',{inputId:69,state:true});
-	}	
-
-	if(event.keyCode === 49 && chatInput.style.display == "none"){ //1
+	else if(event.keyCode === 49 && chatInput.style.display == "none"){ //1
 		socket.emit('keyPress',{inputId:49,state:true});
 	}	
-	if(event.keyCode === 50 && chatInput.style.display == "none"){ //2
+	else if(event.keyCode === 50 && chatInput.style.display == "none"){ //2
 		socket.emit('keyPress',{inputId:50,state:true});
 	}	
-	if(event.keyCode === 51 && chatInput.style.display == "none"){ //3
+	else if(event.keyCode === 51 && chatInput.style.display == "none"){ //3
 		socket.emit('keyPress',{inputId:51,state:true});
 	}	
-	if(event.keyCode === 52 && chatInput.style.display == "none"){ //4
+	else if(event.keyCode === 52 && chatInput.style.display == "none"){ //4
 		socket.emit('keyPress',{inputId:52,state:true});
 	}	
 	
-	if(event.keyCode === 13){ //Enter
+	else if(event.keyCode === 13){ //Enter
 		canvasDiv.style.backgroundColor="black";
 		if (chatInput.style.display == "inline"){
 			if (chatInput.value != "") {
@@ -4551,7 +4567,7 @@ document.onkeydown = function(event){
 			chatStale = 0;
 		}
 	}
-	if(event.keyCode === 27){ //Esc
+	else if(event.keyCode === 27){ //Esc
 		if (showStatOverlay == false){
 			chatInput.value = '';
 			chatInput.style.display = "none";
@@ -4562,7 +4578,7 @@ document.onkeydown = function(event){
 		}		
 	}
 	
-	if(event.keyCode === 77 && chatInput.style.display == "none"){ //M //togglemute toggle mute
+	else if(event.keyCode === 77 && chatInput.style.display == "none"){ //M //togglemute toggle mute
 		if (Player.list[myPlayer.id]){
 			if (mute){
 				mute = false;
@@ -4574,7 +4590,7 @@ document.onkeydown = function(event){
 			}
 		}
 	}
-	if(event.keyCode === 71 && myPlayer.id && chatInput.style.display == "none"){ //"G" //G 
+	else if(event.keyCode === 71 && myPlayer.id && chatInput.style.display == "none"){ //"G" //G 
 		if (Player.list[myPlayer.id]){
 			if (lowGraphicsMode == false){
 				lowGraphicsMode = true;
@@ -4589,7 +4605,7 @@ document.onkeydown = function(event){
 		}		
 	}
 	
-	if(event.keyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing
+	else if(event.keyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing
 	getNewTip();
 		console.log("TESTING BUTTON");
 		ctx.beginPath();
@@ -4609,31 +4625,31 @@ document.onkeyup = function(event){
 		myPlayer.pressingW = false;
 		socket.emit('keyPress',{inputId:87,state:false});
 	}
-	if(event.keyCode === 68){ //D
+	else if(event.keyCode === 68){ //D
 		myPlayer.pressingD = false;
 		socket.emit('keyPress',{inputId:68,state:false});
 	}
-	if(event.keyCode === 83){ //S
+	else if(event.keyCode === 83){ //S
 		myPlayer.pressingS = false;
 		socket.emit('keyPress',{inputId:83,state:false});
 	}
-	if(event.keyCode === 65){ //A
+	else if(event.keyCode === 65){ //A
 		myPlayer.pressingA = false;
 		socket.emit('keyPress',{inputId:65,state:false});
 	}		
-	if((event.keyCode === 38 || event.keyCode === 80) && chatInput.style.display == "none"){ //Up
+	else if((event.keyCode === 38 || event.keyCode === 80) && chatInput.style.display == "none"){ //Up
 		myPlayer.pressingUp = false;
 		if (!shop.active){
 			socket.emit('keyPress',{inputId:38,state:false});
 		}
 	}
-	if((event.keyCode === 39 || event.keyCode === 222) && chatInput.style.display == "none"){ //Right
+	else if((event.keyCode === 39 || event.keyCode === 222) && chatInput.style.display == "none"){ //Right
 		myPlayer.pressingRight = false;
 		if (!shop.active){
 			socket.emit('keyPress',{inputId:39,state:false});
 		}
 	}
-	if((event.keyCode === 40 || event.keyCode === 186) && chatInput.style.display == "none"){ //Down
+	else if((event.keyCode === 40 || event.keyCode === 186) && chatInput.style.display == "none"){ //Down
 		myPlayer.pressingDown = false;
 		if (shop.active){
 			shop.active = false;
@@ -4656,14 +4672,14 @@ document.onkeyup = function(event){
 			socket.emit('keyPress',{inputId:40,state:false});
 		}
 	}
-	if((event.keyCode === 37 || event.keyCode === 76) && chatInput.style.display == "none"){ //Left
+	else if((event.keyCode === 37 || event.keyCode === 76) && chatInput.style.display == "none"){ //Left
 		myPlayer.pressingLeft = false;
 		if (!shop.active){
 			socket.emit('keyPress',{inputId:37,state:false});
 		}
 	}
 	
-	if(event.keyCode === 16){ //Shift
+	else if(event.keyCode === 16){ //Shift
 		myPlayer.pressingShift = false;
 			camOffSet = 300;
 			diagCamOffSet = 200;
@@ -4671,7 +4687,7 @@ document.onkeyup = function(event){
 		socket.emit('keyPress',{inputId:16,state:false});
 	}
 	
-	if(event.keyCode === 84 && chatInput.style.display == "none" && myPlayer.name != ""){ //T
+	else if(event.keyCode === 84 && chatInput.style.display == "none" && myPlayer.name != ""){ //T
 		chatInput.style.display = "inline";
 		chatInput.focus();
 		chatText.style.display = "inline-block";
