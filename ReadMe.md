@@ -25,11 +25,5 @@ The `infrastructure/` folder defines all the AWS resources in the form of TypeSc
 1. `npm install -g cdk`   if you haven't installed CDK
 1. `cd infrastructure`    if you're not in the directory
 1. `npm run build`
+1. `cdk diff`             see what's going to change before doing it
 1. `cdk deploy`
-
-### Other useful commands
-
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       creates the CloudFormation template file but doesn't deploy it
