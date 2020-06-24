@@ -3,7 +3,7 @@
 ## Debug and Run
 
 1. Setup your AWS credentials
-   1. Install the AWS CLI
+   1. Install the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)s
    1. Run `aws configure`
    1. Enter in your 2-part security credentials (available [here](https://console.aws.amazon.com/iam/home#/security_credentials))
 1. Create a file at the root directory called `config.ini`. Contents should look like the following:
