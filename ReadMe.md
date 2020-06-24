@@ -15,3 +15,21 @@
 1. Select `Web Server` or `Game Server`
    * These options are specified in `.vscode/launch.json`
 1. Click the green triangle to start debugging
+
+## Infrastructure
+
+The `infrastructure/` folder defines all the AWS resources in the form of TypeScript using CDK.
+
+### How to deploy
+
+1. `npm install -g cdk`   if you haven't installed CDK
+1. `cd infrastructure`    if you're not in the directory
+1. `npm run build`
+1. `cdk deploy`
+
+### Other useful commands
+
+ * `npm run watch`   watch for changes and compile
+ * `npm run test`    perform the jest unit tests
+ * `cdk diff`        compare deployed stack with current state
+ * `cdk synth`       creates the CloudFormation template file but doesn't deploy it
