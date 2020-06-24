@@ -18,7 +18,7 @@
 
 ## Infrastructure
 
-The `infrastructure/` folder defines all the AWS resources in the form of TypeScript using CDK.
+The `infrastructure/` folder defines all the AWS resources in the form of TypeScript using CDK (see the [API reference](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html)).
 
 ### How to deploy
 
@@ -27,3 +27,5 @@ The `infrastructure/` folder defines all the AWS resources in the form of TypeSc
 1. `npm run build`
 1. `cdk diff`             see what's going to change before doing it
 1. `cdk deploy`
+
+
