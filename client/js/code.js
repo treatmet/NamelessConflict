@@ -3238,7 +3238,9 @@ function drawHUD(){
 		ctx.fillStyle="#FFFFFF";
 		ctx.lineWidth=4;
 		ctx.textAlign="right";
-		fillText(clipCount + "/", canvasWidth - 65, canvasHeight - 13 - liftBottomHUD);
+		fillText(clipCount, canvasWidth - 101, canvasHeight - 9 - liftBottomHUD);
+		ctx.font = '63px Electrolize';
+		fillText("/", canvasWidth - 65, canvasHeight - 15 - liftBottomHUD);
 		if (Player.list[myPlayer.id].weapon == 1){
 			drawImage(Img.infinity, canvasWidth - 77, canvasHeight - 44 - liftBottomHUD);		
 		}

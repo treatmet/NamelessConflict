@@ -45,8 +45,11 @@ pm2 unstartup systemv
 
 
 'use strict';
-var mongojs = require('mongojs');
-var ObjectId = require('mongodb').ObjectID;
+
+const requirements = require('./requirements.js');
+
+const mongojs = require('mongojs');
+const ObjectId = require('mongodb').ObjectID;
 const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
 const AWS = require('aws-sdk');
 const request = require('request-promise');
@@ -55,9 +58,9 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 global.fetch = require('node-fetch');
 
-var express = require('express');
-var app = express();
-var serv = require('http').Server(app);
+const express = require('express');
+const app = express();
+const serv = require('http').Server(app);
 const https = require('https');
 var cookieParser = require('cookie-parser');
 var io = require('socket.io')(serv,{});
@@ -1323,7 +1326,6 @@ var getJoinableServer = function(options, cb){
 						team = "black";
 					}
 					
-					console.log("!!!!!!!!!!!!!!!SPECTATE?????????????????????");
 					var matchRemaining = (serv[i].currentTimeLeft / serv[i].matchTime);
 					var possibleTeamDifference = Math.abs(Math.abs(moreWhitePlayers) - options.party.length);					
 					console.log("(REMAINING TIME) IS " + matchRemaining + " LESS THAN " + joinActiveGameThreshold);
@@ -6059,8 +6061,6 @@ function playerEvent(playerId, event){
 			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
 			updateNotificationList.push({text:"+$" + killCash + " - Enemy Killed",playerId:playerId});
-			log("KILL = " + Player.list[playerId].cognitoSub);
-			dbUserUpdate("inc", Player.list[playerId].cognitoSub, {kills: 1});
 		}
 		else if (event == "multikill"){
 			if (Player.list[playerId].multikill == 2){
@@ -6127,7 +6127,6 @@ function playerEvent(playerId, event){
 			if (Player.list[playerId]){
 				updatePlayerList.push({id:playerId,property:"deaths",value:Player.list[playerId].deaths});
 			}
-			dbUserUpdate("inc", Player.list[playerId].cognitoSub, {deaths: 1});
 		}
 		else if (event == "benedict"){
 			updateNotificationList.push({text:"Benedict!",playerId:playerId});
@@ -6141,7 +6140,6 @@ function playerEvent(playerId, event){
 			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
 			updateNotificationList.push({text:"+$" + stealCash + " - Bag Stolen",playerId:playerId});
-			dbUserUpdate("inc", Player.list[playerId].cognitoSub, {steals: 1});
 		}
 		else if (event == "return"){
 			Player.list[playerId].returns++;
@@ -6151,7 +6149,6 @@ function playerEvent(playerId, event){
 			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
 			updateNotificationList.push({text:"+$" + returnCash + " - Bag Returned",playerId:playerId});
-			dbUserUpdate("inc", Player.list[playerId].cognitoSub, {returns: 1});
 		}
 		else if (event == "capture"){
 			Player.list[playerId].holdingBag = false;
@@ -6165,7 +6162,6 @@ function playerEvent(playerId, event){
 			if (!gameOver){
 				updateNotificationList.push({text:"+$" + captureCash + " - BAG CAPTURED!!",playerId:playerId});
 			}
-			dbUserUpdate("inc", Player.list[playerId].cognitoSub, {captures: 1});
 		}
 	}
 
@@ -6214,10 +6210,7 @@ function calculateEndgameStats(){
 				blackAverageRating = whiteAverageRating;
 			
 			
-			
-			console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + whiteAverageRating);
-			console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + blackAverageRating);
-			
+					
 			
 			for (var p in Player.list){
 				if (Player.list[p].team == "none")
@@ -6275,7 +6268,7 @@ function calculateEndgameStats(){
 				SOCKET_LIST[p].emit('sendLog', "engGameResults:");
 				SOCKET_LIST[p].emit('sendLog', endGameProgressResults);
 
-				dbUserUpdate("inc", Player.list[p].cognitoSub, {cash: Player.list[p].cashEarnedThisGame, experience: Player.list[p].cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained});
+				dbUserUpdate("inc", Player.list[p].cognitoSub, {kills:Player.list[p].kills, deaths:Player.list[p].deaths, captures:Player.list[p].captures, steals:Player.list[p].steals, returns:Player.list[p].returns, cash: Player.list[p].cashEarnedThisGame, experience: Player.list[p].cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained});
 			}
 		}
 		else {
@@ -7316,7 +7309,6 @@ setInterval(
 					longestVotes:longestVotes, 
 					crikVotes:crikVotes,
 				};
-				console.log(votesData);
 				
 				socket.emit('votesUpdate',votesData);
 			}

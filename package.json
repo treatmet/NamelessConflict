@@ -23,7 +23,8 @@
   "engines": {
     "node": "4.1.x"
   },
-  "devDependencies": {},
+  "devDependencies": {
+  },
   "scripts": {
     "start": "node app.js"
   },
