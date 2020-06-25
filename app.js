@@ -46,8 +46,6 @@ pm2 unstartup systemv
 
 'use strict';
 
-const requirements = require('./requirements.js');
-
 const mongojs = require('mongojs');
 const ObjectId = require('mongodb').ObjectID;
 const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
@@ -62,10 +60,12 @@ const express = require('express');
 const app = express();
 const serv = require('http').Server(app);
 const https = require('https');
-var cookieParser = require('cookie-parser');
-var io = require('socket.io')(serv,{});
-var os = require('os');
-var util = require('util')
+const cookieParser = require('cookie-parser');
+const io = require('socket.io')(serv,{});
+const os = require('os');
+const util = require('util')
+
+var S3 = require('aws-sdk/clients/s3');
 
 
 	
@@ -84,13 +84,13 @@ process
 
 
 //--------------------------------CONFIG-----------------------------------------------------
-var debug = true;
-var httpOnlyCookies = false;
-var allowDuplicateUsername = false;
+const debug = true;
+const httpOnlyCookies = false;
+const allowDuplicateUsername = false;
 
 var config = parseINIString(fs.readFileSync(__dirname + '/config.ini', 'utf8'));
 
-var allowServerCommands = true;
+const allowServerCommands = true;
 
 //Game Config   //game config
 var gameMinutesLength = 5;
@@ -947,10 +947,11 @@ else if (port == "3004"){
 
 var SOCKET_LIST = [];
 var S3StreamLogger = require('s3-streamlogger').S3StreamLogger;
-var s3stream = new S3StreamLogger({ bucket: config.s3LoggingBucket, access_key_id: config.awsAccessKeyId, secret_access_key: config.awsSecretAccessKey, name_format: isWebServer ? "WEBADMIN_" + port + ".txt" : "_" + port + ".txt"});
+var s3stream = new S3StreamLogger({ bucket: config.s3LoggingBucket, name_format: isWebServer ? "WEBADMIN_" + port + ".txt" : "_" + port + ".txt"});
 //reinitStream();
 logg("----------------------SERVER STARTUP-----------------------");
-logg("If you are seeing this, then S3 connection established");
+
+
 
 
 var ifaces = os.networkInterfaces();
