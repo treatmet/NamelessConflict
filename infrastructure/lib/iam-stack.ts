@@ -41,5 +41,41 @@ export class IamStack extends cdk.Stack {
       userName: "PrestonRobertson",
       groups: [opsGroup]
     });
+
+    var s3LogBucketPolicy = new iam.ManagedPolicy(this, "Policy-S3LogBucketPolicy", {
+      managedPolicyName: "S3LogBucketPolicy",
+      statements: [
+        new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:ListBucket",
+            ],
+            resources: [
+              "arn:aws:s3:::rw3000-logs",
+              "arn:aws:s3:::rw3000-logs/*",
+            ]
+        })
+      ]
+    });
+
+    var adminServicerRole = new iam.Role(this, "Role-AdminService", {
+      roleName: "EC2-AdminService",
+      assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+      description: "The IAM role for the admin service",
+      managedPolicies: [
+        s3LogBucketPolicy
+      ]
+    });
+
+    var gameServiceRole = new iam.Role(this, "Role-GameService", {
+      roleName: "EC2-GameService",
+      assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+      description: "The IAM role for the game service",
+      managedPolicies: [
+        s3LogBucketPolicy
+      ]
+    });
   }  
 }
