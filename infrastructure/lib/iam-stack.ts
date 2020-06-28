@@ -1,6 +1,7 @@
 import cdk = require('@aws-cdk/core');
 import iam = require('@aws-cdk/aws-iam');
 import { PolicyStatement, Effect } from '@aws-cdk/aws-iam';
+import {createEc2Role} from './iam/role';
 
 export class IamStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -60,18 +61,16 @@ export class IamStack extends cdk.Stack {
       ]
     });
 
-    var adminServicerRole = new iam.Role(this, "Role-AdminService", {
-      roleName: "EC2-AdminService",
-      assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+    createEc2Role(this, {
+      name: "AdminService",
       description: "The IAM role for the admin service",
       managedPolicies: [
         s3LogBucketPolicy
       ]
     });
 
-    var gameServiceRole = new iam.Role(this, "Role-GameService", {
-      roleName: "EC2-GameService",
-      assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+    createEc2Role(this, {
+      name: "GameService",
       description: "The IAM role for the game service",
       managedPolicies: [
         s3LogBucketPolicy
