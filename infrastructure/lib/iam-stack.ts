@@ -1,13 +1,12 @@
-import cdk = require('@aws-cdk/core');
-import iam = require('@aws-cdk/aws-iam');
-import { PolicyStatement, Effect } from '@aws-cdk/aws-iam';
+import { Stack, Construct, StackProps } from '@aws-cdk/core';
+import { PolicyStatement, Effect, ManagedPolicy, Group, User } from '@aws-cdk/aws-iam';
 import {createEc2Role} from './iam/role';
 
-export class IamStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+export class IamStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    var accessKeyPolicy = new iam.ManagedPolicy(this, "Policy-IamSelfManageAccessKeys", {
+    var accessKeyPolicy = new ManagedPolicy(this, "Policy-IamSelfManageAccessKeys", {
       managedPolicyName: "IamSelfManageAccessKeys",
       statements: [
         new PolicyStatement({
@@ -24,26 +23,26 @@ export class IamStack extends cdk.Stack {
       ]
     });
 
-    var opsGroup = new iam.Group(this, "Group-Ops", {
+    var opsGroup = new Group(this, "Group-Ops", {
       groupName: "Ops",
       managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName("ReadOnlyAccess"),
-        iam.ManagedPolicy.fromAwsManagedPolicyName("IAMUserChangePassword"),
+        ManagedPolicy.fromAwsManagedPolicyName("ReadOnlyAccess"),
+        ManagedPolicy.fromAwsManagedPolicyName("IAMUserChangePassword"),
         accessKeyPolicy,
-        iam.ManagedPolicy.fromAwsManagedPolicyName("AWSCloudFormationFullAccess"),
-        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonEC2FullAccess"),
-        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess"),
-        iam.ManagedPolicy.fromAwsManagedPolicyName("CloudWatchFullAccess"),
-        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonCognitoPowerUser"),
+        ManagedPolicy.fromAwsManagedPolicyName("AWSCloudFormationFullAccess"),
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonEC2FullAccess"),
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess"),
+        ManagedPolicy.fromAwsManagedPolicyName("CloudWatchFullAccess"),
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonCognitoPowerUser"),
       ]
     });
 
-    new iam.User(this, "User-PrestonRobertson", {
+    new User(this, "User-PrestonRobertson", {
       userName: "PrestonRobertson",
       groups: [opsGroup]
     });
 
-    var s3LogBucketPolicy = new iam.ManagedPolicy(this, "Policy-S3LogBucketPolicy", {
+    var s3LogBucketPolicy = new ManagedPolicy(this, "Policy-S3LogBucketPolicy", {
       managedPolicyName: "S3LogBucketPolicy",
       statements: [
         new PolicyStatement({

@@ -1,7 +1,17 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
-import cdk = require('@aws-cdk/core');
+import { App }  from '@aws-cdk/core';
 import { IamStack } from '../lib/iam-stack';
+import { AppStack } from '../lib/app-stack';
 
-const app = new cdk.App();
-new IamStack(app, 'IamStack');
+const app = new App();
+
+const defaultStackProps = {
+  env: {
+    account: "231793983438",
+    region: "us-east-2"
+  }
+};
+
+new IamStack(app, 'IamStack', defaultStackProps);
+new AppStack(app, 'AppStack', defaultStackProps);
