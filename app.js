@@ -1,60 +1,16 @@
 //2017-2020 Treat Metcalf
 //Alpha Version
 
-/*
-CMD to run on new server:
-
-
-download and install npm
-download and install node.js
-npm install nodejs
-
-
-npm install --save amazon-cognito-identity-js
-npm install --save aws-sdk
-npm install --save request
-npm install --save jwk-to-pem
-npm install --save jsonwebtoken
-npm install --save node-fetch
-
-
-//use pm2 below
-sudo su (I think)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash (may even need to run this to install nvm)
-nvm install 12.10.0
-npm install -g pm2
-
-//Create pm2 dameon
-sudo su (i think)
-pm2 start app.js -f -- 3001
-pm2 start app.js -f -- 3002
-pm2 start app.js -f -- 3003
-pm2 start app.js -f -- 3004
-
-//Get startup script (run result in terminal)
-pm2 startup
-
-pm2 save
-
-//Stop app from running on ec2 startup: (don't run unless you want to undo the auto startup)
-pm2 unstartup systemv
-
-	
-*/
-
-
-
 'use strict';
 
-const mongojs = require('mongojs');
-const ObjectId = require('mongodb').ObjectID;
+//-------------------------------MODULE REQUIRES----------------------------------------------
 const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
 const AWS = require('aws-sdk');
 const request = require('request-promise');
 const jwkToPem = require('jwk-to-pem');
 const jwt = require('jsonwebtoken');
-const fs = require('fs');
-global.fetch = require('node-fetch');
+global.fs = require('fs');
+const fetch = require('node-fetch');
 
 const express = require('express');
 const app = express();
@@ -65,10 +21,24 @@ const io = require('socket.io')(serv,{});
 const os = require('os');
 const util = require('util')
 
-var S3 = require('aws-sdk/clients/s3');
+global.config = parseINIString(fs.readFileSync(__dirname + '/config.ini', 'utf8'));
+const S3StreamLogger = require('s3-streamlogger').S3StreamLogger;
+
+//-------------------------------FILE REQUIRES----------------------------------------------
+var serverConfig = require('./app_code/config.js');
+const dataAccess = require('./app_code/dataAccess.js');
+
+const postGameEngine = require('./app_code/engines/postGameEngine.js');
+const mapEngine = require('./app_code/engines/mapEngine.js');
+const logger = require('./app_code/engines/logEngine.js');
+
+var Pickup = require('./app_code/entities/pickup.js').Pickup;
+var Block = require('./app_code/entities/block.js').Block;
 
 
-	
+//---------------------------------INIT---------------------------------------
+global.s3stream = new S3StreamLogger({ bucket: config.s3LoggingBucket, name_format: isWebServer ? "WEBADMIN_" + port + ".txt" : "_" + port + ".txt"});
+
 process
   .on('unhandledRejection', (reason, p) => {
 	logg("--SERVER CRASH:Unhandled Rejection at Promise");
@@ -80,782 +50,10 @@ process
     logg(util.format(err));
     process.exit(1);
   });
-  
 
-
-//--------------------------------CONFIG-----------------------------------------------------
-const debug = true;
-const httpOnlyCookies = false;
-const allowDuplicateUsername = false;
-
-var config = parseINIString(fs.readFileSync(__dirname + '/config.ini', 'utf8'));
-
-const allowServerCommands = true;
-
-//Game Config   //game config
-var gameMinutesLength = 5;
-var gameSecondsLength = 0;
-var map = "longest";
-var gametype = "ctf";
-var maxPlayers = 14;
-var isWebServer = false;
-var isLocal = false;
-
-const syncServerWithDbInterval = 15; //Seconds //Both sync and check for stale thresholds
-const serverHealthCheckTimestampThreshold = 90; //Seconds
-
-const updateOnlineTimestampInterval = 15; //Seconds
-const staleOnlineTimestampThreshold = 60; //Seconds
-
-const staleRequestCheckInterval = 60; //Seconds
-const staleFriendRequestThreshold = 30; //Days
-const stalePartyRequestThreshold = 300; //Seconds
-
-const joinActiveGameThreshold = 0.5; //Percentage threshold for how far the game is allowed to be progressed and still accept incoming players
-
-var privateServer = false;
-var scoreToWin = 0;
-var serverNumber = 1;
-var serverName = "Server";
-var voteGametype = true;
-var voteMap = true;
-var ctfVotes = 0;
-var slayerVotes = 0;
-var thePitVotes = 0;
-var longestVotes = 0;
-var crikVotes = 0;
-var voteMapIds = [];
-var voteGametypeIds = [];
-
-var timeBeforeNextGame = 60; //newGameTimer
-var pcMode = 2; //1 = no, 2= yes
-
-
-//Cash Values for Events
-const killCash = 100;
-const doubleKillCash = 200;
-const tripleKillCash = 300;
-const quadKillCash = 400;
-const spreeCash = 250;
-const frenzyCash = 500;
-const rampageCash = 750;
-const unbelievableCash = 1000;
-const thugCash = 25;
-const assassinationCash = 150;
-const stealCash = 50;
-const captureCash= 300;
-const killEnemyBagHolder = 150;
-const returnCash = 100;
-const winCash = 1000;
-const loseCash = 100;
-const mvpCash = 300;
-const hitCash = 5;
-
-//Shop config
-var shopEnabled = false;
-var invincibleInShop = false;
-const shop = {
-	active:false,
-	selection:3,
-	price1:150,
-	price2:300,
-	price3:200,
-	price4:300,
-	price5:100,	
-	uniqueTextTimer:0,
-	uniqueText:"",
-	purchaseEffectTimer:0,
-};
-
-
-//Player config player config
-const startingCash = 0;
-const boostAmount = 23;
-const boostDecay = 1.9;
-var globalSpeed = 6;
-const speedMin = globalSpeed; 
-const maxSpeed = globalSpeed; 
-const rechargeDelayTime = 150; //Double for breaking under zero energy
-const healDelayTime = 300;
-const healRate = 10; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal)
-var respawnTimeLimit = 180;
-const slayerRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
-const ctfRespawnTimeLimit = 7 * 60; //seconds (translated to frames)
-const bagDrag = 0.85;
-//Cloaking config
-const cloakingEnabled = true;
-const cloakDrainSpeed = 0.09;
-const cloakDrag = 0.5; //Walking speed multiplier when cloaked
-const cloakInitializeSpeed = 0.02;
-const cloakDeinitializeSpeed = 0.1;
-const playerMaxHealth = 175;
-const AfkFramesAllowed = 6000 * 60; //seconds (translated to frames) //timeout
-
-//Weapons config
-var bulletRange = 19 * 75;
-var damageScale = 1;
-	var pistolDamage = 10;
-	var pistolSideDamage = 10; //Stacks on above
-	var pistolBackDamage = 20; //Stacks AGAIN on above
-	var mgDamage = 12; 
-	var mgSideDamage = 12; //Stacks on above
-	var mgBackDamage = 24; //Stacks AGAIN on above
-	var SGDamage = 30;
-	var SGSideDamage = 30;
-	var SGBackDamage = 60;
-	var friendlyFireDamageScale = 0.5;
-	var boostDamage = 50;
-	
-const SGRange = 310;
-const SGCloseRangeDamageScale = 4;
-const SGPushSpeed = 12;
-
-const DPClipSize = 20;
-const MGClipSize = 45;
-const SGClipSize = 6;
-
-const pistolFireRateLimiter = true;	
-const pistolFireRate = 12;
-const DPFireRate = 12;
-const MGFireRate = 5;
-const SGFireRate = 50;
-
-const maxSGAmmo = 24;
-const maxDPAmmo = 40;
-const maxMGAmmo = 90;
-
-const cloakBonusDamage = 20;
-
-const staggerScale = 0.60;
-const staggerTime = 20;
-
-const damagePushScale = 2;
-const pushMaxSpeed = 35;
-
-const allowBagWeapons = false;
-
-//thug Config
-var spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
-const thugSightDistance = 600;
-const thugHealth = 80;
-const thugDamage = 50;
-const thugSpeed = 4;
-const thugAttackDelay = 30;
-var thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are wiped off map (for performance concerns)
-
-//Bot Config
-
-//Map Config
-var mapWidth = 0;
-var mapHeight = 0;
-var pushStrength = 15; //Push block strength
-
-var playerWhiteHomeX = 75;
-var playerWhiteHomeY = 75;
-var playerBlackHomeX = mapWidth - 75;
-var playerBlackHomeY = mapHeight - 75;
-var warp1X = 3.9 * 75;
-var warp1Y = 13 * 75;
-var warp2X = 48.1 * 75;
-var warp2Y = 13 * 75;
-
-var spawnXminBlack = 0;
-var spawnXmaxBlack = 0;
-var spawnYminBlack = 0;
-var spawnYmaxBlack = 0;
-
-var spawnXminWhite = 0;
-var spawnXmaxWhite = 0;
-var spawnYminWhite = 0;
-var spawnYmaxWhite = 0;
-
-var threatSpawnRange = 400;
-
-var keepBlackPlayerFromWalls = false;
-
-
-//----------------------SERVER GLOBAL VARIABLES---------------------------------
-var pause = false;
-var minutesLeft = 9;
-var secondsLeft = 99;
-var nextGameTimer = 20;
-
-var bagRed = {
-	homeX:0,
-	homeY:0,
-	x:0,
-	y:0,
-	captured:false,
-	speed:0,
-	direction:0,
-	playerThrowing:0,
-};
-
-var bagBlue = {
-	homeX:0,
-	homeY:0,
-	x:0,
-	y:0,
-	captured:false,
-	speed:0,
-	direction:0,
-	playerThrowing:0,
-};
-
-var whiteScore = 0;
-var blackScore = 0;
-
-var pregame = true;
-var gameOver = false;
-
-
-
-var updatePlayerList = [];
-var updateThugList = [];
-var updateNotificationList = [];
-var updatePickupList = [];
-var updateEffectList = [];
-var updateMisc = {};
-
-//This belongs in a database... or in a museum
-var rankings = [
-	{rank:"bronze1",rating:0},
-	{rank:"bronze2",rating:100},
-	{rank:"bronze3",rating:200},
-	{rank:"silver1",rating:300},
-	{rank:"silver2",rating:500},
-	{rank:"silver3",rating:700},
-	{rank:"gold1",rating:1000},
-	{rank:"gold2",rating:1300},
-	{rank:"gold3",rating:1600},
-	{rank:"diamond",rating:2000},
-	{rank:"diamond2",rating:9999}
-];
-
-function getRankFromRating(rating){
-	for (var r in rankings){
-		var rPlus = parseInt(r)+1;
-		var rMinus = parseInt(r)-1;
-		if (rating < rankings[rPlus].rating){
-			log(rankings[r].rank + " is his rank");
-			var response = {rank:rankings[r].rank, floor:rankings[r].rating, previousRank:"bronze1", nextRank:"diamond2", ceiling:9999};
-			if (rankings[rPlus]){
-				response.nextRank = rankings[rPlus].rank;
-				response.ceiling = rankings[rPlus].rating;
-			}
-			if (rankings[rMinus]){
-				response.previousRank = rankings[rMinus].rank;
-			}
-			return response;
-		}		
-	}
-	return {rank:"bronze1", floor:0, nextRank:"bronze2", ceiling:100};
-}
-
-function getLevelFromExperience(experience){
-	var pointsBetweenThisLevelAndNext = 2500;
-	var additionalPointsBetweenLevels = 2500; //This never gets updated. It is whats added to pointsBetweenLevels, which increases the higher the level.
-	var pointsForLevel = 0;
-	var experienceProgressInfo = {};
-
-	for (var x = 1; x < 99; x++){
-		experienceProgressInfo.level = x;
-		experienceProgressInfo.floor = pointsForLevel;
-		experienceProgressInfo.ceiling = pointsForLevel + pointsBetweenThisLevelAndNext;
-
-		if (experience < experienceProgressInfo.ceiling){
-			return experienceProgressInfo;
-		}
-
-		pointsForLevel += pointsBetweenThisLevelAndNext;
-		pointsBetweenThisLevelAndNext += additionalPointsBetweenLevels;
-	}
-
-	return {
-		level: 99,
-		floor: experience,
-		ceiling: (experience + 1000000)
-	};
-}
-
-//----------------------END GLOBAL VARIABLES---------------------------------
-
-//Rating config
-var matchWinLossRatingBonus = 30;
-var enemySkillDifferenceDivider = 20;
-
-
-/////////////////////////////////////////////MAP LAYOUT/////////////////////////////////////////////////////////////////
-
-function initializePickups(map){
-	Pickup.list = [];
-	
-	bagRed.captured=false;
-	bagRed.speed=0;
-	bagRed.direction=0;
-	bagRed.playerThrowing=0;
-	bagBlue.captured=false;
-	bagBlue.speed=0;
-	bagBlue.direction=0;
-	bagBlue.playerThrowing=0;
-	
-	if (map == "empty"){
-	}
-	else if (map == "loadTest"){
-		for (var i = 0; i <= 60; i+=10){
-			Pickup(Math.random(), mapWidth/2 + i, mapHeight/2 - 90, 5, 75, 60); //Body Armor
-			Pickup(Math.random(), mapWidth/2 + i, mapHeight/2 + 75, 3, 120, 60); //MG
-			Pickup(Math.random(), mapWidth + i - 150, 150, 2, 40, 30); //DP
-			Pickup(Math.random(), 150 + i, mapHeight - 150, 2, 40, 30); //DP
-			Pickup(Math.random(), bagRed.homeX + i, bagRed.homeY - 120, 1, 50, 10); //MD
-			Pickup(Math.random(), bagBlue.homeX + i, bagBlue.homeY + 120, 1, 50, 10); //MD			
-		}
-	}
-	else if (map == "longest"){
-		bagRed.homeX = 3*75;
-		bagRed.homeY = 19*75;
-		bagBlue.homeX = 36*75;
-		bagBlue.homeY = 3*75;
-
-		
-		Pickup(Math.random(), 16, 11, 5, 75, 60); //Body Armor
-		Pickup(Math.random(), 24, 12, 5, 75, 60); //Body Armor
-		Pickup(Math.random(), 13, 2, 3, 90, 45); //MG
-		Pickup(Math.random(), 27, 21, 3, 90, 45); //MG
-		Pickup(Math.random(), 29, 4, 4, 24, 60); //SG
-		Pickup(Math.random(), 11, 19, 4, 24, 60); //SG
-		Pickup(Math.random(), 2, 12, 2, 40, 30); //DP
-		Pickup(Math.random(), 38, 11, 2, 40, 30); //DP
-		Pickup(Math.random(), 2, 4, 1, 50, 10); //MD
-		Pickup(Math.random(), 38, 19, 1, 50, 10); //MD		
-	}
-	else if (map == "thepit"){
-		bagRed.homeX = 5*75;
-		bagRed.homeY = 17*75;
-		bagBlue.homeX = 36*75;
-		bagBlue.homeY = 17*75;
-		
-		Pickup(Math.random(), 4, 7, 1, 50, 10); //MD
-		Pickup(Math.random(), 38, 7, 1, 50, 10); //MD
-		Pickup(Math.random(), 21, 22, 5, 75, 45); //Body Armor
-		Pickup(Math.random(), 21, 3, 3, 90, 45); //MG
-		Pickup(Math.random(), 21, 28, 3, 90, 45); //MG
-		Pickup(Math.random(), 3, 29, 4, 24, 40); //SG
-		Pickup(Math.random(), 39, 29, 4, 24, 40); //SG
-		Pickup(Math.random(), 5, 20, 2, 40, 25); //DP
-		Pickup(Math.random(), 37, 20, 2, 40, 25); //DP
-	}
-	else if (map == "crik"){
-		bagRed.homeX = 7*75;
-		bagRed.homeY = 13*75;
-		bagBlue.homeX = 45*75;
-		bagBlue.homeY = 13*75;
-
-		Pickup(Math.random(), 26.5, 4.5, 1, 50, 10); //MD
-		Pickup(Math.random(), 26.5, 22.5, 1, 50, 10); //MD
-		Pickup(Math.random(), 1, 13.5, 5, 75, 45); //Body Armor
-		Pickup(Math.random(), 52, 13.5, 5, 75, 45); //Body Armor
-		Pickup(Math.random(), 24, 26, 3, 135, 45); //MG
-		Pickup(Math.random(), 29, 1, 3, 135, 45); //MG
-		Pickup(Math.random(), 17, 6, 2, 40, 25); //DP
-		Pickup(Math.random(), 14, 22, 2, 40, 25); //DP		
-		Pickup(Math.random(), 39, 5, 2, 40, 25); //DP
-		Pickup(Math.random(), 36, 21, 2, 40, 25); //DP		
-		Pickup(Math.random(), 26.5, 13.5, 4, 24, 40); //SG
-	}	
-	else if (map == "close"){
-		bagRed.homeX = 5*75;
-		bagRed.homeY = 17*75;
-		bagBlue.homeX = 36*75;
-		bagBlue.homeY = 17*75;		
-	}
-	else{ //Default: map2
-		bagRed.homeX = 200;
-		bagRed.homeY = 200;
-		bagBlue.homeX = mapWidth - 200;
-		bagBlue.homeY = mapHeight - 200;
-
-		//id, x, y, type, amount, respawnTime
-		Pickup(Math.random(), (mapWidth/2 - 90)/75, mapHeight/2/75, 5, 75, 60); //Body Armor
-		Pickup(Math.random(), (mapWidth/2 + 95)/75, mapHeight/2/75, 3, 60, 60); //MG
-		Pickup(Math.random(), 1000/75, 110/75, 4, 36, 90); //SG
-		Pickup(Math.random(), (mapWidth - 1000)/75, (mapHeight - 110)/75, 4, 36, 90); //SG
-		Pickup(Math.random(), (mapWidth - 150)/75, 150/75, 2, 40, 30); //DP
-		Pickup(Math.random(), 150/75, (mapHeight - 150)/75, 2, 40, 30); //DP
-		Pickup(Math.random(), bagRed.homeX/75, (bagRed.homeY - 120)/75, 1, 50, 10); //MD
-		Pickup(Math.random(), bagBlue.homeX/75, (bagBlue.homeY + 120)/75, 1, 50, 10); //MD
-	}
-	bagBlue.x = bagBlue.homeX;
-	bagBlue.y = bagBlue.homeY;
-	bagRed.x = bagRed.homeX;
-	bagRed.y = bagRed.homeY;	
-}
-
-function initializeBlocks(map){
-	Block.list = [];
-	
-	if (map == "empty"){
-	}
-	else if (map == "loadTest"){
-		for (var i = 0; i <= 60; i+=10){
-			Block(450 + i, 200, 400, 75, "normal");
-			Block(200 + i, 450, 75, 400, "normal");
-			Block(mapWidth + i - 400 - 450, mapHeight - 75 - 200, 400, 75, "normal");
-			Block(mapWidth + i - 75 - 200, mapHeight - 400 - 450, 75, 400, "normal");
-			Block(mapWidth/2 + i - 250, mapHeight/2 - 37, 500, 75, "normal");
-			Block(-20 + i, 235, 70, 50, "normal");
-			Block(mapWidth + i - 50, mapHeight - 285, 70, 50, "normal");	
-			Block(-50 + i, mapHeight, mapWidth + 100, 50, "normal"); //Bottom
-			Block(-50 + i, -50, 50, mapHeight + 100, "normal"); //Left
-			Block(mapWidth + i, -50, 50, mapHeight + 100, "normal"); //Right
-			Block(-50 + i, -50, mapWidth + 100, 50, "normal");	//Top
-		}
-	}
-	else if (map == "longest"){
-		mapWidth = 39*75;
-		mapHeight = 22*75;
-		
-		//Spawn areas
-		spawnXminBlack = mapWidth - 700;
-		spawnXmaxBlack = mapWidth - 10;
-		spawnYminBlack = 10;
-		spawnYmaxBlack = mapHeight;
-		
-		spawnXminWhite = 10;
-		spawnXmaxWhite = 700;
-		spawnYminWhite = 0;
-		spawnYmaxWhite = mapHeight - 10;
-		
-		//push blocks
-		Block(9.7, 5, 5.6, 1, "pushDown");
-		Block(26.7, 5, 3.6, 1, "pushDown");
-		Block(8.7, 16, 3.6, 1, "pushUp");
-		Block(23.7, 16, 5.6, 1, "pushUp");	
-
-		Block(3, 0, 7, 3, "normal");
-		Block(-0.5, -0.5, 10.5, 2.5, "normal");			
-		Block(3, 5, 7, 1, "normal");
-		Block(15, 0, 7, 6, "normal");
-		Block(15, -0.5, 16, 2.5, "normal");
-		Block(24, 5, 3, 1, "normal");
-		Block(30, -0.5, 1, 6.5, "normal");
-		Block(34, 2, 1, 2.9, "blue");
-		Block(34, 4, 3, 1, "blue");
-		Block(3, 10, 9, 2, "red");
-		Block(14, 11, 8, 1, "red"); //mid bars
-		Block(17, 10, 8, 1, "blue"); //mid bars
-		Block(27, 10, 9, 2, "blue");
-		Block(4, 17.1, 1, 2.9, "red");
-		Block(2, 17, 3, 1, "red");
-		Block(8, 16, 1, 6.5, "normal");
-		Block(12, 16, 3, 1, "normal");
-		Block(17, 16, 7, 6, "normal");
-		Block(8, 20, 16, 2.5, "normal");
-		Block(29, 16, 7, 1, "normal");
-		Block(29, 19, 7, 3, "normal");
-		Block(29, 20, 10.5, 2.5, "normal");	
-
-		Block(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
-		Block(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
-		Block(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
-		Block(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
-		
-		/*
-		Block(-100/75, (mapHeight - 10)/75, (mapWidth + 400)/75, 200/75); //Bottom
-		Block((-200 + 10)/75, -200/75, 200/75, (mapHeight + 400)/75); //Left
-		Block((mapWidth - 10)/75, -200/75, 200/75, (mapHeight + 400)/75); //Right
-		Block(-200/75, (-200 + 10)/75, (mapWidth + 400)/75, 200/75);	//Top		
-		*/
-	}
-	else if (map == "thepit"){
-		mapWidth = 41*75;
-		mapHeight = 30*75;
-		
-		//Spawn areas
-		spawnXminBlack = mapWidth - 700;
-		spawnXmaxBlack = mapWidth - 10;
-		spawnYminBlack = 8*75;
-		spawnYmaxBlack = 29*75;
-		spawnXminWhite = 10;
-		spawnXmaxWhite = 700;
-		spawnYminWhite = 8*75;
-		spawnYmaxWhite = 29*75;
-		
-		Block(4, 3, 2, 2, "normal");	
-		Block(4, 7, 2, 2, "normal");	
-		Block(-0.5, 7, 2.5, 2, "normal");	
-		Block(6, 15, 1, 7, "red");	
-		Block(3, 15, 4, 1, "red");	
-		Block(2, 21, 5, 1, "red");	
-		Block(2, 24, 1, 4, "red");	
-		Block(2, 27, 4, 1, "red");	
-		Block(13, 18, 1, 4, "red");	
-		Block(10, 27, 4, 1, "normal");	
-		Block(10, 3, 4.9, 1, "normal");	
-		Block(10, 5, 4.9, 1, "normal");	
-		Block(14, -0.5, 1, 4.5, "normal");	
-		Block(14.1, 8, 4.9, 1, "normal");	
-		Block(14, 5, 1, 4, "normal");	
-		Block(22, 8, 4.9, 1, "normal");	
-		Block(26.1, 3, 4.9, 1, "normal");	
-		Block(26, -0.5, 1, 4.5, "normal");	
-		Block(26.1, 5, 4.9, 1, "normal");	
-		Block(26, 5, 1, 4, "normal");	
-		Block(35, 3, 2, 2, "normal");	
-		Block(35, 7, 2, 2, "normal");	
-		Block(39, 7, 2.5, 2, "normal");	
-		Block(27, 18, 1, 4, "blue");	
-		Block(34, 15, 1, 7, "blue");	
-		Block(34, 15, 4, 1, "blue");	
-		Block(34, 21, 5, 1, "blue");	
-		Block(38, 24, 1, 4, "blue");	
-		Block(35, 27, 4, 1, "blue");	
-		Block(27, 27, 4, 1, "normal");	
-		Block(17, 28, 7, 2.5, "normal");	
-		Block(17, 21, 2, 2, "normal");	
-		Block(22, 21, 2, 2, "normal");	
-		Block(17, 22, 7, 5, "normal");	
-		Block(20, 12, 1, 6, "normal");	
-		Block(17, 17, 7, 2, "normal");	
-
-		Block(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
-		Block(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
-		Block(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
-		Block(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
-	}
-	else if (map == "crik"){
-		mapWidth = 52*75;
-		mapHeight = 26*75;
-		
-		//Spawn areas
-		spawnXminWhite = 10;
-		spawnXmaxWhite = mapWidth/2;
-		spawnYminWhite = 10;
-		spawnYmaxWhite = mapHeight - 10;
-		/////////////////////////////
-		spawnXminBlack = mapWidth/2;
-		spawnXmaxBlack = mapWidth - 10;
-		spawnYminBlack = 10;
-		spawnYmaxBlack = mapHeight - 10;
-		
-			
-		//Blocks
-		//Block(40, 14, 2, 3, "normal");	
-		Block(40, 14, 2, 5.8, "normal");	
-		//Block(10, 9, 2, 3, "normal");	
-		Block(10, 6, 2, 6, "normal");	
-		Block(4, 11, 2, 1, "red");	
-		Block(4, 14, 2, 1, "red");	
-		Block(46, 11, 2, 1, "blue");	
-		Block(46, 14, 2, 1, "blue");	
-		Block(19, -0.5, 2, 2.5, "normal");	
-		Block(22, 1, 2, 1, "normal");	
-		Block(24, 1, 5.1, 1, "pushDown");
-		Block(29, -0.5, 23, 2.5, "normal");	
-		Block(17, 4, 1, 3, "red");	
-		Block(44, 3, 2, 2, "normal");	
-		Block(5,6, 8, 1, "red");	
-		Block(15, 6, 3, 1, "red");	
-		Block(34, 6, 13, 1, "blue");	
-		Block(17, 7, 1, 2.1, "pushRight");	
-		Block(24, 8, 1, 10, "pushLeft");	
-		Block(27, 8, 1, 10, "pushRight");	
-		Block(34, 7, 1, 2.1, "pushLeft");	
-		Block(46, 6, 1, 14, "blue");	
-		Block(14, 9, 1, 8, "normal");	
-		Block(17, 9, 1, 3, "red");	
-		Block(20, 8, 2, 3, "normal");	
-		Block(34, 9, 1, 3, "blue");	
-		Block(37, 9, 1, 8, "normal");	
-		Block(40, 9, 2, 3, "normal");	
-		Block(5, 6, 1, 14, "red");	
-		Block(10, 14, 2, 3, "normal");	
-		Block(17, 14, 1, 3, "red");	
-		Block(30, 15, 2, 3, "normal");	
-		Block(34, 14, 1, 3, "blue");	
-		Block(5, 19, 13, 1, "red");	
-		Block(17, 17, 1, 2, "pushRight");	
-		Block(34, 17, 1, 2.1, "pushLeft");	
-		Block(6, 21, 2, 2, "normal");	
-		Block(34, 19, 3, 1, "blue");	
-		Block(39, 19, 8, 1, "blue");	
-		Block(34, 19, 1, 3, "blue");	
-		Block(0, 24, 23, 2.4, "normal");	
-		Block(23, 24, 5.1, 1, "pushUp");	
-		Block(28, 24, 2, 1, "normal");	
-		Block(31, 24, 2, 2.5, "normal");	
-		
-		Block(4, 12, 1, 2, "warp1");	
-		Block(47, 12, 1, 2, "warp2");	
-
-
-		Block(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
-		Block(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
-		Block(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
-		Block(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
-	}		
-	else if (map == "close"){
-		mapWidth = 8*75;
-		mapHeight = 8*75;
-		
-		//Spawn areas
-		spawnXminBlack = mapWidth - 400;
-		spawnXmaxBlack = mapWidth - 10;
-		spawnYminBlack = mapHeight - 400;
-		spawnYmaxBlack = mapHeight - 10;
-		spawnXminWhite = 10;
-		spawnXmaxWhite = 400;
-		spawnYminWhite = 10;
-		spawnYmaxWhite = 400;
-		
-		Block(3, 6, 2, 2, "normal");	
-		Block(3, 6, 2, 2, "normal");	
-		Block(3, 6, 2, 2, "normal");	
-		Block(3, 6, 2, 2, "normal");	
-		Block(3, 6, 2, 2, "normal");	
-
-		Block(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
-		Block(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
-		Block(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
-		Block(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
-		
-		Thug(Math.random(), "black", 10, 10);
-		Thug(Math.random(), "black", 10, 10);
-		Thug(Math.random(), "black", 10, 10);
-		Thug(Math.random(), "white", 10, 450);
-		Thug(Math.random(), "white", 10, 450);
-		Thug(Math.random(), "white", 10, 450);
-	}
-	else{ //default	
-		mapWidth = 2100;
-		mapHeight = 1500;
-		
-		//Spawn areas
-		spawnXminBlack = mapWidth - 700;
-		spawnXmaxBlack = mapWidth - 10;
-		spawnYminBlack = mapHeight - 700;
-		spawnYmaxBlack = mapHeight - 10;
-		spawnXminWhite = 10;
-		spawnXmaxWhite = 700;
-		spawnYminWhite = 10;
-		spawnYmaxWhite = 700;
-
-		Block(550/75, 200/75, 600/75, 75/75, "normal");
-		Block(-50/75, 275/75, 350/75, 900/75, "normal");
-		Block((mapWidth - 400 - 750)/75, (mapHeight - 75 - 200)/75, 600/75, 75/75, "normal");
-		Block((mapWidth - 300)/75, (mapHeight - 900 - 450 + 175)/75, 350/75, 900/75, "normal");
-		Block((mapWidth/2 - 37)/75, (mapHeight/2 - 250)/75, 75/75, 500/75, "normal"); //Middle beam
-		Block(-20/75, 235/75, 70/75, 50/75, "normal"); //BM nub white
-		Block((mapWidth - 50)/75, (mapHeight - 285)/75, 70/75, 50/75, "normal"); //BM nub black
-
-		Block(-50/75, mapHeight/75, (mapWidth + 100)/75, 50/75, "normal"); //Bottom
-		Block(-50/75, -50/75, 50/75, (mapHeight + 100)/75, "normal"); //Left
-		Block(mapWidth/75, -50/75, 50/75, (mapHeight + 100)/75, "normal"); //Right
-		Block(-50/75, -50/75, (mapWidth + 100)/75, 50/75, "normal");	//Top
-	}
-}
-
-//-------------------------------------------------------------------------------------
 logg('Initializing...');
-
-//////////////////MONGODB and DB ACCESS FUNCTIONS///////////////////////////////////////////////////////
-var db = mongojs(config.mongoDbLocation, ['RW_USER','RW_USER_PROG','RW_SERV','RW_FRIEND', 'RW_REQUEST']);
-
-/////////////////////DB FUNCTIONS////////////////////////////// dbfunctions.js
-var dbUpdateAwait = function(table, action, searchObj, updateObj, cb){
-	if (action == "set"){
-		db[table].update(searchObj, {$set: updateObj}, {multi: true}, function (err, res, status) {
-			if (!err){
-				logg("DB: " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj));
-				cb(false, res.n);
-			}
-			else {
-				logg("DB ERROR - " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj) + " ERROR MESSAGE: " + err);	
-				cb("Error updating " + table, 0);
-			}
-		});		
-	}
-	else if (action == "ups"){
-		db[table].update(searchObj, {$set: updateObj}, {upsert:true, multi: true}, function (err, res, status) {
-			if (!err){
-				logg("DB: " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj));
-				cb(false, res.n);
-			}
-			else {
-				logg("DB ERROR - " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj) + " ERROR MESSAGE: " + err);	
-				cb("Error updating " + table, 0);
-			}
-		});		
-	}
-	else if (action == "inc"){
-		db[table].update(searchObj, {$inc: updateObj}, {multi: true}, function (err, res, status) {
-			if (!err){
-				logg("DB: " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj));
-				cb(false, res.n);
-			}
-			else {
-				logg("DB ERROR - " + table + " " + action + " - " + JSON.stringify(searchObj) + " - " + JSON.stringify(updateObj) + " ERROR MESSAGE: " + err);			
-				cb("Error updating " + table, 0);
-			}
-		});	
-	}	
-	else if (action == "rem"){
-		db[table].remove(searchObj, function(err, result) {
-			if (!err){
-				if (result.deletedCount > 0)
-					logg("DB: " + result.deletedCount + " document(s) deleted - " + JSON.stringify(searchObj));
-				cb(false, result.deletedCount);
-			}
-			else {
-				logg("DB ERROR - " + table + " " + action + " - " + JSON.stringify(searchObj) + " ERROR MESSAGE: " + err);		
-				cb("Error updating " + table, 0);
-			}
-		});		
-	}
-}
-
-var dbFindAwait = function(table, searchObj, cb){
-	dbFindOptionsAwait(table, searchObj, {sort:{},limit:100}, async function(err, res){
-		if (!err){
-			cb(false, res);
-		}
-	});
-}
-
-var dbFindOptionsAwait = function(table, searchObj, options, cb){
-	/*
-	options
-	{sort:{experience: -1},limit:100}
-	*/
-	
-	if (typeof options === 'undefined'){
-		options = {sort:{},limit:100};
-	}
-	if (typeof options.sort === 'undefined'){
-		options.sort = {};
-	}
-	if (typeof options.limit === 'undefined'){
-		options.limit = 100;
-	}
-	
-	db[table].find(searchObj).limit(options.limit).sort(options.sort, function(err,res){
-		if (!err){
-			if (typeof res === 'undefined'){
-				res = [];
-			}
-			cb(false, res);			
-		}
-		else {		
-			logg("DB ERROR - dbFindAwait() - " + table + " - " + JSON.stringify(searchObj) + " ERROR MESSAGE: " + err);
-			cb("Error Searching " + table, []);
-		}		
-	});
-}
-
-
-
 logg("testing db");
-dbFindAwait("RW_USER", {USERNAME:"testuser"}, async function(err, res){
+dataAccess.dbFindAwait("RW_USER", {USERNAME:"testuser"}, async function(err, res){
 	if (res && res[0]){
 		logg("DB SUCCESS! found testuser");
 	}
@@ -863,6 +61,7 @@ dbFindAwait("RW_USER", {USERNAME:"testuser"}, async function(err, res){
 		logg("ERROR! DB CONNECT FAIL: unable to find testuser");
 	}
 });
+
 
 app.use('/client',express.static(__dirname + '/client'));
 app.use('/',express.static(__dirname + '/'));
@@ -946,8 +145,6 @@ else if (port == "3004"){
 }
 
 var SOCKET_LIST = [];
-var S3StreamLogger = require('s3-streamlogger').S3StreamLogger;
-var s3stream = new S3StreamLogger({ bucket: config.s3LoggingBucket, name_format: isWebServer ? "WEBADMIN_" + port + ".txt" : "_" + port + ".txt"});
 //reinitStream();
 logg("----------------------SERVER STARTUP-----------------------");
 
@@ -1068,7 +265,8 @@ function sendPartyToGameServer(party, targetServer) {
 }
 
 
-/////////////////ROUTES CONTROLLERS ENDPOINTS/////////////////////////////////////////////////////////////
+const router = require('./app_code/routes.js');
+app.use(router);
 
 //Get user profile page
 app.get('/user/:cognitoSub', function(req, res) {
@@ -1077,8 +275,8 @@ app.get('/user/:cognitoSub', function(req, res) {
 	getUserFromDB(cognitoSub, function(pageData){
 		if (pageData){
 
-			var rankProgressInfo = getRankFromRating(pageData["rating"]);
-			var experienceProgressInfo = getLevelFromExperience(pageData["experience"]);
+			var rankProgressInfo = postGameEngine.getRankFromRating(pageData["rating"]);
+			var experienceProgressInfo = postGameEngine.getLevelFromExperience(pageData["experience"]);
 
 			pageData["username"] = pageData["username"].substring(0,15);
 			pageData["playerLevel"] = experienceProgressInfo.level;
@@ -1176,7 +374,7 @@ app.post('/playNow', async function (req, res) {
 	var params = {url:myUrl, privateServer:false};
 	var approvedToJoinServer = false;
 	
-	dbFindOptionsAwait("RW_SERV", params, {sort:{serverNumber: 1}}, async function(err, serv){	
+	dataAccess.dbFindOptionsAwait("RW_SERV", params, {sort:{serverNumber: 1}}, async function(err, serv){	
 		if (serv && serv[0]){
 			var incomingUsers = serv[0].incomingUsers || "[]";
 			for (var u = 0; u < incomingUsers.length; u++){
@@ -1271,7 +469,7 @@ var getJoinableServer = function(options, cb){
 		options.matchmaking = false;
 	}
 	
-	dbFindOptionsAwait("RW_SERV", params, {sort:{serverNumber: 1}}, async function(err, serverResult){	
+	dataAccess.dbFindOptionsAwait("RW_SERV", params, {sort:{serverNumber: 1}}, async function(err, serverResult){	
 		var serv = serverResult.sort(compareCurrentPlayerSize);
 		
 		if (typeof serv != 'undefined' && typeof serv[0] != 'undefined'){	
@@ -1348,7 +546,7 @@ var getJoinableServer = function(options, cb){
 					incomingUsers.push.apply(incomingUsers, options.party); //Merge 2 arrays					
 					var obj = {incomingUsers:incomingUsers};
 					var selectedServer = i;
-					dbUpdateAwait("RW_SERV", "set", {url: serv[selectedServer].url}, obj, async function(err2, res){
+					dataAccess.dbUpdateAwait("RW_SERV", "set", {url: serv[selectedServer].url}, obj, async function(err2, res){
 						if (!err2){
 							logg("DB: UPDATING incomingUsers: " + serv[selectedServer].url + " with: " + JSON.stringify(obj));
 							cb("Found joinable server. Joining...", serv[selectedServer].url);
@@ -1411,7 +609,7 @@ app.post('/kickFromParty', async function (req, res) {
 		res.send({msg:errorMsg});
 		return;
 	}		
-	dbUpdateAwait("RW_USER", "set", {partyId: req.body.cognitoSub, cognitoSub:req.body.targetCognitoSub}, {partyId:""}, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: req.body.cognitoSub, cognitoSub:req.body.targetCognitoSub}, {partyId:""}, async function(err, res){
 		if (!err){
 			//logg("DB: Set: cognitoSub=" + req.body.cognitoSub + " with: ");
 			//console.log('partyId:""');
@@ -1471,12 +669,12 @@ app.post('/requestResponse', async function (req, res) {
 						getUserFromDB(authorizedUser.cognitoSub, function(partyJoiner){
 							if (partyJoiner && partyJoiner.partyId && partyJoiner.partyId.length > 0 && partyJoiner.partyId == partyJoiner.cognitoSub && partyJoiner.partyId != partyDbResults.partyId){ //If party leader of a previous party (which is NOT the party currently requested to join) and accepting a new party request
 								var re = new RegExp(partyJoiner.cognitoSub,"g");
-								dbUpdateAwait("RW_USER", "set", {partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {partyId: ""}, async function(err, res){}); //Disband the previous party							
+								dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {partyId: ""}, async function(err, res){}); //Disband the previous party							
 							}
 							//log("dbUserUpdate - Party request accepted, joining party.");
 							dbUserUpdate("set", authorizedUser.cognitoSub, {partyId:partyDbResults.partyId});
-							dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, res){}); //Remove all party requests targeted at the responder
-							dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, res){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
+							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, res){}); //Remove all party requests targeted at the responder
+							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, res){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
 						});
 					});					
 					res.status(200);
@@ -1509,13 +707,13 @@ app.post('/leaveParty', async function (req, res) {
 	console.log(req.body);
 
 	if (req.body.partyId == req.body.cognitoSub){ //Leaving a party that user is the leader of (disband ALL party members' partyId)
-		dbUpdateAwait("RW_USER", "set", {partyId: req.body.partyId}, {partyId:""}, async function(err, userRes){
+		dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: req.body.partyId}, {partyId:""}, async function(err, userRes){
 			res.status(200);
 			res.send({msg:"Ended Party " + req.body.partyId});
 		});	
 	}
 	else { //Leaving someone else's party
-		dbUpdateAwait("RW_USER", "set", {cognitoSub: req.body.cognitoSub}, {partyId:""}, async function(err, userRes){
+		dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: req.body.cognitoSub}, {partyId:""}, async function(err, userRes){
 			res.status(200);
 			res.send({msg:"Left Party " + req.body.partyId});
 		});	
@@ -1543,7 +741,7 @@ app.post('/upsertRequest', async function (req, res) {
 	console.log(req.body);
 	
 	if (req.body.type == "friend"){
-		dbFindAwait("RW_FRIEND", {cognitoSub:req.body.targetCognitoSub, friendCognitoSub:req.body.cognitoSub}, function(err,friendRes){ //Make sure they're not already a friend
+		dataAccess.dbFindAwait("RW_FRIEND", {cognitoSub:req.body.targetCognitoSub, friendCognitoSub:req.body.cognitoSub}, function(err,friendRes){ //Make sure they're not already a friend
 			if (friendRes[0]){
 				res.status(200);
 				res.send("Already friends!");				
@@ -1720,7 +918,7 @@ app.post('/updateUsername', async function (req, res) {
 	
 	var goodToUpdateUsername = false;
 	try {
-		dbFindAwait("RW_USER", {USERNAME:updateNewUsername}, function(err,result){
+		dataAccess.dbFindAwait("RW_USER", {USERNAME:updateNewUsername}, function(err,result){
 			if (result && result[0]){
 				if (allowDuplicateUsername){
 					goodToUpdateUsername = true;
@@ -1732,7 +930,7 @@ app.post('/updateUsername', async function (req, res) {
 				goodToUpdateUsername = true;
 			}		
 			if (goodToUpdateUsername){
-				dbUpdateAwait("RW_USER", "set", {cognitoSub: updateCognitoSub}, {USERNAME: updateNewUsername}, async function(err, updateRes){
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: updateCognitoSub}, {USERNAME: updateNewUsername}, async function(err, updateRes){
 					res.send({msg:"Updated username to " + updateNewUsername});
 				});			
 			}
@@ -1759,15 +957,15 @@ function removeCognitoSubFromArray(incomingUsers, cognitoSub){
 
 //updateUser update user
 function dbUserUpdate(action, cognitoSub, obj) {
-	dbUpdateAwait("RW_USER", action, {cognitoSub: cognitoSub}, obj, async function(err, obj){
+	dataAccess.dbUpdateAwait("RW_USER", action, {cognitoSub: cognitoSub}, obj, async function(err, obj){
 	});		
 }
 
 function setPartyIdIfEmpty(cognitoSub) {
-	dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			if (!res[0].partyId || res[0].partyId == ""){
-				dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {partyId:cognitoSub}, async function(err, obj){
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {partyId:cognitoSub}, async function(err, obj){
 					//logg("DB: Set: " + cognitoSub + " with: ");
 					//console.log("partyId:" + cognitoSub);
 				});						
@@ -1777,7 +975,7 @@ function setPartyIdIfEmpty(cognitoSub) {
 }
 
 function dbGameServerRemoveAndAdd(){
-	dbUpdateAwait("RW_SERV", "rem", {url: myUrl}, {}, async function(err, obj){
+	dataAccess.dbUpdateAwait("RW_SERV", "rem", {url: myUrl}, {}, async function(err, obj){
 		if (!err){
 			dbGameServerUpdate();
 		}
@@ -1845,7 +1043,7 @@ function dbGameServerUpdate() {
 	console.log(currentUsers);
 	var obj = {serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:currentUsers};
 	
-	dbUpdateAwait("RW_SERV", "ups", {url: myUrl}, obj, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_SERV", "ups", {url: myUrl}, obj, async function(err, res){
 		//logg("dbGameServerUpdate DB: Set: " + myUrl + " with: ");
 		//console.log(obj);
 	});		
@@ -1853,7 +1051,7 @@ function dbGameServerUpdate() {
 
 var getPublicServersFromDB = function(cb){
 	var servers = [];
-	dbFindAwait("RW_SERV", {privateServer:false}, function(err,res){
+	dataAccess.dbFindAwait("RW_SERV", {privateServer:false}, function(err,res){
 		if (res && res[0]){
 				
 			for (var i = 0; i < res.length; i++){
@@ -1887,7 +1085,7 @@ var getPlayerRelationshipFromDB = function(data,cb){
 	}
 	try {
 		//log("searching for user: " + data.callerCognitoSub);
-		dbFindAwait("RW_FRIEND", {cognitoSub:data.callerCognitoSub}, function(err,friendRes){
+		dataAccess.dbFindAwait("RW_FRIEND", {cognitoSub:data.callerCognitoSub}, function(err,friendRes){
 			if (friendRes[0]){
 				for (let j = 0; j < friendRes.length; j++) {
 					if (friendRes[j].friendCognitoSub == data.targetCognitoSub){
@@ -1927,7 +1125,7 @@ var upsertFriend = function(data,cb){
 	var result = {};
 	try {
 		//log("searching for user: " + data.cognitoSub);
-		dbFindAwait("RW_FRIEND", {cognitoSub:data.cognitoSub}, function(err,friendRes){
+		dataAccess.dbFindAwait("RW_FRIEND", {cognitoSub:data.cognitoSub}, function(err,friendRes){
 			if (friendRes[0]){
 				for (let j = 0; j < friendRes.length; j++) {
 					if (friendRes[j].friendCognitoSub == data.targetCognitoSub){
@@ -1939,7 +1137,7 @@ var upsertFriend = function(data,cb){
 				}
 			}
 			if (result.status != "present"){
-				dbUpdateAwait("RW_FRIEND", "ups", {cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub}, {cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub, timestamp:new Date()}, async function(err, doc){
+				dataAccess.dbUpdateAwait("RW_FRIEND", "ups", {cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub}, {cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub, timestamp:new Date()}, async function(err, doc){
 					if (!err){
 						logg("New friend added to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub);
 						cb({status:"added"});
@@ -1966,7 +1164,7 @@ function removeFriend(data){
 	};*/
 	try {
 		logg("Removing friendship: " + data.cognitoSub + " friends with " + data.targetCognitoSub);
-		dbUpdateAwait("RW_FRIEND", "rem", {cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub}, {}, async function(err, res){
+		dataAccess.dbUpdateAwait("RW_FRIEND", "rem", {cognitoSub:data.cognitoSub, friendCognitoSub:data.targetCognitoSub}, {}, async function(err, res){
 		});
 	}
 	catch(e) {
@@ -1983,7 +1181,7 @@ function removeRequest(data){
 	try {
 		logg("Removing request:");
 		console.log(data);
-		dbUpdateAwait("RW_REQUEST", "rem", data, {}, async function(err, res){
+		dataAccess.dbUpdateAwait("RW_REQUEST", "rem", data, {}, async function(err, res){
 		});
 	}
 	catch(e) {
@@ -2004,13 +1202,13 @@ var upsertRequest = function(data,cb){
 	try {
 		log("searching for request: ");
 		logObj(data);
-		dbFindAwait("RW_REQUEST", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, function(err,friendRes){
+		dataAccess.dbFindAwait("RW_REQUEST", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, function(err,friendRes){
 			if (friendRes[0]){
 				logg("REQUEST ALREADY EXISTS SPAMMER, exiting");
 				cb(false);
 			}
 			else {
-				dbUpdateAwait("RW_REQUEST", "ups", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, {cognitoSub:data.cognitoSub, username:data.username, targetCognitoSub:data.targetCognitoSub, type:data.type, timestamp:new Date()}, async function(err, doc){
+				dataAccess.dbUpdateAwait("RW_REQUEST", "ups", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, {cognitoSub:data.cognitoSub, username:data.username, targetCognitoSub:data.targetCognitoSub, type:data.type, timestamp:new Date()}, async function(err, doc){
 					if (!err){
 						logg("New request added to RW_REQUEST: " + data.cognitoSub + "," + data.targetCognitoSub + "," + data.type);
 						cb({status:"added"});
@@ -2031,7 +1229,7 @@ var upsertRequest = function(data,cb){
 
 var getOnlineFriendsAndPartyFromDB = function(cognitoSub,cb){
 	//log("searching for user: " + cognitoSub);
-	dbFindAwait("RW_FRIEND", {cognitoSub:cognitoSub}, function(err,res){
+	dataAccess.dbFindAwait("RW_FRIEND", {cognitoSub:cognitoSub}, function(err,res){
 		var friends = [];
 		if (res && res[0]){
 			for (let j = 0; j < res.length; j++) {
@@ -2045,7 +1243,7 @@ var getOnlineFriendsAndPartyFromDB = function(cognitoSub,cb){
 var searchUserFromDB = function(searchText,cb){
 	//log("searching for user with text: " + searchText);
 	var re = new RegExp(searchText,"i");
-	dbFindOptionsAwait("RW_USER", {USERNAME:re}, {limit:50}, async function(err, res){	
+	dataAccess.dbFindOptionsAwait("RW_USER", {USERNAME:re}, {limit:50}, async function(err, res){	
 		if (res && res[0]){
 			var users = res;
 			console.log(users);
@@ -2060,7 +1258,7 @@ var searchUserFromDB = function(searchText,cb){
 
 var getUserFromDB = function(cognitoSub,cb){
 	//log("searching for user: " + cognitoSub);
-	dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			var user = res[0];
 			user.username = res[0].USERNAME;
@@ -2083,7 +1281,7 @@ var getAllPlayersFromDB = function(cb){
 	}
 	
 	var searchParams = { cognitoSub: { $in: cognitoSubsInGame } };	
-	dbFindAwait("RW_USER", searchParams, async function(err, res){
+	dataAccess.dbFindAwait("RW_USER", searchParams, async function(err, res){
 		if (res && res[0]){
 			cb(res);
 		}
@@ -2100,7 +1298,7 @@ var getAllUsersOnServer = function(cb){
 	}
 	
 	var searchParams = { cognitoSub: { $in: cognitoSubs } };
-	dbFindAwait("RW_USER", searchParams, async function(err, res){
+	dataAccess.dbFindAwait("RW_USER", searchParams, async function(err, res){
 		if (res && res[0]){
 			cb(res);
 		}
@@ -2121,7 +1319,7 @@ function updateOnlineTimestampForUsers(){
 
 function updateOnlineTimestampForUser(cognitoSub){
 	var newDate = new Date();	
-	dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {onlineTimestamp: newDate}, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {onlineTimestamp: newDate}, async function(err, res){
 		if (err){
 			logg("DB ERROR - updateOnlineTimestampForUser() - RW_USER.update: " + err);
 		}	
@@ -2130,7 +1328,7 @@ function updateOnlineTimestampForUser(cognitoSub){
 }
 
 function updateServerUrlForUser(cognitoSub){
-	dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {serverUrl: myUrl}, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {serverUrl: myUrl}, async function(err, res){
 		if (err){
 			logg("DB ERROR - updateServerUrlForUser() - RW_USER.update: " + err);
 		}		
@@ -2144,7 +1342,7 @@ var getOnlineFriends = function(cognitoSub, cb){
 	
 	//console.log("Searching DB for online friends of: " + cognitoSub);
 	
-	dbFindAwait("RW_FRIEND", {cognitoSub:cognitoSub}, async function(err, friendRes){
+	dataAccess.dbFindAwait("RW_FRIEND", {cognitoSub:cognitoSub}, async function(err, friendRes){
 		if (err){
 			logg("DB ERROR - getOnlineFriends() - RW_FRIEND.find: " + err);
 		}	
@@ -2159,7 +1357,7 @@ var getOnlineFriends = function(cognitoSub, cb){
 			var thresholdDate = new Date(Date.now() - miliInterval);
 			var searchParams = { cognitoSub:{ $in: cognitoSubArray }, onlineTimestamp:{ $gt: thresholdDate } };
 			//console.log("Searching DB for which of the above friends are online?");
-			dbFindAwait("RW_USER", searchParams, async function(err2, userRes){
+			dataAccess.dbFindAwait("RW_USER", searchParams, async function(err2, userRes){
 				if (err2){
 					logg("DB ERROR - getOnlineFriends() - RW_USER.find: " + err2);
 				}
@@ -2190,7 +1388,7 @@ var getPartyForUser = function(cognitoSub, cb){
 		party:[] //ALL Party members [{cognitoSub:partyRes[k].cognitoSub, username:partyRes[k].USERNAME, serverUrl:partyRes[k].serverUrl, leader:false}]
 	};	
 	
-	dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, async function(err,userRes){
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, async function(err,userRes){
 		if (err){
 			logg("DB ERROR - getPartyForUser()1 - RW_USER.find: " + err);
 		}
@@ -2204,7 +1402,7 @@ var getPartyForUser = function(cognitoSub, cb){
 				kickOfflineFromParty(partyData.partyId, function(){
 					var miliInterval = (staleOnlineTimestampThreshold * 1000);
 					var thresholdDate = new Date(Date.now() - miliInterval);	
-					dbFindAwait("RW_USER", {partyId:partyData.partyId, onlineTimestamp:{ $gt: thresholdDate }}, async function(err2,partyRes){
+					dataAccess.dbFindAwait("RW_USER", {partyId:partyData.partyId, onlineTimestamp:{ $gt: thresholdDate }}, async function(err2,partyRes){
 						if (err2){
 							logg("DB ERROR - getPartyForUser()2 - RW_USER.find: " + err2);
 						}
@@ -2243,7 +1441,7 @@ var getPartyById = function(partyId, cb){
 		var miliInterval = (staleOnlineTimestampThreshold * 1000);
 		var thresholdDate = new Date(Date.now() - miliInterval);		
 
-		dbFindAwait("RW_USER", {partyId:partyData.partyId, onlineTimestamp:{ $gt: thresholdDate }}, async function(err, partyRes){
+		dataAccess.dbFindAwait("RW_USER", {partyId:partyData.partyId, onlineTimestamp:{ $gt: thresholdDate }}, async function(err, partyRes){
 			if (err){
 				logg("DB ERROR - getPartyById() - RW_USER.find: " + err);
 			}
@@ -2272,14 +1470,14 @@ var kickOfflineFromParty = function(partyId, cb){
 		return;
 	}
 
-	dbFindAwait("RW_USER", {cognitoSub:partyId}, async function(err, partyRes){
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:partyId}, async function(err, partyRes){
 		if (err){
 			logg("DB ERROR - kickOfflineFromParty()1 - RW_USER.update: " + err);
 		}
 		var miliInterval = (staleOnlineTimestampThreshold * 1000);
 		var thresholdDate = new Date(Date.now() - miliInterval);
 		if (partyRes && partyRes[0] && (partyRes[0].partyId != partyRes[0].cognitoSub || partyRes[0].onlineTimestamp < thresholdDate)){ //PartyId where the 'leader' is in a different party or offline. Clearing all users with partyId
-			dbUpdateAwait("RW_USER", "set", {partyId: partyId}, {partyId: ""}, async function(err2, res1){
+			dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: partyId}, {partyId: ""}, async function(err2, res1){
 				if (err2){
 					logg("DB ERROR - kickOfflineFromParty()1 - RW_USER.update: " + err2);
 				}
@@ -2290,7 +1488,7 @@ var kickOfflineFromParty = function(partyId, cb){
 		else if(partyRes && partyRes[0] && partyRes[0].partyId == partyRes[0].cognitoSub && partyRes[0].onlineTimestamp >= thresholdDate){ //Valid party with online leader who is also in the party		
 			var searchParams = { partyId: partyId, onlineTimestamp:{ $lt: thresholdDate } };		
 						
-			dbUpdateAwait("RW_USER", "set", searchParams, {partyId: ""}, async function(err3, res2){
+			dataAccess.dbUpdateAwait("RW_USER", "set", searchParams, {partyId: ""}, async function(err3, res2){
 				if (err3){
 					logg("DB ERROR - kickOfflineFromParty()2 - RW_USER.update: " + err3);
 				}
@@ -2311,7 +1509,7 @@ var getFriendRequests = function(cognitoSub, cb){
 	var friendRequests = [];
 	
 	//console.log("Searching DB for friend requests of: " + cognitoSub);
-	dbFindAwait("RW_REQUEST", {targetCognitoSub:cognitoSub, type:"friend"}, async function(err, friendRes){
+	dataAccess.dbFindAwait("RW_REQUEST", {targetCognitoSub:cognitoSub, type:"friend"}, async function(err, friendRes){
 		if (err){
 			logg("DB ERROR - getFriendRequests() - RW_REQUEST.find: " + err);
 		}
@@ -2331,7 +1529,7 @@ var getPartyRequests = function(cognitoSub, cb){
 	var partyRequests = [];
 	
 	//console.log("Searching DB for party requests of: " + cognitoSub);
-	dbFindAwait("RW_REQUEST", {targetCognitoSub:cognitoSub, type:"party"}, async function(err, partyRes){
+	dataAccess.dbFindAwait("RW_REQUEST", {targetCognitoSub:cognitoSub, type:"party"}, async function(err, partyRes){
 		if (err){
 			logg("DB ERROR - getPartyRequests() - RW_REQUEST.find: " + err);
 		}
@@ -2350,7 +1548,7 @@ var getPartyRequests = function(cognitoSub, cb){
 var getRequestById = function(id, cb){
 	console.log("DB getRequestById: " + id);
 	
-	dbFindAwait("RW_REQUEST", {"_id": ObjectId(id)}, async function(err, res){
+	dataAccess.dbFindAwait("RW_REQUEST", {"_id": ObjectId(id)}, async function(err, res){
 		if (err){
 			logg("DB ERROR - getRequestById() - RW_REQUEST.find: " + err);
 			cb(false);
@@ -2367,7 +1565,7 @@ var getRequestById = function(id, cb){
 function removeRequestById(id){
 	console.log("DB Removing request by id: " + id);
 
-	dbUpdateAwait("RW_REQUEST", "rem", {"_id": ObjectId(id)}, {}, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {"_id": ObjectId(id)}, {}, async function(err, res){
 		if (err){
 			logg("DB ERROR - removeRequestById() - RW_REQUEST.remove: " + err);
 		}
@@ -2380,7 +1578,7 @@ function removeStaleFriendRequests(){
 	var thresholdDate = new Date(Date.now() - miliInterval);
 	var searchParams = { type:"friend", timestamp:{ $lt: thresholdDate } };
 
-	dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
 		if (err){
 			logg("DB ERROR - removeStaleFriendRequests() - RW_REQUEST.remove: " + err);
 		}
@@ -2392,7 +1590,7 @@ function removeStalePartyRequests(){
 	var thresholdDate = new Date(Date.now() - miliInterval);
 	var searchParams = { type:"party", timestamp:{ $lt: thresholdDate } };
 	
-	dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
 		if (err){
 			logg("DB ERROR - removeStalePartyRequests() - RW_REQUEST.remove: " + err);
 		}
@@ -2669,7 +1867,7 @@ var addUser = function(cognitoSub, username, cb){
 
 	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:''};
 
-	dbUpdateAwait("RW_USER", "ups", {cognitoSub:cognitoSub}, obj, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_USER", "ups", {cognitoSub:cognitoSub}, obj, async function(err, res){
 		if (err){
 			logg("DB ERROR - addUser() - RW_USER.insert: " + err);
 		}	
@@ -2718,7 +1916,7 @@ function sendSocketListToServerDb(){
 		});
 	}
 	
-	dbUpdateAwait("RW_SERV", "set", {url: myUrl}, {currentUsers:currentUsers}, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_SERV", "set", {url: myUrl}, {currentUsers:currentUsers}, async function(err, res){
 	});
 }
 
@@ -3103,7 +2301,7 @@ io.sockets.on('connection', function(socket){
 			restartGame();
 		}
 		else if (data == "stats" || data == "stat"){
-			dbFindAwait("RW_USER", {cognitoSub:Player.list[socket.id].cognitoSub}, async function(err, res){
+			dataAccess.dbFindAwait("RW_USER", {cognitoSub:Player.list[socket.id].cognitoSub}, async function(err, res){
 				if (res && res[0]){
 					socket.emit('addToChat', 'Cash Earned:' + res[0].experience + ' Kills:' + res[0].kills + ' Deaths:' + res[0].deaths + ' Benedicts:' + res[0].benedicts + ' Captures:' + res[0].captures + ' Steals:' + res[0].steals + ' Returns:' + res[0].returns + ' Games Played:' + res[0].gamesPlayed + ' Wins:' + res[0].gamesWon + ' Losses:' + res[0].gamesLost + ' TPM Rating:' + res[0].rating);	
 				}
@@ -3338,12 +2536,12 @@ function changeTeams(playerId){
 					Player.list[p].partyId = Player.list[p].cognitoSub;
 				}
 			}
-			dbUpdateAwait("RW_USER", "set", {partyId: Player.list[playerId].partyId}, {partyId:""}, async function(err, userRes){
+			dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: Player.list[playerId].partyId}, {partyId:""}, async function(err, userRes){
 			});	
 		}
 		else { //Leaving someone else's party
 			Player.list[playerId].partyId = Player.list[playerId].cognitoSub;
-			dbUpdateAwait("RW_USER", "set", {cognitoSub: Player.list[playerId].cognitoSub}, {partyId:""}, async function(err, userRes){
+			dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: Player.list[playerId].cognitoSub}, {partyId:""}, async function(err, userRes){
 			});	
 		}
 
@@ -3359,7 +2557,7 @@ function populateLoginPage(socket){
 	//Populate Leaderboard Table
 	var leaderboard= "<table class='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";
 	
-	dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}]}, {sort:{experience: -1},limit:100}, async function(err, res){
+	dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}]}, {sort:{experience: -1},limit:100}, async function(err, res){
 		if (res && res[0]){
 			for (var i = 0; i < res.length; i++){
 				if (res[i].USERNAME){
@@ -3390,7 +2588,7 @@ function sendChatToAll(text){
 //Unused, but could be a nice function in the future
 function getPlayerRatingAndExperience(id){
 	var cognitoSub = Player.list[id].cognitoSub;
-	dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			var rating = res[0].rating;
 			if (rating == undefined || rating == null || isNaN(rating)){rating = 0;}
@@ -3671,8 +2869,8 @@ function restartGame(){
 		delete Thug.list[t];
 	}
 	ensureCorrectThugCount();
-	initializePickups(map);
-	initializeBlocks(map);
+	mapEngine.initializePickups(map);
+	mapEngine.initializeBlocks(map);
 	logg("Initializing map: " + map + " Dimensions:" + mapWidth + "," + mapHeight);
 
 	for (var i in SOCKET_LIST){
@@ -4288,16 +3486,6 @@ var Player = function(id, cognitoSub, name, team, partyId){
 		if (self.y > mapHeight - 5){self.y = mapHeight - 5; updatePlayerList.push({id:self.id,property:"y",value:self.y});} // bottom
 		if (self.x < 5){self.x = 5; updatePlayerList.push({id:self.id,property:"x",value:self.x});} //left
 		if (self.y < 5){self.y = 5; updatePlayerList.push({id:self.id,property:"y",value:self.y});} //top
-
-		//For testing stuff off of walls i guess. Delete me someday!!!
-		if (self.team == "black" && keepBlackPlayerFromWalls){
-			if (self.x > mapWidth - 200){self.x = mapWidth - 200; updatePlayerList.push({id:self.id,property:"x",value:self.x});}
-			if (self.y > mapHeight - 200){self.y = mapHeight - 200; updatePlayerList.push({id:self.id,property:"y",value:self.y});}
-			if (self.x < 200){self.x = 200; updatePlayerList.push({id:self.id,property:"x",value:self.x});}
-			if (self.y < 200){self.y = 200; updatePlayerList.push({id:self.id,property:"y",value:self.y});}
-		}
-
-		
 		
 		if (self.stagger > 0){self.stagger--;}
 		//End MOVEMENT
@@ -4474,16 +3662,16 @@ var Player = function(id, cognitoSub, name, team, partyId){
 					updatePlayerList.push({id:self.id,property:"x",value:self.x});
 				}
 				else if (Block.list[i].type == "warp1"){
-					self.x = warp2X;
+					self.x = warp1X;
 					updatePlayerList.push({id:self.id,property:"x",value:self.x});
-					self.y = warp2Y;
+					self.y = warp1Y;
 					updatePlayerList.push({id:self.id,property:"y",value:self.y});
 					SOCKET_LIST[self.id].emit('sfx', "sfxWarp");
 				}
 				else if (Block.list[i].type == "warp2"){
-					self.x = warp1X;
+					self.x = warp2X;
 					updatePlayerList.push({id:self.id,property:"x",value:self.x});
-					self.y = warp1Y;
+					self.y = warp2Y;
 					updatePlayerList.push({id:self.id,property:"y",value:self.y});
 					SOCKET_LIST[self.id].emit('sfx', "sfxWarp");
 				}
@@ -6253,14 +5441,14 @@ function calculateEndgameStats(){
 				endGameProgressResults.originalExp = Player.list[p].experience;
 				endGameProgressResults.expDif = Player.list[p].cashEarnedThisGame;
 
-				var rankProgressInfo = getRankFromRating(Player.list[p].rating);
+				var rankProgressInfo = postGameEngine.getRankFromRating(Player.list[p].rating);
 				endGameProgressResults.rank = rankProgressInfo.rank;
 				endGameProgressResults.nextRank = rankProgressInfo.nextRank;
 				endGameProgressResults.previousRank = rankProgressInfo.previousRank;
 				endGameProgressResults.rankFloor = rankProgressInfo.floor;
 				endGameProgressResults.rankCeiling = rankProgressInfo.ceiling;
 
-				var experienceProgressInfo = getLevelFromExperience(Player.list[p].experience);
+				var experienceProgressInfo = postGameEngine.getLevelFromExperience(Player.list[p].experience);
 				endGameProgressResults.level = experienceProgressInfo.level;
 				endGameProgressResults.experienceFloor = experienceProgressInfo.floor;
 				endGameProgressResults.experienceCeiling = experienceProgressInfo.ceiling;		
@@ -6914,83 +6102,9 @@ function processEntityPush(entity){
 	}
 }
 
-var Block = function(x, y, width, height, type){	
-	x *= 75;
-	y *= 75;
-	width *= 75;
-	height *= 75;
-
-	var self = {
-		id:Math.random(),
-		x:x,
-		y:y,
-		width:width,
-		height:height,
-		type:type,
-	}		
-	Block.list[self.id] = self;
-}//End Block Function
-Block.list = [];
-
-var Pickup = function(id, x, y, type, amount, respawnTime){
-	if (respawnTime > -1){
-		x-=1;
-		y-=1;
-		x *= 75;
-		y *= 75;
-	}
-	
-	var self = {
-		id:id,
-		x:x,
-		y:y,
-		type:type,
-		amount:amount,
-		width:0,
-		height:0,
-		respawnTime: respawnTime, //Initialize this as -1 if the pickup is a non-respawning "one time drop" like from a fallen player
-		respawnTimer: 0,
-	}		
-	if (self.type == 1){
-		self.width = 41;
-		self.height = 41;
-	}
-	else if (self.type == 2){
-		self.width = 41;
-		self.height = 41;
-	}
-	else if (self.type == 3){
-		self.width = 67;
-		self.height = 25;
-	}
-	else if (self.type == 4){
-		self.width = 61;
-		self.height = 32;
-	}
-	else if (self.type == 5){
-		self.width = 41;
-		self.height = 56;
-	}
-	else if (self.type == 6){
-		self.width = 0;
-		self.height = 0;
-	}
-
-	if (respawnTime > -1){
-		self.x += (75/2) - self.width/2;
-		self.y += (75/2) - self.height/2;
-	}
-	
-
-	
-	Pickup.list[self.id] = self;
-}//End Pickup Function
-Pickup.list = [];
-
-
 //////////INITIALIZE MAP///////////////////// Create Blocks new block Create Pickups new pickups
-initializeBlocks(map);
-initializePickups(map);
+mapEngine.initializeBlocks(map);
+mapEngine.initializePickups(map);
 
 
 ///////////////////////////CREATE THUGS/////////////////
@@ -7129,13 +6243,13 @@ function moveBags(){
 					updateMisc.bagBlue = bagBlue;
 				}
 				else if (Block.list[i].type == "warp1"){
-					bagBlue.x = warp2X;
-					bagBlue.y = warp2Y;
+					bagBlue.x = warp1X;
+					bagBlue.y = warp1Y;
 					updateMisc.bagBlue = bagBlue;
 				}
 				else if (Block.list[i].type == "warp2"){
-					bagBlue.x = warp1X;
-					bagBlue.y = warp1Y;
+					bagBlue.x = warp2X;
+					bagBlue.y = warp2Y;
 					updateMisc.bagBlue = bagBlue;
 				}
 			}// End check if bag is overlapping block
@@ -7187,13 +6301,13 @@ function moveBags(){
 					updateMisc.bagRed = bagRed;
 				}
 				else if (Block.list[i].type == "warp1"){
-					bagRed.x = warp2X;
-					bagRed.y = warp2Y;
+					bagRed.x = warp1X;
+					bagRed.y = warp1Y;
 					updateMisc.bagRed = bagRed;
 				}
 				else if (Block.list[i].type == "warp2"){
-					bagRed.x = warp1X;
-					bagRed.y = warp1Y;
+					bagRed.x = warp2X;
+					bagRed.y = warp2Y;
 					updateMisc.bagRed = bagRed;
 				}
 
@@ -7414,7 +6528,7 @@ setInterval(
 
 function checkForUnhealthyServers(){
 	//logg("Checking for dead servers on server DB...");	
-	dbFindOptionsAwait("RW_SERV", {}, {sort:{serverNumber: 1}}, async function(err, res){
+	dataAccess.dbFindOptionsAwait("RW_SERV", {}, {sort:{serverNumber: 1}}, async function(err, res){
 		if (res && res[0]){
 			for (var i = 0; i < res.length; i++){
 				var serverLastHealthCheck = new Date(res[i].healthCheckTimestamp);
@@ -7429,7 +6543,7 @@ function checkForUnhealthyServers(){
 					else {
 						logg("DEAD SERVER FOUND: " + res[i].url + ". [" + serverLastHealthCheck.toISOString() + " is less than " + acceptableLastHealthCheckTime.toISOString() + ". Current time is " + new Date().toISOString() + "] Removing...");
 					}					
-					dbUpdateAwait("RW_SERV", "rem", { url: res[i].url }, {}, async function(err2, obj){
+					dataAccess.dbUpdateAwait("RW_SERV", "rem", { url: res[i].url }, {}, async function(err2, obj){
 						if (!err2){
 							logg("Unhealthy Server successfully removed from database.");
 						}
@@ -7454,7 +6568,7 @@ function syncGameServerWithDatabase(){
 	}
 	//logg("Syncing server with Database...");
 	
-	dbFindAwait("RW_SERV", {url:myUrl}, async function(err, res){
+	dataAccess.dbFindAwait("RW_SERV", {url:myUrl}, async function(err, res){
 		if (res && res[0]){
 			//log("Server " + myUrl + " present in IN_SERV. Grabbing server config...");
 			serverNumber = res[0].serverNumber;
@@ -7492,7 +6606,7 @@ function syncGameServerWithDatabase(){
 				incomingUsers = removeIndexesFromArray(incomingUsers, usersToRemove);	
 
 			
-				dbUpdateAwait("RW_SERV", "set", {url: myUrl}, {incomingUsers:incomingUsers}, async function(err, res){
+				dataAccess.dbUpdateAwait("RW_SERV", "set", {url: myUrl}, {incomingUsers:incomingUsers}, async function(err, res){
 					//logg("DB: Set: " + myUrl + " with: " + obj);
 				});	
 			}			
@@ -7500,7 +6614,7 @@ function syncGameServerWithDatabase(){
 		else {
 			//Server url does not exist
 			logg('Server does not exist');
-			dbFindOptionsAwait("RW_SERV", {}, {sort:{serverNumber: -1}}, async function(err, res){		
+			dataAccess.dbFindOptionsAwait("RW_SERV", {}, {sort:{serverNumber: -1}}, async function(err, res){		
 				if (res && res[0]){
 					serverNumber = res[0].serverNumber;
 					serverNumber++;						
@@ -7701,32 +6815,4 @@ Object.size = function(obj) {
 function randomInt(min,max)
 {
     return Math.floor(Math.random()*(max-min+1)+min);
-}
-function log(msg) {	
-	if (debug){
-		logg(msg);
-	}
-}
-
-function logObj(obj){
-	if (debug){
-		logg(util.format(obj));
-	}
-}
-
-function logg(msg) {
-	msg = msg.toString();
-	var d = new Date();
-	var hours = d.getUTCHours();
-	if (hours <= 9){hours = "0" + hours;}
-	var minutes = d.getUTCMinutes();
-	if (minutes <= 9){minutes = "0" + minutes;}
-	var seconds = d.getUTCSeconds();
-	if (seconds <= 9){seconds = "0" + seconds;}
-	
-	var logMsgText = hours + ':' + minutes + '.' + seconds + '> ' + msg;
-	console.log(logMsgText);	
-	if (s3stream){
-		s3stream.write(logMsgText+'\r\n');
-	}	
 }

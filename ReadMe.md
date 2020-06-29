@@ -28,4 +28,22 @@ The `infrastructure/` folder defines all the AWS resources in the form of TypeSc
 1. `cdk diff`             see what's going to change before doing it
 1. `cdk deploy`
 
+## Configuring an EC2 instance from Scratch
 
+1. FTP files onto EC2
+1. download and install npm
+1. npm install nodejs
+1. npm install
+
+### Install pm2 to automate server startup
+1. sudo su
+1. curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
+1. nvm install 12.10.0
+1. npm install -g pm2
+1. pm2 start app.js -f -- 3001
+1. pm2 start app.js -f -- 3002 (etc for however many ports you want to run on a single server)
+1. pm2 startup (Gets startup script - run the result in terminal)
+1. pm2 save
+
+### Stop app from auto running on ec2 startup:
+1. pm2 unstartup systemv

@@ -43,7 +43,7 @@ var canvas = document.getElementById("ctx");
 ctx.font = 'bold 11px Electrolize';
 ctx.textAlign="center";
 ctx.lineWidth=4;
-	
+
 var gameStartAlpha = 0;
 var suddenDeathAlpha = 0;
 var energyRedAlpha = 1.0;
