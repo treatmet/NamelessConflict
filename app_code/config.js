@@ -140,6 +140,10 @@ global.matchWinLossRatingBonus = 30;
 global.enemySkillDifferenceDivider = 20;
 
 //----------------------SERVER GLOBAL VARIABLES---------------------------------
+global.myIP = "";
+global.myUrl = "";
+global.port = 3000;
+global.serverHomePage = "/";
 
 //Game global variables
 global.pause = false;
@@ -222,3 +226,5 @@ global.updateNotificationList = [];
 global.updatePickupList = [];
 global.updateEffectList = [];
 global.updateMisc = {};
+
+global.SOCKET_LIST = [];

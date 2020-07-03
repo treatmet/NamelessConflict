@@ -1,11 +1,5 @@
-var appDir = ""; var searchingDir = __dirname + "/";
-for (var x = 0; x < 9; x++){
-	if (fs.existsSync(searchingDir + "app.js")) { break; }
-	else { appDir += "../"; searchingDir += "../"; }}
-
-
-var Pickup = require(appDir + 'app_code/entities/pickup.js').Pickup;
-var Block = require(appDir + 'app_code/entities/block.js').Block;
+var Pickup = require(absAppDir + '/app_code/entities/pickup.js');
+var Block = require(absAppDir + '/app_code/entities/block.js');
 
 var initializePickups = function(map){
 	Pickup.list = [];
@@ -368,6 +362,7 @@ var initializeBlocks = function(map){
 		Block(mapWidth/75, -50/75, 50/75, (mapHeight + 100)/75, "normal"); //Right
 		Block(-50/75, -50/75, (mapWidth + 100)/75, 50/75, "normal");	//Top
 	}
+	
 }
 
 module.exports.initializePickups = initializePickups;

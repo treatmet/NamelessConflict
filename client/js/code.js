@@ -4388,6 +4388,7 @@ document.onkeydown = function(event){
 	if(event.keyCode === 87 && chatInput.style.display == "none"){ //W
 		myPlayer.pressingW = true;
 		if (!shop.active){
+			console.log("EMIT W");
 			socket.emit('keyPress',{inputId:87,state:true});
 		}
 	}
