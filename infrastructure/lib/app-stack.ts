@@ -31,8 +31,8 @@ export class AppStack extends Stack {
       loadBalancerName: "LB-GameService",
       vpc: defaultVpc,
       internetFacing: true,
-      ipAddressType: IpAddressType.DUAL_STACK,
-      securityGroup: securityGroup
+      ipAddressType: IpAddressType.IPV4,
+      securityGroup: securityGroup,
     });
   }  
 }
