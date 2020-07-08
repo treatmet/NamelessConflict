@@ -556,3 +556,30 @@ io.sockets.on('connection', function(socket){
 		
 	});	
 }); //END socket.on(connection)
+
+
+function populateLoginPage(socket){	
+
+	//Populate Leaderboard Table
+	var leaderboard= "<table class='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";
+	
+	dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}]}, {sort:{experience: -1},limit:100}, async function(err, res){
+		if (res && res[0]){
+			for (var i = 0; i < res.length; i++){
+				if (res[i].USERNAME){
+					leaderboard+="<tr><td style='background-color: #728498; text-align: center; font-weight: bold;'>" + (i + 1) + "</td><td><a href='{{serverHomePage}}user/"+res[i].cognitoSub+"'>" + res[i].USERNAME.substring(0, 15) + "</td><td>" + res[i].rating + "</td><td>" + res[i].kills + "</td><td>" + res[i].captures + "</td><td>" + res[i].gamesWon + "</td><td>" + res[i].experience + "</td></tr>";
+				}
+				else {
+					logg("ERROR ACQUIRING USERNAME:");
+					console.log(res[i]);
+				}
+			}		
+			leaderboard+="</table>";
+			socket.emit('populateLoginPage', leaderboard, pcMode);
+		}
+		else {
+			logg('ERROR finding players in database.');
+			leaderboard+="</table>";
+			socket.emit('populateLoginPage', leaderboard, pcMode);		}
+	});	
+}

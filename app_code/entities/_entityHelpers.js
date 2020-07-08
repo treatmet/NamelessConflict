@@ -1,5 +1,6 @@
 var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
 var Thug = require(absAppDir + '/app_code/entities/thug.js');
+var player = require(absAppDir + '/app_code/entities/player.js');
 
 var sprayBloodOntoTarget = function(shootingDir, targetX, targetY, targetId) {
 	var data = {};
@@ -271,15 +272,6 @@ var getHitTarget = function(hitTargets){
 	return hitTarget;		
 }
 
-//hit //gethit //get hit
-
-
-
-
 module.exports.sprayBloodOntoTarget = sprayBloodOntoTarget;
 module.exports.checkIfInLineOfShot = checkIfInLineOfShot;
 module.exports.getHitTarget = getHitTarget;
-module.exports.hit = hit;
-module.exports.kill = kill;
-
-

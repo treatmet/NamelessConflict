@@ -1,3 +1,16 @@
+const helpers = require(absAppDir + '/app_code/helperFunctions.js'); //Global helper functions
+
+global.express = require('express');
+global.app = express();
+global.serv = require('http').Server(app);
+
+
+global.fs = require('fs');
+global.util = require('util')
+
+global.config = parseINIString(fs.readFileSync(absAppDir + '/config.ini', 'utf8'));
+
+
 //--------------------------------SERVER CONFIGURATION-----------------------------------------------------
 global.debug = true;
 global.httpOnlyCookies = false;

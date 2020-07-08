@@ -149,7 +149,7 @@ var Thug = function(id, team, x, y){
 			if (targetPlayer){
 				updatePlayerList.push({id:target.id,property:"health",value:target.health});
 				if (target.health <= 0){
-					entityHelpers.kill(target, target.shootingDir, 0);
+					self.kill(target, target.shootingDir, 0);
 				}
 				target.healDelay += healDelayTime;
 				if (target.healDelay > healDelayTime){target.healDelay = healDelayTime;} //Ceiling on healDelay

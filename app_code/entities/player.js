@@ -1991,6 +1991,12 @@ var playerDisconnect = function(id){
         Player.onDisconnect(SOCKET_LIST[id]);
 }
 
+function sendChatToAll(text){
+	for(var i in SOCKET_LIST){
+		SOCKET_LIST[i].emit('addMessageToChat',text);
+	}
+}
+
 module.exports.getPlayerList = getPlayerList;
 module.exports.playerDisconnect = playerDisconnect; //onDisconnect
 module.exports.getPlayerById = getPlayerById;

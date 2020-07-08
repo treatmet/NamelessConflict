@@ -1,7 +1,11 @@
 const userRouter = require(absAppDir + '/app_code/routes/userController.js');
 const serverRouter = require(absAppDir + '/app_code/routes/serverController.js');
 const pageRouter = require(absAppDir + '/app_code/routes/pageController.js');
+
 const logEngine = require(absAppDir + '/app_code/engines/logEngine.js');
+const mapEngine = require(absAppDir + '/app_code/engines/mapEngine.js');
+require(absAppDir + '/app_code/engines/socketEngine.js');
+
 var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
 
 const os = require('os');
@@ -23,6 +27,9 @@ app.use(cookieParser());
 
 logg("----------------------SERVER STARTUP-----------------------");
 logg('Express server started on port ' + port + '.');
+
+mapEngine.initializeBlocks(map);
+mapEngine.initializePickups(map);
 
 function testDB(){
 	logg('Initializing...');
