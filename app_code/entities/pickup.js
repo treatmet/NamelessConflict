@@ -1,3 +1,6 @@
+var player = require(absAppDir + '/app_code/entities/player.js');
+
+
 var Pickup = function(id, x, y, type, amount, respawnTime){
 	if (respawnTime > -1){
 		x-=1;
@@ -45,12 +48,144 @@ var Pickup = function(id, x, y, type, amount, respawnTime){
 	if (respawnTime > -1){
 		self.x += (75/2) - self.width/2;
 		self.y += (75/2) - self.height/2;
-	}
-	
-
-	
+	}	
 	Pickup.list[self.id] = self;
+	updatePickupList.push(self);
 }//End Pickup Function
 Pickup.list = [];
 
-module.exports.Pickup = Pickup;
+var pickupPickup = function(playerId, pickupId){
+	var playerList = player.getPlayerList();
+
+	if (Pickup.list[pickupId].type == 1){ //MD
+		if (playerList[playerId].health < 100){
+			playerList[playerId].health += Pickup.list[pickupId].amount;
+			if (playerList[playerId].health > 100){
+				playerList[playerId].health = 100;
+			}
+			updatePlayerList.push({id:playerId,property:"health",value:playerList[playerId].health});											
+			SOCKET_LIST[playerId].emit('sfx', "sfxHealthPackGrab");
+			removePickup(pickupId);
+		}
+		else {
+			return;
+		}
+	}
+	else if (Pickup.list[pickupId].type == 2){ //DP
+		if (playerList[playerId].holdingBag == false && playerList[playerId].weapon == 1){
+			if (playerList[playerId].reloading > 0){
+				playerList[playerId].reloading = 0;
+				updatePlayerList.push({id:playerId,property:"reloading",value:playerList[playerId].reloading});				
+			}
+			playerList[playerId].weapon = 2;
+			updatePlayerList.push({id:playerId,property:"weapon",value:playerList[playerId].weapon});	
+		}
+		else {
+			SOCKET_LIST[playerId].emit('sfx', "sfxDPEquip");
+		}
+		if (playerList[playerId].DPClip <= 0 && playerList[playerId].DPAmmo <= 0){
+			if (Pickup.list[pickupId].amount <= DPClipSize){
+				playerList[playerId].DPClip += Pickup.list[pickupId].amount;				
+			}
+			else {
+				playerList[playerId].DPClip += DPClipSize;
+				playerList[playerId].DPAmmo += Pickup.list[pickupId].amount - DPClipSize;
+				if (playerList[playerId].DPAmmo > maxDPAmmo){playerList[playerId].DPAmmo = maxDPAmmo;}
+			}
+			updatePlayerList.push({id:playerId,property:"DPClip",value:playerList[playerId].DPClip});								
+			updatePlayerList.push({id:playerId,property:"DPAmmo",value:playerList[playerId].DPAmmo});								
+		}
+		else {
+			playerList[playerId].DPAmmo += Pickup.list[pickupId].amount;
+			if (playerList[playerId].DPAmmo > maxDPAmmo){playerList[playerId].DPAmmo = maxDPAmmo;}
+			updatePlayerList.push({id:playerId,property:"DPAmmo",value:playerList[playerId].DPAmmo});								
+		}	
+		removePickup(pickupId);		
+	}
+	else if (Pickup.list[pickupId].type == 3){ //MG
+		if (playerList[playerId].holdingBag == false && playerList[playerId].weapon == 1){
+			if (playerList[playerId].reloading > 0){
+				playerList[playerId].reloading = 0;
+				updatePlayerList.push({id:playerId,property:"reloading",value:playerList[playerId].reloading});				
+			}
+			playerList[playerId].weapon = 3;
+			updatePlayerList.push({id:playerId,property:"weapon",value:playerList[playerId].weapon});	
+		}
+		else {
+			SOCKET_LIST[playerId].emit('sfx', "sfxMGEquip");
+		}
+		if (playerList[playerId].MGClip <= 0 && playerList[playerId].MGAmmo <= 0){
+			if (Pickup.list[pickupId].amount <= MGClipSize){
+				playerList[playerId].MGClip += Pickup.list[pickupId].amount;				
+			}
+			else {
+				playerList[playerId].MGClip += MGClipSize;
+				playerList[playerId].MGAmmo += Pickup.list[pickupId].amount - MGClipSize;
+				if (playerList[playerId].MGAmmo > maxMGAmmo){playerList[playerId].MGAmmo = maxMGAmmo;}
+			}
+			updatePlayerList.push({id:playerId,property:"MGClip",value:playerList[playerId].MGClip});								
+			updatePlayerList.push({id:playerId,property:"MGAmmo",value:playerList[playerId].MGAmmo});								
+		}
+		else {
+			playerList[playerId].MGAmmo += Pickup.list[pickupId].amount;
+			if (playerList[playerId].MGAmmo > maxMGAmmo){playerList[playerId].MGAmmo = maxMGAmmo;}
+			updatePlayerList.push({id:playerId,property:"MGAmmo",value:playerList[playerId].MGAmmo});								
+		}	
+		removePickup(pickupId);		
+	}
+	else if (Pickup.list[pickupId].type == 4){ //SG
+		if (playerList[playerId].holdingBag == false && playerList[playerId].weapon == 1){
+			if (playerList[playerId].reloading > 0){
+				playerList[playerId].reloading = 0;
+				updatePlayerList.push({id:playerId,property:"reloading",value:playerList[playerId].reloading});				
+			}
+			playerList[playerId].weapon = 4;
+			updatePlayerList.push({id:playerId,property:"weapon",value:playerList[playerId].weapon});	
+		}
+		else { //because the sfx will already trigger automatically clientside if switching weapons to SG
+			SOCKET_LIST[playerId].emit('sfx', "sfxSGEquip");
+		}
+		if (playerList[playerId].SGClip <= 0 && playerList[playerId].SGAmmo <= 0){
+			if (Pickup.list[pickupId].amount <= SGClipSize){
+				playerList[playerId].SGClip += Pickup.list[pickupId].amount;				
+			}
+			else {
+				playerList[playerId].SGClip += SGClipSize;
+				playerList[playerId].SGAmmo += Pickup.list[pickupId].amount - SGClipSize;
+				if (playerList[playerId].SGAmmo > maxSGAmmo){playerList[playerId].SGAmmo = maxSGAmmo;}
+			}
+			updatePlayerList.push({id:playerId,property:"SGClip",value:playerList[playerId].SGClip});								
+			updatePlayerList.push({id:playerId,property:"SGAmmo",value:playerList[playerId].SGAmmo});								
+		}
+		else {
+			playerList[playerId].SGAmmo += Pickup.list[pickupId].amount;
+			if (playerList[playerId].SGAmmo > maxSGAmmo){playerList[playerId].SGAmmo = maxSGAmmo;}
+			updatePlayerList.push({id:playerId,property:"SGAmmo",value:playerList[playerId].SGAmmo});								
+		}		
+		removePickup(pickupId);		
+	}
+	else if (Pickup.list[pickupId].type == 5 && playerList[playerId].health <= 100){ //BA
+		playerList[playerId].health = 100 + Pickup.list[pickupId].amount;
+		if (playerList[playerId].health > playerMaxHealth){
+			playerList[playerId].health = playerMaxHealth;
+		}
+		updatePlayerList.push({id:playerId,property:"health",value:playerList[playerId].health});											
+		SOCKET_LIST[playerId].emit('sfx', "sfxBagGrab");
+		removePickup(pickupId);
+	}
+	
+	
+}
+
+var removePickup = function(pickupId){
+	if (Pickup.list[pickupId].respawnTime == -1){
+		delete Pickup.list[pickupId];
+	}
+	else {
+		Pickup.list[pickupId].respawnTimer = Pickup.list[pickupId].respawnTime;
+	}
+	updatePickupList.push(pickupId);
+}
+
+module.exports = Pickup;
+module.exports.pickupPickup = pickupPickup;

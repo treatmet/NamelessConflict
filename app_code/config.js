@@ -1,3 +1,16 @@
+const helpers = require(absAppDir + '/app_code/helperFunctions.js'); //Global helper functions
+
+global.express = require('express');
+global.app = express();
+global.serv = require('http').Server(app);
+
+
+global.fs = require('fs');
+global.util = require('util')
+
+global.config = parseINIString(fs.readFileSync(absAppDir + '/config.ini', 'utf8'));
+
+
 //--------------------------------SERVER CONFIGURATION-----------------------------------------------------
 global.debug = true;
 global.httpOnlyCookies = false;
@@ -140,6 +153,10 @@ global.matchWinLossRatingBonus = 30;
 global.enemySkillDifferenceDivider = 20;
 
 //----------------------SERVER GLOBAL VARIABLES---------------------------------
+global.myIP = "";
+global.myUrl = "";
+global.port = 3000;
+global.serverHomePage = "/";
 
 //Game global variables
 global.pause = false;
@@ -222,3 +239,5 @@ global.updateNotificationList = [];
 global.updatePickupList = [];
 global.updateEffectList = [];
 global.updateMisc = {};
+
+global.SOCKET_LIST = [];

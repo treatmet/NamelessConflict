@@ -24,6 +24,7 @@ export class IamStack extends cdk.Stack {
       ]
     });
 
+    
     var opsGroup = new iam.Group(this, "Group-Ops", {
       groupName: "Ops",
       managedPolicies: [
