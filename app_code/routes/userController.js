@@ -1,11 +1,6 @@
-var appDir = ""; var searchingDir = __dirname + "/";
-for (var x = 0; x < 9; x++){
-	if (fs.existsSync(searchingDir + "app.js")) { break; }
-	else { appDir += "../"; searchingDir += "../"; }}
-
-var dataAccess = require(appDir + 'app_code/data_access/dataAccess.js');
-var dataAccessFunctions = require(appDir + 'app_code/data_access/dataAccessFunctions.js');
-var authenticationEngine = require(appDir + 'app_code/engines/authenticationEngine.js');
+var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
+var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
+var authenticationEngine = require(absAppDir + '/app_code/engines/authenticationEngine.js');
 
 const express = require('express');
 const router = express.Router();

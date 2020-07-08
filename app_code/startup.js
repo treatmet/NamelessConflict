@@ -1,13 +1,8 @@
-var appDir = ""; var searchingDir = __dirname + "/";
-for (var x = 0; x < 9; x++){
-	if (fs.existsSync(searchingDir + "app.js")) { break; }
-	else { appDir += "../"; searchingDir += "../"; }}
-
-const userRouter = require(appDir + 'app_code/routes/userController.js');
-const serverRouter = require(appDir + 'app_code/routes/serverController.js');
-const pageRouter = require(appDir + 'app_code/routes/pageController.js');
-const logEngine = require(appDir + 'app_code/engines/logEngine.js');
-var dataAccess = require(appDir + 'app_code/data_access/dataAccess.js');
+const userRouter = require(absAppDir + '/app_code/routes/userController.js');
+const serverRouter = require(absAppDir + '/app_code/routes/serverController.js');
+const pageRouter = require(absAppDir + '/app_code/routes/pageController.js');
+const logEngine = require(absAppDir + '/app_code/engines/logEngine.js');
+var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
 
 const os = require('os');
 const ifaces = os.networkInterfaces();

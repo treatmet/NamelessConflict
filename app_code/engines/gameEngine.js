@@ -1,9 +1,10 @@
 var Pickup = require(absAppDir + '/app_code/entities/pickup.js');
 var Block = require(absAppDir + '/app_code/entities/block.js');
 var Thug = require(absAppDir + '/app_code/entities/thug.js');
-var Player = require(absAppDir + '/app_code/entities/player.js');
+var player = require(absAppDir + '/app_code/entities/player.js');
 var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
 var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
+var mapEngine = require(absAppDir + '/app_code/engines/mapEngine.js');
 
 var secondsSinceLastServerSync = syncServerWithDbInterval - 2;
 var secondsSinceOnlineTimestampUpdate = 0;
@@ -72,48 +73,49 @@ var getLevelFromExperience = function(experience){
 
 
 var changeTeams = function(playerId){
- 	console.log("change teams: " + Player.list[playerId]);
-	if (Player.list[playerId]){
-		if (Player.list[playerId].holdingBag){
+	var playerList = player.getPlayerList();
+ 	console.log("change teams: " + playerList[playerId]);
+	if (playerList[playerId]){
+		if (playerList[playerId].holdingBag){
 		
-			if (Player.list[playerId].team == "white"){
+			if (playerList[playerId].team == "white"){
 				bagBlue.captured = false;
 				updateMisc.bagBlue = bagBlue;
 			}
-			else if (Player.list[playerId].team == "black"){
+			else if (playerList[playerId].team == "black"){
 				bagRed.captured = false;
 				updateMisc.bagRed = bagRed;
 			}
-			Player.list[playerId].holdingBag = false;
-			updatePlayerList.push({id:Player.list[playerId].id,property:"holdingBag",value:Player.list[playerId].holdingBag});				
+			playerList[playerId].holdingBag = false;
+			updatePlayerList.push({id:playerList[playerId].id,property:"holdingBag",value:playerList[playerId].holdingBag});				
 		}
-		if (Player.list[playerId].team == "white"){
-			Player.list[playerId].team = "black";
-			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:Player.list[playerId].team});
+		if (playerList[playerId].team == "white"){
+			playerList[playerId].team = "black";
+			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
 		}
-		else if (Player.list[playerId].team == "black"){
-			Player.list[playerId].team = "white";
-			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:Player.list[playerId].team});
+		else if (playerList[playerId].team == "black"){
+			playerList[playerId].team = "white";
+			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
 		}
-		SOCKET_LIST[playerId].team = Player.list[playerId].team;
-		Player.list[playerId].respawn();	
+		SOCKET_LIST[playerId].team = playerList[playerId].team;
+		playerList[playerId].respawn();			
 		dataAccessFunctions.dbGameServerUpdate();
 		
 		//Abandon party
-		if (Player.list[playerId].partyId == Player.list[playerId].cognitoSub){ //Leaving a party that user is the leader of (disband ALL party members' partyId)
-			for (var p in Player.list){
-				if (Player.list[p].partyId == Player.list[playerId].partyId){
-					Player.list[p].partyId = Player.list[p].cognitoSub;
+		if (playerList[playerId].partyId == playerList[playerId].cognitoSub){ //Leaving a party that user is the leader of (disband ALL party members' partyId)
+			for (var p in playerList){
+				if (playerList[p].partyId == playerList[playerId].partyId){
+					playerList[p].partyId = playerList[p].cognitoSub;
 				}
 			}
-			dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: Player.list[playerId].partyId}, {partyId:""}, async function(err, userRes){
+			dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: playerList[playerId].partyId}, {partyId:""}, async function(err, userRes){
 			});	
 		}
 		else { //Leaving someone else's party
-			Player.list[playerId].partyId = Player.list[playerId].cognitoSub;
-			dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: Player.list[playerId].cognitoSub}, {partyId:""}, async function(err, userRes){
+			playerList[playerId].partyId = playerList[playerId].cognitoSub;
+			dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: playerList[playerId].cognitoSub}, {partyId:""}, async function(err, userRes){
 			});	
 		}
 	}
@@ -126,15 +128,15 @@ function calculateTeamAvgRating(team){
 	var whitePlayers = 0;
 	var whiteTotalScore = 0;
 	var enemyTeamAvgRating = 0;
-	
-	for (var i in Player.list){
-		if (Player.list[i].team == "white"){
+	var playerList = player.getPlayerList();
+	for (var i in playerList){
+		if (playerList[i].team == "white"){
 			whitePlayers++;
-			whiteTotalScore += Player.list[i].rating;
+			whiteTotalScore += playerList[i].rating;
 		}
-		else if (Player.list[i].team == "black"){
+		else if (playerList[i].team == "black"){
 			blackPlayers++;
-			blackTotalScore += Player.list[i].rating;
+			blackTotalScore += playerList[i].rating;
 		}
 	}
 	
@@ -164,8 +166,9 @@ function calculateEndgameStats(){
 			
 					
 			//Calculate progress made, and send to client (and then update user's DB stats)
-			for (var p in Player.list){
-				if (Player.list[p].team == "none")
+			var playerList = player.getPlayerList();
+			for (var p in playerList){
+				if (playerList[p].team == "none")
 					continue;
 				
 				var gamesLostInc = 0;
@@ -174,44 +177,44 @@ function calculateEndgameStats(){
 				
 				SOCKET_LIST[p].emit('sendLog', "Player in endgame loop...");
 
-				var enemyAverageRating = Player.list[p].team == "white" ? blackAverageRating : whiteAverageRating;
-				if ((Player.list[p].team == "white" && whiteScore > blackScore) || (Player.list[p].team == "black" && whiteScore < blackScore)){
+				var enemyAverageRating = playerList[p].team == "white" ? blackAverageRating : whiteAverageRating;
+				if ((playerList[p].team == "white" && whiteScore > blackScore) || (playerList[p].team == "black" && whiteScore < blackScore)){
 					//win
 					gamesWonInc++;
-					ptsGained = Math.round(matchWinLossRatingBonus + (enemyAverageRating - Player.list[p].rating)/enemySkillDifferenceDivider);
+					ptsGained = Math.round(matchWinLossRatingBonus + (enemyAverageRating - playerList[p].rating)/enemySkillDifferenceDivider);
 					if (ptsGained < 1){ptsGained = 1;}		
-					logg(Player.list[p].name + " had " + Player.list[p].rating + " pts, and beat a team with " + enemyAverageRating + " pts. He gained " + ptsGained);
-					Player.list[p].cashEarnedThisGame+=winCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
+					logg(playerList[p].name + " had " + playerList[p].rating + " pts, and beat a team with " + enemyAverageRating + " pts. He gained " + ptsGained);
+					playerList[p].cashEarnedThisGame+=winCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
 				}
 				else {
 					//loss
 					gamesLostInc++;
-					ptsGained = Math.round(-matchWinLossRatingBonus + (enemyAverageRating - Player.list[p].rating)/enemySkillDifferenceDivider);
+					ptsGained = Math.round(-matchWinLossRatingBonus + (enemyAverageRating - playerList[p].rating)/enemySkillDifferenceDivider);
 					if (ptsGained > -1){ptsGained = -1;}		
 					if (ptsGained < -20){ptsGained = -20;} //Loss cap		
-					logg(Player.list[p].name + " had " + Player.list[p].rating + " pts, and lost to a team with " + enemyAverageRating + " pts. He lost " + ptsGained);
-					Player.list[p].cashEarnedThisGame+=loseCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
+					logg(playerList[p].name + " had " + playerList[p].rating + " pts, and lost to a team with " + enemyAverageRating + " pts. He lost " + ptsGained);
+					playerList[p].cashEarnedThisGame+=loseCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
 				}
 				//Prevent player from having sub zero ranking
-				if (Player.list[p].rating + ptsGained < 0){
-					ptsGained += Math.abs(Player.list[p].rating + ptsGained);
+				if (playerList[p].rating + ptsGained < 0){
+					ptsGained += Math.abs(playerList[p].rating + ptsGained);
 				}
 
 				//Trigger client's end of game progress results report
 				var endGameProgressResults = {};
-				endGameProgressResults.originalRating = Player.list[p].rating;
+				endGameProgressResults.originalRating = playerList[p].rating;
 				endGameProgressResults.ratingDif = ptsGained;
-				endGameProgressResults.originalExp = Player.list[p].experience;
-				endGameProgressResults.expDif = Player.list[p].cashEarnedThisGame;
+				endGameProgressResults.originalExp = playerList[p].experience;
+				endGameProgressResults.expDif = playerList[p].cashEarnedThisGame;
 
-				var rankProgressInfo = getRankFromRating(Player.list[p].rating);
+				var rankProgressInfo = getRankFromRating(playerList[p].rating);
 				endGameProgressResults.rank = rankProgressInfo.rank;
 				endGameProgressResults.nextRank = rankProgressInfo.nextRank;
 				endGameProgressResults.previousRank = rankProgressInfo.previousRank;
 				endGameProgressResults.rankFloor = rankProgressInfo.floor;
 				endGameProgressResults.rankCeiling = rankProgressInfo.ceiling;
 
-				var experienceProgressInfo = getLevelFromExperience(Player.list[p].experience);
+				var experienceProgressInfo = getLevelFromExperience(playerList[p].experience);
 				endGameProgressResults.level = experienceProgressInfo.level;
 				endGameProgressResults.experienceFloor = experienceProgressInfo.floor;
 				endGameProgressResults.experienceCeiling = experienceProgressInfo.ceiling;		
@@ -221,7 +224,7 @@ function calculateEndgameStats(){
 				SOCKET_LIST[p].emit('sendLog', endGameProgressResults);
 
 				//update user's DB stats
-				dataAccessFunctions.dbUserUpdate("inc", Player.list[p].cognitoSub, {kills:Player.list[p].kills, deaths:Player.list[p].deaths, captures:Player.list[p].captures, steals:Player.list[p].steals, returns:Player.list[p].returns, cash: Player.list[p].cashEarnedThisGame, experience: Player.list[p].cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained});
+				dataAccessFunctions.dbUserUpdate("inc", playerList[p].cognitoSub, {kills:playerList[p].kills, deaths:playerList[p].deaths, captures:playerList[p].captures, steals:playerList[p].steals, returns:playerList[p].returns, cash: playerList[p].cashEarnedThisGame, experience: playerList[p].cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained});
 			}
 		}
 		else {
@@ -233,14 +236,15 @@ function calculateEndgameStats(){
 function updatePlayersRatingAndExpWithMongoRes(mongoRes){
 	var pCount = 0;
 	var totalPlayers = getNumPlayersInGame();
-	
-	for (var p in Player.list){
+	var playerList = player.getPlayerList();
+
+	for (var p in playerList){
 		pCount++;
 		for (var r in mongoRes){
-			if (Player.list[p].cognitoSub == mongoRes[r].cognitoSub){		
-				Player.list[p].rating = mongoRes[r].rating;
-				Player.list[p].experience = mongoRes[r].experience;				
-				logg("[" + pCount + "/" + totalPlayers + "] Got player[" + Player.list[p].id + "] from db. Rating:" + Player.list[p].rating + " Experience:" + Player.list[p].experience);
+			if (playerList[p].cognitoSub == mongoRes[r].cognitoSub){		
+				playerList[p].rating = mongoRes[r].rating;
+				playerList[p].experience = mongoRes[r].experience;				
+				logg("[" + pCount + "/" + totalPlayers + "] Got player[" + playerList[p].id + "] from db. Rating:" + playerList[p].rating + " Experience:" + playerList[p].experience);
 			}
 		}
 	}	
@@ -248,7 +252,9 @@ function updatePlayersRatingAndExpWithMongoRes(mongoRes){
 
 var getNumPlayersInGame = function(){
 	var totalPlayers = 0;
-	for (var p in Player.list){
+	var playerList = player.getPlayerList();
+
+	for (var p in playerList){
 		totalPlayers++;
 	}
 	
@@ -257,8 +263,10 @@ var getNumPlayersInGame = function(){
 
 function getNumTeamPlayersInGame(){ //getCurrentPlayers in game actual players
 	var totalPlayers = 0;
-	for (var p in Player.list){
-		if (Player.list[p].team == "white" || Player.list[p].team == "black")
+	var playerList = player.getPlayerList();
+
+	for (var p in playerList){
+		if (playerList[p].team == "white" || playerList[p].team == "black")
 		totalPlayers++;
 	}
 	
@@ -272,8 +280,10 @@ function spawnSafely(entity){
 }
 
 function getEntityById(id){
-	if (Player.list[id]){
-		return Player.list[id];
+	var playerList = player.getPlayerList();
+
+	if (playerList[id]){
+		return playerList[id];
 	}
 	else if (Thug.list[id]){
 		return Thug.list[id];
@@ -289,7 +299,8 @@ function getEntityById(id){
 function getSafeCoordinates(team){
 	var potentialX = 10;
 	var potentialY = 10;
-	
+	var playerList = player.getPlayerList();
+
 	if (team == "black"){
 		for (var w = 0; w < 50; w++){
 			var safeToSpawn = true;
@@ -302,8 +313,8 @@ function getSafeCoordinates(team){
 				}					
 			}
 			//check for enemies nearby
-			for (var i in Player.list){
-				if (Player.list[i].team != team && Player.list[i].health > 0 && potentialX >= Player.list[i].x - threatSpawnRange && potentialX <= Player.list[i].x + threatSpawnRange && potentialY >= Player.list[i].y - threatSpawnRange && potentialY <= Player.list[i].y + threatSpawnRange){																		
+			for (var i in playerList){
+				if (playerList[i].team != team && playerList[i].health > 0 && potentialX >= playerList[i].x - threatSpawnRange && potentialX <= playerList[i].x + threatSpawnRange && potentialY >= playerList[i].y - threatSpawnRange && potentialY <= playerList[i].y + threatSpawnRange){																		
 					safeToSpawn = false;
 				}
 			}
@@ -331,8 +342,8 @@ function getSafeCoordinates(team){
 					safeToSpawn = false;
 				}
 			}
-			for (var i in Player.list){
-				if (Player.list[i].team != team && Player.list[i].health > 0 && potentialX >= Player.list[i].x - threatSpawnRange && potentialX <= Player.list[i].x + threatSpawnRange && potentialY >= Player.list[i].y - threatSpawnRange && potentialY <= Player.list[i].y + threatSpawnRange){																		
+			for (var i in playerList){
+				if (playerList[i].team != team && playerList[i].health > 0 && potentialX >= playerList[i].x - threatSpawnRange && potentialX <= playerList[i].x + threatSpawnRange && potentialY >= playerList[i].y - threatSpawnRange && potentialY <= playerList[i].y + threatSpawnRange){																		
 					safeToSpawn = false;
 				}
 			}
@@ -387,7 +398,9 @@ function processEntityPush(entity){
 			entity.y -= (entity.pushSpeed) * (2/3);
 		}						
 		entity.pushSpeed--;
-		if (Player.list[entity.id]){
+
+		var playerList = player.getPlayerList();
+		if (playerList[entity.id]){
 			updatePlayerList.push({id:entity.id,property:"x",value:entity.x});
 			updatePlayerList.push({id:entity.id,property:"y",value:entity.y});
 		}
@@ -420,50 +433,6 @@ function endGame(){
 	updateMisc.nextGameTimer = nextGameTimer;
 	updateMisc.gameOver = true; //send gameover to all clients
 }
-
-//TIMER1 - EVERY FRAME timer1 tiemer1 tiemr1
-//------------------------------------------------------------------------------
-setInterval(
-	function(){
-		if (pause == true)
-			return;
-				
-		for (var i in Player.list){
-			console.log("ENGINEING " + Player.list[i].id);
-			if (Player.list[i].team != "none")
-				Player.list[i].engine();
-		}		
-		for (var i in Thug.list){
-			Thug.list[i].engine();
-		}	
-		
-		var secondsLeftPlusZero = "" + secondsLeft;
-		if (secondsLeft < 10){
-			secondsLeftPlusZero = "0" + secondsLeft;
-		}
-		
-		if (gametype == "ctf"){
-			moveBags();
-		}
-		
-		//Send packs to all players
-		//updateNotificationList = [];
-		//updateEffectList = [];
-		for (var i in SOCKET_LIST){			
-			var socket = SOCKET_LIST[i];			
-			socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, updateEffectList, updateMisc);
-		}
-		updatePlayerList = [];
-		updateThugList = [];
-		updatePickupList = [];
-		updateNotificationList = [];
-		updateEffectList = []; 	//1=shot, 2=blood, 3=boost, 4=smash, 5=body, 6=notification?
-		updateMisc = {};		
-		
-		checkForGameOver();
-	},
-	1000/60 //FPS frames per second
-);
 
 function moveBags(){
 	if (bagRed.speed > 0){
@@ -719,9 +688,9 @@ var killScore = function(team){
 var assignSpectatorsToTeam = function(assignEvenIfFull){
 	//First, get the current team sizes
 	var moreWhitePlayers = 0; 
-	for (var p in Player.list){
-		if (Player.list[p].team == "white"){moreWhitePlayers++;}
-		else if (Player.list[p].team == "black"){moreWhitePlayers--;}
+	for (var p in playerList){
+		if (playerList[p].team == "white"){moreWhitePlayers++;}
+		else if (playerList[p].team == "black"){moreWhitePlayers--;}
 	}
 	
 	//Then get the parties, ordered by party size
@@ -741,21 +710,22 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 
 	]
 	*/	
-	for (var l in Player.list){
-		if (Player.list[l].team != "none"){ //only process spectators
+	var playerList = player.getPlayerList();
+	for (var l in playerList){
+		if (playerList[l].team != "none"){ //only process spectators
 			continue;
 		}
 		var addedToParty = false;
 		for (var p = 0; p < parties.length; p++){
-			if (typeof Player.list[l].partyId != 'undefined' && Player.list[l].partyId == parties[p].partyId && Player.list[l].partyId.length > 0){
+			if (typeof playerList[l].partyId != 'undefined' && playerList[l].partyId == parties[p].partyId && playerList[l].partyId.length > 0){
 				parties[p].partySize++;
-				parties[p].playerIds.push(Player.list[l].id);
+				parties[p].playerIds.push(playerList[l].id);
 				addedToParty = true;
 				break;
 			}
 		}
-		if (!addedToParty && typeof Player.list[l].id != 'undefined'){
-			var newParty = {partyId: Player.list[l].partyId, partySize: 1, playerIds: [Player.list[l].id]};
+		if (!addedToParty && typeof playerList[l].id != 'undefined'){
+			var newParty = {partyId: playerList[l].partyId, partySize: 1, playerIds: [playerList[l].id]};
 			parties.push(newParty);
 		}
 	}
@@ -772,20 +742,20 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 			
 		if (moreWhitePlayers <= 0){
 			for (var r = 0; r < parties[q].playerIds.length; r++){
-				if (typeof Player.list[parties[q].playerIds[r]] === 'undefined')
+				if (typeof playerList[parties[q].playerIds[r]] === 'undefined')
 					continue;
-				Player.list[parties[q].playerIds[r]].team = "white";
+				playerList[parties[q].playerIds[r]].team = "white";
 				moreWhitePlayers++;
-				Player.list[parties[q].playerIds[r]].respawn();
+				playerList[parties[q].playerIds[r]].respawn();
 			}
 		}
 		else {
 			for (var r = 0; r < parties[q].playerIds.length; r++){
-				if (typeof Player.list[parties[q].playerIds[r]] === 'undefined')
+				if (typeof playerList[parties[q].playerIds[r]] === 'undefined')
 					continue;
-				Player.list[parties[q].playerIds[r]].team = "black";
+				playerList[parties[q].playerIds[r]].team = "black";
 				moreWhitePlayers--;
-				Player.list[parties[q].playerIds[r]].respawn();
+				playerList[parties[q].playerIds[r]].respawn();
 			}
 		}
 	}
@@ -823,11 +793,11 @@ function restartGame(){
 	assignSpectatorsToTeam(true);
 	
 	/////////REBALANCE TEAMS////////////////////////////////////////////////////
-	
+	var playerList = player.getPlayerList();
 	var moreWhitePlayers = 0; 
-	for (var p in Player.list){
-		if (Player.list[p].team == "white"){moreWhitePlayers++;}
-		else if (Player.list[p].team == "black"){moreWhitePlayers--;}
+	for (var p in playerList){
+		if (playerList[p].team == "white"){moreWhitePlayers++;}
+		else if (playerList[p].team == "black"){moreWhitePlayers--;}
 	}
 
 	logg("REBALANCING TEAMS1: Teams are off by " + Math.abs(moreWhitePlayers));
@@ -839,28 +809,28 @@ function restartGame(){
 		var whiteParties = [];
 		var blackParties = [];
 		
-		for (var l in Player.list){
+		for (var l in playerList){
 			var addedToParty = false;
 			for (var p = 0; p < inGameParties.length; p++){
-				if (typeof Player.list[l].partyId != 'undefined' && Player.list[l].partyId == inGameParties[p].partyId && Player.list[l].partyId.length > 0){
+				if (typeof playerList[l].partyId != 'undefined' && playerList[l].partyId == inGameParties[p].partyId && playerList[l].partyId.length > 0){
 					inGameParties[p].partySize++;
-					inGameParties[p].playerIds.push(Player.list[l].id);
+					inGameParties[p].playerIds.push(playerList[l].id);
 					addedToParty = true;
 					break;
 				}
 			}
-			if (!addedToParty && typeof Player.list[l].id != 'undefined'){
-				var newParty = {partyId: Player.list[l].partyId, partySize: 1, playerIds: [Player.list[l].id]};
+			if (!addedToParty && typeof playerList[l].id != 'undefined'){
+				var newParty = {partyId: playerList[l].partyId, partySize: 1, playerIds: [playerList[l].id]};
 				inGameParties.push(newParty);
 			}
 		}		
 		inGameParties.sort(comparePartySize);		
 		
 		for (var gp = 0; gp < inGameParties.length; gp++){
-			if (Player.list[inGameParties[gp].playerIds[0]].team == "white"){
+			if (playerList[inGameParties[gp].playerIds[0]].team == "white"){
 				whiteParties.push(inGameParties[gp]);
 			}
-			else if (Player.list[inGameParties[gp].playerIds[0]].team == "black"){
+			else if (playerList[inGameParties[gp].playerIds[0]].team == "black"){
 				blackParties.push(inGameParties[gp]);
 			}
 		}	
@@ -903,18 +873,18 @@ function restartGame(){
 					
 						logg("REBALANCING TEAMS3: ADDING THIS GUY: " + biggerTeamsParties[q].playerIds[r] + " FROM THIS PARTY " + biggerTeamsParties[q].partyId);
 					
-						if (typeof Player.list[biggerTeamsParties[q].playerIds[r]] === 'undefined')
+						if (typeof playerList[biggerTeamsParties[q].playerIds[r]] === 'undefined')
 							continue;
-						Player.list[biggerTeamsParties[q].playerIds[r]].team = "white";
+						playerList[biggerTeamsParties[q].playerIds[r]].team = "white";
 						moreWhitePlayers -= 2;
 					}
 				}
 				else {
 					for (var r = 0; r < biggerTeamsParties[q].playerIds.length; r++){
 						logg("REBALANCING TEAMS3: ADDING THIS GUY: " + biggerTeamsParties[q].playerIds[r] + " FROM THIS PARTY " + biggerTeamsParties[q].partyId + " [" + q + "," + r);
-						if (typeof Player.list[biggerTeamsParties[q].playerIds[r]] === 'undefined')
+						if (typeof playerList[biggerTeamsParties[q].playerIds[r]] === 'undefined')
 							continue;
-						Player.list[biggerTeamsParties[q].playerIds[r]].team = "black";
+						playerList[biggerTeamsParties[q].playerIds[r]].team = "black";
 						moreWhitePlayers -=2;
 					}
 				}				
@@ -963,7 +933,7 @@ function restartGame(){
 
 	for (var i in SOCKET_LIST){
 		var socket = SOCKET_LIST[i];	
-		gameEngine.sendCapturesToClient(socket);
+		sendCapturesToClient(socket);
 	}
 	updateMisc.gameOver = gameOver;	
 	updateMisc.bagRed = bagRed;
@@ -981,22 +951,22 @@ function restartGame(){
 		updateMisc.variant.timeLimit = false;
 	}
 	
-	for(var i in Player.list){		
-		Player.list[i].cash = startingCash;
-		Player.list[i].cashEarnedThisGame = 0;
-		Player.list[i].kills = 0;
-		Player.list[i].deaths = 0;
-		Player.list[i].steals = 0;
-		Player.list[i].returns = 0;
-		Player.list[i].captures = 0;		
-		updatePlayerList.push({id:Player.list[i].id,property:"cash",value:Player.list[i].cash});
-		updatePlayerList.push({id:Player.list[i].id,property:"cashEarnedThisGame",value:Player.list[i].cashEarnedThisGame});
-		updatePlayerList.push({id:Player.list[i].id,property:"kills",value:Player.list[i].kills});
-		updatePlayerList.push({id:Player.list[i].id,property:"deaths",value:Player.list[i].deaths});
-		updatePlayerList.push({id:Player.list[i].id,property:"steals",value:Player.list[i].steals});
-		updatePlayerList.push({id:Player.list[i].id,property:"returns",value:Player.list[i].returns});
-		updatePlayerList.push({id:Player.list[i].id,property:"captures",value:Player.list[i].captures});	
-		Player.list[i].respawn();
+	for(var i in playerList){		
+		playerList[i].cash = startingCash;
+		playerList[i].cashEarnedThisGame = 0;
+		playerList[i].kills = 0;
+		playerList[i].deaths = 0;
+		playerList[i].steals = 0;
+		playerList[i].returns = 0;
+		playerList[i].captures = 0;		
+		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
+		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
+		updatePlayerList.push({id:playerList[i].id,property:"kills",value:playerList[i].kills});
+		updatePlayerList.push({id:playerList[i].id,property:"deaths",value:playerList[i].deaths});
+		updatePlayerList.push({id:playerList[i].id,property:"steals",value:playerList[i].steals});
+		updatePlayerList.push({id:playerList[i].id,property:"returns",value:playerList[i].returns});
+		updatePlayerList.push({id:playerList[i].id,property:"captures",value:playerList[i].captures});	
+		playerList[i].respawn();
 	}//End player for loop update
 
 	for(var i in SOCKET_LIST){
@@ -1014,13 +984,13 @@ function ensureCorrectThugCount(){
 	var expectedBlackThugs = 0;
 	var whiteThugs = 0;
 	var blackThugs = 0;
+	var playerList = player.getPlayerList();
 	
-	
-	for (var p in Player.list){
-		if (Player.list[p].team == "white"){
+	for (var p in playerList){
+		if (playerList[p].team == "white"){
 			expectedBlackThugs++;
 		}
-		else if (Player.list[p].team == "black"){
+		else if (playerList[p].team == "black"){
 			expectedWhiteThugs++;
 		}
 	}	
@@ -1071,12 +1041,12 @@ function ensureCorrectThugCount(){
 	}
 
 	while (whiteThugs < expectedWhiteThugs){
-		var coords = gameEngine.getSafeCoordinates("white");
+		var coords = getSafeCoordinates("white");
 		Thug(Math.random(), "white", coords.x, coords.y);	
 		whiteThugs++;
 	}
 	while (blackThugs < expectedBlackThugs){
-		var coords = gameEngine.getSafeCoordinates("black");
+		var coords = getSafeCoordinates("black");
 		Thug(Math.random(), "black", coords.x, coords.y);			
 		blackThugs++;
 	}
@@ -1206,6 +1176,50 @@ setInterval(
 	1000/1 //Ticks per second
 );
 
+//TIMER1 - EVERY FRAME timer1 tiemer1 tiemr1
+//------------------------------------------------------------------------------
+setInterval(
+	function(){
+		if (pause == true)
+			return;
+
+		var playerList = player.getPlayerList();				
+		for (var i in playerList){
+			//console.log("ENGINEING " + playerList[i].id);
+			if (playerList[i].team != "none")
+				playerList[i].engine();
+		}		
+		for (var i in Thug.list){
+			Thug.list[i].engine();
+		}	
+		
+		var secondsLeftPlusZero = "" + secondsLeft;
+		if (secondsLeft < 10){
+			secondsLeftPlusZero = "0" + secondsLeft;
+		}
+		
+		if (gametype == "ctf"){
+			moveBags();
+		}
+		
+		//Send packs to all players
+		//updateNotificationList = [];
+		//updateEffectList = [];
+		for (var i in SOCKET_LIST){			
+			var socket = SOCKET_LIST[i];			
+			socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, updateEffectList, updateMisc);
+		}
+		updatePlayerList = [];
+		updateThugList = [];
+		updatePickupList = [];
+		updateNotificationList = [];
+		updateEffectList = []; 	//1=shot, 2=blood, 3=boost, 4=smash, 5=body, 6=notification?
+		updateMisc = {};		
+		
+		checkForGameOver();
+	},
+	1000/60 //FPS frames per second
+);
 
 module.exports.getRankFromRating = getRankFromRating;
 module.exports.getLevelFromExperience = getLevelFromExperience;

@@ -1,7 +1,3 @@
-var appDir = ""; var searchingDir = __dirname + "/";
-for (var x = 0; x < 9; x++){
-	if (fs.existsSync(searchingDir + "app.js")) { break; }
-	else { appDir += "../"; searchingDir += "../"; }}
 
 const express = require('express');
 const router = express.Router();
@@ -9,8 +5,8 @@ const cookieParser = require('cookie-parser');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 router.use(cookieParser());
 
-var dataAccessFunctions = require(appDir + 'app_code/data_access/dataAccessFunctions.js');
-var gameEngine = require(appDir + 'app_code/engines/gameEngine.js');
+var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
+var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
 
 
 

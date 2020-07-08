@@ -994,7 +994,7 @@ socket.on('sfx', function(sfx){
 //----------------Player Functionality----------------
 socket.on('sendPlayerNameToClient',function(data){
 	myPlayer.name = data;
-	logg("My name is " + myPlayer.name + ".");
+	logg("My name is " + myPlayer.name + ". Id: " + myPlayer.id);
 });
 
 function getRotation(direction){

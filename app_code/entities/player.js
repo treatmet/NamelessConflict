@@ -47,12 +47,6 @@ var Player = function(id, cognitoSub, name, team, partyId){
 	updatePlayerList.push({id:self.id,property:"captures",value:self.captures});
 	updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
 	
-    console.log("CONNECTING SOCKET!!!!!!!!!!!!!!!!!!!!!!!!!");
-    console.log("ID:" + id);
-    console.log("SOCKET:");
-    console.log(SOCKET_LIST[id]);
-    console.log("SOCKET LIST:");
-    console.log(SOCKET_LIST);
 	var socket = SOCKET_LIST[id];
 	
 //Player Update (Timer1 for player - Happens every frame)
@@ -1420,12 +1414,11 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 	var player = Player(socket.id, cognitoSub, name, team, partyId);
 	gameEngine.ensureCorrectThugCount();
 
-
 	socket.on('keyPress', function(data){
 		Player.list[socket.id].afk = AfkFramesAllowed;
 		if (player.health > 0 && player.team != "none"){
 			var discharge = false;
-			if(data.inputId === 87){player.pressingW = data.state; console.log("W");} //W
+			if(data.inputId === 87){player.pressingW = data.state;} //W
 			else if(data.inputId === 68){player.pressingD = data.state;}
 			else if(data.inputId === 83){player.pressingS = data.state;}
 			else if(data.inputId === 65){player.pressingA = data.state;}
@@ -1969,7 +1962,6 @@ function playerEvent(playerId, event){
 	}
 }
 
-
 var joinGame = function(cognitoSub, username, team, partyId){
 	var socket = SOCKET_LIST[getSocketIdFromCognitoSub(cognitoSub)];
 	socket.team = team;
@@ -1979,15 +1971,27 @@ var joinGame = function(cognitoSub, username, team, partyId){
 		socket.emit('signInResponse',{success:false,message:"SERVER FULL. Try again later, or try a different server."});								
 	}
 	else {
-		log("Player signing into game server - cognitoSub: " + cognitoSub + " username: " + username + " team: " + team + " partyId: " + partyId);
-		console.log(Player);
+		log("!!!!Player signing into game server - socketID: " + socket.id + " cognitoSub: " + cognitoSub + " username: " + username + " team: " + team + " partyId: " + partyId);
 		Player.onConnect(socket, cognitoSub, username, team, partyId);
 		dataAccessFunctions.dbGameServerUpdate();
 		socket.emit('signInResponse',{success:true,id:socket.id, mapWidth:mapWidth, mapHeight:mapHeight, whiteScore:whiteScore, blackScore:blackScore});
 	}	
 }
 
-module.exports = Player;
-module.exports.joinGame = joinGame;
+var getPlayerList = function(){
+    return Player.list;
+}
 
-console.log("Player module loaded");
+var getPlayerById = function(id){
+    return Player.list[id];
+}
+
+var playerDisconnect = function(id){
+    if (Player.list[id])
+        Player.onDisconnect(SOCKET_LIST[id]);
+}
+
+module.exports.getPlayerList = getPlayerList;
+module.exports.playerDisconnect = playerDisconnect; //onDisconnect
+module.exports.getPlayerById = getPlayerById;
+module.exports.joinGame = joinGame;

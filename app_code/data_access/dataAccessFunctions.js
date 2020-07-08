@@ -1,5 +1,5 @@
 var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
-var Player = require(absAppDir + '/app_code/entities/player.js');
+var player = require(absAppDir + '/app_code/entities/player.js');
 
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
 var getUserFromDB = function(cognitoSub,cb){
@@ -36,22 +36,7 @@ var getAllUsersOnServer = function(cb){
 	});
 }
 
-var getAllPlayersFromDB = function(cb){
-	var cognitoSubsInGame = [];
-	for (var i in Player.list){
-		cognitoSubsInGame.push(Player.list[i].cognitoSub);
-	}
-	
-	var searchParams = { cognitoSub: { $in: cognitoSubsInGame } };	
-	dataAccess.dbFindAwait("RW_USER", searchParams, async function(err, res){
-		if (res && res[0]){
-			cb(res);
-		}
-		else {
-			cb(false);
-		}
-	});		
-}
+
 
 var getPartyForUser = function(cognitoSub, cb){
 	var partyData = {
@@ -575,6 +560,8 @@ var dbGameServerUpdate = function() {
 		logg("ERROR - NO SERVER URL - NOT READY TO SYNC WITH DB");
 		return;
 	}
+	if (isWebServer == true)
+		return;
 	
 	serverName = "";
 	
@@ -729,9 +716,27 @@ function checkForUnhealthyServers(){
 	});
 }
 
+var getAllPlayersFromDB = function(cb){
+	var cognitoSubsInGame = [];
+	var playerList = player.getPlayerList();
+
+	for (var i in playerList){
+		cognitoSubsInGame.push(playerList[i].cognitoSub);
+	}
+	
+	var searchParams = { cognitoSub: { $in: cognitoSubsInGame } };	
+	dataAccess.dbFindAwait("RW_USER", searchParams, async function(err, res){
+		if (res && res[0]){
+			cb(res);
+		}
+		else {
+			cb(false);
+		}
+	});		
+}
+
 module.exports.getUserFromDB = getUserFromDB;
 module.exports.getAllUsersOnServer = getAllUsersOnServer;
-module.exports.getAllPlayersFromDB = getAllPlayersFromDB;
 module.exports.getPartyForUser = getPartyForUser;
 module.exports.getPartyById = getPartyById;
 module.exports.kickOfflineFromParty = kickOfflineFromParty;
@@ -759,3 +764,5 @@ module.exports.dbGameServerUpdate = dbGameServerUpdate;
 module.exports.syncGameServerWithDatabase = syncGameServerWithDatabase;
 module.exports.checkForUnhealthyServers = checkForUnhealthyServers;
 module.exports.addUser = addUser;
+module.exports.getAllPlayersFromDB = getAllPlayersFromDB;
+

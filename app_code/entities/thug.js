@@ -1,6 +1,7 @@
 var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
 var Block = require(absAppDir + '/app_code/entities/block.js');
 var entityHelpers = require(absAppDir + '/app_code/entities/_entityHelpers.js');
+var player = require(absAppDir + '/app_code/entities/player.js');
 
 var Thug = function(id, team, x, y){
 	var self = {
@@ -54,12 +55,13 @@ var Thug = function(id, team, x, y){
 	}//End self.engine
 	
 	self.checkForEntityCollision = function(){
+		var playerList = player.getPlayerList();
 		//Check collision with players
-		for (var i in Player.list){
-			if (Player.list[i].id != self.id  && Player.list[i].health > 0 && self.x + self.width > Player.list[i].x && self.x < Player.list[i].x + Player.list[i].width && self.y + self.height > Player.list[i].y && self.y < Player.list[i].y + Player.list[i].height){								
-				if (self.x == Player.list[i].x && self.y == Player.list[i].y){self.x -= 5; updateThugList.push({id:self.id,property:"x",value:self.x});} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
-				var dx1 = self.x - Player.list[i].x;
-				var dy1 = self.y - Player.list[i].y;
+		for (var i in playerList){
+			if (playerList[i].id != self.id  && playerList[i].health > 0 && self.x + self.width > playerList[i].x && self.x < playerList[i].x + playerList[i].width && self.y + self.height > playerList[i].y && self.y < playerList[i].y + playerList[i].height){								
+				if (self.x == playerList[i].x && self.y == playerList[i].y){self.x -= 5; updateThugList.push({id:self.id,property:"x",value:self.x});} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+				var dx1 = self.x - playerList[i].x;
+				var dy1 = self.y - playerList[i].y;
 				var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
 				var ax1 = dx1/dist1;
 				var ay1 = dy1/dist1;
@@ -123,10 +125,11 @@ var Thug = function(id, team, x, y){
 		if (self.reevaluateTargetTimer <= 0){			
 			self.targetId = 0;
 			self.closestTargetDist = 999999;
-			
-			for (var i in Player.list){
-				if (Player.list[i].cloak < 0.2){
-					checkIfClosestToThug(self, Player.list[i]);
+
+			var playerList = player.getPlayerList();
+			for (var i in playerList){
+				if (playerList[i].cloak < 0.2){
+					checkIfClosestToThug(self, playerList[i]);
 				}
 			}
 			for (var i in Thug.list){
@@ -141,7 +144,9 @@ var Thug = function(id, team, x, y){
 		if (self.closestTargetDist < 60 && target.health > 0 && target.team != self.team){
 			self.attacking = thugAttackDelay;
 			target.health -= thugDamage * damageScale; //scale damage
-			if (Player.list[target.id]){
+
+			var targetPlayer = player.getPlayerById(target.id);
+			if (targetPlayer){
 				updatePlayerList.push({id:target.id,property:"health",value:target.health});
 				if (target.health <= 0){
 					entityHelpers.kill(target, target.shootingDir, 0);
@@ -290,7 +295,7 @@ var Thug = function(id, team, x, y){
 					
 		//Damage push
 		self.pushSpeed += damageInflicted/8 * damagePushScale;
-		self.pushDir = Player.list[shooter.id].shootingDir;			
+		self.pushDir = player.getPlayerById(shooter.id).shootingDir;			
 		
 		updateThugList.push({id:self.id,property:"pushSpeed",value:self.pushSpeed});		
 		updateThugList.push({id:self.id,property:"pushDir",value:self.pushDir});

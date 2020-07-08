@@ -2,7 +2,7 @@ var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
 var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
 var authenticationEngine = require(absAppDir + '/app_code/engines/authenticationEngine.js');
 var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
-var Player = require(absAppDir + '/app_code/entities/player.js');
+var player = require(absAppDir + '/app_code/entities/player.js');
 
 const express = require('express');
 const router = express.Router();
@@ -54,7 +54,7 @@ router.post('/playNow', async function (req, res) {
 					res.status(200);
 					logg("res.send: " + "Server " + myUrl + " welcomes you!");
 					res.send({msg:"Server " + myUrl + " welcomes you!", success:true});					
-					Player.joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team, incomingUsers[u].partyId); //Join game
+					player.joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team, incomingUsers[u].partyId); //Join game
 					break;
 				}
 			}	
