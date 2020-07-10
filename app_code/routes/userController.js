@@ -1,6 +1,7 @@
 var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
 var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
 var authenticationEngine = require(absAppDir + '/app_code/engines/authenticationEngine.js');
+var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
 
 const express = require('express');
 const router = express.Router();
@@ -285,6 +286,7 @@ router.post('/validateToken', async function (req, res) {
 	var httpResult = {};
 	if (result && result.cognitoSub && result.username && result.refresh_token && result.access_token) {
 		//Success
+		logg("Authentication SUCCESS!");
 		dataAccessFunctions.updateOnlineTimestampForUser(result.cognitoSub);
 		dataAccessFunctions.updateServerUrlForUser(result.cognitoSub);
 		res.status(200);
@@ -330,6 +332,76 @@ router.post('/validateToken', async function (req, res) {
 			});
 		}
 	});
+});
+
+router.post('/getLeaderboard', async function (req, res) {
+	console.log("GET LEADERBOARD");
+	var leaderboard = [];
+
+	dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}]}, {sort:{experience: -1},limit:100}, async function(err, dbRes){
+		if (dbRes && dbRes[0]){
+			for (var i = 0; i < dbRes.length; i++){
+				if (dbRes[i].USERNAME){
+					leaderboard.push({cognitoSub:dbRes[i].cognitoSub, username:dbRes[i].USERNAME.substring(0, 15), rating:dbRes[i].rating, kills:dbRes[i].kills, captures:dbRes[i].captures, gamesWon:dbRes[i].gamesWon, experience:dbRes[i].experience});
+				}
+				else {
+					logg("ERROR ACQUIRING USERNAME:");
+					console.log(dbRes[i]);
+				}
+			}
+		}
+		res.send(leaderboard);
+	});	
+});
+
+router.post('/getProfile', async function (req, res) {
+	var cognitoSub = req.body.cognitoSub;		
+	var returnData = {};
+
+	dataAccessFunctions.getUserFromDB(cognitoSub, function(pageData){
+		if (pageData){
+
+			var rankProgressInfo = gameEngine.getRankFromRating(pageData["rating"]);
+			var experienceProgressInfo = gameEngine.getLevelFromExperience(pageData["experience"]);
+
+			pageData["username"] = pageData["username"].substring(0,15);
+			pageData["playerLevel"] = experienceProgressInfo.level;
+			pageData["levelProgressPercent"] = getProgressBarPercentage(pageData["experience"], experienceProgressInfo.floor, experienceProgressInfo.ceiling) * 100;
+			pageData["expToNext"] = numberWithCommas(experienceProgressInfo.ceiling - pageData["experience"]);
+			pageData["rank"] = rankProgressInfo.rank;
+			pageData["rankFullName"] = getFullRankName(rankProgressInfo.rank);
+			pageData["rankProgressPercent"] = getProgressBarPercentage(pageData["rating"], rankProgressInfo.floor, rankProgressInfo.ceiling) * 100;
+			pageData["nextRank"] = rankProgressInfo.nextRank;
+			pageData["nextRankFullName"] = getFullRankName(rankProgressInfo.nextRank);
+			pageData["ratingToNext"] = rankProgressInfo.ceiling - pageData["rating"];
+			pageData["experience"] = numberWithCommas(pageData["experience"]);
+			pageData["success"] = true;
+
+			res.send(pageData);
+		}
+		else {
+			res.send({success:false});
+		}
+	});	
+});
+
+router.post('/getPlayerSearchResults', async function (req, res) {
+	var searchText = req.body.searchText;		
+	var returnData = [];
+	dataAccessFunctions.searchUserFromDB(searchText, function(searchRes){
+		if (searchRes){			
+			for (var i = 0; i < searchRes.length; i++){
+				if (searchRes[i].USERNAME){
+					returnData.push({cognitoSub:searchRes[i].cognitoSub, username:searchRes[i].USERNAME});
+				}
+				else {
+					logg("ERROR ACQUIRING USERNAME:");
+					logg(searchRes[i]);
+				}
+			}		
+		}
+		res.send(returnData);
+	});	
 });
 
 router.post('/updateUsername', async function (req, res) {
