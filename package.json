@@ -1,7 +1,7 @@
 {
   "name": "racewar3000",
   "version": "1.0.0",
-  "description": "",
+  "description": "1. Setup your AWS credentials\r    1. Install the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)s\r    1. Run `aws configure`\r    1. Enter in your 2-part security credentials (available [here](https://console.aws.amazon.com/iam/home#/security_credentials))\r 1. Create a file at the root directory called `config.ini`. Contents should look like the following:\r     ```ini\r     mongoDbLocation=MONGO_DB_CONNECTION_STRING\r     s3LoggingBucket=rw3000-logs\r     ```\r 1. Open VS Code\r 1. Select `Web Server` or `Game Server`\r    * These options are specified in `.vscode/launch.json`\r 1. Click the green triangle to start debugging",
   "main": "app.js",
   "dependencies": {
     "amazon-cognito-identity-js": "^3.0.14",
@@ -24,10 +24,20 @@
     "node": "4.1.x"
   },
   "devDependencies": {
+    "cssnano": "^4.1.10"
   },
   "scripts": {
     "start": "node app.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/treatmet/NamelessConflict.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/treatmet/NamelessConflict/issues"
+  },
+  "homepage": "https://github.com/treatmet/NamelessConflict#readme"
 }

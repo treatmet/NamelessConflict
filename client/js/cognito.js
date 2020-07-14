@@ -14,21 +14,15 @@ if (window.location.href.indexOf("localhost") > -1)
 	serverHomePage = "/";
 
 
-//includeHTMLHeader();
 initializePage();
 function initializePage(){
-    //showDefaultLoginButtons();
     showLocalElements();
 	populateLeaderboard();
 	populateProfilePage();
 	populateSearchPage();	
 	getTokenFromUrlParameterAndLogin(); 	
-
 }
 
-//Post to server body = 3 tokens
-//First, check if session exists by POST to server. Does it have cog_a set?
-//2, establish connection on POST
 function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
 	var code = getUrlParam("code", "").substring(0,36);
@@ -74,7 +68,6 @@ function getTokenFromUrlParameterAndLogin(){
         }
 		removeUrlParams();
     });
-
 }
 
 function populateSearchPage(){
@@ -126,12 +119,8 @@ function setPcModeAndIsLocalElements(data){
 function populateLeaderboard(){
 	if (document.getElementById('tablePrint')){
 		$.post('/getLeaderboard', {}, function(res,status){
-			console.log("getLeaderboard response:");
-			
-
 			var leaderboardHTML= "<table class='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";
 			for (let i = 0; i < res.length; i++) {
-				console.log(res[i]);
 				leaderboardHTML+="<tr><td style='background-color: #728498; text-align: center; font-weight: bold;'>" + (i + 1) + "</td><td><a href='{{serverHomePage}}user/"+res[i].cognitoSub+"'>" + res[i].username + "</td><td>" + res[i].rating + "</td><td>" + res[i].kills + "</td><td>" + res[i].captures + "</td><td>" + res[i].gamesWon + "</td><td>" + res[i].experience + "</td></tr>";			
 			}		
 			leaderboardHTML = leaderboardHTML.replace(/{{serverHomePage}}/g, serverHomePage);
