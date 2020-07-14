@@ -5,6 +5,7 @@ var player = require(absAppDir + '/app_code/entities/player.js');
 var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
 var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
 var mapEngine = require(absAppDir + '/app_code/engines/mapEngine.js');
+const logEngine = require(absAppDir + '/app_code/engines/logEngine.js');
 
 var secondsSinceLastServerSync = syncServerWithDbInterval - 2;
 var secondsSinceOnlineTimestampUpdate = 0;

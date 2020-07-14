@@ -28,6 +28,22 @@ router.post('/sendPlayerToGameServer', async function (req, res) {
 	res.send({msg:"Request received"});
 });
 
+router.post('/getServerList', async function (req, res) {
+	console.log("GET SERVER LIST");
+	var serverList = [];
+
+	dataAccessFunctions.getPublicServersFromDB(function(servers){
+		servers.sort(compareCurrentPlayerSize);
+		
+		for (let j = 0; j < servers.length; j++) {
+			var currentPlayers = getCurrentPlayersFromUsers(servers[j].currentUsers).length;
+			serverList.push({url:servers[j].url, serverName:servers[j].serverName, gametype:servers[j].gametype, currentPlayers:currentPlayers, maxPlayers:servers[j].maxPlayers});			
+		}
+		
+		res.send(serverList);
+	});	
+});
+
 router.post('/playNow', async function (req, res) {
 	if (myUrl == ""){
 		logg("res.send: " + "Url for current server not set");

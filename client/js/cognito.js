@@ -14,29 +14,20 @@ if (window.location.href.indexOf("localhost") > -1)
 	serverHomePage = "/";
 
 
-//includeHTMLHeader();
 initializePage();
 function initializePage(){
-    //showDefaultLoginButtons();
     showLocalElements();
-    getTokenFromUrlParameterAndLogin(); 	
-	setPlayerSearchText();
+	populateLeaderboard();
+	populateProfilePage();
+	populateSearchPage();	
+	getTokenFromUrlParameterAndLogin(); 	
 }
 
-//Post to server body = 3 tokens
-//First, check if session exists by POST to server. Does it have cog_a set?
-//2, establish connection on POST
 function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
 	var code = getUrlParam("code", "").substring(0,36);
 	var cog_a = getUrlParam("cog_a", "");
 	var cog_r = getUrlParam("cog_r", "");
-	console.log("Got cog_a from url: " + cog_a);
-
-	console.log("Grabbed code from URL: " + code);
-	if (code == ""){
-		console.log("Unable to get Url parameter: 'code'");
-	}
 	
     const validateTokenEndpoint = '/validateToken';
     const data = {
@@ -48,48 +39,23 @@ function getTokenFromUrlParameterAndLogin(){
     $.post(validateTokenEndpoint, data, function(data,status){ //validation
         console.log("validateToken response:");
         console.log(data);
-				
-		var redirectUri = "https://rw.treatmetcalf.com/";
-		if (data.isLocal == true){
-			serverHomePage = "/";
-			redirectUri = "https://rw2.treatmetcalf.com/";
-		}
 		
-		if (document.getElementById("logInH")){
-			document.getElementById("logInH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
-			document.getElementById("createAccountH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
-		}
-		if (document.getElementById("logIn")){
-			document.getElementById("logIn").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
-			document.getElementById("createAccount").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
-		}
-		
-		pcMode = data.pcMode;
-		if (data.pcMode == 2){
-			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
-		}
-		else {
-			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
-		}
-		if (document.getElementById("homeLink")){
-			document.getElementById("homeLink").href = serverHomePage;
-		}		
-		
-		
+		setPcModeAndIsLocalElements({isLocal:data.isLocal, pcMode:data.pcMode});
+
         if (data && data.username){
             //Successful Auth
             cognitoSub = data.cognitoSub;
 			console.log('emmiting updateSocketInfo');
 			socket.emit('updateSocketInfo', cognitoSub);
-            username = data.username;		
-			
+            username = data.username;					
             federatedUser = data.federatedUser;
   		
 			if (!data.isWebServer){
 				autoJoinGame = getUrlParam("join", "false");
 			}
+			getServerList();
 			updateProfileLink();
-			showServerLoginButtons();
+			hideServerLoginButtons();
             showAuthorizedLoginButtons();            
             setLocalStorage();
 			getRequests();
@@ -102,7 +68,81 @@ function getTokenFromUrlParameterAndLogin(){
         }
 		removeUrlParams();
     });
+}
 
+function populateSearchPage(){
+	if (document.getElementById('playerSearchPageBox')){
+		$.post('/getPlayerSearchResults', {searchText:getSearchText()}, function(res,status){
+			console.log("getPlayerSearchResults response:");
+			console.log(res);
+			
+			var searchResultsHTML = "";
+			for (var i = 0; i < res.length; i++){
+				searchResultsHTML+="<a href='" + serverHomePage + "user/" + res[i].cognitoSub + "'>" + res[i].username + "</a><br>";
+			}	
+		
+			document.getElementById('searchResults').innerHTML = searchResultsHTML;
+		});
+
+		setPlayerSearchText();
+	}	
+}
+
+function setPcModeAndIsLocalElements(data){
+	var redirectUri = "https://rw.treatmetcalf.com/";
+	if (data.isLocal == true){
+		redirectUri = "https://rw2.treatmetcalf.com/";
+		serverHomePage = "/";
+	}
+	
+	if (document.getElementById("logInH")){
+		document.getElementById("logInH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
+		document.getElementById("createAccountH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
+	}
+	if (document.getElementById("logIn")){
+		document.getElementById("logIn").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
+		document.getElementById("createAccount").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
+	}
+
+	pcMode = data.pcMode;
+	if (pcMode == 2){
+		document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
+	}
+	else {
+		document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
+	}
+	if (document.getElementById("homeLink")){
+		document.getElementById("homeLink").href = serverHomePage;
+	}		
+}
+
+function populateLeaderboard(){
+	if (document.getElementById('tablePrint')){
+		$.post('/getLeaderboard', {}, function(res,status){
+			var leaderboardHTML= "<table class='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";
+			for (let i = 0; i < res.length; i++) {
+				leaderboardHTML+="<tr><td style='background-color: #728498; text-align: center; font-weight: bold;'>" + (i + 1) + "</td><td><a href='{{serverHomePage}}user/"+res[i].cognitoSub+"'>" + res[i].username + "</td><td>" + res[i].rating + "</td><td>" + res[i].kills + "</td><td>" + res[i].captures + "</td><td>" + res[i].gamesWon + "</td><td>" + res[i].experience + "</td></tr>";			
+			}		
+			leaderboardHTML = leaderboardHTML.replace(/{{serverHomePage}}/g, serverHomePage);
+			leaderboardHTML+="</table>";
+		
+			document.getElementById('tablePrint').innerHTML = leaderboardHTML;
+		});
+	}	
+}
+
+
+function getServerList(){
+	$.post('/getServerList', {}, function(data,status){
+		console.log("Get server list response:");
+		console.log(data);		
+
+		var serversHTML = "";
+		for (let j = 0; j < data.length; j++) {
+			serversHTML += '<div class="serverSelectButton" onclick="getJoinableServer({server:\'' + data[j].url + '\'})" style="cursor: pointer;">' + data[j].serverName + '<br><span style="font-size: 12;text-shadow: none;">' + data[j].gametype + ' -- ' + data[j].currentPlayers + '/' + data[j].maxPlayers + ' Players</span></div>';
+		}		
+		document.getElementById("serverList").innerHTML = serversHTML;
+	});
 }
 
 function getJoinParams(){
@@ -210,7 +250,7 @@ function hide(element){
 	}
 }
 
-function showServerLoginButtons(){
+function hideServerLoginButtons(){
 	if (document.getElementById("serverLoginButtons")) {
 		document.getElementById("serverLoginButtons").style.display = "none";
 	}
@@ -434,12 +474,12 @@ function updateRequestsSectionHtml(data){
 
 //Leaves if member, ends party if leader
 function leavePartyButtonClick(userPartyId){
-	const data = {
+	const params = {
 		partyId:userPartyId,
 		cognitoSub:cognitoSub
 	};
 	
-	$.post('/leaveParty', data, function(data,status){
+	$.post('/leaveParty', params, function(data,status){
 		console.log("leaveParty endpoint response from server:");
 		console.log(data);		
 		window.location.reload();
@@ -447,13 +487,13 @@ function leavePartyButtonClick(userPartyId){
 }
 
 function friendAcceptClick(id){
-	const data = {
+	const params = {
 		type:"friend",
 		id:id,
 		accept:true
 	};
 	
-	$.post('/requestResponse', data, function(data,status){
+	$.post('/requestResponse', params, function(data,status){
 		console.log("requestResponse (friend accept) endpoint response from server:");
 		console.log(data);		
 		window.location.reload();
@@ -461,13 +501,13 @@ function friendAcceptClick(id){
 }
 
 function partyAcceptClick(id){
-	const data = {
+	const params = {
 		type:"party",
 		id:id,
 		accept:true
 	};
 	
-	$.post('/requestResponse', data, function(data,status){
+	$.post('/requestResponse', params, function(data,status){
 		console.log("requestResponse (party accept) endpoint response from server:");
 		console.log(data);		
 		window.location.reload();
@@ -475,36 +515,69 @@ function partyAcceptClick(id){
 }
 
 function requestDeclineClick(id){
-	const data = {
+	const params = {
 		id:id,
 		accept:false
 	};
 	
-	$.post('/requestResponse', data, function(data,status){
+	$.post('/requestResponse', params, function(data,status){
 		console.log("requestResponse (decline) endpoint response from server:");
 		console.log(data);		
 		window.location.reload();
 	});
 }
 
+function populateProfilePage(){
+	const params = {
+		cognitoSub:getViewedProfileCognitoSub()
+	}
+
+	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){	
+		$.post('/getProfile', params, function(data,status){
+			if (!data.success){
+				document.getElementById("mainContent").innerHTML = '<div id="fullScreenError" class="sectionTitle">Invalid User</div>';
+			}
+			else {
+
+				console.log("getProfilePage response from server:");
+				console.log(data);		
+
+				var mainContentHTML = document.getElementById("mainContent").innerHTML;
+				for (var element in data){
+					var regex = new RegExp("{{" + element + "}}","g");
+					mainContentHTML = mainContentHTML.replace(regex, data[element]);
+				}
+
+				document.getElementById("mainContent").innerHTML = mainContentHTML;
+			}
+		});
+	}	
+}
+
 function getViewedProfileCognitoSub(){
 	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
 		return getUrl().split('/user/')[1];
 	}	
+	return "";
+}
+
+function getSearchText(){
+	if (document.getElementById('playerSearchPageBox') && getUrl().indexOf('/search/') > -1){
+		return getUrl().split('/search/')[1];
+	}	
+	return "";
 }
 
 function checkViewedProfileIsFriendOrParty(){
 	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
 		console.log("passed profile page check, making call with:");
 	
-		const data = {
+		const params = {
 			callerCognitoSub:cognitoSub,
 			targetCognitoSub:getViewedProfileCognitoSub()
 		};
-		
-		console.log(data);
 	
-	    $.post('/getPlayerRelationship', data, function(data,status){
+	    $.post('/getPlayerRelationship', params, function(data,status){
 			console.log("getPlayerRelationship response:");
 			console.log(data);
 			if (data.friends == true){
@@ -638,9 +711,7 @@ function removeUrlParams(){
 }
 
 function setPlayerSearchText(){
-	if (document.getElementById('playerSearchPageBox')){
-		playerSearchPageBox.value = window.location.href.split("/search/")[1];
-	}
+	document.getElementById('playerSearchPageBox').value = getSearchText();
 }
 
 /////////////////////////////EDIT USER PROFILE FUNCTIONS////////////////////////////////////////////

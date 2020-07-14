@@ -185,14 +185,6 @@ socket.on('pingResponse', function (socketId){
 		waitingOnPing = false;
 	}		
 });
-		
-socket.on('populateLoginPage', function(leaderboard, pcModeValue){
-	//Leaderboard
-	leaderboard = leaderboard.replace(/{{serverHomePage}}/g, serverHomePage);
-	if (document.getElementById('tablePrint')){
-		document.getElementById('tablePrint').innerHTML = leaderboard;	
-	}
-});
 
 socket.on('reloadHomePage', function(){
 	window.location.href = serverHomePage;
@@ -724,7 +716,7 @@ var Player = function(id){
 	}
 	Player.list[id] = self;
 }
-Player.list = {};
+Player.list = [];
 var orderedPlayerList = [];
 
 function updateOrderedPlayerList(){
@@ -4744,7 +4736,7 @@ setInterval(
 			clientTimeoutTicker = clientTimeoutSeconds;
 		}
 		
-		if (document.getElementById("leftMenu").style.display != 'none'){
+		if (document.getElementById("leftMenu") && document.getElementById("leftMenu").style.display != 'none'){
 			newTipTicker--;
 			if (newTipTicker < 1){
 				newTipTicker = newTipSeconds;

@@ -274,6 +274,9 @@ div#progressColumn {
 	color:white;
 }
 
+#searchResults a:hover{
+    color: #b0b0b0;
+}
 
 .sectionTitle {
     display: inline-block;
