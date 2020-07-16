@@ -1,22 +1,5 @@
 <head>
 	<title>R-Wars - User Profile</title>
-	<html style="background-color: #303030;"><head>
-	<link href='https://fonts.googleapis.com/css?family=Armata' rel='stylesheet'>
-	<link href='https://fonts.googleapis.com/css?family=Changa' rel='stylesheet'>
-	<link href='https://fonts.googleapis.com/css?family=Electrolize' rel='stylesheet'>
-	<link href='https://fonts.googleapis.com/css?family=Iceberg' rel='stylesheet'>
-	<link href='https://fonts.googleapis.com/css?family=Iceland' rel='stylesheet'>
-	<link type="text/css" rel="stylesheet" href="/client/style/style.css">
-	
-	<!--AUTH-->
-
-	<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script> 
-	<script src="/client/js/amazon-cognito-auth.min.js"></script>
-	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script> 
-	<script src="/client/js/amazon-cognito-identity.min.js"></script>   
-	<script src="https://apis.google.com/js/platform.js" async defer></script>
-	<meta name="google-signin-client_id" content="1028026572877-som86lnjg647590thv3bs64ht6hu7lel.apps.googleusercontent.com">
-		
 </head>
 
 <body style="margin: 0px;overflow-y: hidden;overflow-x: hidden;">
@@ -135,10 +118,6 @@
 				</tr>
 			</table>
 		</div>
-		
-
-
-
 	</div>
 
 	<div id="progressColumn" class="columnSection">
@@ -169,45 +148,13 @@
 	<div id="customizationColumn" class="columnSection">
 		Aesthetic player customizations coming soon.
 	</div>
-
 </div>
-
-
-
-
-
-<!-------CANVAS-------->
-<div id="canvasDiv" style="display:none; margin: auto; width: 1100px; margin-top: 8px;">	
-	<canvas id="ctx" width="1100" height="900" style="border:2px solid #000000;background-color: #131313;"></canvas>
-	<!--<canvas id="ctx2" width="1100" height="900" style="border: 2px solid rgb(0, 0, 0);margin: -2px;position: absolute; top: 5px;"></canvas> -->
-
-	<div id="chat-window" style="width: 400px; position:absolute; margin-top: -200px;">
-		<div id="chat-text" style="overflow:hidden; width:400px; height:170px; color: white; 
-		text-shadow: 1px 0px 1px #333, 1px 0px 1px #333, 0px 1px 1px #333, 0px -1px 1px #333, -1px -1px 0px #333, 1px -1px 0px #333, -1px 1px 0px #333, 1px 1px 0px #333;		
-		padding-left: 5px;
-		">
-		<!---HARDER TEXT OUTLINE:text-shadow: -1px 0px 0 #333, 1px 0px 0 #333, 0px 1px 0 #333, 0px -1px 0 #333, -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333, 1px 1px 0 #333; -->
-		<!---SOFTER TEXT OUTLINE: text-shadow: 1px 0px 1px #333, 1px 0px 1px #333, 0px 1px 1px #333, 0px -1px 1px #333, -1px -1px 0px #333, 1px -1px 0px #333, -1px 1px 0px #333, 1px 1px 0px #333; -->
-			<div></div>
-		</div>
-		<form id="chat-form" style="padding-left: 5px;">
-			<input id="chat-input" type="text" maxlength="50" autocomplete="off" style="display:none; width:300px; background: rgba(255, 255, 255, 0.18);
-			color: white; 
-			text-shadow: 1px 0px 1px #444, 1px 0px 1px #444, 0px 1px 1px #444, 0px -1px 1px #444, -1px -1px 0px #444, 1px -1px 0px #444, -1px 1px 0px #444, 1px 1px 0px #444;
-			">
-		</form>
-	</div> <!--End Chat Window -->
-
-</div> <!--End Canvas -->
 
 <div id="bottom"></div>
 
-<div id="newDiv" style="margin: auto; width: 200px;">
-	<!--<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>-->
-	<script src="/client/js/socket.io-1.4.5.js"></script>
-	<script src="/client/js/howler.core.js"></script>
+<div id="code" style="margin: auto; width: 200px;">
 	<script src="/client/js/cognito.js"></script>
-	<script src="/client/js/code.js"></script>	
+	<script src="/client/js/pages/profile.js"></script>	
 </div>
 
 </body></html>

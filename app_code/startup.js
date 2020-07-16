@@ -20,7 +20,7 @@ serv.listen(port);
 app.use(userRouter);
 app.use(serverRouter);
 app.use(pageRouter);
-app.use('/client',express.static(absAppDir + '/client'));
+//app.use('/client',express.static(absAppDir + '/client'));
 app.use('/',express.static(absAppDir + '/')); //To allow for favicon.ico
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 app.use(cookieParser());
