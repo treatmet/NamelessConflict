@@ -2,7 +2,8 @@ const userRouter = require(absAppDir + '/app_code/routes/userController.js');
 const serverRouter = require(absAppDir + '/app_code/routes/serverController.js');
 const pageRouter = require(absAppDir + '/app_code/routes/pageController.js');
 
-const logEngine = require(absAppDir + '/app_code/engines/logEngine.js');
+//const logEngine = require(absAppDir + '/app_code/engines/logEngine.js');
+import * as logEngine from absAppDir + '/app_code/engines/logEngine.js';
 const mapEngine = require(absAppDir + '/app_code/engines/mapEngine.js');
 require(absAppDir + '/app_code/engines/socketEngine.js');
 
