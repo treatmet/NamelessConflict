@@ -34,6 +34,7 @@ export class IamStack extends Stack {
         ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess"),
         ManagedPolicy.fromAwsManagedPolicyName("CloudWatchFullAccess"),
         ManagedPolicy.fromAwsManagedPolicyName("AmazonCognitoPowerUser"),
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonECS_FullAccess"),
       ]
     });
 
