@@ -1,4 +1,4 @@
-const page = "playerSearch";
+page = "playerSearch";
 initializePage();
 function initializePage(){
     showLocalElements();

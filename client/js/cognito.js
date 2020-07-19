@@ -2,26 +2,19 @@ console.log("cognito.js loading");
 var socket = io();
 const cognitoClientId = '70ru3b3jgosqa5fpre6khrislj';
 const cognitoPoolId = 'us-east-2_SbevJL5zt';
-export var page = "";
-export var cognitoSub = "";
-export var username = "";
-export var partyId = "";
-export var federatedUser = false;
-export var pageLoaded = false;
-export var autoJoinGame = "false";
-export var pcMode = 1;
-export var serverHomePage = "https://rw.treatmetcalf.com/";
+var page = "";
+var cognitoSub = "";
+var username = "";
+var partyId = "";
+var federatedUser = false;
+var pageLoaded = false;
+var autoJoinGame = "false";
+var pcMode = 1;
+var serverHomePage = "https://rw.treatmetcalf.com/";
 if (window.location.href.indexOf("localhost") > -1)
 	serverHomePage = "/";
 
-export function updatePage(newPage){
-	page = newPage;
-}
-window.logOutClick = logOutClick;
-window.getJoinableServer = getJoinableServer;
-
-
-export function getTokenFromUrlParameterAndLogin(){
+function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
 	var code = getUrlParam("code", "").substring(0,36);
 	var cog_a = getUrlParam("cog_a", "");
@@ -425,7 +418,7 @@ function logOutClick(){
     });
 }
 
-export function showLocalElements(){
+function showLocalElements(){
   $(document).ready(function() {
     if (window.location.href.indexOf("localhost") > -1) {
       //document.getElementById("localPlayNow").style.display = "";

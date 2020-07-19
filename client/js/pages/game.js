@@ -1,4 +1,4 @@
-const page = "game";
+page = "game";
 initializePage();
 function initializePage(){
 	getTokenFromUrlParameterAndLogin(); 	

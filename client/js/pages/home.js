@@ -1,12 +1,11 @@
 console.log("home.js loading");
-import * as cognitoCode from "/client/js/cognito.js";
 
-cognitoCode.updatePage("home");
+page = "home";
 initializePage();
 function initializePage(){
-    cognitoCode.showLocalElements();
+    showLocalElements();
 	populateLeaderboard();
-	cognitoCode.getTokenFromUrlParameterAndLogin(); 
+	getTokenFromUrlParameterAndLogin(); 
     getServerList();
 }
 
@@ -17,7 +16,7 @@ function populateLeaderboard(){
 			for (let i = 0; i < res.length; i++) {
 				leaderboardHTML+="<tr><td style='background-color: #728498; text-align: center; font-weight: bold;'>" + (i + 1) + "</td><td><a href='{{serverHomePage}}user/"+res[i].cognitoSub+"'>" + res[i].username + "</td><td>" + res[i].rating + "</td><td>" + res[i].kills + "</td><td>" + res[i].captures + "</td><td>" + res[i].gamesWon + "</td><td>" + res[i].experience + "</td></tr>";			
 			}		
-			leaderboardHTML = leaderboardHTML.replace(/{{serverHomePage}}/g, cognitoCode.serverHomePage);
+			leaderboardHTML = leaderboardHTML.replace(/{{serverHomePage}}/g, serverHomePage);
 			leaderboardHTML+="</table>";
 		
 			document.getElementById('tablePrint').innerHTML = leaderboardHTML;

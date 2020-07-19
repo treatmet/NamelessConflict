@@ -1,4 +1,4 @@
-const page = "profile";
+page = "profile";
 initializePage();
 function initializePage(){
     showLocalElements();
