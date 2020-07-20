@@ -1,0 +1,43 @@
+{
+  "name": "game",
+  "version": "1.0.0",
+  "description": "1. Setup your AWS credentials\r    1. Install the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)s\r    1. Run `aws configure`\r    1. Enter in your 2-part security credentials (available [here](https://console.aws.amazon.com/iam/home#/security_credentials))\r 1. Create a file at the root directory called `config.ini`. Contents should look like the following:\r     ```ini\r     mongoDbLocation=MONGO_DB_CONNECTION_STRING\r     s3LoggingBucket=rw3000-logs\r     ```\r 1. Open VS Code\r 1. Select `Web Server` or `Game Server`\r    * These options are specified in `.vscode/launch.json`\r 1. Click the green triangle to start debugging",
+  "main": "app.js",
+  "dependencies": {
+    "amazon-cognito-identity-js": "^3.0.14",
+    "aws-sdk": "^2.500.0",
+    "cognito-jwt-token-validator": "^1.0.0",
+    "cookie-parser": "^1.4.4",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "jwk-to-pem": "^2.0.1",
+    "mongojs": "^2.6.0",
+    "node-fetch": "^2.6.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
+    "s3-streamlogger": "^1.5.0",
+    "socket.io": "^1.7.4",
+    "util": "^0.12.1",
+    "winston": "^3.2.1"
+  },
+  "engines": {
+    "node": "4.1.x"
+  },
+  "devDependencies": {
+    "cssnano": "^4.1.10"
+  },
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/treatmet/NamelessConflict.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/treatmet/NamelessConflict/issues"
+  },
+  "homepage": "https://github.com/treatmet/NamelessConflict#readme"
+}
