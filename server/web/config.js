@@ -1,5 +1,3 @@
-const helpers = require(absAppDir + '/server/shared/helperFunctions.js'); //Global helper functions
-
 global.express = require('express');
 global.app = express();
 global.serv = require('http').Server(app);
@@ -8,7 +6,7 @@ global.serv = require('http').Server(app);
 global.fs = require('fs');
 global.util = require('util')
 
-global.config = parseINIString(fs.readFileSync(absAppDir + 'server/shared/config.ini', 'utf8'));
+global.config = parseINIString(fs.readFileSync(absAppDir + '/server/shared/config.ini', 'utf8'));
 
 //--------------------------------SERVER CONFIGURATION-----------------------------------------------------
 global.debug = true;
@@ -34,5 +32,7 @@ global.myIP = "";
 global.myUrl = "";
 global.port = 3000;
 global.serverHomePage = "/";
+global.isWebServer = false;
+global.isLocal = false;
 
 global.SOCKET_LIST = [];

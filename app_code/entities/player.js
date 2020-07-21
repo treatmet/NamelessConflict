@@ -1840,6 +1840,11 @@ function getPlayerFromCognitoSub(searchingCognitoSub){
 	return null;
 }
 
+var playerDisconnect = function(id){
+    if (Player.list[id])
+        Player.onDisconnect(SOCKET_LIST[id]);
+}
+
 //eventTrigger Database push update db
 function playerEvent(playerId, event){
 	if (!gameOver && Player.list[playerId]){
@@ -1986,10 +1991,7 @@ var getPlayerById = function(id){
     return Player.list[id];
 }
 
-var playerDisconnect = function(id){
-    if (Player.list[id])
-        Player.onDisconnect(SOCKET_LIST[id]);
-}
+
 
 function sendChatToAll(text){
 	for(var i in SOCKET_LIST){

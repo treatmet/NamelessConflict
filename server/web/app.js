@@ -3,6 +3,9 @@
 
 'use strict';
 global.absAppDir = __dirname + "/../..";
+require(absAppDir + '/server/shared/helperFunctions.js');
+require(absAppDir + '/server/web/config.js');
+require(absAppDir + '/server/shared/engines/logEngine.js');
 
 //Crash handling
 process
@@ -18,5 +21,4 @@ process
   });
 
 //---------------------------------STARTUP---------------------------------------
-require(absAppDir + '/server/admin/config.js');
-require(absAppDir + '/server/admin/startup.js');
+require(absAppDir + '/server/web/startup.js');

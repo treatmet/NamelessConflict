@@ -2,7 +2,6 @@ const mongojs = require('mongojs');
 const ObjectId = require('mongodb').ObjectID;
 var db = mongojs(config.mongoDbLocation, ['RW_USER','RW_USER_PROG','RW_SERV','RW_FRIEND', 'RW_REQUEST']);
 
-
 var dbUpdateAwait = function(table, action, searchObj, updateObj, cb){
 	if (action == "set"){
 		db[table].update(searchObj, {$set: updateObj}, {multi: true}, function (err, res, status) {

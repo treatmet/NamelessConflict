@@ -1,12 +1,8 @@
-
 const express = require('express');
 const router = express.Router();
 const cookieParser = require('cookie-parser');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 router.use(cookieParser());
-
-var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
-var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
 
 //Homepage
 router.get('/', function(req, res) {

@@ -1,7 +1,6 @@
-var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
-var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
-var authenticationEngine = require(absAppDir + '/app_code/engines/authenticationEngine.js');
-var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
+var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
+var dataAccessFunctions = require(absAppDir + '/server/shared/data_access/dataAccessFunctions.js');
+var authenticationEngine = require(absAppDir + '/server/shared/engines/authenticationEngine.js');
 
 const express = require('express');
 const router = express.Router();
@@ -361,8 +360,8 @@ router.post('/getProfile', async function (req, res) {
 	dataAccessFunctions.getUserFromDB(cognitoSub, function(pageData){
 		if (pageData){
 
-			var rankProgressInfo = gameEngine.getRankFromRating(pageData["rating"]);
-			var experienceProgressInfo = gameEngine.getLevelFromExperience(pageData["experience"]);
+			var rankProgressInfo = getRankFromRating(pageData["rating"]);
+			var experienceProgressInfo = getLevelFromExperience(pageData["experience"]);
 
 			pageData["username"] = pageData["username"].substring(0,15);
 			pageData["playerLevel"] = experienceProgressInfo.level;

@@ -1,8 +1,9 @@
-const userRouter = require(absAppDir + '/server/admin/controllers/userController.js');
-const serverRouter = require(absAppDir + '/server/admin/controllers/serverController.js');
-const pageRouter = require(absAppDir + '/server/admin/controllers/pageController.js');
-
 const logEngine = require(absAppDir + '/server/shared/engines/logEngine.js');
+
+const userRouter = require(absAppDir + '/server/web/controllers/userController.js');
+const serverRouter = require(absAppDir + '/server/web/controllers/serverController.js');
+const pageRouter = require(absAppDir + '/server/web/controllers/pageController.js');
+
 require(absAppDir + '/server/shared/engines/socketEngine.js');
 
 var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');

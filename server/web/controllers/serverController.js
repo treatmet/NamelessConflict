@@ -1,8 +1,6 @@
-var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
-var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
-var authenticationEngine = require(absAppDir + '/app_code/engines/authenticationEngine.js');
-var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
-var player = require(absAppDir + '/app_code/entities/player.js');
+var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
+var dataAccessFunctions = require(absAppDir + '/server/shared/data_access/dataAccessFunctions.js');
+var authenticationEngine = require(absAppDir + '/server/shared/engines/authenticationEngine.js');
 
 const express = require('express');
 const router = express.Router();
@@ -42,44 +40,6 @@ router.post('/getServerList', async function (req, res) {
 		
 		res.send(serverList);
 	});	
-});
-
-router.post('/playNow', async function (req, res) {
-	if (myUrl == ""){
-		logg("res.send: " + "Url for current server not set");
-		res.send({autoJoin:false, error:"Url for current server not set"});
-		return;
-	}
-	/*req.body
-	{
-	}*/
-	
-	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
-	
-	//Check if server is expecting this incoming user
-	var params = {url:myUrl, privateServer:false};
-	var approvedToJoinServer = false;
-	
-	dataAccess.dbFindOptionsAwait("RW_SERV", params, {sort:{serverNumber: 1}}, async function(err, serv){	
-		if (serv && serv[0]){
-			var incomingUsers = serv[0].incomingUsers || "[]";
-			for (var u = 0; u < incomingUsers.length; u++){
-				if (incomingUsers[u].cognitoSub == authorizedUser.cognitoSub){
-					approvedToJoinServer = true;
-					
-					res.status(200);
-					logg("res.send: " + "Server " + myUrl + " welcomes you!");
-					res.send({msg:"Server " + myUrl + " welcomes you!", success:true});					
-					player.joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team, incomingUsers[u].partyId); //Join game
-					break;
-				}
-			}	
-		}
-		if (!approvedToJoinServer){
-			logg("res.send: " + "Error: The server was not expecting you");
-			res.send({msg:"Error: The server was not expecting you", success:false}); //Error
-		}
-	});
 });
 
 router.post('/getJoinableServer', async function (req, res) {

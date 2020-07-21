@@ -157,6 +157,8 @@ global.myIP = "";
 global.myUrl = "";
 global.port = 3000;
 global.serverHomePage = "/";
+global.isWebServer = false;
+global.isLocal = false;
 
 //Game global variables
 global.pause = false;
@@ -168,8 +170,6 @@ global.gameSecondsLength = 0;
 global.map = "longest";
 global.gametype = "ctf";
 global.maxPlayers = 14;
-global.isWebServer = false;
-global.isLocal = false;
 global.privateServer = false;
 global.scoreToWin = 0;
 global.serverNumber = 1;

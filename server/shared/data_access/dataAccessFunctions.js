@@ -1,5 +1,4 @@
-var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
-var player = require(absAppDir + '/app_code/entities/player.js');
+var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
 
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
 var getUserFromDB = function(cognitoSub,cb){
@@ -716,25 +715,6 @@ function checkForUnhealthyServers(){
 	});
 }
 
-var getAllPlayersFromDB = function(cb){
-	var cognitoSubsInGame = [];
-	var playerList = player.getPlayerList();
-
-	for (var i in playerList){
-		cognitoSubsInGame.push(playerList[i].cognitoSub);
-	}
-	
-	var searchParams = { cognitoSub: { $in: cognitoSubsInGame } };	
-	dataAccess.dbFindAwait("RW_USER", searchParams, async function(err, res){
-		if (res && res[0]){
-			cb(res);
-		}
-		else {
-			cb(false);
-		}
-	});		
-}
-
 module.exports.getUserFromDB = getUserFromDB;
 module.exports.getAllUsersOnServer = getAllUsersOnServer;
 module.exports.getPartyForUser = getPartyForUser;
@@ -764,5 +744,3 @@ module.exports.dbGameServerUpdate = dbGameServerUpdate;
 module.exports.syncGameServerWithDatabase = syncGameServerWithDatabase;
 module.exports.checkForUnhealthyServers = checkForUnhealthyServers;
 module.exports.addUser = addUser;
-module.exports.getAllPlayersFromDB = getAllPlayersFromDB;
-
