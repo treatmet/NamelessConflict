@@ -1,7 +1,6 @@
 const io = require('socket.io')(serv,{});
 const dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
 const dataAccessFunctions = require(absAppDir + '/server/shared/data_access/dataAccessFunctions.js');
-const player = require(absAppDir + '/server/game/entities/player.js');
 
 io.sockets.on('connection', function(socket){
 	socket.id = Math.random();
@@ -39,8 +38,7 @@ io.sockets.on('connection', function(socket){
 	});
 
 	socket.on('disconnect', function(){
-		logg("Socket " + socket.id + " disconnected.");
-		player.playerDisconnect(socket.id);
+		logg("Socket " + socket.id + " disconnected. SOCKET");
 		delete SOCKET_LIST[socket.id];		
 	});
 }); //END socket.on(connection)

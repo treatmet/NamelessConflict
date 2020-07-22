@@ -5,7 +5,7 @@
   "main": "app.js",
   "dependencies": {
     "amazon-cognito-identity-js": "^3.0.14",
-    "aws-sdk": "^2.500.0",
+    "aws-sdk": "^2.718.0",
     "cognito-jwt-token-validator": "^1.0.0",
     "cookie-parser": "^1.4.4",
     "express": "^4.17.1",
@@ -14,8 +14,8 @@
     "mongojs": "^2.6.0",
     "node-fetch": "^2.6.0",
     "request": "^2.88.0",
-    "request-promise": "^4.2.4",
-    "s3-streamlogger": "^1.5.0",
+    "request-promise": "^4.2.6",
+    "s3-streamlogger": "^1.7.0",
     "socket.io": "^1.7.4",
     "util": "^0.12.1",
     "winston": "^3.2.1"
@@ -27,7 +27,7 @@
     "cssnano": "^4.1.10"
   },
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js 3000"
   },
   "author": "",
   "license": "ISC",

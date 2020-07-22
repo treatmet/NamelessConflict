@@ -1731,6 +1731,13 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 		}
 	});
 
+	socket.on('disconnect', function(){
+		logg("Socket " + socket.id + " disconnected. PLAYER");
+		playerDisconnect(socket.id);
+		if (SOCKET_LIST[socket.id])
+			delete SOCKET_LIST[socket.id];		
+	});
+
 	//Server commands
 	socket.on('evalServer', function(data){
 		//socket = socketBak;
@@ -2294,24 +2301,24 @@ function Discharge(player){
 	player.liveShot = true;
 }
 
-Player.onDisconnect = function(socket){
-	if (Player.list[socket.id]){
-		logg(Player.list[socket.id].name + " disconnected.");
-		if (Player.list[socket.id].holdingBag == true){
-			if (Player.list[socket.id].team == "white"){
+Player.onDisconnect = function(id){
+	if (Player.list[id]){
+		logg(Player.list[id].name + " disconnected.");
+		if (Player.list[id].holdingBag == true){
+			if (Player.list[id].team == "white"){
 				bagBlue.captured = false;
 				updateMisc.bagBlue = bagBlue;
 			}
-			else if (Player.list[socket.id].team == "black"){
+			else if (Player.list[id].team == "black"){
 				bagRed.captured = false;
 				updateMisc.bagRed = bagRed;
 			}
 		}
-		sendChatToAll(Player.list[socket.id].name + " has disconnected.");
+		sendChatToAll(Player.list[id].name + " has disconnected.");
 	}
-	delete Player.list[socket.id];
+	delete Player.list[id];
 	for(var i in SOCKET_LIST){
-		SOCKET_LIST[i].emit('removePlayer', socket.id);
+		SOCKET_LIST[i].emit('removePlayer', id);
 	}	
 	gameEngine.ensureCorrectThugCount();
 	gameEngine.assignSpectatorsToTeam(false);
@@ -2475,7 +2482,7 @@ var getPlayerById = function(id){
 
 var playerDisconnect = function(id){
     if (Player.list[id])
-        Player.onDisconnect(SOCKET_LIST[id]);
+        Player.onDisconnect(id);
 }
 
 function sendChatToAll(text){

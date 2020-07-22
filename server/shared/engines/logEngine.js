@@ -11,7 +11,6 @@ var reinitStream = function(){
 	if (isWebServer){
 		name_format = "WEBADMIN_" + name_format;
 	}
-	
 
 	var reinitYear = (new Date().getUTCFullYear()).toString();
 	var reinitMonth = (new Date().getUTCMonth()+1).toString();
@@ -63,7 +62,7 @@ global.logg = function(msg) {
 	console.log(logMsgText);	
 	if (s3stream){
 		s3stream.write(logMsgText+'\r\n');
-	}	
+	}
 }
 
 module.exports.reinitStream = reinitStream;
