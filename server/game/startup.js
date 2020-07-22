@@ -1,13 +1,9 @@
-const userRouter = require(absAppDir + '/app_code/routes/userController.js');
-const serverRouter = require(absAppDir + '/app_code/routes/serverController.js');
-const pageRouter = require(absAppDir + '/app_code/routes/pageController.js');
-
-const logEngine = require(absAppDir + '/app_code/engines/logEngine.js');
-const mapEngine = require(absAppDir + '/app_code/engines/mapEngine.js');
-require(absAppDir + '/app_code/engines/socketEngine.js');
-
-var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
-
+const gameRouter = require(absAppDir + '/server/game/controllers/gameController.js');
+const userRouter = require(absAppDir + '/server/shared/controllers/userController.js');
+const logEngine = require(absAppDir + '/server/shared/engines/logEngine.js');
+const mapEngine = require(absAppDir + '/server/game/engines/mapEngine.js');
+require(absAppDir + '/server/shared/engines/socketEngine.js');
+var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
 const os = require('os');
 const ifaces = os.networkInterfaces();
 const cookieParser = require('cookie-parser');
@@ -17,9 +13,8 @@ processArgs();
 testDB();
 
 serv.listen(port);
+app.use(gameRouter);
 app.use(userRouter);
-app.use(serverRouter);
-app.use(pageRouter);
 //app.use('/client',express.static(absAppDir + '/client'));
 app.use('/', express.static(absAppDir + '/')); //To allow for favicon.ico
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
@@ -45,6 +40,7 @@ function testDB(){
 }
 
 function processArgs(){
+	isWebServer = false;
 	logg("Command line arguments:");
 	for (let j = 0; j < process.argv.length; j++) {
 		if (j >= 2){
@@ -54,10 +50,6 @@ function processArgs(){
 				port = process.argv[j];
 			}
 			else if (j == 3 && process.argv[j] == "true"){
-				logg("Updating app to run as an admin webserver: " + process.argv[j]);
-				isWebServer = true;
-			}
-			else if (j == 4 && process.argv[j] == "true"){
 				logg("Updating app to run locally: " + process.argv[j]);
 				isLocal = true;
 			}
@@ -118,6 +110,7 @@ function getIP(){
 
 //Get IP Address for RW_SERV (AWS)
 function getAwsIp() {
+	const request = require('request-promise');
 	request('http://169.254.169.254/latest/meta-data/public-ipv4', function (error, response, body) {
 		if (!error && response.statusCode === 200 && response.body) {
 			myIP = response.body;

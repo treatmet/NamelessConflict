@@ -1,13 +1,9 @@
 const logEngine = require(absAppDir + '/server/shared/engines/logEngine.js');
-
-const userRouter = require(absAppDir + '/server/web/controllers/userController.js');
+const userRouter = require(absAppDir + '/server/shared/controllers/userController.js');
 const serverRouter = require(absAppDir + '/server/web/controllers/serverController.js');
 const pageRouter = require(absAppDir + '/server/web/controllers/pageController.js');
-
 require(absAppDir + '/server/shared/engines/socketEngine.js');
-
 var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
-
 const os = require('os');
 const ifaces = os.networkInterfaces();
 const cookieParser = require('cookie-parser');
@@ -65,23 +61,6 @@ function processArgs(){
 		getAwsIp();
 		serverHomePage = "https://rw.treatmetcalf.com/";
 	}
-
-	if (port == "3001"){
-		gametype = "ctf";
-		maxPlayers = 14;
-	}
-	else if (port == "3002"){
-		gametype = "ctf";
-		maxPlayers = 8;
-	}
-	else if (port == "3003"){
-		gametype = "slayer";
-		maxPlayers = 14;
-	}
-	else if (port == "3004"){
-		gametype = "slayer";
-		maxPlayers = 8;
-	}
 }
 
 //Get IP Address for RW_SERV (localhost)
@@ -112,6 +91,7 @@ function getIP(){
 
 //Get IP Address for RW_SERV (AWS)
 function getAwsIp() {
+	const request = require('request-promise');
 	request('http://169.254.169.254/latest/meta-data/public-ipv4', function (error, response, body) {
 		if (!error && response.statusCode === 200 && response.body) {
 			myIP = response.body;

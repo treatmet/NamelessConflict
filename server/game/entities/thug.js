@@ -1,7 +1,7 @@
-var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
-var Block = require(absAppDir + '/app_code/entities/block.js');
-var entityHelpers = require(absAppDir + '/app_code/entities/_entityHelpers.js');
-var player = require(absAppDir + '/app_code/entities/player.js');
+var gameEngine = require(absAppDir + '/server/game/engines/gameEngine.js');
+var block = require(absAppDir + '/server/game/entities/block.js');
+var entityHelpers = require(absAppDir + '/server/game/entities/_entityHelpers.js');
+var player = require(absAppDir + '/server/game/entities/player.js');
 
 var Thug = function(id, team, x, y){
 	var self = {
@@ -168,50 +168,51 @@ var Thug = function(id, team, x, y){
 	}
 	
 	self.checkForBlockCollision = function(){
-		for (var i in Block.list){
-			if (self.x > Block.list[i].x && self.x < Block.list[i].x + Block.list[i].width && self.y > Block.list[i].y && self.y < Block.list[i].y + Block.list[i].height){												
-				if (Block.list[i].type == "normal" || Block.list[i].type == "red" || Block.list[i].type == "blue"){	
+		var blockList = block.getBlockList();
+		for (var i in blockList){
+			if (self.x > blockList[i].x && self.x < blockList[i].x + blockList[i].width && self.y > blockList[i].y && self.y < blockList[i].y + blockList[i].height){												
+				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){	
 					//absolutevalue		
-					var overlapTop = Math.abs(Block.list[i].y - self.y);  
-					var overlapBottom = Math.abs((Block.list[i].y + Block.list[i].height) - self.y);
-					var overlapLeft = Math.abs(self.x - Block.list[i].x);
-					var overlapRight = Math.abs((Block.list[i].x + Block.list[i].width) - self.x);
+					var overlapTop = Math.abs(blockList[i].y - self.y);  
+					var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - self.y);
+					var overlapLeft = Math.abs(self.x - blockList[i].x);
+					var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - self.x);
 					
 					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){
-						self.y = Block.list[i].y;
+						self.y = blockList[i].y;
 						updateThugList.push({id:self.id,property:"y",value:self.y});				
 					}
 					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
-						self.y = Block.list[i].y + Block.list[i].height;
+						self.y = blockList[i].y + blockList[i].height;
 						updateThugList.push({id:self.id,property:"y",value:self.y});				
 					}
 					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
-						self.x = Block.list[i].x;
+						self.x = blockList[i].x;
 						updateThugList.push({id:self.id,property:"x",value:self.x});				
 					}
 					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
-						self.x = Block.list[i].x + Block.list[i].width;
+						self.x = blockList[i].x + blockList[i].width;
 						updateThugList.push({id:self.id,property:"x",value:self.x});				
 					}
 				}
-				else if (Block.list[i].type == "pushUp"){
+				else if (blockList[i].type == "pushUp"){
 					self.y -= pushStrength;
-					if (self.y < Block.list[i].y){self.y = Block.list[i].y;}
+					if (self.y < blockList[i].y){self.y = blockList[i].y;}
 					updatePlayerList.push({id:self.id,property:"y",value:self.y});
 				}
-				else if (Block.list[i].type == "pushRight"){
+				else if (blockList[i].type == "pushRight"){
 					self.x += pushStrength;
-					if (self.x > Block.list[i].x + Block.list[i].width){self.x = Block.list[i].x + Block.list[i].width;}
+					if (self.x > blockList[i].x + blockList[i].width){self.x = blockList[i].x + blockList[i].width;}
 					updatePlayerList.push({id:self.id,property:"x",value:self.x});
 				}
-				else if (Block.list[i].type == "pushDown"){
+				else if (blockList[i].type == "pushDown"){
 					self.y += pushStrength;
-					if (self.y > Block.list[i].y + Block.list[i].height){self.y = Block.list[i].y + Block.list[i].height;}
+					if (self.y > blockList[i].y + blockList[i].height){self.y = blockList[i].y + blockList[i].height;}
 					updatePlayerList.push({id:self.id,property:"y",value:self.y});
 				}
-				else if (Block.list[i].type == "pushLeft"){
+				else if (blockList[i].type == "pushLeft"){
 					self.x -= pushStrength;
-					if (self.x < Block.list[i].x){self.x = Block.list[i].x;}
+					if (self.x < blockList[i].x){self.x = blockList[i].x;}
 					updatePlayerList.push({id:self.id,property:"x",value:self.x});
 				}
 			}//End is entity overlapping block
@@ -354,4 +355,44 @@ function respawnThug(thug){
 	thug.respawnTimer = 600;
 }
 
-module.exports = Thug;
+var getThugList = function(){
+	var thugList = [];
+	for (var t in Thug.list){
+		thugList.push(Thug.list[t]);
+	}
+    return thugList;
+}
+
+var getThugById = function(id){
+    return Thug.list[id];
+}
+
+var createThug = function(id, team, x, y){
+	Thug(id, team, x, y);
+}
+
+var clearThugList = function(){
+	Thug.list = [];
+}
+
+var isSafeCoords = function(potentialX, potentialY, team){
+	for (var i in Thug.list){
+		if (Thug.list[i].team != team && Thug.list[i].health > 0 && potentialX >= Thug.list[i].x - threatSpawnRange && potentialX <= Thug.list[i].x + threatSpawnRange && potentialY >= Thug.list[i].y - threatSpawnRange && potentialY <= Thug.list[i].y + threatSpawnRange){																		
+			return false;
+		}
+	}
+	return true;
+}
+
+var runThugEngines = function(){
+	for (var i in Thug.list){
+		Thug.list[i].engine();
+	}	
+}
+
+module.exports.getThugList = getThugList;
+module.exports.getThugById = getThugById;
+module.exports.createThug = createThug;
+module.exports.clearThugList = clearThugList;
+module.exports.isSafeCoords = isSafeCoords;
+module.exports.runThugEngines = runThugEngines;

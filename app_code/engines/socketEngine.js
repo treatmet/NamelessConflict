@@ -84,6 +84,7 @@ io.sockets.on('connection', function(socket){
 		dataAccessFunctions.searchUserFromDB("test", function(mongoRes){});
 	});
 
+	//Not used. Remove!!!
 	socket.on('validateToken', function(token){
 		if (token != null){
 			authenticationEngine.validateToken(token, socket);

@@ -1,5 +1,3 @@
-const helpers = require(absAppDir + '/app_code/helperFunctions.js'); //Global helper functions
-
 global.express = require('express');
 global.app = express();
 global.serv = require('http').Server(app);
@@ -8,7 +6,7 @@ global.serv = require('http').Server(app);
 global.fs = require('fs');
 global.util = require('util')
 
-global.config = parseINIString(fs.readFileSync(absAppDir + '/config.ini', 'utf8'));
+global.config = parseINIString(fs.readFileSync(absAppDir + '/server/shared/config.ini', 'utf8'));
 
 
 //--------------------------------SERVER CONFIGURATION-----------------------------------------------------
@@ -27,7 +25,7 @@ global.staleRequestCheckInterval = 60; //Seconds
 global.staleFriendRequestThreshold = 30; //Days
 global.stalePartyRequestThreshold = 300; //Seconds
 
-global.joinActiveGameThreshold = 0.5; //Percentage threshold for how far the game is allowed to be progressed and still accept incoming players
+global.joinActiveGameThreshold = 0.5; //Percentage threshold for how far the game is allowed to be progressed and still accept incoming players (0.0 - 1.0)
 
 global.pcMode = 2; //1 = no, 2= yes
 

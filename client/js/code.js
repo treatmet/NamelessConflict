@@ -186,20 +186,6 @@ socket.on('pingResponse', function (socketId){
 	}		
 });
 
-socket.on('reloadHomePage', function(){
-	window.location.href = serverHomePage;
-});
-
-socket.on('redirect', function(url){
-	window.location.href = url;
-});
-
-socket.on('redirectToGame', function(url){
-	url = url + getJoinParams();
-	window.location.href = url;
-});
-
-
 var blinkOn = false;
 socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
 	if (myPlayer.name == "" || !Player.list[myPlayer.id])
@@ -284,7 +270,6 @@ var suddenDeath = false;
 
 var healthFlashTimer = 100;
 
-logg('Client initialization');
 //----------------Loading Images----------------
 var Img = {};
 Img.block = new Image();
@@ -852,6 +837,7 @@ Notification.list = {};
 
 
 //----------------------Login-----------------
+logg('Game code initialization');
 
 socket.on('signInResponse', function(data){
 	if(data.success){
@@ -869,10 +855,6 @@ socket.on('signInResponse', function(data){
 		alert(data.message);
 	}
 });
-
-loginForm.onsubmit = function(e){
-	e.preventDefault();
-}
 
 socket.on('killScore', function(team, dataWhiteScore, dataBlackScore){
 	whiteScore = dataWhiteScore;
@@ -4838,18 +4820,3 @@ function randomInt(min,max)
     return Math.floor(Math.random()*(max-min+1)+min);
 }
 
-function log(msg) {
-	var d = new Date();
-	d.getHours(); // => 9
-	d.getMinutes(); // =>  30
-	d.getSeconds(); // => 51
-	console.log(d.getHours() + ':' + d.getMinutes() + '.' + d.getSeconds() + '> ' + msg.toString());	
-}
-
-function logg(msg) {
-	var d = new Date();
-	d.getHours(); // => 9
-	d.getMinutes(); // =>  30
-	d.getSeconds(); // => 51
-	console.log(d.getHours() + ':' + d.getMinutes() + '.' + d.getSeconds() + '> ' + msg.toString());	
-}

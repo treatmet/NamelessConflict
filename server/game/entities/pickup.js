@@ -1,4 +1,4 @@
-var player = require(absAppDir + '/app_code/entities/player.js');
+var player = require(absAppDir + '/server/game/entities/player.js');
 
 
 var Pickup = function(id, x, y, type, amount, respawnTime){
@@ -187,5 +187,49 @@ var removePickup = function(pickupId){
 	updatePickupList.push(pickupId);
 }
 
-module.exports = Pickup;
+var getPickupList = function(){
+	var pickupList = [];
+	for (var p in Pickup.list){
+		pickupList.push(Pickup.list[p]);
+	}
+    return pickupList;
+}
+
+var getPickupById = function(id){
+    return Pickup.list[id];
+}
+
+var createPickup = function(id, x, y, type, amount, respawn){
+	Pickup(id, x, y, type, amount, respawn);
+}
+
+var clearPickupList = function(){
+	Pickup.list = [];
+}
+
+var clockTick = function(){
+	for (var i in Pickup.list){
+		if (Pickup.list[i].respawnTime > -1 && gameOver == false){				
+			if (Pickup.list[i].respawnTimer > 0){
+				Pickup.list[i].respawnTimer--;
+				updatePickupList.push(Pickup.list[i]);
+			} else if (Pickup.list[i].respawnTimer < 0){Pickup.list[i].respawnTimer = 0;} //Ignore this. This should never be triggered.
+		}
+	}	
+}
+
+var checkForPickup = function(player){
+	for (var i in Pickup.list){
+		if (player.health > 0 && player.x > Pickup.list[i].x - 30 && player.x < Pickup.list[i].x + Pickup.list[i].width + 30 && player.y > Pickup.list[i].y - 30 && player.y < Pickup.list[i].y + Pickup.list[i].height + 30 && Pickup.list[i].respawnTimer == 0){
+			pickupPickup(player.id, Pickup.list[i].id);
+		}
+	}			
+}
+
 module.exports.pickupPickup = pickupPickup;
+module.exports.getPickupList = getPickupList;
+module.exports.getPickupById = getPickupById;
+module.exports.createPickup = createPickup;
+module.exports.clearPickupList = clearPickupList;
+module.exports.clockTick = clockTick;
+module.exports.checkForPickup = checkForPickup;

@@ -1,7 +1,3 @@
-var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
-var Thug = require(absAppDir + '/app_code/entities/thug.js');
-var player = require(absAppDir + '/app_code/entities/player.js');
-
 var sprayBloodOntoTarget = function(shootingDir, targetX, targetY, targetId) {
 	var data = {};
 	data.targetX = targetX;
@@ -26,7 +22,7 @@ var checkIfInLineOfShot = function(shooter, target){
 					}
 				}
 				else if (shooter.shootingDir == 2){
-					distFromDiag = -shooter.x + target.x - shooter.y + target.y; //forwardslash diag. Negative means target's x is left of shooter's diag.
+					distFromDiag = -shooter.x + target.x - shooter.y + target.y; //forwardslash diag (/). Negative means target's x is left of shooter's diag.
 					if (Math.abs(distFromDiag) < 44 && target.y < shooter.y){
 						return {target:target,dist:(shooter.y - target.y),distFromDiag:distFromDiag};
 					}
@@ -37,7 +33,7 @@ var checkIfInLineOfShot = function(shooter, target){
 					}
 				}
 				else if (shooter.shootingDir == 4){
-					distFromDiag = -shooter.x + target.x + shooter.y - target.y; //backslash diag. Negative means target's x is left of shooter's diag.
+					distFromDiag = -shooter.x + target.x + shooter.y - target.y; //backslash diag (\). Negative means target's x is left of shooter's diag.
 					if (Math.abs(distFromDiag) < 44 && target.y > shooter.y){
 						return {target:target,dist:(target.x - shooter.x),distFromDiag:distFromDiag};
 					}

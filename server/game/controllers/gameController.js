@@ -1,7 +1,7 @@
-var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
-var authenticationEngine = require(absAppDir + '/app_code/engines/authenticationEngine.js');
+var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
+var authenticationEngine = require(absAppDir + '/server/shared/engines/authenticationEngine.js');
 
-var player = require(absAppDir + '/app_code/entities/player.js');
+var player = require(absAppDir + '/server/game/entities/player.js');
 
 const express = require('express');
 const router = express.Router();
@@ -10,16 +10,20 @@ const request = require('request-promise');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 router.use(cookieParser());
 
+router.get('/', function(req, res) {
+	var pageData = {};
+	var pageContent = fs.readFileSync(absAppDir + '/client/game.html', 'utf8');
+	pageContent = replaceValues(pageData, pageContent);	
+	res.send(pageContent);
+});
+
 router.post('/playNow', async function (req, res) {
 	if (myUrl == ""){
 		logg("res.send: " + "Url for current server not set");
 		res.send({autoJoin:false, error:"Url for current server not set"});
 		return;
-	}
-	/*req.body
-	{
-	}*/
-	
+    }
+    	
 	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
 	
 	//Check if server is expecting this incoming user
@@ -39,7 +43,7 @@ router.post('/playNow', async function (req, res) {
 					player.joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team, incomingUsers[u].partyId); //Join game
 					break;
 				}
-			}	
+			}
 		}
 		if (!approvedToJoinServer){
 			logg("res.send: " + "Error: The server was not expecting you");

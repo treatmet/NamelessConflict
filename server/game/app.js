@@ -2,7 +2,10 @@
 //Alpha Version
 
 'use strict';
-global.absAppDir = __dirname;
+global.absAppDir = __dirname + "/../..";
+require(absAppDir + '/server/shared/helperFunctions.js');
+require(absAppDir + '/server/game/config.js');
+require(absAppDir + '/server/shared/engines/logEngine.js');
 
 //Crash handling
 process
@@ -18,5 +21,4 @@ process
   });
 
 //---------------------------------STARTUP---------------------------------------
-require('./app_code/config.js');
-require('./app_code/startup.js');
+require(absAppDir + '/server/game/startup.js');

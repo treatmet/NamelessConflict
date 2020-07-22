@@ -13,7 +13,6 @@ var Block = function(x, y, width, height, type){
 		type:type,
 	}		
 
-
 	self.hit = function(shootingDir, distance, shooter, targetDistance){
 		if (shooter.weapon != 4){
 			var shotData = {};
@@ -33,14 +32,41 @@ var Block = function(x, y, width, height, type){
 			}
 		}
 	}
-
-
-
-
-
-
 	Block.list[self.id] = self;
 }//End Block Function
 Block.list = [];
 
-module.exports = Block;
+var getBlockList = function(){
+	var blockList = [];
+	for (var b in Block.list){
+		blockList.push(Block.list[b]);
+	}
+    return blockList;
+}
+
+var getBlockById = function(id){
+    return Block.list[id];
+}
+
+var createBlock = function(x, y, width, height, type){
+	Block(x, y, width, height, type);
+}
+
+var clearBlockList = function(){
+	Block.list = [];
+}
+
+var isSafeCoords = function(potentialX, potentialY){
+	for (var i in Block.list){
+		if (potentialX >= Block.list[i].x && potentialX <= Block.list[i].x + Block.list[i].width && potentialY >= Block.list[i].y && potentialY <= Block.list[i].y + Block.list[i].height){																		
+			return false;
+		}					
+	}
+	return true;
+}
+
+module.exports.getBlockList = getBlockList;
+module.exports.getBlockById = getBlockById;
+module.exports.createBlock = createBlock;
+module.exports.clearBlockList = clearBlockList;
+module.exports.isSafeCoords = isSafeCoords;

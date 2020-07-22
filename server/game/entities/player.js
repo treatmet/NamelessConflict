@@ -1,9 +1,9 @@
-var gameEngine = require(absAppDir + '/app_code/engines/gameEngine.js');
-var Thug = require(absAppDir + '/app_code/entities/thug.js');
-var Block = require(absAppDir + '/app_code/entities/block.js');
-var Pickup = require(absAppDir + '/app_code/entities/pickup.js');
-var entityHelpers = require(absAppDir + '/app_code/entities/_entityHelpers.js');
-var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
+var gameEngine = require(absAppDir + '/server/game/engines/gameEngine.js');
+var thug = require(absAppDir + '/server/game/entities/thug.js');
+var block = require(absAppDir + '/server/game/entities/block.js');
+var pickup = require(absAppDir + '/server/game/entities/pickup.js');
+var entityHelpers = require(absAppDir + '/server/game/entities/_entityHelpers.js');
+var dataAccessFunctions = require(absAppDir + '/server/shared/data_access/dataAccessFunctions.js');
 
 var Player = function(id, cognitoSub, name, team, partyId){
 	var self = {
@@ -166,16 +166,18 @@ var Player = function(id, cognitoSub, name, team, partyId){
 						organicHitTargets.push(isHitTarget);
 					}	
 				}
-				for (var i in Thug.list){
-					var isHitTarget = entityHelpers.checkIfInLineOfShot(self, Thug.list[i]);
+				var thugList = thug.getThugList();
+				for (var i in thugList){
+					var isHitTarget = entityHelpers.checkIfInLineOfShot(self, thugList[i]);
 					if (isHitTarget && isHitTarget != false){
 						hitTargets.push(isHitTarget);
 						organicHitTargets.push(isHitTarget);
 					}	
 				}					
-				for (var i in Block.list){
-					if (Block.list[i].type == "normal" || Block.list[i].type == "red" || Block.list[i].type == "blue"){
-						var isHitTarget = entityHelpers.checkIfInLineOfShot(self, Block.list[i]);
+				var blockList = block.getBlockList();
+				for (var i in blockList){
+					if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
+						var isHitTarget = entityHelpers.checkIfInLineOfShot(self, blockList[i]);
 						if (isHitTarget && isHitTarget != false){
 							hitTargets.push(isHitTarget);
 							blockHitTargets.push(isHitTarget);
@@ -586,11 +588,12 @@ var Player = function(id, cognitoSub, name, team, partyId){
 		}
 	
 		//Check collision with thugs
-		for (var i in Thug.list){
-			if (Thug.list[i].id != self.id && Thug.list[i].health > 0 && self.x + self.width > Thug.list[i].x && self.x < Thug.list[i].x + Thug.list[i].width && self.y + self.height > Thug.list[i].y && self.y < Thug.list[i].y + Thug.list[i].height){								
-				if (self.x == Thug.list[i].x && self.y == Thug.list[i].y){self.x -= 5; updateThugList.push({id:self.id,property:"x",value:self.x});} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
-				var dx1 = self.x - Thug.list[i].x;
-				var dy1 = self.y - Thug.list[i].y;
+		var thugList = thug.getThugList();
+		for (var i in thugList){
+			if (thugList[i].id != self.id && thugList[i].health > 0 && self.x + self.width > thugList[i].x && self.x < thugList[i].x + thugList[i].width && self.y + self.height > thugList[i].y && self.y < thugList[i].y + thugList[i].height){								
+				if (self.x == thugList[i].x && self.y == thugList[i].y){self.x -= 5; updateThugList.push({id:self.id,property:"x",value:self.x});} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+				var dx1 = self.x - thugList[i].x;
+				var dy1 = self.y - thugList[i].y;
 				var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
 				var ax1 = dx1/dist1;
 				var ay1 = dy1/dist1;
@@ -601,13 +604,13 @@ var Player = function(id, cognitoSub, name, team, partyId){
 						self.boosting = -1;
 						updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
 						
-						if (self.team != Thug.list[i].team){
-							Thug.list[i].health -= boostDamage;
-							updateThugList.push({id:Thug.list[i].id,property:"health",value:Thug.list[i].health})
-							entityHelpers.sprayBloodOntoTarget(self.boostingDir, Thug.list[i].x, Thug.list[i].y, Thug.list[i].id);
-							Thug.list[i].attacking = thugAttackDelay;
-							if (Thug.list[i].health <= 0){
-								Thug.list[i].kill(self);
+						if (self.team != thugList[i].team){
+							thugList[i].health -= boostDamage;
+							updateThugList.push({id:thugList[i].id,property:"health",value:thugList[i].health})
+							entityHelpers.sprayBloodOntoTarget(self.boostingDir, thugList[i].x, thugList[i].y, thugList[i].id);
+							thugList[i].attacking = thugAttackDelay;
+							if (thugList[i].health <= 0){
+								thugList[i].kill(self);
 							}
 						}
 					}
@@ -621,58 +624,59 @@ var Player = function(id, cognitoSub, name, team, partyId){
 		}
 		
 		//Check Player collision with blocks
-		for (var i in Block.list){
-			if (self.x > Block.list[i].x && self.x < Block.list[i].x + Block.list[i].width && self.y > Block.list[i].y && self.y < Block.list[i].y + Block.list[i].height){												
-				if (Block.list[i].type == "normal" || Block.list[i].type == "red" || Block.list[i].type == "blue"){
-					var overlapTop = Math.abs(Block.list[i].y - self.y);  
-					var overlapBottom = Math.abs((Block.list[i].y + Block.list[i].height) - self.y);
-					var overlapLeft = Math.abs(self.x - Block.list[i].x);
-					var overlapRight = Math.abs((Block.list[i].x + Block.list[i].width) - self.x);			
+		var blockList = block.getBlockList();
+		for (var i in blockList){
+			if (self.x > blockList[i].x && self.x < blockList[i].x + blockList[i].width && self.y > blockList[i].y && self.y < blockList[i].y + blockList[i].height){												
+				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
+					var overlapTop = Math.abs(blockList[i].y - self.y);  
+					var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - self.y);
+					var overlapLeft = Math.abs(self.x - blockList[i].x);
+					var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - self.x);			
 					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){	
-						self.y = Block.list[i].y - 1;
+						self.y = blockList[i].y - 1;
 						updatePlayerList.push({id:self.id,property:"y",value:self.y});
 					}
 					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
-						self.y = Block.list[i].y + Block.list[i].height + 1;
+						self.y = blockList[i].y + blockList[i].height + 1;
 						updatePlayerList.push({id:self.id,property:"y",value:self.y});
 					}
 					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
-						self.x = Block.list[i].x - 1;
+						self.x = blockList[i].x - 1;
 						updatePlayerList.push({id:self.id,property:"x",value:self.x});
 					}
 					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
-						self.x = Block.list[i].x + Block.list[i].width + 1;
+						self.x = blockList[i].x + blockList[i].width + 1;
 						updatePlayerList.push({id:self.id,property:"x",value:self.x});
 					}
 				}
-				else if (Block.list[i].type == "pushUp"){
+				else if (blockList[i].type == "pushUp"){
 					self.y -= pushStrength;
-					if (self.y < Block.list[i].y){self.y = Block.list[i].y;}
+					if (self.y < blockList[i].y){self.y = blockList[i].y;}
 					updatePlayerList.push({id:self.id,property:"y",value:self.y});
 				}
-				else if (Block.list[i].type == "pushRight"){
+				else if (blockList[i].type == "pushRight"){
 					self.x += pushStrength;
-					if (self.x > Block.list[i].x + Block.list[i].width){self.x = Block.list[i].x + Block.list[i].width;}
+					if (self.x > blockList[i].x + blockList[i].width){self.x = blockList[i].x + blockList[i].width;}
 					updatePlayerList.push({id:self.id,property:"x",value:self.x});
 				}
-				else if (Block.list[i].type == "pushDown"){
+				else if (blockList[i].type == "pushDown"){
 					self.y += pushStrength;
-					if (self.y > Block.list[i].y + Block.list[i].height){self.y = Block.list[i].y + Block.list[i].height;}
+					if (self.y > blockList[i].y + blockList[i].height){self.y = blockList[i].y + blockList[i].height;}
 					updatePlayerList.push({id:self.id,property:"y",value:self.y});
 				}
-				else if (Block.list[i].type == "pushLeft"){
+				else if (blockList[i].type == "pushLeft"){
 					self.x -= pushStrength;
-					if (self.x < Block.list[i].x){self.x = Block.list[i].x;}
+					if (self.x < blockList[i].x){self.x = blockList[i].x;}
 					updatePlayerList.push({id:self.id,property:"x",value:self.x});
 				}
-				else if (Block.list[i].type == "warp1"){
+				else if (blockList[i].type == "warp1"){
 					self.x = warp1X;
 					updatePlayerList.push({id:self.id,property:"x",value:self.x});
 					self.y = warp1Y;
 					updatePlayerList.push({id:self.id,property:"y",value:self.y});
 					SOCKET_LIST[self.id].emit('sfx', "sfxWarp");
 				}
-				else if (Block.list[i].type == "warp2"){
+				else if (blockList[i].type == "warp2"){
 					self.x = warp2X;
 					updatePlayerList.push({id:self.id,property:"x",value:self.x});
 					self.y = warp2Y;
@@ -681,14 +685,10 @@ var Player = function(id, cognitoSub, name, team, partyId){
 				}
 
 			}// End check if player is overlapping block
-		}//End Block.list loop		
+		}//End blockList loop		
 		
 		//Pickup updates
-		for (var i in Pickup.list){
-			if (self.health > 0 && self.x > Pickup.list[i].x - 30 && self.x < Pickup.list[i].x + Pickup.list[i].width + 30 && self.y > Pickup.list[i].y - 30 && self.y < Pickup.list[i].y + Pickup.list[i].height + 30 && Pickup.list[i].respawnTimer == 0){
-				Pickup.pickupPickup(self.id, Pickup.list[i].id);
-			}
-		}			
+		pickup.checkForPickup(self);
 		
 		//Check Player collision with bag - STEAL
 		if (gametype == "ctf"){
@@ -975,7 +975,7 @@ var Player = function(id, cognitoSub, name, team, partyId){
 			drops++;
 			var ammoAmount = self.DPClip + self.DPAmmo;
 			var dpId = Math.random();
-			Pickup(dpId, self.x - 40, self.y - 35, 2, ammoAmount, -1);
+			pickup.createPickup(dpId, self.x - 40, self.y - 35, 2, ammoAmount, -1);
 			self.DPAmmo = 0;
 			self.DPClip = 0;
 			updatePlayerList.push({id:self.id,property:"DPAmmo",value:self.DPAmmo});		
@@ -985,7 +985,7 @@ var Player = function(id, cognitoSub, name, team, partyId){
 			drops++;
 			var ammoAmount = self.MGClip + self.MGAmmo;
 			var mgId = Math.random();
-			Pickup(mgId, self.x - 25 + (drops * 8), self.y - 10, 3, ammoAmount, -1);
+			pickup.createPickup(mgId, self.x - 25 + (drops * 8), self.y - 10, 3, ammoAmount, -1);
 			self.MGAmmo = 0;
 			self.MGClip = 0;
 			updatePlayerList.push({id:self.id,property:"MGAmmo",value:self.MGAmmo});		
@@ -995,7 +995,7 @@ var Player = function(id, cognitoSub, name, team, partyId){
 			drops++;
 			var ammoAmount = self.SGClip + self.SGAmmo;
 			var sgId = Math.random();
-			Pickup(sgId, self.x - 30, self.y - 20 + (drops * 10), 4, ammoAmount, -1);
+			pickup.createPickup(sgId, self.x - 30, self.y - 20 + (drops * 10), 4, ammoAmount, -1);
 			self.SGAmmo = 0;
 			self.SGClip = 0;
 			updatePlayerList.push({id:self.id,property:"SGAmmo",value:self.SGAmmo});		
@@ -1077,6 +1077,7 @@ var Player = function(id, cognitoSub, name, team, partyId){
 		
 						
 		//Send Full Game Status To Individual Player
+		//gameEngine.sendFullGameStatus(self.id);
 		var playerPack = [];
 		var thugPack = [];
 		var blockPack = [];
@@ -1120,31 +1121,22 @@ var Player = function(id, cognitoSub, name, team, partyId){
 			};
 			playerPack.push(player);
 		}
-		for (var b in Thug.list){
-			var thug = {
-				id:Thug.list[b].id,
-				x:Thug.list[b].x,
-				y:Thug.list[b].y,
-				health:Thug.list[b].health,
-				team:Thug.list[b].team,
-				rotation:Thug.list[b].rotation,
+		var thugList = thug.getThugList();
+		for (var b in thugList){
+			var thugy = {
+				id:thugList[b].id,
+				x:thugList[b].x,
+				y:thugList[b].y,
+				health:thugList[b].health,
+				team:thugList[b].team,
+				rotation:thugList[b].rotation,
 			};
-			thugPack.push(thug);
+			thugPack.push(thugy);
 		}
-		for (var b in Block.list){
-			blockPack.push(Block.list[b]);
-		}
-		for (var p in Pickup.list){
-			var pickup = {
-				id:Pickup.list[p].id,
-				x:Pickup.list[p].x,
-				y:Pickup.list[p].y,
-				type:Pickup.list[p].type,
-				amount:Pickup.list[p].amount,
-				respawnTimer:Pickup.list[p].respawnTimer,
-			};			
-			pickupPack.push(pickup);
-		}
+
+		blockPack = block.getBlockList();
+		pickupPack = pickup.getPickupList();
+
 		
 		var size = Object.size(Player.list);			
 		miscPack.bagRed = bagRed;
@@ -1171,7 +1163,11 @@ var Player = function(id, cognitoSub, name, team, partyId){
 		else {
 			miscPack.variant.timeLimit = false;
 		}
-		socket.emit('updateInit', playerPack, thugPack, pickupPack, blockPack, miscPack); //Goes to a single player //!!!! Questionable. This might overload stack
+		console.log("SENDING FULL GAME STATUS");
+		console.log("BLOCKS");
+		console.log(blockPack);
+		
+		socket.emit('updateInit', playerPack, thugPack, pickupPack, blockPack, miscPack); //Goes to a single player
 	}
 	
 	Player.list[id] = self;
@@ -1727,9 +1723,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 	});
 
 	socket.on('chat', function(data){
-		if (player.getPlayerById(data[0])){
+		if (getPlayerById(data[0])){
 			for(var i in SOCKET_LIST){
-				SOCKET_LIST[i].emit('addToChat',player.getPlayerById(data[0]).name + ': ' + data[1].substring(0,50), player.getPlayerById(data[0]).id);
+				SOCKET_LIST[i].emit('addToChat',getPlayerById(data[0]).name + ': ' + data[1].substring(0,50), getPlayerById(data[0]).id);
 				updateEffectList.push({type:7, playerId:data[0], text:data[1].substring(0,50)});
 			}
 		}
@@ -1738,7 +1734,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 	//Server commands
 	socket.on('evalServer', function(data){
 		//socket = socketBak;
-		if (!player.getPlayerById(socket.id)){return;}
+		if (!getPlayerById(socket.id)){return;}
 
 		if(!allowServerCommands){
 			if (data == "stopcmd" || data == "servercmd" || data == "servercommands"){
@@ -1793,12 +1789,12 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			respawnTimeLimit = 9 * 60;
 		}
 		else if (data.substring(0,4) == "kick"){
-			var playerList = player.getPlayerList();
+			var playerList = getPlayerList();
 			for (var p in playerList){
 				if (playerList[p].name == data.substring(4)){
 					var id = playerList[p].id;
 					var name = playerList[p].name;
-					player.playerDisconnect(id);
+					playerDisconnect(id);
 					delete SOCKET_LIST[id];
 					socket.emit('addToChat', 'Kicked ' + name + ' from game.');
 					break;
@@ -2001,7 +1997,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			gameEngine.restartGame();
 		}
 		else if (data == "stats" || data == "stat"){
-			dataAccess.dbFindAwait("RW_USER", {cognitoSub:player.getPlayerById(socket.id).cognitoSub}, async function(err, res){
+			dataAccess.dbFindAwait("RW_USER", {cognitoSub:getPlayerById(socket.id).cognitoSub}, async function(err, res){
 				if (res && res[0]){
 					socket.emit('addToChat', 'Cash Earned:' + res[0].experience + ' Kills:' + res[0].kills + ' Deaths:' + res[0].deaths + ' Benedicts:' + res[0].benedicts + ' Captures:' + res[0].captures + ' Steals:' + res[0].steals + ' Returns:' + res[0].returns + ' Games Played:' + res[0].gamesPlayed + ' Wins:' + res[0].gamesWon + ' Losses:' + res[0].gamesLost + ' TPM Rating:' + res[0].rating);	
 				}
@@ -2038,13 +2034,13 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 		else if (data == "sThugWhite"){		
 			logg("Server command: Spawn Thug (White)");
 			var coords = gameEngine.getSafeCoordinates("white");
-			Thug(Math.random(), "white", coords.x, coords.y);
+			thug.createThug(Math.random(), "white", coords.x, coords.y);
 			socket.emit('addToChat', 'White thug spawned.');	
 		}
 		else if (data == "sThugBlack"){
 			logg("Server command: Spawn Thug (Black)");
 			var coords = gameEngine.getSafeCoordinates("black");
-			Thug(Math.random(), "black", coords.x, coords.y);
+			thug.createThug(Math.random(), "black", coords.x, coords.y);
 			socket.emit('addToChat', 'Black thug spawned.');	
 		}
 		else if (data == "5sec"){
@@ -2071,17 +2067,17 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			gameEngine.changeTeams(socket.id);
 		}
 		else if (data == "capturet" || data == "scoret"){
-			if (player.getPlayerById(socket.id).team == "white"){
+			if (getPlayerById(socket.id).team == "white"){
 				gameEngine.capture("white");
 			}
-			else if (player.getPlayerById(socket.id).team == "black"){
+			else if (getPlayerById(socket.id).team == "black"){
 				gameEngine.capture("black");
 			}
 		}
 		else if (data == "kill" || data == "die"){
-			player.getPlayerById(socket.id).health = 0
-			updatePlayerList.push({id:player.getPlayerById(socket.id).id,property:"health",value:player.getPlayerById(socket.id).health})
-			player.getPlayerById(socket.id).kill({id:0, shootingDir:1});
+			getPlayerById(socket.id).health = 0
+			updatePlayerList.push({id:getPlayerById(socket.id).id,property:"health",value:getPlayerById(socket.id).health})
+			getPlayerById(socket.id).kill({id:0, shootingDir:1});
 		}
 		else if (data == "end"){
 			minutesLeft = 0;
@@ -2104,7 +2100,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			}
 			gameEngine.restartGame();
 
-			if (player.getPlayerById(socket.id) && player.getPlayerById(socket.id).team == "white"){
+			if (getPlayerById(socket.id) && getPlayerById(socket.id).team == "white"){
 				if (gametype == "ctf"){
 					gameEngine.capture("white");
 				}
@@ -2112,7 +2108,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 					whiteScore += 100;
 				}
 			}
-			else if (player.getPlayerById(socket.id) && player.getPlayerById(socket.id).team == "black"){
+			else if (getPlayerById(socket.id) && getPlayerById(socket.id).team == "black"){
 				if (gametype == "ctf"){
 					gameEngine.capture("black");
 				}
@@ -2135,11 +2131,11 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			}
 			gameEngine.restartGame();
 
-			if (player.getPlayerById(socket.id) && player.getPlayerById(socket.id).team == "white"){
+			if (getPlayerById(socket.id) && getPlayerById(socket.id).team == "white"){
 				if (gametype == "ctf")
 					gameEngine.capture("black");
 			}
-			else if (player.getPlayerById(socket.id) && player.getPlayerById(socket.id).team == "black"){
+			else if (getPlayerById(socket.id) && getPlayerById(socket.id).team == "black"){
 				if (gametype == "ctf")
 					gameEngine.capture("white");
 			}
@@ -2150,17 +2146,17 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			crash();
 		}
 		else if (data == "godt" || data == "haxt"){
-			player.getPlayerById(socket.id).SGClip = 99;
-			player.getPlayerById(socket.id).MGClip = 999;
-			player.getPlayerById(socket.id).DPClip = 99;
-			player.getPlayerById(socket.id).health = 99;
-			player.getPlayerById(socket.id).hasBattery = 2;
-			updatePlayerList.push({id:socket.id,property:"hasBattery",value:player.getPlayerById(socket.id).hasBattery});
-			updatePlayerList.push({id:socket.id,property:"health",value:player.getPlayerById(socket.id).health});
-			updatePlayerList.push({id:socket.id,property:"weapon",value:player.getPlayerById(socket.id).weapon});
-			updatePlayerList.push({id:socket.id,property:"DPClip",value:player.getPlayerById(socket.id).DPClip});
-			updatePlayerList.push({id:socket.id,property:"MGClip",value:player.getPlayerById(socket.id).MGClip});
-			updatePlayerList.push({id:socket.id,property:"SGClip",value:player.getPlayerById(socket.id).SGClip});
+			getPlayerById(socket.id).SGClip = 99;
+			getPlayerById(socket.id).MGClip = 999;
+			getPlayerById(socket.id).DPClip = 99;
+			getPlayerById(socket.id).health = 99;
+			getPlayerById(socket.id).hasBattery = 2;
+			updatePlayerList.push({id:socket.id,property:"hasBattery",value:getPlayerById(socket.id).hasBattery});
+			updatePlayerList.push({id:socket.id,property:"health",value:getPlayerById(socket.id).health});
+			updatePlayerList.push({id:socket.id,property:"weapon",value:getPlayerById(socket.id).weapon});
+			updatePlayerList.push({id:socket.id,property:"DPClip",value:getPlayerById(socket.id).DPClip});
+			updatePlayerList.push({id:socket.id,property:"MGClip",value:getPlayerById(socket.id).MGClip});
+			updatePlayerList.push({id:socket.id,property:"SGClip",value:getPlayerById(socket.id).SGClip});
 			socket.emit('addToChat', 'INITIATE HAX');
 		}
 
@@ -2470,7 +2466,7 @@ var joinGame = function(cognitoSub, username, team, partyId){
 }
 
 var getPlayerList = function(){
-    return Player.list;
+	return Player.list;
 }
 
 var getPlayerById = function(id){
@@ -2487,8 +2483,26 @@ function sendChatToAll(text){
 		SOCKET_LIST[i].emit('addMessageToChat',text);
 	}
 }
+function runPlayerEngines(){
+	for (var i in Player.list){
+		if (Player.list[i].team != "none")
+		Player.list[i].engine();
+	}		
+	
+}
+
+var isSafeCoords = function(potentialX, potentialY, team){
+	for (var i in Player.list){
+		if (Player.list[i].team != team && Player.list[i].health > 0 && potentialX >= Player.list[i].x - threatSpawnRange && potentialX <= Player.list[i].x + threatSpawnRange && potentialY >= Player.list[i].y - threatSpawnRange && potentialY <= Player.list[i].y + threatSpawnRange){																		
+			return false;
+		}
+	}
+	return true;
+}
 
 module.exports.getPlayerList = getPlayerList;
 module.exports.playerDisconnect = playerDisconnect; //onDisconnect
 module.exports.getPlayerById = getPlayerById;
 module.exports.joinGame = joinGame;
+module.exports.runPlayerEngines = runPlayerEngines;
+module.exports.isSafeCoords = isSafeCoords;

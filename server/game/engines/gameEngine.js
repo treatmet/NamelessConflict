@@ -1,11 +1,11 @@
-var Pickup = require(absAppDir + '/app_code/entities/pickup.js');
-var Block = require(absAppDir + '/app_code/entities/block.js');
-var Thug = require(absAppDir + '/app_code/entities/thug.js');
-var player = require(absAppDir + '/app_code/entities/player.js');
-var dataAccessFunctions = require(absAppDir + '/app_code/data_access/dataAccessFunctions.js');
-var dataAccess = require(absAppDir + '/app_code/data_access/dataAccess.js');
-var mapEngine = require(absAppDir + '/app_code/engines/mapEngine.js');
-const logEngine = require(absAppDir + '/app_code/engines/logEngine.js');
+var pickup = require(absAppDir + '/server/game/entities/pickup.js');
+var block = require(absAppDir + '/server/game/entities/block.js');
+var thug = require(absAppDir + '/server/game/entities/thug.js');
+var player = require(absAppDir + '/server/game/entities/player.js');
+var dataAccessFunctions = require(absAppDir + '/server/shared/data_access/dataAccessFunctions.js');
+var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
+var mapEngine = require(absAppDir + '/server/game/engines/mapEngine.js');
+const logEngine = require(absAppDir + '/server/shared/engines/logEngine.js');
 
 var secondsSinceLastServerSync = syncServerWithDbInterval - 2;
 var secondsSinceOnlineTimestampUpdate = 0;
@@ -220,16 +220,14 @@ function spawnSafely(entity){
 }
 
 function getEntityById(id){
-	var playerList = player.getPlayerList();
-
-	if (playerList[id]){
-		return playerList[id];
+	if (player.getPlayerById(id)){
+		return player.getPlayerById(id);
 	}
-	else if (Thug.list[id]){
-		return Thug.list[id];
+	else if (thug.getThugById(id)){
+		return thug.getThugById(id);
 	}
-	else if (Block.list[id]){
-		return Block.list[id];
+	else if (block.getBlockById(id)){
+		return block.getBlockById(id);
 	}
 	else {
 		return 0;
@@ -239,66 +237,13 @@ function getEntityById(id){
 function getSafeCoordinates(team){
 	var potentialX = 10;
 	var potentialY = 10;
-	var playerList = player.getPlayerList();
-
-	if (team == "black"){
-		for (var w = 0; w < 50; w++){
-			var safeToSpawn = true;
-
-			potentialX = randomInt(spawnXminBlack,spawnXmaxBlack);
-			potentialY = randomInt(spawnYminBlack,spawnYmaxBlack);
-			for (var i in Block.list){
-				if (potentialX >= Block.list[i].x && potentialX <= Block.list[i].x + Block.list[i].width && potentialY >= Block.list[i].y && potentialY <= Block.list[i].y + Block.list[i].height){																		
-					safeToSpawn = false;
-				}					
-			}
-			//check for enemies nearby
-			for (var i in playerList){
-				if (playerList[i].team != team && playerList[i].health > 0 && potentialX >= playerList[i].x - threatSpawnRange && potentialX <= playerList[i].x + threatSpawnRange && potentialY >= playerList[i].y - threatSpawnRange && potentialY <= playerList[i].y + threatSpawnRange){																		
-					safeToSpawn = false;
-				}
-			}
-			for (var i in Thug.list){
-				if (Thug.list[i].team != team && Thug.list[i].health > 0 && potentialX >= Thug.list[i].x - threatSpawnRange && potentialX <= Thug.list[i].x + threatSpawnRange && potentialY >= Thug.list[i].y - threatSpawnRange && potentialY <= Thug.list[i].y + threatSpawnRange){																		
-					safeToSpawn = false;
-				}
-			}
-			if (!safeToSpawn){
-				continue;
-			}
-			else {
-				break;
-			}
-		}		
-	}
-	else if (team == "white"){
-		for (var w = 0; w < 50; w++){
-			var safeToSpawn = true;
-			
-			potentialX = randomInt(spawnXminWhite,spawnXmaxWhite);			
-			potentialY = randomInt(spawnYminWhite,spawnYmaxWhite);
-			for (var i in Block.list){
-				if (potentialX >= Block.list[i].x && potentialX <= Block.list[i].x + Block.list[i].width && potentialY >= Block.list[i].y && potentialY <= Block.list[i].y + Block.list[i].height){																		
-					safeToSpawn = false;
-				}
-			}
-			for (var i in playerList){
-				if (playerList[i].team != team && playerList[i].health > 0 && potentialX >= playerList[i].x - threatSpawnRange && potentialX <= playerList[i].x + threatSpawnRange && potentialY >= playerList[i].y - threatSpawnRange && potentialY <= playerList[i].y + threatSpawnRange){																		
-					safeToSpawn = false;
-				}
-			}
-			for (var i in Thug.list){
-				if (Thug.list[i].team != team && Thug.list[i].health > 0 && potentialX >= Thug.list[i].x - threatSpawnRange && potentialX <= Thug.list[i].x + threatSpawnRange && potentialY >= Thug.list[i].y - threatSpawnRange && potentialY <= Thug.list[i].y + threatSpawnRange){																		
-					safeToSpawn = false;
-				}
-			}
-			if (!safeToSpawn){
-				continue;
-			}
-			else {
-				break;
-			}
-		}
+	for (var w = 0; w < 50; w++){			
+		potentialX = randomInt(spawnXminWhite,spawnXmaxWhite);			
+		potentialY = randomInt(spawnYminWhite,spawnYmaxWhite);
+		if (!block.isSafeCoords(potentialX, potentialY)){continue;}
+		if (!thug.isSafeCoords(potentialX, potentialY, team)){continue;}
+		if (!player.isSafeCoords(potentialX, potentialY, team)){continue;}
+		break;
 	}
 	return {x:potentialX,y:potentialY};
 }
@@ -339,12 +284,11 @@ function processEntityPush(entity){
 		}						
 		entity.pushSpeed--;
 
-		var playerList = player.getPlayerList();
-		if (playerList[entity.id]){
+		if (player.getPlayerById(entity.id)){
 			updatePlayerList.push({id:entity.id,property:"x",value:entity.x});
 			updatePlayerList.push({id:entity.id,property:"y",value:entity.y});
 		}
-		else if (Thug.list[entity.id]){
+		else if (thug.getThugById(entity.id)){
 			updateThugList.push({id:entity.id,property:"x",value:entity.x});
 			updateThugList.push({id:entity.id,property:"y",value:entity.y});
 		}
@@ -458,122 +402,123 @@ function moveBags(){
 	}
 
 	//Check Bag collision with blocks
+	var blockList = block.getBlockList();
 	if (bagBlue.speed > 0){
-		for (var i in Block.list){
-			if (bagBlue.x > Block.list[i].x && bagBlue.x < Block.list[i].x + Block.list[i].width && bagBlue.y > Block.list[i].y && bagBlue.y < Block.list[i].y + Block.list[i].height){												
-				if (Block.list[i].type == "normal" || Block.list[i].type == "red" || Block.list[i].type == "blue"){
-					var overlapTop = Math.abs(Block.list[i].y - bagBlue.y);  
-					var overlapBottom = Math.abs((Block.list[i].y + Block.list[i].height) - bagBlue.y);
-					var overlapLeft = Math.abs(bagBlue.x - Block.list[i].x);
-					var overlapRight = Math.abs((Block.list[i].x + Block.list[i].width) - bagBlue.x);			
+		for (var i in blockList){
+			if (bagBlue.x > blockList[i].x && bagBlue.x < blockList[i].x + blockList[i].width && bagBlue.y > blockList[i].y && bagBlue.y < blockList[i].y + blockList[i].height){												
+				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
+					var overlapTop = Math.abs(blockList[i].y - bagBlue.y);  
+					var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - bagBlue.y);
+					var overlapLeft = Math.abs(bagBlue.x - blockList[i].x);
+					var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - bagBlue.x);			
 					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){
-						bagBlue.y = Block.list[i].y;
+						bagBlue.y = blockList[i].y;
 						updateMisc.bagBlue = bagBlue;
 					}
 					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
-						bagBlue.y = Block.list[i].y + Block.list[i].height;
+						bagBlue.y = blockList[i].y + blockList[i].height;
 						updateMisc.bagBlue = bagBlue;
 					}
 					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
-						bagBlue.x = Block.list[i].x;
+						bagBlue.x = blockList[i].x;
 						updateMisc.bagBlue = bagBlue;
 					}
 					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
-						bagBlue.x = Block.list[i].x + Block.list[i].width;
+						bagBlue.x = blockList[i].x + blockList[i].width;
 						updateMisc.bagBlue = bagBlue;
 					}
 				}
-				else if (Block.list[i].type == "pushUp"){
+				else if (blockList[i].type == "pushUp"){
 					bagBlue.y -= pushStrength;
-					if (bagBlue.y < Block.list[i].y){bagBlue.y = Block.list[i].y;}
+					if (bagBlue.y < blockList[i].y){bagBlue.y = blockList[i].y;}
 					updateMisc.bagBlue = bagBlue;
 				}
-				else if (Block.list[i].type == "pushRight"){
+				else if (blockList[i].type == "pushRight"){
 					bagBlue.x += pushStrength;
-					if (bagBlue.x > Block.list[i].x + Block.list[i].width){bagBlue.x = Block.list[i].x + Block.list[i].width;}
+					if (bagBlue.x > blockList[i].x + blockList[i].width){bagBlue.x = blockList[i].x + blockList[i].width;}
 					updateMisc.bagBlue = bagBlue;
 				}
-				else if (Block.list[i].type == "pushDown"){
+				else if (blockList[i].type == "pushDown"){
 					bagBlue.y += pushStrength;
-					if (bagBlue.y > Block.list[i].y + Block.list[i].height){bagBlue.y = Block.list[i].y + Block.list[i].height;}
+					if (bagBlue.y > blockList[i].y + blockList[i].height){bagBlue.y = blockList[i].y + blockList[i].height;}
 					updateMisc.bagBlue = bagBlue;
 				}
-				else if (Block.list[i].type == "pushLeft"){
+				else if (blockList[i].type == "pushLeft"){
 					bagBlue.x -= pushStrength;
-					if (bagBlue.x < Block.list[i].x){bagBlue.x = Block.list[i].x;}
+					if (bagBlue.x < blockList[i].x){bagBlue.x = blockList[i].x;}
 					updateMisc.bagBlue = bagBlue;
 				}
-				else if (Block.list[i].type == "warp1"){
+				else if (blockList[i].type == "warp1"){
 					bagBlue.x = warp1X;
 					bagBlue.y = warp1Y;
 					updateMisc.bagBlue = bagBlue;
 				}
-				else if (Block.list[i].type == "warp2"){
+				else if (blockList[i].type == "warp2"){
 					bagBlue.x = warp2X;
 					bagBlue.y = warp2Y;
 					updateMisc.bagBlue = bagBlue;
 				}
 			}// End check if bag is overlapping block
-		}//End Block.list loop		
+		}//End blockList loop		
 	}
-	if (bagRed.speed > 0){
-		for (var i in Block.list){
-			if (bagRed.x > Block.list[i].x && bagRed.x < Block.list[i].x + Block.list[i].width && bagRed.y > Block.list[i].y && bagRed.y < Block.list[i].y + Block.list[i].height){												
-				if (Block.list[i].type == "normal" || Block.list[i].type == "red" || Block.list[i].type == "blue"){
-					var overlapTop = Math.abs(Block.list[i].y - bagRed.y);  
-					var overlapBottom = Math.abs((Block.list[i].y + Block.list[i].height) - bagRed.y);
-					var overlapLeft = Math.abs(bagRed.x - Block.list[i].x);
-					var overlapRight = Math.abs((Block.list[i].x + Block.list[i].width) - bagRed.x);			
+	if (bagRed.speed > 0){		
+		for (var i in blockList){
+			if (bagRed.x > blockList[i].x && bagRed.x < blockList[i].x + blockList[i].width && bagRed.y > blockList[i].y && bagRed.y < blockList[i].y + blockList[i].height){												
+				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
+					var overlapTop = Math.abs(blockList[i].y - bagRed.y);  
+					var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - bagRed.y);
+					var overlapLeft = Math.abs(bagRed.x - blockList[i].x);
+					var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - bagRed.x);			
 					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){
-						bagRed.y = Block.list[i].y;
+						bagRed.y = blockList[i].y;
 						updateMisc.bagRed = bagRed;
 					}
 					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
-						bagRed.y = Block.list[i].y + Block.list[i].height;
+						bagRed.y = blockList[i].y + blockList[i].height;
 						updateMisc.bagRed = bagRed;
 					}
 					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
-						bagRed.x = Block.list[i].x;
+						bagRed.x = blockList[i].x;
 						updateMisc.bagRed = bagRed;
 					}
 					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
-						bagRed.x = Block.list[i].x + Block.list[i].width;
+						bagRed.x = blockList[i].x + blockList[i].width;
 						updateMisc.bagRed = bagRed;
 					}
 				}
-				else if (Block.list[i].type == "pushUp"){
+				else if (blockList[i].type == "pushUp"){
 					bagRed.y -= pushStrength;
-					if (bagRed.y < Block.list[i].y){bagRed.y = Block.list[i].y;}
+					if (bagRed.y < blockList[i].y){bagRed.y = blockList[i].y;}
 					updateMisc.bagRed = bagRed;
 				}
-				else if (Block.list[i].type == "pushRight"){
+				else if (blockList[i].type == "pushRight"){
 					bagRed.x += pushStrength;
-					if (bagRed.x > Block.list[i].x + Block.list[i].width){bagRed.x = Block.list[i].x + Block.list[i].width;}
+					if (bagRed.x > blockList[i].x + blockList[i].width){bagRed.x = blockList[i].x + blockList[i].width;}
 					updateMisc.bagRed = bagRed;
 				}
-				else if (Block.list[i].type == "pushDown"){
+				else if (blockList[i].type == "pushDown"){
 					bagRed.y += pushStrength;
-					if (bagRed.y > Block.list[i].y + Block.list[i].height){bagRed.y = Block.list[i].y + Block.list[i].height;}
+					if (bagRed.y > blockList[i].y + blockList[i].height){bagRed.y = blockList[i].y + blockList[i].height;}
 					updateMisc.bagRed = bagRed;
 				}
-				else if (Block.list[i].type == "pushLeft"){
+				else if (blockList[i].type == "pushLeft"){
 					bagRed.x -= pushStrength;
-					if (bagRed.x < Block.list[i].x){bagRed.x = Block.list[i].x;}
+					if (bagRed.x < blockList[i].x){bagRed.x = blockList[i].x;}
 					updateMisc.bagRed = bagRed;
 				}
-				else if (Block.list[i].type == "warp1"){
+				else if (blockList[i].type == "warp1"){
 					bagRed.x = warp1X;
 					bagRed.y = warp1Y;
 					updateMisc.bagRed = bagRed;
 				}
-				else if (Block.list[i].type == "warp2"){
+				else if (blockList[i].type == "warp2"){
 					bagRed.x = warp2X;
 					bagRed.y = warp2Y;
 					updateMisc.bagRed = bagRed;
 				}
 
 			}// End check if bag is overlapping block
-		}//End Block.list loop		
+		}//End blockList loop		
 	}
 	
 	if (bagRed.x > mapWidth){bagRed.x = mapWidth; updateMisc.bagRed = bagRed;}
@@ -859,13 +804,13 @@ function restartGame(){
 		respawnTimeLimit = ctfRespawnTimeLimit;
 	}
 
-
-	for (var t in Thug.list){
+	var thugList = thug.getThugList();
+	for (var t in thugList){
 		for(var i in SOCKET_LIST){
-			SOCKET_LIST[i].emit('removeThug', Thug.list[t].id);
+			SOCKET_LIST[i].emit('removeThug', thugList[t].id);
 		}			
-		delete Thug.list[t];
 	}
+	thug.clearThugList();
 	ensureCorrectThugCount();
 	mapEngine.initializePickups(map);
 	mapEngine.initializeBlocks(map);
@@ -925,6 +870,7 @@ function ensureCorrectThugCount(){
 	var whiteThugs = 0;
 	var blackThugs = 0;
 	var playerList = player.getPlayerList();
+	var thugList = thug.getThugList();
 	
 	for (var p in playerList){
 		if (playerList[p].team == "white"){
@@ -934,46 +880,46 @@ function ensureCorrectThugCount(){
 			expectedWhiteThugs++;
 		}
 	}	
-	for (var t in Thug.list){
-		if (Thug.list[t].team == "white"){
+	for (var t in thugList){
+		if (thugList[t].team == "white"){
 			whiteThugs++;
 		}
-		else if (Thug.list[t].team == "black"){
+		else if (thugList[t].team == "black"){
 			blackThugs++;
 		}
 	}
 	
 	//Delete all thugs if Thug setting is disabled, or more than "thugLimit" players
 	if (!spawnOpposingThug || (expectedWhiteThugs + expectedBlackThugs > thugLimit)){
-		for (var t in Thug.list){
+		for (var t in thugList){
 			for(var i in SOCKET_LIST){
-				SOCKET_LIST[i].emit('removeThug', Thug.list[t].id);
+				SOCKET_LIST[i].emit('removeThug', thugList[t].id);
 			}			
-			delete Thug.list[t];
+			delete thugList[t];
 		}
 		return;
 	}
 
 	
 	while (whiteThugs > expectedWhiteThugs){
-		for (var t in Thug.list){
-			if (Thug.list[t].team == "white"){
+		for (var t in thugList){
+			if (thugList[t].team == "white"){
 			for(var i in SOCKET_LIST){
-				SOCKET_LIST[i].emit('removeThug', Thug.list[t].id);
+				SOCKET_LIST[i].emit('removeThug', thugList[t].id);
 			}			
-			delete Thug.list[t];
+			delete thugList[t];
 			whiteThugs--;
 			break;
 			}
 		}
 	}
 	while (blackThugs > expectedBlackThugs){
-		for (var t in Thug.list){
-			if (Thug.list[t].team == "black"){
+		for (var t in thugList){
+			if (thugList[t].team == "black"){
 			for(var i in SOCKET_LIST){
-				SOCKET_LIST[i].emit('removeThug', Thug.list[t].id);
+				SOCKET_LIST[i].emit('removeThug', thugList[t].id);
 			}			
-			delete Thug.list[t];
+			delete thugList[t];
 			blackThugs--;
 			break;
 			}
@@ -982,12 +928,12 @@ function ensureCorrectThugCount(){
 
 	while (whiteThugs < expectedWhiteThugs){
 		var coords = getSafeCoordinates("white");
-		Thug(Math.random(), "white", coords.x, coords.y);	
+		thug.createThug(Math.random(), "white", coords.x, coords.y);	
 		whiteThugs++;
 	}
 	while (blackThugs < expectedBlackThugs){
 		var coords = getSafeCoordinates("black");
-		Thug(Math.random(), "black", coords.x, coords.y);			
+		thug.createThug(Math.random(), "black", coords.x, coords.y);			
 		blackThugs++;
 	}
 }
@@ -1052,14 +998,7 @@ setInterval(
 		}
 		
 		//Pickup timer stuff
-		for (var i in Pickup.list){
-			if (Pickup.list[i].respawnTime > -1 && gameOver == false){				
-				if (Pickup.list[i].respawnTimer > 0){
-					Pickup.list[i].respawnTimer--;
-					updatePickupList.push(Pickup.list[i]);
-				} else if (Pickup.list[i].respawnTimer < 0){Pickup.list[i].respawnTimer = 0;} //Ignore this. This should never be triggered.
-			}
-		}	
+		pickup.clockTick();
 		
 		if (gameOver == true){
 			if (nextGameTimer > 0){
@@ -1123,28 +1062,13 @@ setInterval(
 		if (pause == true)
 			return;
 
-		var playerList = player.getPlayerList();				
-		for (var i in playerList){
-			//console.log("ENGINEING " + playerList[i].id);
-			if (playerList[i].team != "none")
-				playerList[i].engine();
-		}		
-		for (var i in Thug.list){
-			Thug.list[i].engine();
-		}	
-		
-		var secondsLeftPlusZero = "" + secondsLeft;
-		if (secondsLeft < 10){
-			secondsLeftPlusZero = "0" + secondsLeft;
-		}
-		
+		player.runPlayerEngines();
+		thug.runThugEngines();
+			
 		if (gametype == "ctf"){
 			moveBags();
 		}
 		
-		//Send packs to all players
-		//updateNotificationList = [];
-		//updateEffectList = [];
 		for (var i in SOCKET_LIST){			
 			var socket = SOCKET_LIST[i];			
 			socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, updateEffectList, updateMisc);
