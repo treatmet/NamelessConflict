@@ -1075,99 +1075,7 @@ var Player = function(id, cognitoSub, name, team, partyId){
 		updatePlayerList.push({id:self.id,property:"y",value:self.y});
 		updatePlayerList.push({id:self.id,property:"x",value:self.x});
 		
-						
-		//Send Full Game Status To Individual Player
-		//gameEngine.sendFullGameStatus(self.id);
-		var playerPack = [];
-		var thugPack = [];
-		var blockPack = [];
-		var pickupPack = [];
-		var miscPack = {};
-
-		for (var a in Player.list){
-			var player = {
-				id:Player.list[a].id,
-				name:Player.list[a].name,
-				x:Player.list[a].x,
-				y:Player.list[a].y,
-				health:Player.list[a].health,
-				energy:Player.list[a].energy,
-				cloak:Player.list[a].cloak,
-				cloakEngaged:Player.list[a].cloakEngaged,
-				boosting:Player.list[a].boosting,
-				walkingDir:Player.list[a].walkingDir,				
-				shootingDir:Player.list[a].shootingDir,				
-				holdingBag:Player.list[a].holdingBag,				
-				team:Player.list[a].team,	
-				weapon:Player.list[a].weapon,	
-				PClip:Player.list[a].DPClip,	
-				DPClip:Player.list[a].DPClip,	
-				MGClip:Player.list[a].MGClip,	
-				SGClip:Player.list[a].SGClip,	
-				DPAmmo:Player.list[a].DPAmmo,	
-				MGAmmo:Player.list[a].MGAmmo,	
-				SGAmmo:Player.list[a].SGAmmo,	
-				reloading:Player.list[a].reloading,
-				
-				cash:Player.list[a].cash,
-				cashEarnedThisGame:Player.list[a].cashEarnedThisGame,
-				kills:Player.list[a].kills,
-				deaths:Player.list[a].deaths,
-				steals:Player.list[a].steals,
-				returns:Player.list[a].returns,
-				captures:Player.list[a].captures,	
-				chat:"",
-				chatDecay:0,
-			};
-			playerPack.push(player);
-		}
-		var thugList = thug.getThugList();
-		for (var b in thugList){
-			var thugy = {
-				id:thugList[b].id,
-				x:thugList[b].x,
-				y:thugList[b].y,
-				health:thugList[b].health,
-				team:thugList[b].team,
-				rotation:thugList[b].rotation,
-			};
-			thugPack.push(thugy);
-		}
-
-		blockPack = block.getBlockList();
-		pickupPack = pickup.getPickupList();
-
-		
-		var size = Object.size(Player.list);			
-		miscPack.bagRed = bagRed;
-		miscPack.bagBlue = bagBlue;
-		miscPack.numPlayers = size;
-		miscPack.shop = shop;
-		miscPack.gameOver = gameOver;
-		miscPack.pregame = pregame;		
-		miscPack.shopEnabled = shopEnabled;
-		
-		miscPack.variant = {};
-		miscPack.variant.map = map;
-		miscPack.variant.gametype = gametype;
-		miscPack.variant.scoreToWin = scoreToWin;
-		miscPack.mapWidth = mapWidth;
-		miscPack.mapHeight = mapHeight;
-		miscPack.pcMode = pcMode;
-		miscPack.ip = myIP;
-		miscPack.port = port;
-		
-		if (gameMinutesLength > 0 || gameSecondsLength > 0){
-			miscPack.variant.timeLimit = true;
-		}
-		else {
-			miscPack.variant.timeLimit = false;
-		}
-		console.log("SENDING FULL GAME STATUS");
-		console.log("BLOCKS");
-		console.log(blockPack);
-		
-		socket.emit('updateInit', playerPack, thugPack, pickupPack, blockPack, miscPack); //Goes to a single player
+		gameEngine.sendFullGameStatus(self.id);
 	}
 	
 	Player.list[id] = self;
@@ -2456,20 +2364,9 @@ function playerEvent(playerId, event){
 	}
 }
 
-var joinGame = function(cognitoSub, username, team, partyId){
-	var socket = SOCKET_LIST[getSocketIdFromCognitoSub(cognitoSub)];
-	socket.team = team;
-	socket.partyId = partyId;
-	var players = gameEngine.getNumPlayersInGame();
-	if (players >= maxPlayers){ //Another redundant maxplayers check couldn't hurt, right?
-		socket.emit('signInResponse',{success:false,message:"SERVER FULL. Try again later, or try a different server."});								
-	}
-	else {
-		log("!!!!Player signing into game server - socketID: " + socket.id + " cognitoSub: " + cognitoSub + " username: " + username + " team: " + team + " partyId: " + partyId);
-		Player.onConnect(socket, cognitoSub, username, team, partyId);
-		dataAccessFunctions.dbGameServerUpdate();
-		socket.emit('signInResponse',{success:true,id:socket.id, mapWidth:mapWidth, mapHeight:mapHeight, whiteScore:whiteScore, blackScore:blackScore});
-	}	
+
+var connect = function(socket, cognitoSub, username, team, partyId){
+	Player.onConnect(socket, cognitoSub, username, team, partyId);
 }
 
 var getPlayerList = function(){
@@ -2507,9 +2404,9 @@ var isSafeCoords = function(potentialX, potentialY, team){
 	return true;
 }
 
+module.exports.connect = connect;
 module.exports.getPlayerList = getPlayerList;
 module.exports.playerDisconnect = playerDisconnect; //onDisconnect
 module.exports.getPlayerById = getPlayerById;
-module.exports.joinGame = joinGame;
 module.exports.runPlayerEngines = runPlayerEngines;
 module.exports.isSafeCoords = isSafeCoords;

@@ -6,6 +6,18 @@ function initializePage(){
 	getTokenFromUrlParameterAndLogin(); 	
 }
 
+function loginSuccess(){
+	showAuthorizedLoginButtons();            
+	getRequests();
+}
+
+function loginFail(){
+	showDefaultLoginButtons();
+}
+
+function loginFinally(){
+	showUnset("mainContent");
+}
 
 function populateSearchPage(){
 	if (document.getElementById('playerSearchPageBox')){
@@ -29,7 +41,6 @@ window.addEventListener('load', function () {
 	showUnset("mainContent");	
 
 	focusPlayerSearchPageBox();
-	pageLoaded = true;
 })
 
 function focusPlayerSearchPageBox(){

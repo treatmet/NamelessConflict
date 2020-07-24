@@ -6,6 +6,20 @@ function initializePage(){
 	getTokenFromUrlParameterAndLogin(); 	
 }
 
+function loginSuccess(){
+	checkViewedProfileIsFriendOrParty();
+	showAuthorizedLoginButtons();            
+	getRequests();
+}
+
+function loginFail(){
+	showDefaultLoginButtons();
+}
+
+function loginFinally(){
+	showUnset("mainContent");
+}
+
 function checkViewedProfileIsFriendOrParty(){	
 	console.log("passed profile page check, making call with:");
 

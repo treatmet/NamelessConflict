@@ -9,6 +9,20 @@ function initializePage(){
     getServerList();
 }
 
+function loginSuccess(){
+	hide("serverLoginButtons");
+	showAuthorizedLoginButtons();            
+	getRequests();
+}
+
+function loginFail(){
+	showDefaultLoginButtons();
+}
+
+function loginFinally(){
+	showUnset("mainContent");
+}
+
 function populateLeaderboard(){
 	if (document.getElementById('tablePrint')){
 		$.post('/getLeaderboard', {}, function(res,status){

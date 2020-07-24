@@ -1,7 +1,7 @@
 var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
 var authenticationEngine = require(absAppDir + '/server/shared/engines/authenticationEngine.js');
 
-var player = require(absAppDir + '/server/game/entities/player.js');
+var gameEngine = require(absAppDir + '/server/game/engines/gameEngine.js');
 
 const express = require('express');
 const router = express.Router();
@@ -40,7 +40,7 @@ router.post('/playNow', async function (req, res) {
 					res.status(200);
 					logg("res.send: " + "Server " + myUrl + " welcomes you!");
 					res.send({msg:"Server " + myUrl + " welcomes you!", success:true});					
-					player.joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team, incomingUsers[u].partyId); //Join game
+					gameEngine.joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team, incomingUsers[u].partyId); //Join game
 					break;
 				}
 			}

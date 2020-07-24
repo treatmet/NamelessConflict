@@ -237,9 +237,15 @@ function getEntityById(id){
 function getSafeCoordinates(team){
 	var potentialX = 10;
 	var potentialY = 10;
-	for (var w = 0; w < 50; w++){			
-		potentialX = randomInt(spawnXminWhite,spawnXmaxWhite);			
-		potentialY = randomInt(spawnYminWhite,spawnYmaxWhite);
+	for (var w = 0; w < 50; w++){
+		if (team == "white") {			
+			potentialX = randomInt(spawnXminWhite,spawnXmaxWhite);			
+			potentialY = randomInt(spawnYminWhite,spawnYmaxWhite);
+		}
+		else if (team == "black") {			
+			potentialX = randomInt(spawnXminBlack,spawnXmaxBlack);			
+			potentialY = randomInt(spawnYminBlack,spawnYmaxBlack);
+		}
 		if (!block.isSafeCoords(potentialX, potentialY)){continue;}
 		if (!thug.isSafeCoords(potentialX, potentialY, team)){continue;}
 		if (!player.isSafeCoords(potentialX, potentialY, team)){continue;}
@@ -1104,6 +1110,112 @@ var getAllPlayersFromDB = function(cb){
 	});		
 }
 
+var joinGame = function(cognitoSub, username, team, partyId){
+	var socket = SOCKET_LIST[getSocketIdFromCognitoSub(cognitoSub)];
+	socket.team = team;
+	socket.partyId = partyId;
+	var players = getNumPlayersInGame();
+	if (players >= maxPlayers){ //Another redundant maxplayers check couldn't hurt, right?
+		socket.emit('signInResponse',{success:false,message:"SERVER FULL. Try again later, or try a different server."});								
+	}
+	else {
+		log("!!!!Player signing into game server - socketID: " + socket.id + " cognitoSub: " + cognitoSub + " username: " + username + " team: " + team + " partyId: " + partyId);
+		player.connect(socket, cognitoSub, username, team, partyId);
+		dataAccessFunctions.dbGameServerUpdate();
+		socket.emit('signInResponse',{success:true,id:socket.id, mapWidth:mapWidth, mapHeight:mapHeight, whiteScore:whiteScore, blackScore:blackScore});
+	}	
+}
+
+var sendFullGameStatus = function(socketId){
+	var playerPack = [];
+	var thugPack = [];
+	var blockPack = [];
+	var pickupPack = [];
+	var miscPack = {};
+
+	var playerList = player.getPlayerList();
+	for (var a in playerList){
+		var playa = {
+			id:playerList[a].id,
+			name:playerList[a].name,
+			x:playerList[a].x,
+			y:playerList[a].y,
+			health:playerList[a].health,
+			energy:playerList[a].energy,
+			cloak:playerList[a].cloak,
+			cloakEngaged:playerList[a].cloakEngaged,
+			boosting:playerList[a].boosting,
+			walkingDir:playerList[a].walkingDir,				
+			shootingDir:playerList[a].shootingDir,				
+			holdingBag:playerList[a].holdingBag,				
+			team:playerList[a].team,	
+			weapon:playerList[a].weapon,	
+			PClip:playerList[a].DPClip,	
+			DPClip:playerList[a].DPClip,	
+			MGClip:playerList[a].MGClip,	
+			SGClip:playerList[a].SGClip,	
+			DPAmmo:playerList[a].DPAmmo,	
+			MGAmmo:playerList[a].MGAmmo,	
+			SGAmmo:playerList[a].SGAmmo,	
+			reloading:playerList[a].reloading,
+			
+			cash:playerList[a].cash,
+			cashEarnedThisGame:playerList[a].cashEarnedThisGame,
+			kills:playerList[a].kills,
+			deaths:playerList[a].deaths,
+			steals:playerList[a].steals,
+			returns:playerList[a].returns,
+			captures:playerList[a].captures,	
+			chat:"",
+			chatDecay:0,
+		};
+		playerPack.push(playa);
+	}
+	var thugList = thug.getThugList();
+	for (var b in thugList){
+		var thugy = {
+			id:thugList[b].id,
+			x:thugList[b].x,
+			y:thugList[b].y,
+			health:thugList[b].health,
+			team:thugList[b].team,
+			rotation:thugList[b].rotation,
+		};
+		thugPack.push(thugy);
+	}
+
+	blockPack = block.getBlockList();
+	pickupPack = pickup.getPickupList();
+
+	var size = Object.size(playerList);			
+	miscPack.bagRed = bagRed;
+	miscPack.bagBlue = bagBlue;
+	miscPack.numPlayers = size;
+	miscPack.shop = shop;
+	miscPack.gameOver = gameOver;
+	miscPack.pregame = pregame;		
+	miscPack.shopEnabled = shopEnabled;
+	
+	miscPack.variant = {};
+	miscPack.variant.map = map;
+	miscPack.variant.gametype = gametype;
+	miscPack.variant.scoreToWin = scoreToWin;
+	miscPack.mapWidth = mapWidth;
+	miscPack.mapHeight = mapHeight;
+	miscPack.pcMode = pcMode;
+	miscPack.ip = myIP;
+	miscPack.port = port;
+	
+	if (gameMinutesLength > 0 || gameSecondsLength > 0){
+		miscPack.variant.timeLimit = true;
+	}
+	else {
+		miscPack.variant.timeLimit = false;
+	}
+	SOCKET_LIST[socketId].emit('sendFullGameStatus', playerPack, thugPack, pickupPack, blockPack, miscPack); //Goes to a single player
+}
+
+
 module.exports.changeTeams = changeTeams;
 module.exports.spawnSafely = spawnSafely;
 module.exports.getEntityById = getEntityById;
@@ -1116,3 +1228,5 @@ module.exports.killScore = killScore;
 module.exports.ensureCorrectThugCount = ensureCorrectThugCount;
 module.exports.restartGame = restartGame;
 module.exports.assignSpectatorsToTeam = assignSpectatorsToTeam;
+module.exports.joinGame = joinGame;
+module.exports.sendFullGameStatus = sendFullGameStatus;

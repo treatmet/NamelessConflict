@@ -7,8 +7,6 @@ var cognitoSub = "";
 var username = "";
 var partyId = "";
 var federatedUser = false;
-var pageLoaded = false;
-var autoJoinGame = "false";
 var pcMode = 1;
 var serverHomePage = "https://rw.treatmetcalf.com/";
 if (window.location.href.indexOf("localhost") > -1)
@@ -32,36 +30,22 @@ function getTokenFromUrlParameterAndLogin(){
         console.log(data);
 		
         if (data && data.username){
-            //Successful Auth
             cognitoSub = data.cognitoSub;
 			console.log('emmiting updateSocketInfo');
 			socket.emit('updateSocketInfo', cognitoSub);
             username = data.username;					
 			federatedUser = data.federatedUser;
-  		
-			if (!data.isWebServer){
-				autoJoinGame = getUrlParam("join", "false");
-			}
-			if (page == "home"){
-				hide("serverLoginButtons");
-			}
-			else if(page == "game"){
-				updateProfileLink();
-			}
-			else if (page == "profile"){
-				checkViewedProfileIsFriendOrParty();
-			}
-            showAuthorizedLoginButtons();            
-            setLocalStorage();
-			getRequests();
-			getOnlineFriendsAndParty();
-			autoPlayNow();
+	
+			setLocalStorage();
+			getOnlineFriendsAndParty();	
+			loginSuccess();
 	    }
-        else { //Failed Auth
-            showDefaultLoginButtons();
-        }
-		removeUrlParams();
+		else {
+			loginFail();
+		}
 		setPcModeAndIsLocalElements({isLocal:data.isLocal, pcMode:data.pcMode});
+		loginFinally();
+		removeUrlParams();
     });
 }
 
@@ -73,10 +57,11 @@ function updateProfileLink(){
 }
 
 function setPcModeAndIsLocalElements(data){
+	pcMode = data.pcMode;
 	var redirectUri = "https://rw.treatmetcalf.com/";
 	if (data.isLocal == true){
 		redirectUri = "https://rw2.treatmetcalf.com/";
-	}
+	}	
 	
 	if (document.getElementById("header")){
 		if (document.getElementById("logInH")){
@@ -87,8 +72,7 @@ function setPcModeAndIsLocalElements(data){
 			document.getElementById("logIn").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
 			document.getElementById("createAccount").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
 		}
-
-		pcMode = data.pcMode;
+		
 		if (pcMode == 2){
 			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
 		}
@@ -124,7 +108,7 @@ socket.on('redirectToGame', function(url){
 });
 
 function autoPlayNow(){
-	if (autoJoinGame == "true" && pageLoaded){
+	if (getUrlParam("join", "false") == "true"){
 		var options = {};
 		options.server = getUrl();
 		playNow();
@@ -241,6 +225,7 @@ function transformToUIPartyData(data){
 }
 
 function updateOnlineFriendsSectionHtml(friends){
+	if (!document.getElementById("onlineFriendsSection")){return;}
 	var section = document.getElementById("onlineFriendsSection");
 	var html = "<span>Online friends [" + friends.length + "]";	
 	if (friends.length > 0){
@@ -262,6 +247,7 @@ function updateOnlineFriendsSectionHtml(friends){
 	party:[{cognitoSub:"67890",username:"myman"}] //Party members excluding you 07/2020
 };*/
 function updatePartySectionHtml(partyData){
+	if (!document.getElementById("partySection")){return;}
 	var section = document.getElementById("partySection");	
 	var html = "";
 
@@ -296,7 +282,6 @@ function updatePartySectionHtml(partyData){
 }
 
 function getRequests(){
-	if (page == "game"){return;}
 	const data = {
 		cognitoSub:cognitoSub
 	};
@@ -317,8 +302,8 @@ function getRequests(){
 	});
 }
 
-function updateRequestsSectionHtml(data){
-	if (data.partyRequests.length > 0 || data.friendRequests.length > 0){
+function updateRequestsSectionHtml(data){	
+	if (document.getElementById("invitesBar") && data.partyRequests.length > 0 || data.friendRequests.length > 0){
 		if (data.friendRequests.length > 0){document.getElementById("invitesBar").style.backgroundColor = '#153e17';}
 			else {document.getElementById("friendInvitesSection").style.display = 'none';}
 		if (data.partyRequests.length > 0){document.getElementById("invitesBar").style.backgroundColor = '#003461';}
@@ -448,7 +433,7 @@ function localClick(){
 }
 
 function showDefaultLoginButtons(){
-	if (page == "game"){alert("Authentication failed while trying to join game."); window.location.href = serverHomePage;};
+	if (page == "game"){return;}
     document.getElementById("createAccountH").style.display = "";
     document.getElementById("logInH").style.display = "";
     document.getElementById("playNowH").style.display = "none";
@@ -552,18 +537,6 @@ function submitPlayerSearch(e){ //Used in header as well
 	}
 	window.location.href = serverHomePage + "search/" + e.target.elements[0].value;
 }
-
-window.addEventListener('load', function () {
-	if (autoJoinGame != "true") {
-		if (document.getElementById("serverLoginButtons") && cognitoSub == "") {
-			document.getElementById("serverLoginButtons").style.display = "inline-block";				
-		}
-		showUnset("mainContent");	
-	}
-
-	pageLoaded = true;
-	autoPlayNow();	
-})
 
 function localPlayNowClick(){
 	socket.emit('test', "123456");

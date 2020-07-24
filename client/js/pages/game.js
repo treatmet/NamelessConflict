@@ -4,6 +4,19 @@ function initializePage(){
 	getTokenFromUrlParameterAndLogin(); 	
 }
 
+function loginSuccess(){
+	autoPlayNow();
+}
+
+function loginFail(){
+	alert("Authentication failed while trying to join game."); 
+	window.location.href = serverHomePage;
+}
+
+function loginFinally(){
+	updateProfileLink();
+}
+
 function voteCTF(){
 	socket.emit("voteEndgame", myPlayer.id, "gametype", "ctf");
 	document.getElementById("voteCTF").disabled = true;
@@ -1335,7 +1348,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 });
 
 //Goes to only a single player init initialize 
-socket.on('updateInit',function(playerPack, thugPack, pickupPack, blockPack, miscPack){
+socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockPack, miscPack){
 	Player.list = [];
 	for (var i = 0; i < playerPack.length; i++) {
 		//Update myPlayer
