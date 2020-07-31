@@ -1,5 +1,6 @@
 global.mongoDbLocation = process.env.mongoDbLocation;
 global.s3LoggingBucket = process.env.s3LoggingBucket;
+global.EBName = process.env.EBName;
 
 var AWS = require("aws-sdk");
 var elasticbeanstalk = new AWS.ElasticBeanstalk();
@@ -40,14 +41,11 @@ exports.handler = (event, context, callback) => {
 
 
     });	
-    
-
-
 };
 
 function updateInstanceCount(targetCount, cb){
     var params = {
-        EnvironmentName: "BeanstalkNodePoc", 
+        EnvironmentName: EBName, 
         OptionSettings: [
             {
                 Namespace: "aws:autoscaling:asg", 
