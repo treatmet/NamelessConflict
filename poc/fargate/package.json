@@ -1,0 +1,16 @@
+{
+  "name": "docker_web_app",
+  "version": "1.0.0",
+  "description": "Node.js on Docker",
+  "author": "First Last <first.last@example.com>",
+  "main": "server.js",
+  "scripts": {
+    "build": "docker build -t sticky .",
+    "start": "docker run -p 80:80 -d --name sticky --rm sticky",
+    "stop": "docker stop sticky"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.5",
+    "express": "^4.16.1"
+  }
+}

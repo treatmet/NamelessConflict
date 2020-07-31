@@ -23,17 +23,32 @@ export class IamStack extends Stack {
       ]
     });
 
+    var ecrFullAccessPolicy = new ManagedPolicy(this, "Policy-ECR_FullAccess", {
+      managedPolicyName: "ECR_FullAccess",
+      statements: [
+        new PolicyStatement({
+          sid: "FullAccess",
+          effect: Effect.ALLOW,
+          actions: [
+            "ecr:*"
+          ],
+          resources: ["*"]
+        })
+      ]
+    });
+
     var opsGroup = new Group(this, "Group-Ops", {
       groupName: "Ops",
       managedPolicies: [
         ManagedPolicy.fromAwsManagedPolicyName("ReadOnlyAccess"),
-        ManagedPolicy.fromAwsManagedPolicyName("IAMUserChangePassword"),
-        accessKeyPolicy,
+        ManagedPolicy.fromAwsManagedPolicyName("IAMFullAccess"),
         ManagedPolicy.fromAwsManagedPolicyName("AWSCloudFormationFullAccess"),
         ManagedPolicy.fromAwsManagedPolicyName("AmazonEC2FullAccess"),
         ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess"),
         ManagedPolicy.fromAwsManagedPolicyName("CloudWatchFullAccess"),
         ManagedPolicy.fromAwsManagedPolicyName("AmazonCognitoPowerUser"),
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonECS_FullAccess"),
+        ecrFullAccessPolicy
       ]
     });
 
