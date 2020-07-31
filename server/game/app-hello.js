@@ -14,4 +14,4 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, HOST);
-console.log(`Running on http://${HOST}:${PORT} as instance ${instance}`);
+console.log(`Running on http://${HOST}:${PORT}`);
