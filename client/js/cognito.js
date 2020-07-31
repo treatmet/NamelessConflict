@@ -1,27 +1,16 @@
+console.log("cognito.js loading");
 var socket = io();
 const cognitoClientId = '70ru3b3jgosqa5fpre6khrislj';
 const cognitoPoolId = 'us-east-2_SbevJL5zt';
+var page = "";
 var cognitoSub = "";
 var username = "";
 var partyId = "";
 var federatedUser = false;
-var pageLoaded = false;
-var autoJoinGame = "false";
 var pcMode = 1;
-
 var serverHomePage = "https://rw.treatmetcalf.com/";
 if (window.location.href.indexOf("localhost") > -1)
 	serverHomePage = "/";
-
-
-initializePage();
-function initializePage(){
-    showLocalElements();
-	populateLeaderboard();
-	populateProfilePage();
-	populateSearchPage();	
-	getTokenFromUrlParameterAndLogin(); 	
-}
 
 function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
@@ -40,109 +29,60 @@ function getTokenFromUrlParameterAndLogin(){
         console.log("validateToken response:");
         console.log(data);
 		
-		setPcModeAndIsLocalElements({isLocal:data.isLocal, pcMode:data.pcMode});
-
         if (data && data.username){
-            //Successful Auth
             cognitoSub = data.cognitoSub;
 			console.log('emmiting updateSocketInfo');
 			socket.emit('updateSocketInfo', cognitoSub);
             username = data.username;					
-            federatedUser = data.federatedUser;
-  		
-			if (!data.isWebServer){
-				autoJoinGame = getUrlParam("join", "false");
-			}
-			getServerList();
-			updateProfileLink();
-			hideServerLoginButtons();
-            showAuthorizedLoginButtons();            
-            setLocalStorage();
-			getRequests();
-			getOnlineFriendsAndParty();
-			checkViewedProfileIsFriendOrParty();
-			autoPlayNow();
+			federatedUser = data.federatedUser;
+	
+			setLocalStorage();
+			getOnlineFriendsAndParty();	
+			loginSuccess();
 	    }
-        else { //Failed Auth
-            showDefaultLoginButtons();
-        }
+		else {
+			loginFail();
+		}
+		setPcModeAndIsLocalElements({isLocal:data.isLocal, pcMode:data.pcMode});
+		loginFinally();
 		removeUrlParams();
     });
 }
 
-function populateSearchPage(){
-	if (document.getElementById('playerSearchPageBox')){
-		$.post('/getPlayerSearchResults', {searchText:getSearchText()}, function(res,status){
-			console.log("getPlayerSearchResults response:");
-			console.log(res);
-			
-			var searchResultsHTML = "";
-			for (var i = 0; i < res.length; i++){
-				searchResultsHTML+="<a href='" + serverHomePage + "user/" + res[i].cognitoSub + "'>" + res[i].username + "</a><br>";
-			}	
-		
-			document.getElementById('searchResults').innerHTML = searchResultsHTML;
-		});
-
-		setPlayerSearchText();
-	}	
+function updateProfileLink(){
+	if (document.getElementById("menuRightLink")){
+		var link = serverHomePage + "user/" + cognitoSub;
+		document.getElementById("menuRightLink").innerHTML = '<a href="' + link + '" style="" class="elecText" id="profileLink">' + "Profile" + '&gt;</a>';
+	}
 }
 
 function setPcModeAndIsLocalElements(data){
+	pcMode = data.pcMode;
 	var redirectUri = "https://rw.treatmetcalf.com/";
 	if (data.isLocal == true){
 		redirectUri = "https://rw2.treatmetcalf.com/";
-		serverHomePage = "/";
-	}
-	
-	if (document.getElementById("logInH")){
-		document.getElementById("logInH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
-		document.getElementById("createAccountH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
-	}
-	if (document.getElementById("logIn")){
-		document.getElementById("logIn").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
-		document.getElementById("createAccount").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
-	}
-
-	pcMode = data.pcMode;
-	if (pcMode == 2){
-		document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
-	}
-	else {
-		document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
-	}
-	if (document.getElementById("homeLink")){
-		document.getElementById("homeLink").href = serverHomePage;
-	}		
-}
-
-function populateLeaderboard(){
-	if (document.getElementById('tablePrint')){
-		$.post('/getLeaderboard', {}, function(res,status){
-			var leaderboardHTML= "<table class='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";
-			for (let i = 0; i < res.length; i++) {
-				leaderboardHTML+="<tr><td style='background-color: #728498; text-align: center; font-weight: bold;'>" + (i + 1) + "</td><td><a href='{{serverHomePage}}user/"+res[i].cognitoSub+"'>" + res[i].username + "</td><td>" + res[i].rating + "</td><td>" + res[i].kills + "</td><td>" + res[i].captures + "</td><td>" + res[i].gamesWon + "</td><td>" + res[i].experience + "</td></tr>";			
-			}		
-			leaderboardHTML = leaderboardHTML.replace(/{{serverHomePage}}/g, serverHomePage);
-			leaderboardHTML+="</table>";
-		
-			document.getElementById('tablePrint').innerHTML = leaderboardHTML;
-		});
 	}	
-}
-
-
-function getServerList(){
-	$.post('/getServerList', {}, function(data,status){
-		console.log("Get server list response:");
-		console.log(data);		
-
-		var serversHTML = "";
-		for (let j = 0; j < data.length; j++) {
-			serversHTML += '<div class="serverSelectButton" onclick="getJoinableServer({server:\'' + data[j].url + '\'})" style="cursor: pointer;">' + data[j].serverName + '<br><span style="font-size: 12;text-shadow: none;">' + data[j].gametype + ' -- ' + data[j].currentPlayers + '/' + data[j].maxPlayers + ' Players</span></div>';
+	
+	if (document.getElementById("header")){
+		if (document.getElementById("logInH")){
+			document.getElementById("logInH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
+			document.getElementById("createAccountH").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
+		}
+		if (document.getElementById("logIn")){
+			document.getElementById("logIn").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
+			document.getElementById("createAccount").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
+		}
+		
+		if (pcMode == 2){
+			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
+		}
+		else {
+			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
+		}
+		if (document.getElementById("homeLink")){
+			document.getElementById("homeLink").href = serverHomePage;
 		}		
-		document.getElementById("serverList").innerHTML = serversHTML;
-	});
+	}
 }
 
 function getJoinParams(){
@@ -154,34 +94,21 @@ function getJoinParams(){
 	return tokenParams;
 }
 
-window.addEventListener('load', function () {
-	if (autoJoinGame != "true") {
-		if (document.getElementById("serverLoginButtons") && cognitoSub == "") {
-			document.getElementById("serverLoginButtons").style.display = "inline-block";				
-		}
-		showMainContent();	
-	}
+socket.on('reloadHomePage', function(){
+	window.location.href = serverHomePage;
+});
 
-	focusPlayerSearchPageBox();
-	pageLoaded = true;
-	autoPlayNow();	
-})
+socket.on('redirect', function(url){
+	window.location.href = url;
+});
 
-function updateProfileLink(){
-	if (document.getElementById("menuRightLink")){
-		var link = serverHomePage + "user/" + cognitoSub;
-		document.getElementById("menuRightLink").innerHTML = '<a href="' + link + '" style="" class="elecText" id="profileLink">' + "Profile" + '&gt;</a>';
-	}
-}
-
-function focusPlayerSearchPageBox(){
-	if (document.getElementById("playerSearchPageBox")){
-		document.getElementById("playerSearchPageBox").focus();
-	}
-}
+socket.on('redirectToGame', function(url){
+	url = url + getJoinParams();
+	window.location.href = url;
+});
 
 function autoPlayNow(){
-	if (autoJoinGame == "true" && pageLoaded){
+	if (getUrlParam("join", "false") == "true"){
 		var options = {};
 		options.server = getUrl();
 		playNow();
@@ -232,66 +159,18 @@ function getJoinableServer(options){
 	}
 }
 
-function localPlayNowClick(){
-	socket.emit('test', "123456");
-
-	//window.location.href = '/?join=true';
-}
-
-function show(element){
-	if (document.getElementById(element)) {
-		document.getElementById(element).style.display = "inline-block";
-	}
-}
-
-function hide(element){
-	if (document.getElementById(element)) {
-		document.getElementById(element).style.display = "none";
-	}
-}
-
-function hideServerLoginButtons(){
-	if (document.getElementById("serverLoginButtons")) {
-		document.getElementById("serverLoginButtons").style.display = "none";
-	}
-}
-
-function showInviteButtons(){
-	if (document.getElementById('invitePlayerButtons')){
-		document.getElementById('invitePlayerButtons').style.display = '';
-	}
-}
-
-function hideAddFriendButton(){
-	if (document.getElementById('addFriendButton')){
-		document.getElementById('addFriendButton').style.display = 'none';
-	}
-}
-
-function showMainContent(){
-	if (document.getElementById("mainContent")){
-		document.getElementById("mainContent").style.display = "unset";
-	}
-}
-
-function showServerList(){
-	if (document.getElementById("serverList")){
-		document.getElementById("serverList").style.display = "unset";
-	}
-	hide("serversHiddenMsg");
-}
-
 function getOnlineFriendsAndParty(){	
 	//Get friends
 	const data = {
 		cognitoSub:cognitoSub
 	};
-	$.post('/getOnlineFriends', data, function(data,status){
-		//console.log("getOnlineFriends response:");
-		//console.log(data);		
-		updateOnlineFriendsSectionHtml(data);		
-	});
-	
+	if (page != "game"){
+		$.post('/getOnlineFriends', data, function(data,status){
+			//console.log("getOnlineFriends response:");
+			//console.log(data);		
+			updateOnlineFriendsSectionHtml(data);		
+		});
+	}	
 	//Get party
 	$.post('/getParty', data, function(data,status){
 		/*
@@ -307,25 +186,26 @@ function getOnlineFriendsAndParty(){
 			partyId = data.partyId;
 		}
 		else {
-			alert("Error getting party data");
 			partyId = "";
 			return;
 		}
 		
 		var partyData = transformToUIPartyData(data);
 		
+		if (page == "game"){return};
 		updatePartySectionHtml(partyData);		
-		updateKickInviteToPartyButtons(partyData);
+		if (page == "profile"){
+			updateKickInviteToPartyButtons(partyData);
+		}
 		if (partyData.leader.cognitoSub && partyData.leader.cognitoSub != cognitoSub){
 			show("serversHiddenMsg");
 			hide("serverList");
 		}
 		else {
-			showServerList();
+			showUnset("serverList");
+			hide("serversHiddenMsg");
 		}
 	});
-	
-	
 }
 
 function transformToUIPartyData(data){
@@ -344,33 +224,8 @@ function transformToUIPartyData(data){
 	return partyData;
 }
 
-
-function updateKickInviteToPartyButtons(data){
-	var viewedProfileCognitoSub = getViewedProfileCognitoSub();
-	var isInParty = false;
-	for (var p = 0; p < data.party.length; p++){
-		if (viewedProfileCognitoSub == data.party[p].cognitoSub){
-			isInParty = true;
-		}
-	}
-
-	if (data.leader.cognitoSub == cognitoSub && data.party.length > 0 && isInParty){ //If you are the leader, and viewed profile is in party
-		hide("inviteToPartyButton");
-		show("kickFromPartyButton");
-	}
-	else if(data.leader.cognitoSub && data.leader.cognitoSub != cognitoSub && (isInParty || viewedProfileCognitoSub == data.leader.cognitoSub)){ //If there is a leader, and you're not it. AND viewed profile is already in party (or is the leader)
-		hide("inviteToPartyButton");
-		hide("kickFromPartyButton");			
-	}
-	else {
-		hide("kickFromPartyButton");			
-		show("inviteToPartyButton");
-	}
-}
-
-
-
 function updateOnlineFriendsSectionHtml(friends){
+	if (!document.getElementById("onlineFriendsSection")){return;}
 	var section = document.getElementById("onlineFriendsSection");
 	var html = "<span>Online friends [" + friends.length + "]";	
 	if (friends.length > 0){
@@ -387,11 +242,12 @@ function updateOnlineFriendsSectionHtml(friends){
 	section.innerHTML = html;
 }
 
-	/*var partyData = {
-		leader:{cognitoSub:"12345",username:"myguy"},
-		party:[{cognitoSub:"67890",username:"myman"}] //Party members other than you
-	};*/
+/*var partyData = {
+	leader:{cognitoSub:"12345",username:"myguy"},
+	party:[{cognitoSub:"67890",username:"myman"}] //Party members excluding you 07/2020
+};*/
 function updatePartySectionHtml(partyData){
+	if (!document.getElementById("partySection")){return;}
 	var section = document.getElementById("partySection");	
 	var html = "";
 
@@ -446,8 +302,8 @@ function getRequests(){
 	});
 }
 
-function updateRequestsSectionHtml(data){
-	if (data.partyRequests.length > 0 || data.friendRequests.length > 0){
+function updateRequestsSectionHtml(data){	
+	if (document.getElementById("invitesBar") && data.partyRequests.length > 0 || data.friendRequests.length > 0){
 		if (data.friendRequests.length > 0){document.getElementById("invitesBar").style.backgroundColor = '#153e17';}
 			else {document.getElementById("friendInvitesSection").style.display = 'none';}
 		if (data.partyRequests.length > 0){document.getElementById("invitesBar").style.backgroundColor = '#003461';}
@@ -527,74 +383,7 @@ function requestDeclineClick(id){
 	});
 }
 
-function populateProfilePage(){
-	const params = {
-		cognitoSub:getViewedProfileCognitoSub()
-	}
-
-	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){	
-		$.post('/getProfile', params, function(data,status){
-			if (!data.success){
-				document.getElementById("mainContent").innerHTML = '<div id="fullScreenError" class="sectionTitle">Invalid User</div>';
-			}
-			else {
-
-				console.log("getProfilePage response from server:");
-				console.log(data);		
-
-				var mainContentHTML = document.getElementById("mainContent").innerHTML;
-				for (var element in data){
-					var regex = new RegExp("{{" + element + "}}","g");
-					mainContentHTML = mainContentHTML.replace(regex, data[element]);
-				}
-
-				document.getElementById("mainContent").innerHTML = mainContentHTML;
-			}
-		});
-	}	
-}
-
-function getViewedProfileCognitoSub(){
-	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
-		return getUrl().split('/user/')[1];
-	}	
-	return "";
-}
-
-function getSearchText(){
-	if (document.getElementById('playerSearchPageBox') && getUrl().indexOf('/search/') > -1){
-		return getUrl().split('/search/')[1];
-	}	
-	return "";
-}
-
-function checkViewedProfileIsFriendOrParty(){
-	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
-		console.log("passed profile page check, making call with:");
-	
-		const params = {
-			callerCognitoSub:cognitoSub,
-			targetCognitoSub:getViewedProfileCognitoSub()
-		};
-	
-	    $.post('/getPlayerRelationship', params, function(data,status){
-			console.log("getPlayerRelationship response:");
-			console.log(data);
-			if (data.friends == true){
-				hide("addFriendButton");
-				show("removeFriendButton");								
-			}
-			else {
-				hide("removeFriendButton");											
-				show("addFriendButton");
-			}
-		});
-	}
-}
-
-
-
-
+//Unused
 function setCookie(cname, cvalue, exdays) {
   var d = new Date();
   d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
@@ -617,7 +406,6 @@ function getCookie(cname) {
   return "";
 }
 
-
 function setLocalStorage(){
     var keyPrefix = 'CognitoIdentityServiceProvider.' + cognitoClientId;
     var lastUserKey = keyPrefix + '.LastAuthUser';
@@ -633,12 +421,19 @@ function logOutClick(){
 function showLocalElements(){
   $(document).ready(function() {
     if (window.location.href.indexOf("localhost") > -1) {
-      //document.getElementById("localPlayNow").style.display = "";
+      document.getElementById("localPlayNow").style.display = "";
     }
   });
 }
 
+function localClick(){
+	console.log("NAVING22");
+	window.location.href = "https://google.com",true;
+	return false;
+}
+
 function showDefaultLoginButtons(){
+	if (page == "game"){return;}
     document.getElementById("createAccountH").style.display = "";
     document.getElementById("logInH").style.display = "";
     document.getElementById("playNowH").style.display = "none";
@@ -648,9 +443,8 @@ function showDefaultLoginButtons(){
 	}
 }
 
-
-
 function showAuthorizedLoginButtons(){
+	if (page == "game"){return;}
     document.getElementById("createAccountH").style.display = "none";
     document.getElementById("logInH").style.display = "none";
     document.getElementById("playNowH").style.display = "";
@@ -670,7 +464,7 @@ function showAuthorizedLoginButtons(){
 			showSecondaySectionTitles();
 		}
 		else {
-			showInviteButtons();			
+			showUnset("invitePlayerButtons");			
 		}
     }
 }
@@ -701,347 +495,12 @@ function getUrl(){ //Get server Ip, myIp, myUrl
     return window.location.pathname;
 }
 
-//clear all url params
 function removeUrlParams(){
 	var uri = window.location.toString();
 	if (uri.indexOf("?") > 0) {
 		var clean_uri = uri.substring(0, uri.indexOf("?"));
 		window.history.replaceState({}, document.title, clean_uri);
 	}
-}
-
-function setPlayerSearchText(){
-	document.getElementById('playerSearchPageBox').value = getSearchText();
-}
-
-/////////////////////////////EDIT USER PROFILE FUNCTIONS////////////////////////////////////////////
-
-function editUserButtonClick(){
-    if (getUrl().includes(cognitoSub)){
-		document.getElementById('editUserFieldText').innerHTML = 'Select attribute you would like to change:';
-        if (federatedUser){
-            document.getElementById('editUserPasswordText').style.display = 'none';
-            document.getElementById('oldPasswordText').style.display = 'none';
-            document.getElementById('newPasswordText').style.display = 'none';
-            document.getElementById('newPasswordText2').style.display = 'none';
-            document.getElementById('newEmailText').style.display = 'none';
-            document.getElementById('newUsernameText').style.display = '';
-            document.getElementById('editUsernameButton').style.display = 'none';
-            document.getElementById('editPasswordButton').style.display = 'none';            
-			document.getElementById('editUserFieldText').innerHTML = 'Update username:';
-        }
-        document.getElementById('editUserButton').style.display = 'none';
-		document.getElementById('statsTables').style.display = 'none';
-        document.getElementById('updateUserTextBoxes').style.display = '';
-    }
-}
-
-async function editUserConfirmButtonClick(){    
-    var oldPassword = document.getElementById('oldPasswordText').value;
-    var newUsername = document.getElementById('newUsernameText').value;
-    var newPassword = document.getElementById('newPasswordText').value;
-    var newPassword2 = document.getElementById('newPasswordText2').value;
-    var newEmail = document.getElementById('newEmailText').value;
-    if (getUrl().includes(cognitoSub)){
-        if (federatedUser){
-            if (isValidUsername(newUsername)){
-                updateMongoUsername(newUsername, cognitoSub);
-            }
-        }
-        else {
-            if ((newPassword.length == 0 || newPassword == "Password") && (newUsername.length == 0 || newUsername == "Username") && (newEmail.length == 0 || newEmail == "Email")){
-                alert("No fields were updated.");
-                return;
-            }
-            if (isValidUsername(newUsername)){
-                updatePreferredUsername(oldPassword, newUsername);
-            }
-            if (newPassword.length > 0 && newPassword != "Password"){
-                if (newPassword == newPassword2){
-                    ChangePassword(oldPassword, newPassword);
-                }
-                else {
-                    alert("New password fields do not match.");
-                }
-            }
-        }
-    }
-}
-
-async function updateMongoUsername(newUsername, cognitoSub){
-    var data = {
-        newUsername:newUsername,
-        cognitoSub:cognitoSub
-    };
-    
-    await $.post('/updateUsername', data, function(data,status){
-    if (data){
-		if (data.error){
-			alert(data.error);
-		}
-		else {
-			window.location.reload();
-		}
-    }
-        console.log("updateUsername response:");
-        console.log(data);
-    });
-}
-
-
-function isValidUsername(newUsername){
-    if (newUsername == "Username" || newUsername == ""){
-        return false;        
-    }
-    else if (newUsername.length < 3){
-        alert("Please enter a Username that is at least 3 characters long.");
-        return false;
-    }
-    else if (newUsername.length > 20){
-        alert("Username is too long.\nPlease enter a Username that is less than 20 characters.");
-        return false;
-    }
-    else if (!isValid(newUsername) || newUsername.indexOf(' ') > -1 || newUsername.indexOf('@') > -1 || newUsername.indexOf('%') > -1 || newUsername.indexOf(')') > -1 || newUsername.indexOf('(') > -1 || newUsername.indexOf('}') > -1 || newUsername.indexOf('{') > -1 || newUsername.indexOf('nigger') > -1 || newUsername.indexOf('cunt') > -1){
-        alert("Spaces and special characters (\"@\", \"%\", etc) are not allowed in Usernames.");
-        return false;
-    }
-
-    return true;
-}
-
-function isValid(str){
- return !/[~`!#$%\^&*+=\[\]\\';,\/{}|\\"@:<>\?]/g.test(str);
-}
-
-function editUsernameButtonClick(){
-    if (document.getElementById('oldPasswordText').value.length > 0 && document.getElementById('oldPasswordText').value != "Password"){
-		document.getElementById('editUserFieldText').innerHTML = 'Enter new username:';
-        document.getElementById('newUsernameText').style.display = '';
-        document.getElementById('editUsernameButton').style.display = 'none';
-        document.getElementById('editPasswordButton').style.display = 'none';
-    }
-    else {
-        alert("Enter your current password first.");
-    }
-}
-
-function editPasswordButtonClick(){
-    if (document.getElementById('oldPasswordText').value.length > 0 && document.getElementById('oldPasswordText').value != "Password"){
-		document.getElementById('editUserFieldText').innerHTML = 'Enter new password:';
-        document.getElementById('newPasswordText').style.display = '';
-        document.getElementById('newPasswordText2').style.display = '';
-        document.getElementById('editUsernameButton').style.display = 'none';
-        document.getElementById('editPasswordButton').style.display = 'none';
-    }
-    else {
-        alert("Enter your current password first.");
-    }
-}
-
-function editUserCancelButtonClick(){
-    resetEditUserElements();
-    document.getElementById('editUserButton').style.display = '';
-    document.getElementById('updateUserTextBoxes').style.display = 'none';
-    document.getElementById('statsTables').style.display = '';
-
-    document.getElementById('newUsernameText').style.display = 'none';
-    document.getElementById('editUsernameButton').style.display = '';
-    document.getElementById('editPasswordButton').style.display = '';
-    document.getElementById('newPasswordText').style.display = 'none';
-    document.getElementById('newPasswordText2').style.display = 'none';
-
-}
-
-function newUserNameClick(){	
-        var newUsernameText = document.getElementById("newUsernameText");
-		newUsernameText.style.color = "#000000";
-		if (newUsernameText.value == "Username"){newUsernameText.value = "";}		
-}
-
-function passwordClick(element){
-	element.style.color = "#000000";
-	if (element.value == "Password" || element.value == "Password Confirm"){element.value = "";}
-    element.type = "password";
-}
-
-function newEmailClick(){
-    var newEmailText = document.getElementById("newEmailText"); 		
-	newEmailText.style.color = "#000000";
-	if (newEmailText.value == "Email"){newEmailText.value = "";}
-}
-
-function addFriendButtonClick(){
-	console.log("addFriendButtonClick()");
-
-	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
-
-		const friendRequestData = {
-			cognitoSub:cognitoSub,
-			username:username,
-			targetCognitoSub:getUrl().split('/user/')[1],
-			type:"friend"
-		};		
-		upsertRequest(friendRequestData);
-
-		const data = {
-			cognitoSub:cognitoSub,
-			targetCognitoSub:getUrl().split('/user/')[1]
-		};		
-		console.log(data);
-		$.post('/addFriend', data, function(data,status){
-		if (data){
-			if (data.error){
-				alert(data.error);
-			}
-			else {
-				window.location.reload();
-			}
-		}
-			console.log("addFriend response:");
-			console.log(data);
-		});
-	}
-}
-
-function removeFriendButtonClick(){
-	const data = {
-		cognitoSub:cognitoSub,
-		targetCognitoSub:getUrl().split('/user/')[1]
-	};	
-	$.post('/removeFriend', data, function(data,status){
-	if (data){
-		if (data.error){
-			alert(data.error);
-		}
-		else {
-			window.location.reload();
-		}
-	}
-		console.log("removeFriend response:");
-		console.log(data);
-	});
-}
-
-function inviteToPartyButtonClick() {
-	console.log("partyRequestButtonClick()");
-
-	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
-		const data = {
-			cognitoSub:cognitoSub,
-			username:username,
-			targetCognitoSub:getUrl().split('/user/')[1],
-			type:"party"
-		};		
-		upsertRequest(data);
-	}
-
-}
-
-function upsertRequest(data){
-	$.post('/upsertRequest', data, function(data,status){
-	if (data){
-		if (data.error){
-			alert(data.error);
-		}
-		else {
-			window.location.reload();
-		}
-	}
-		console.log("upsertRequest response:");
-		console.log(data);
-	});
-}
-
-
-
-function kickFromPartyButtonClick() {
-	document.getElementById("kickFromPartyButton").style.backgrounColor = "gray";
-	
-	const data = {
-		cognitoSub: cognitoSub,
-		targetCognitoSub: getUrl().split('/user/')[1]
-	};
-	
-	$.post('/kickFromParty', data, function(data,status){
-		console.log("Kick from party endpoint response from server:");
-		console.log(data);		
-		window.location.reload(); //remove when doing ui polish
-		//hide("kickFromPartyButton");			
-		//show("inviteToPartyButton");
-	});
-}
-
-
-
-/*-------------------------------COGNITO FUNCTIONS------------------------------------------------------*/
-
-
-function updatePreferredUsername(password, newUsername){
-    console.log("updating username");
-	var attributeList = [];
-    var attribute = {
-        Name : 'preferred_username',
-        Value : newUsername
-    };
-    var attribute = new AmazonCognitoIdentity.CognitoUserAttribute(attribute);
-    attributeList.push(attribute);
-
-
-    var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-        Username: username,
-        Password: password,
-    });
-
-    var cognitoUser = getCognitoUser();
-
-    cognitoUser.authenticateUser(authenticationDetails, {
-        onSuccess: function (result) {
-            cognitoUser.updateAttributes(attributeList, function(err, result) {
-                if (err) {
-                    console.log(err);
-                    alert("Unable to update Username. Make sure your current password was entered correctly (the first textbox).\n\n Or, that username may already be taken.\n\n Check your browser's console log for the full error message.");
-                } 
-                else {
-                    console.log('Update Attribute result: ' + result);
-                    updateMongoUsername(newUsername, cognitoSub);
-                }
-            });
-        },
-        onFailure: function (err) {
-            console.log(err);
-            alert("Unable to update Username. Make sure your current password was entered correctly (the first textbox).\n\n Or, that username may already be taken.\n\n Check your browser's console log for the full error message.");
-        },
-    });
-}
-
-function ChangePassword(password, newPassword) {
-    var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-        Username: username,
-        Password: password,
-    });
-
-    var cognitoUser = getCognitoUser();
-
-    cognitoUser.authenticateUser(authenticationDetails, {
-        onSuccess: function (result) {
-            cognitoUser.changePassword(password, newPassword, (err, result) => {
-                if (err) {
-                    console.log(err);
-                    alert("Unable to update Password. Make sure if your current password was entered correctly (the first textbox). Check your browser's console log for the full error message.");
-                } else {
-                    console.log("Successfully changed password of the user.");
-                    console.log(result);
-                    document.getElementById("updateInfo").value += "Successfully changed password\n";
-                    window.location.reload();
-                }
-            });
-        },
-        onFailure: function (err) {
-            console.log(err);
-            log(username + " " + password);
-            alert("Unable to update Password. Make sure if your current password was entered correctly (the first textbox). Check your browser's console log for the full error message.");
-        },
-    });
 }
 
 function getCognitoUser(){
@@ -1060,66 +519,13 @@ function getCognitoUserPool(){
 	return new AmazonCognitoIdentity.CognitoUserPool(poolData);
 }
 
-function onBlur(element){
-    if (element.value == ""){
-        resetElement(element);
-    }    
-}
-
-function resetEditUserElements(){
-    resetElement(document.getElementById('oldPasswordText'));
-    resetElement(document.getElementById('newUsernameText'));
-    resetElement(document.getElementById('newPasswordText'));
-    resetElement(document.getElementById('newPasswordText2'));
-    resetElement(document.getElementById('newEmailText'));
-}
-
-function resetElement(element){
-    if (element.id == "oldPasswordText" || element.id == "newPasswordText"){
-        element.value = "Password";
-        element.style.color = "gray";
-        element.type = "none";
-        //element.style.background-color: "lightgray";
-    }
-    else if (element.id == "newPasswordText2"){
-        element.value = "Password Confirm";
-        element.style.color = "gray";
-        element.type = "none";        
-        //element.style.background-color: "lightgray";
-    }
-    else if (element.id == "newUsernameText"){
-        element.value = "Username";
-        element.style.color = "gray";
-        element.type = "none";
-        //element.style.background-color: "lightgray";
-    }
-    else if (element.id == "newEmailText"){
-        element.value = "Email";
-        element.style.color = "gray";
-        element.type = "none";
-        //element.style.background-color: "lightgray";
-    }
-
-}
-
-
-
-/* PLAYER SEARCH*/
-
-var playerSearchForm = document.getElementById("playerSearchForm");
-if (playerSearchForm){
-	playerSearchForm.onsubmit = function(e){
-		submitPlayerSearch(e);
-	}
-}
-var playerSearchPageForm = document.getElementById("playerSearchPageForm");
-if (playerSearchPageForm){
-	playerSearchPageForm.onsubmit = function(e){	
+if (document.getElementById("playerSearchForm")){
+	document.getElementById("playerSearchForm").onsubmit = function(e){
 		submitPlayerSearch(e);
 	}
 }
 
-function submitPlayerSearch(e){
+function submitPlayerSearch(e){ //Used in header as well
 	e.preventDefault();
 	if (!isValid(e.target.elements[0].value)){
 		alert("Invalid character (\"$\", \"%\", \";\", \"{\", etc) in search. Please remove character and try again.");
@@ -1132,47 +538,28 @@ function submitPlayerSearch(e){
 	window.location.href = serverHomePage + "search/" + e.target.elements[0].value;
 }
 
-
-function voteCTF(){
-	socket.emit("voteEndgame", myPlayer.id, "gametype", "ctf");
-	document.getElementById("voteCTF").disabled = true;
-	document.getElementById("voteDeathmatch").disabled = true;	
+function localPlayNowClick(){
+	socket.emit('test', "123456");
+	//window.location.href = '/?join=true';
 }
 
-function voteDeathmatch(){
-	socket.emit("voteEndgame", myPlayer.id, "gametype", "slayer");
-	document.getElementById("voteCTF").disabled = true;
-	document.getElementById("voteDeathmatch").disabled = true;	
+function show(element){
+	if (document.getElementById(element)) {
+		document.getElementById(element).style.display = "inline-block";
+	}
 }
 
-function voteLongest(){
-	socket.emit("voteEndgame", myPlayer.id, "map", "longest");
-	document.getElementById("voteLongest").disabled = true;
-	document.getElementById("voteCrik").disabled = true;
-	document.getElementById("voteThePit").disabled = true;	
+function showUnset(element){
+	if (document.getElementById(element)) {
+		document.getElementById(element).style.display = "unset";
+	}
 }
 
-function voteThePit(){
-	socket.emit("voteEndgame", myPlayer.id, "map", "thepit");
-	document.getElementById("voteLongest").disabled = true;
-	document.getElementById("voteCrik").disabled = true;
-	document.getElementById("voteThePit").disabled = true;	
+function hide(element){
+	if (document.getElementById(element)) {
+		document.getElementById(element).style.display = "none";
+	}
 }
-				
-function voteCrik(){
-	socket.emit("voteEndgame", myPlayer.id, "map", "crik");
-	document.getElementById("voteLongest").disabled = true;
-	document.getElementById("voteCrik").disabled = true;
-	document.getElementById("voteThePit").disabled = true;	
-}
-
-socket.on('votesUpdate', function(votesData){
-	document.getElementById("voteCTF").innerHTML = "CTF - [" + votesData.ctfVotes + "]";
-	document.getElementById("voteDeathmatch").innerHTML = "Deathmatch - [" + votesData.slayerVotes + "]";	
-	document.getElementById("voteLongest").innerHTML = "Longest - [" + votesData.longestVotes + "]";
-	document.getElementById("voteThePit").innerHTML = "The Pit - [" + votesData.thePitVotes + "]";	
-	document.getElementById("voteCrik").innerHTML = "Battle Creek - [" + votesData.crikVotes + "]";
-});
 
 //EVERY 1 SECOND
 const headerRefreshSeconds = 10;
@@ -1181,13 +568,15 @@ setInterval(
 	function(){	
 	
 		//Refresh header
-		if (document.getElementById("header").style.display != 'none' && cognitoSub.length > 0){
+		if (document.getElementById("header") && document.getElementById("header").style.display != 'none' && cognitoSub.length > 0){
 			headerRefreshTicker--;
 			if (headerRefreshTicker < 1){
 				//logg("Refreshing header");
 				getRequests();
 				getOnlineFriendsAndParty();
-				checkViewedProfileIsFriendOrParty();
+				if (page == "profile"){
+					checkViewedProfileIsFriendOrParty();
+				}
 				
 				headerRefreshTicker = headerRefreshSeconds;
 			}
@@ -1195,4 +584,4 @@ setInterval(
 	},
 	1000/1 //Ticks per second
 );
-
+console.log("cognito.js loaded");
