@@ -1,0 +1,8 @@
+{
+  "packages": [
+    "game",
+    "shared",
+    "web"
+  ],
+  "version": "1.0.0"
+}
