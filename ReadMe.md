@@ -28,6 +28,11 @@ The `infrastructure/` folder defines all the AWS resources in the form of TypeSc
 1. `cdk diff`             see what's going to change before doing it
 1. `cdk deploy`
 
+## Deploy to Beanstalk
+
+1. Install the [EB CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install-windows.html)
+1. Run `eb deploy`
+
 ## Configuring an EC2 instance from Scratch
 
 1. FTP files onto EC2
