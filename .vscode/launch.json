@@ -11,8 +11,8 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}\\app.js",
-      "args": ["3000", "true", "true"]
+      "program": "${workspaceFolder}\\server\\web\\app.js",
+      "args": ["3000", "true"]
     },
     {
       "type": "node",
@@ -21,8 +21,8 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}\\app.js",
-      "args": ["3001", "false", "true"]
+      "program": "${workspaceFolder}\\server\\game\\app.js",
+      "args": ["3001", "true"]
     }
   ]
 }
