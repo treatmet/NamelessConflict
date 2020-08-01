@@ -2,10 +2,9 @@
 //Alpha Version
 
 'use strict';
-require('server-shared');
-require('../shared/helperFunctions.js');
+require('server-shared/helperFunctions');
+require('server-shared/engines/logEngine');
 require('./config.js');
-require('../shared/engines/logEngine.js');
 
 //Crash handling
 process

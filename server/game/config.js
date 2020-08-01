@@ -6,6 +6,7 @@ global.serv = require('http').Server(app);
 global.fs = require('fs');
 global.util = require('util')
 
+// TODO: use app-specific secrets files
 global.config = parseINIString(fs.readFileSync('../shared/config.ini', 'utf8'));
 
 
