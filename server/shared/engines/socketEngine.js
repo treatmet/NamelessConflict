@@ -1,6 +1,6 @@
 const io = require('socket.io')(serv,{});
-const dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
-const dataAccessFunctions = require(absAppDir + '/server/shared/data_access/dataAccessFunctions.js');
+const dataAccess = require('../data_access/dataAccess.js');
+const dataAccessFunctions = require('../data_access/dataAccessFunctions.js');
 
 io.sockets.on('connection', function(socket){
 	socket.id = Math.random();

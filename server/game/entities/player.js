@@ -1,9 +1,9 @@
-var gameEngine = require(absAppDir + '/server/game/engines/gameEngine.js');
-var thug = require(absAppDir + '/server/game/entities/thug.js');
-var block = require(absAppDir + '/server/game/entities/block.js');
-var pickup = require(absAppDir + '/server/game/entities/pickup.js');
-var entityHelpers = require(absAppDir + '/server/game/entities/_entityHelpers.js');
-var dataAccessFunctions = require(absAppDir + '/server/shared/data_access/dataAccessFunctions.js');
+var gameEngine = require('../engines/gameEngine.js');
+var thug = require('./thug.js');
+var block = require('./block.js');
+var pickup = require('./pickup.js');
+var entityHelpers = require('./_entityHelpers.js');
+var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
 
 var Player = function(id, cognitoSub, name, team, partyId){
 	var self = {

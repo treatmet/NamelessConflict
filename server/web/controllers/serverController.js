@@ -1,6 +1,6 @@
-var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
-var dataAccessFunctions = require(absAppDir + '/server/shared/data_access/dataAccessFunctions.js');
-var authenticationEngine = require(absAppDir + '/server/shared/engines/authenticationEngine.js');
+var dataAccess = require('../shared/data_access/dataAccess.js');
+var dataAccessFunctions = require('../shared/data_access/dataAccessFunctions.js');
+var authenticationEngine = require('../shared/engines/authenticationEngine.js');
 const express = require('express');
 const router = express.Router();
 const cookieParser = require('cookie-parser');

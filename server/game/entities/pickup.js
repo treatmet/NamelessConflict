@@ -1,4 +1,4 @@
-var player = require(absAppDir + '/server/game/entities/player.js');
+var player = require('./player.js');
 
 
 var Pickup = function(id, x, y, type, amount, respawnTime){

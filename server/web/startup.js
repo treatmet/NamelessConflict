@@ -1,9 +1,9 @@
-const logEngine = require(absAppDir + '/server/shared/engines/logEngine.js');
-const userRouter = require(absAppDir + '/server/shared/controllers/userController.js');
+const logEngine = require('../shared/engines/logEngine.js');
+const userRouter = require('../shared/controllers/userController.js');
 const serverRouter = require(absAppDir + '/server/web/controllers/serverController.js');
 const pageRouter = require(absAppDir + '/server/web/controllers/pageController.js');
-require(absAppDir + '/server/shared/engines/socketEngine.js');
-var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
+require('../shared/engines/socketEngine.js');
+var dataAccess = require('../shared/data_access/dataAccess.js');
 const os = require('os');
 const ifaces = os.networkInterfaces();
 const cookieParser = require('cookie-parser');

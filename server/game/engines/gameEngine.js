@@ -1,11 +1,11 @@
-var pickup = require(absAppDir + '/server/game/entities/pickup.js');
-var block = require(absAppDir + '/server/game/entities/block.js');
-var thug = require(absAppDir + '/server/game/entities/thug.js');
-var player = require(absAppDir + '/server/game/entities/player.js');
-var dataAccessFunctions = require(absAppDir + '/server/shared/data_access/dataAccessFunctions.js');
-var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
-var mapEngine = require(absAppDir + '/server/game/engines/mapEngine.js');
-const logEngine = require(absAppDir + '/server/shared/engines/logEngine.js');
+var pickup = require('../entities/pickup.js');
+var block = require('../entities/block.js');
+var thug = require('../entities/thug.js');
+var player = require('../entities/player.js');
+var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
+var dataAccess = require('../../shared/data_access/dataAccess.js');
+var mapEngine = require('./mapEngine.js');
+const logEngine = require('../../shared/engines/logEngine.js');
 
 var secondsSinceLastServerSync = syncServerWithDbInterval - 2;
 var secondsSinceOnlineTimestampUpdate = 0;

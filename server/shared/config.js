@@ -1,4 +1,4 @@
-const helpers = require(absAppDir + '/server/shared/helperFunctions.js'); //Global helper functions
+const helpers = require('./helperFunctions.js'); //Global helper functions
 
 global.express = require('express');
 global.app = express();

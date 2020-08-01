@@ -1,6 +1,6 @@
-var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
-var dataAccessFunctions = require(absAppDir + '/server/shared/data_access/dataAccessFunctions.js');
-var authenticationEngine = require(absAppDir + '/server/shared/engines/authenticationEngine.js');
+var dataAccess = require('../data_access/dataAccess.js');
+var dataAccessFunctions = require('../data_access/dataAccessFunctions.js');
+var authenticationEngine = require('../engines/authenticationEngine.js');
 
 const express = require('express');
 const router = express.Router();

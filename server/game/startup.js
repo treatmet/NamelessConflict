@@ -1,9 +1,9 @@
-const gameRouter = require(absAppDir + '/server/game/controllers/gameController.js');
-const userRouter = require(absAppDir + '/server/shared/controllers/userController.js');
-const logEngine = require(absAppDir + '/server/shared/engines/logEngine.js');
-const mapEngine = require(absAppDir + '/server/game/engines/mapEngine.js');
-require(absAppDir + '/server/shared/engines/socketEngine.js');
-var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
+const gameRouter = require('./controllers/gameController.js');
+const userRouter = require('../shared/controllers/userController.js');
+const logEngine = require('../shared/engines/logEngine.js');
+const mapEngine = require('./engines/mapEngine.js');
+require('../shared/engines/socketEngine.js');
+var dataAccess = require('../shared/data_access/dataAccess.js');
 const os = require('os');
 const ifaces = os.networkInterfaces();
 const cookieParser = require('cookie-parser');

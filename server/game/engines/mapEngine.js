@@ -1,5 +1,5 @@
-var pickup = require(absAppDir + '/server/game/entities/pickup.js');
-var block = require(absAppDir + '/server/game/entities/block.js');
+var pickup = require('../entities/pickup.js');
+var block = require('../entities/block.js');
 
 var initializePickups = function(map){
 	pickup.clearPickupList();

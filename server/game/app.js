@@ -1,21 +1,11 @@
 //2017-2020 Treat Metcalf
 //Alpha Version
 
-const express = require('express');
-var port = process.env.PORT || 80;
-const app = express();
-app.get('/', (req, res) => {
-  res.send("Hello from Beanstalk!");
-});
-app.listen(port);
-console.log(`Running on port ${port}`);
-
-/*
 'use strict';
-global.absAppDir = __dirname + "/../..";
-require(absAppDir + '/server/shared/helperFunctions.js');
-require(absAppDir + '/server/game/config.js');
-require(absAppDir + '/server/shared/engines/logEngine.js');
+require('server-shared');
+require('../shared/helperFunctions.js');
+require('./config.js');
+require('../shared/engines/logEngine.js');
 
 //Crash handling
 process
@@ -31,5 +21,4 @@ process
   });
 
 //---------------------------------STARTUP---------------------------------------
-require(absAppDir + '/server/game/startup.js');
-*/
+require('./startup.js');

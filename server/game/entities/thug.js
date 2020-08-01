@@ -1,7 +1,7 @@
-var gameEngine = require(absAppDir + '/server/game/engines/gameEngine.js');
-var block = require(absAppDir + '/server/game/entities/block.js');
-var entityHelpers = require(absAppDir + '/server/game/entities/_entityHelpers.js');
-var player = require(absAppDir + '/server/game/entities/player.js');
+var gameEngine = require('../engines/gameEngine.js');
+var block = require('./block.js');
+var entityHelpers = require('./_entityHelpers.js');
+var player = require('./player.js');
 
 var Thug = function(id, team, x, y){
 	var self = {

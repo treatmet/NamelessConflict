@@ -1,7 +1,7 @@
-var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
-var authenticationEngine = require(absAppDir + '/server/shared/engines/authenticationEngine.js');
+var dataAccess = require('../../shared/data_access/dataAccess.js');
+var authenticationEngine = require('../../shared/engines/authenticationEngine.js');
 
-var gameEngine = require(absAppDir + '/server/game/engines/gameEngine.js');
+var gameEngine = require('../engines/gameEngine.js');
 
 const express = require('express');
 const router = express.Router();

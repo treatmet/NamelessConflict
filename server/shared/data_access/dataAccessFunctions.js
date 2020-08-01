@@ -1,4 +1,4 @@
-var dataAccess = require(absAppDir + '/server/shared/data_access/dataAccess.js');
+var dataAccess = require('./dataAccess.js');
 
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
 var getUserFromDB = function(cognitoSub,cb){
