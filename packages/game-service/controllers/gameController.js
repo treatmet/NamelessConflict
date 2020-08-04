@@ -1,5 +1,5 @@
-var dataAccess = require('server-shared/data_access/dataAccess.js');
-var authenticationEngine = require('server-shared/engines/authenticationEngine.js');
+var dataAccess = require('shared/data_access/dataAccess.js');
+var authenticationEngine = require('shared/engines/authenticationEngine.js');
 
 var gameEngine = require('../engines/gameEngine.js');
 

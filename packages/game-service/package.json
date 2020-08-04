@@ -19,7 +19,7 @@
     "socket.io": "^1.7.4",
     "util": "^0.12.1",
     "winston": "^3.2.1",
-    "server-shared": "1.0.0"
+    "shared": "1.0.0"
   },
   "devDependencies": {
     "cssnano": "^4.1.10"

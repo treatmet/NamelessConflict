@@ -3,7 +3,7 @@ var thug = require('./thug.js');
 var block = require('./block.js');
 var pickup = require('./pickup.js');
 var entityHelpers = require('./_entityHelpers.js');
-var dataAccessFunctions = require('server-shared/data_access/dataAccessFunctions.js');
+var dataAccessFunctions = require('shared/data_access/dataAccessFunctions.js');
 
 var Player = function(id, cognitoSub, name, team, partyId){
 	var self = {

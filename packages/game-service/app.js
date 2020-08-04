@@ -3,8 +3,8 @@
 
 'use strict';
 require('./config.js');
-require('server-shared/helperFunctions');
-require('server-shared/engines/logEngine');
+require('shared/helperFunctions');
+require('shared/engines/logEngine');
 
 //Crash handling
 process

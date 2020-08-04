@@ -4,6 +4,7 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+
     {
       "type": "node",
       "request": "launch",
@@ -11,7 +12,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}\\server\\web\\app.js",
+      "program": "${workspaceFolder}\\packages\\web-service\\app.js",
       "args": ["3000", "true"]
     },
     {
@@ -21,8 +22,8 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}\\server\\game\\app.js",
-      "args": ["3001", "true"]
+      "program": "${workspaceFolder}\\packages\\game-service\\app.js",
+      "args": ["3099", "true"]
     }
   ]
 }
