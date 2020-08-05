@@ -1,6 +1,7 @@
 global.mongoDbLocation = process.env.mongoDbLocation;
 global.s3LoggingBucket = process.env.s3LoggingBucket;
 global.EBName = process.env.EBName;
+global.serverHealthCheckTimestampThreshold = process.env.serverHealthCheckTimestampThreshold;
 
 var AWS = require("aws-sdk");
 var elasticbeanstalk = new AWS.ElasticBeanstalk();
@@ -8,19 +9,18 @@ var elasticbeanstalk = new AWS.ElasticBeanstalk();
 require('./code/logEngine.js');
 const dataAccess = require('./code/dataAccess.js');
 
-
-
 exports.handler = (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false;
     var fullServers = 0;
     var emptyServers = 0;
     var playableServers = 0;
 
-    getPublicServersFromDB(function(servers){
+    getPublicServersFromDB(function(res){
 
-        for (var s = 0; s < servers.length; s++){
-            var players = getCurrentNumPlayers(servers[s]);
-            if (players >= servers[s].maxPlayers){
+        for (var s = 0; s < res.length; s++){
+            console.log
+            var players = getCurrentNumPlayers(res[s].currentUsers);
+            if (players >= res[s].maxPlayers){
                 fullServers++;
             }
             else {
@@ -29,16 +29,37 @@ exports.handler = (event, context, callback) => {
             if (players == 0){
                 emptyServers++;
             }
+
+            var serverLastHealthCheck = new Date(res[s].healthCheckTimestamp);                                    
+            var acceptableLastHealthCheckTime = new Date();
+            acceptableLastHealthCheckTime.setSeconds(acceptableLastHealthCheckTime.getUTCSeconds() - serverHealthCheckTimestampThreshold);
+            if (serverLastHealthCheck < acceptableLastHealthCheckTime || typeof res[s].healthCheckTimestamp === 'undefined'){
+                if (typeof res[s].healthCheckTimestamp === 'undefined'){
+                    console.log("DEAD SERVER FOUND: " + res[s].url + ". [No set healthCheckTimestamp] Removing...");					
+                }
+                else {
+                    console.log("DEAD SERVER FOUND: " + res[s].url + ". [" + serverLastHealthCheck.toISOString() + " is less than " + acceptableLastHealthCheckTime.toISOString() + ". Current time is " + new Date().toISOString() + "] Removing...");
+                }					
+                dataAccess.dbUpdateAwait("RW_SERV", "rem", { url: res[s].url }, {}, async function(err2, obj){
+                    if (!err2){
+                        console.log("Unhealthy Server successfully removed from database. (" + res[s].url + ")");
+                    }
+                });										
+            }
+
+
         }	
 
         console.log("fullServers: " + fullServers);
         console.log("emptyServers: " + emptyServers);
         console.log("playableServers: " + playableServers);
+
+
+        console.log("Updating EB instance count...");
         updateInstanceCount(3, function(){
-            console.log("updateInstnceCount callback");
+            console.log("EB updateInstnceCount callback");
             callback(null, "fullServers: " + fullServers);
         });
-
 
     });	
 };
@@ -117,10 +138,10 @@ function getPublicServersFromDB(cb){
 	});
 }
 
-function getCurrentNumPlayers(server){
+function getCurrentNumPlayers(currentUsers){
     var players = 0;
-    for (var u = 0; u < server.currentUsers.length; u++){
-        if (server.currentUsers[u].team == "none" || server.currentUsers[u].team == "white" || server.currentUsers[u].team == "black")
+    for (var u = 0; u < currentUsers.length; u++){
+        if (currentUsers[u].team == "none" || currentUsers[u].team == "white" || currentUsers[u].team == "black")
             players++;
     }
     return players;
