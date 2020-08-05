@@ -17,7 +17,7 @@ app.use(gameRouter);
 app.use(userRouter);
 
 // TODO: do we need favicon.ico for an API?
-//app.use('/', express.static('../../')); //To allow for favicon.ico
+app.use('/', express.static('./../')); //To allow for favicon.ico
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 app.use(cookieParser());
 

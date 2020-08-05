@@ -6,7 +6,6 @@ global.serv = require('http').Server(app);
 global.fs = require('fs');
 global.util = require('util')
 
-// TODO: use app-specific secrets files
 global.config = require("./settings.json");
 
 //--------------------------------SERVER CONFIGURATION-----------------------------------------------------

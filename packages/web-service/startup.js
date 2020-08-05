@@ -1,9 +1,9 @@
-const logEngine = require('../shared/engines/logEngine.js');
-const userRouter = require('../shared/controllers/userController.js');
-const serverRouter = require(absAppDir + '/server/web/controllers/serverController.js');
-const pageRouter = require(absAppDir + '/server/web/controllers/pageController.js');
-require('../shared/engines/socketEngine.js');
-var dataAccess = require('../shared/data_access/dataAccess.js');
+const logEngine = require('shared/engines/logEngine.js');
+const userRouter = require('shared/controllers/userController.js');
+const serverRouter = require('./controllers/serverController.js');
+const pageRouter = require('./controllers/pageController.js');
+require('shared/engines/socketEngine.js');
+var dataAccess = require('shared/data_access/dataAccess.js');
 const os = require('os');
 const ifaces = os.networkInterfaces();
 const cookieParser = require('cookie-parser');
@@ -17,7 +17,7 @@ app.use(userRouter);
 app.use(serverRouter);
 app.use(pageRouter);
 //app.use('/client',express.static(absAppDir + '/client'));
-app.use('/', express.static(absAppDir + '/')); //To allow for favicon.ico
+app.use('/', express.static('./../')); //To allow for favicon.ico
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 app.use(cookieParser());
 

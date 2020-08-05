@@ -6,7 +6,7 @@ global.serv = require('http').Server(app);
 global.fs = require('fs');
 global.util = require('util')
 
-global.config = parseINIString(fs.readFileSync('../shared/config.ini', 'utf8'));
+global.config = require("./settings.json");
 
 //--------------------------------SERVER CONFIGURATION-----------------------------------------------------
 global.debug = true;
