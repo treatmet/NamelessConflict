@@ -56,6 +56,10 @@ function processArgs(){
 			}
 		}
 	}
+
+	if (!port) {
+		port = 5000;
+	}
 		
 	if (isLocal){
 		getIP();
