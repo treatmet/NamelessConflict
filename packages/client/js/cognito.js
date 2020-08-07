@@ -383,6 +383,31 @@ function requestDeclineClick(id){
 	});
 }
 
+function isValidUsername(newUsername){
+    if (newUsername == "Username" || newUsername == ""){
+        return false;        
+    }
+    else if (newUsername.length < 3){
+        alert("Please enter a Username that is at least 3 characters long.");
+        return false;
+    }
+    else if (newUsername.length > 20){
+        alert("Username is too long.\nPlease enter a Username that is less than 20 characters.");
+        return false;
+    }
+    else if (!isValid(newUsername) || newUsername.indexOf(' ') > -1 || newUsername.indexOf('@') > -1 || newUsername.indexOf('%') > -1 || newUsername.indexOf(')') > -1 || newUsername.indexOf('(') > -1 || newUsername.indexOf('}') > -1 || newUsername.indexOf('{') > -1 || newUsername.indexOf('nigger') > -1 || newUsername.indexOf('cunt') > -1){
+        alert("Spaces and special characters (\"@\", \"%\", etc) are not allowed in Usernames.");
+        return false;
+    }
+
+    return true;
+}
+
+function isValid(str){
+ return !/[~`!#$%\^&*+=\[\]\\';,\/{}|\\"@:<>\?]/g.test(str);
+}
+
+
 //Unused
 function setCookie(cname, cvalue, exdays) {
   var d = new Date();
