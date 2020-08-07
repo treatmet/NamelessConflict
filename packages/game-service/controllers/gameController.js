@@ -12,8 +12,7 @@ router.use(cookieParser());
 
 router.get('/', function(req, res) {
 	var pageData = {};
-	// TODO: move this into client deployable
-	var pageContent = fs.readFileSync('../../../client/game.html', 'utf8');
+	var pageContent = fs.readFileSync('../client/game.html', 'utf8');
 	pageContent = replaceValues(pageData, pageContent);	
 	res.send(pageContent);
 });

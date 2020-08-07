@@ -28,6 +28,7 @@
     "lerna": "^3.22.1"
   },
   "scripts": {
+    "bootstrap": "lerna bootstrap",
     "start": "node app.js 3000"
   },
   "author": "",

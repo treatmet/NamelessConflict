@@ -28,6 +28,11 @@ The `infrastructure/` folder defines all the AWS resources in the form of TypeSc
 1. `cdk diff`             see what's going to change before doing it
 1. `cdk deploy`
 
+### How to Setup Lerna
+1. Delete all `package-lock.json` files
+1. Run `lerna bootstrap` at the root
+1. Run `npm install` in one of the service projects (to test the setup)
+
 ## How to Deploy using Beanstalk
 
 1. Install [EB CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install-windows.html)
