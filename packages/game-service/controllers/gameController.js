@@ -12,7 +12,7 @@ router.use(cookieParser());
 
 router.get('/', function(req, res) {
 	var pageData = {};
-	var pageContent = fs.readFileSync('../client/game.html', 'utf8');
+	var pageContent = fs.readFileSync('./client/game.html', 'utf8');
 	pageContent = replaceValues(pageData, pageContent);	
 	res.send(pageContent);
 });

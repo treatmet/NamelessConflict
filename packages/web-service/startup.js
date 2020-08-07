@@ -16,8 +16,8 @@ serv.listen(port);
 app.use(userRouter);
 app.use(serverRouter);
 app.use(pageRouter);
-//app.use('/client',express.static(absAppDir + '/client'));
-app.use('/', express.static('./../')); //To allow for favicon.ico
+app.use("/favicon.ico", express.static('client/favicon.ico'));
+app.use("/client", express.static('client'));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 app.use(cookieParser());
 
