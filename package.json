@@ -25,11 +25,13 @@
   },
   "devDependencies": {
     "cssnano": "^4.1.10",
-    "lerna": "^3.22.1"
+    "lerna": "^3.22.1",
+    "archiver": "^5.0.0"
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "start": "node app.js 3000"
+    "start": "node app.js 3000",
+    "zip:game": "node ./scripts/zip.js game"
   },
   "author": "",
   "license": "ISC",
