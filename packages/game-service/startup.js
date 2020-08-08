@@ -42,6 +42,7 @@ function testDB(){
 
 function processArgs(){
 	isWebServer = false;
+	port = "3001"; // Default port
 	logg("Command line arguments:");
 	for (let j = 0; j < process.argv.length; j++) {
 		if (j >= 2){
@@ -55,10 +56,6 @@ function processArgs(){
 				isLocal = true;
 			}
 		}
-	}
-
-	if (!port) {
-		port = 80;
 	}
 		
 	if (isLocal){
