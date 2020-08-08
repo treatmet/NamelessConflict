@@ -31,7 +31,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "start": "node app.js 3000",
-    "deploy:game": "node ./scripts/zip.js game && eb deploy"
+    "deploy:game": "node ./scripts/zip.js game && eb deploy GameService-Production"
   },
   "author": "",
   "license": "ISC",
