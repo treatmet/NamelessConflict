@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 const archiver = require("archiver");
 
 if (process.argv.length < 3) {
@@ -24,11 +25,15 @@ const config = configs[app];
 const zip = config => new Promise((resolve, reject) => {
   config.fileName = `${config.name}.zip`;
 
-  const relativePath = `${config.relativePath}/${config.fileName}`;
+  const artifactsDirectory = path.resolve(`${__dirname}/../artifacts`);
 
-  console.log(`Creating deployment artifact at ${relativePath}`);
+  if (!fs.existsSync(artifactsDirectory)) {
+    fs.mkdirSync(artifactsDirectory);
+  }
 
-  var output = fs.createWriteStream(`${__dirname}/../${config.relativePath}/${config.fileName}`);
+  console.log(`Creating deployment artifact at artifacts/${config.fileName}`);
+
+  var output = fs.createWriteStream(`${artifactsDirectory}\\${config.fileName}`);
   var archive = archiver('zip', {
     zlib: { level: 9 } // Sets the compression level.
   });
