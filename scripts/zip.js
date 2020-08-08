@@ -62,8 +62,10 @@ const zip = config => new Promise((resolve, reject) => {
   });
   
   archive.pipe(output);
-  
-  archive.directory(config.relativePath, false);
+
+  process.chdir(config.relativePath);  
+  archive.glob("**/[!client]*");
+  process.chdir("../..");
   archive.directory("packages/client", "client");
   
   archive.finalize();
