@@ -6,7 +6,6 @@ if (process.argv.length < 3) {
   return;
 }
 
-const env = "Production";
 const app = process.argv[2];
 
 const configs = {
@@ -23,24 +22,26 @@ const configs = {
 const config = configs[app];
 
 const zip = config => new Promise((resolve, reject) => {
-  //var now = new Date();
-  //config.fileName = `${config.name}-${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
-  //  + `_${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}.zip`;
-
   config.fileName = `${config.name}.zip`;
+
+  const relativePath = `${config.relativePath}/${config.fileName}`;
+
+  console.log(`Creating deployment artifact at ${relativePath}`);
+
   var output = fs.createWriteStream(`${__dirname}/../${config.relativePath}/${config.fileName}`);
   var archive = archiver('zip', {
     zlib: { level: 9 } // Sets the compression level.
   });
 
   output.on('close', function() {
-    console.log(archive.pointer() + ' total bytes');
-    console.log('archiver has been finalized and the output file descriptor has closed.');
+    const bytes = archive.pointer();
+    const megabytes = Math.round(bytes / 100000) / 10;
+    console.log(`Done. Size: ${megabytes} MB`);
     resolve();
   });
   
   output.on('end', function() {
-    console.log('Data has been drained');
+    // TODO: do we care about this event?
   });
   
   archive.on('warning', function(err) {
@@ -63,12 +64,4 @@ const zip = config => new Promise((resolve, reject) => {
   archive.finalize();
 });
 
-(async () => {
-  console.log(`Deploying ${app} service to ${env}`);
-
-  await zip(config);
-
-  //fs.unlinkSync(config.fileName);
-
-  console.log("Done");
-})()
+zip(config);
