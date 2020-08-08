@@ -58,7 +58,7 @@ function processArgs(){
 	}
 
 	if (!port) {
-		port = 5000;
+		port = 80;
 	}
 		
 	if (isLocal){
