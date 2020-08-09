@@ -25,7 +25,6 @@
   },
   "devDependencies": {
     "cssnano": "^4.1.10",
-    "lerna": "^3.22.1",
     "archiver": "^5.0.0"
   },
   "scripts": {
