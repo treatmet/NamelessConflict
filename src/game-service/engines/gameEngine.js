@@ -2,10 +2,10 @@ var pickup = require('../entities/pickup.js');
 var block = require('../entities/block.js');
 var thug = require('../entities/thug.js');
 var player = require('../entities/player.js');
-var dataAccessFunctions = require('shared/data_access/dataAccessFunctions.js');
-var dataAccess = require('shared/data_access/dataAccess.js');
+var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
+var dataAccess = require('../../shared/data_access/dataAccess.js');
 var mapEngine = require('./mapEngine.js');
-const logEngine = require('shared/engines/logEngine.js');
+const logEngine = require('../../shared/engines/logEngine.js');
 
 var secondsSinceLastServerSync = syncServerWithDbInterval - 2;
 var secondsSinceOnlineTimestampUpdate = 0;

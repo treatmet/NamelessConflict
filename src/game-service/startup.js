@@ -1,12 +1,13 @@
 const gameRouter = require('./controllers/gameController.js');
-const userRouter = require('shared/controllers/userController.js');
-const logEngine = require('shared/engines/logEngine.js');
+const userRouter = require('../shared/controllers/userController.js');
+const logEngine = require('../shared/engines/logEngine.js');
 const mapEngine = require('./engines/mapEngine.js');
-require('shared/engines/socketEngine.js');
-var dataAccess = require('shared/data_access/dataAccess.js');
+require('../../shared/engines/socketEngine.js');
+var dataAccess = require('../shared/data_access/dataAccess.js');
 const os = require('os');
 const ifaces = os.networkInterfaces();
 const cookieParser = require('cookie-parser');
+const path = require('path');
 
 //Process command line arguments
 processArgs();
@@ -16,8 +17,8 @@ serv.listen(port);
 app.use(gameRouter);
 app.use(userRouter);
 
-app.use("/favicon.ico", express.static('client/favicon.ico'));
-app.use("/client", express.static('client'));
+app.use("/favicon.ico", express.static(path.join(__dirname, '../client/favicon.ico')));
+app.use("/client", express.static(path.join(__dirname, '../client')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 app.use(cookieParser());
 

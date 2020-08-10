@@ -3,11 +3,11 @@
 
 'use strict';
 require('./config.js');
-require('shared/helperFunctions');
-require('shared/engines/logEngine');
+require('../shared/helperFunctions');
+require('../shared/engines/logEngine');
 
 //Crash handling
-process
+processs
   .on('unhandledRejection', (reason, p) => {
 	logg("--SERVER CRASH:Unhandled Rejection at Promise");
     logg("--" + reason);
