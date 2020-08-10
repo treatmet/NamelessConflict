@@ -12,7 +12,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "cwd": "${workspaceFolder}\\packages\\web-service",
+      "cwd": "${workspaceFolder}\\src\\web-service",
       "program": "app.js",
       "args": ["3000", "true"]
     },
@@ -23,7 +23,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "cwd": "${workspaceFolder}\\packages\\game-service",
+      "cwd": "${workspaceFolder}\\src\\game-service",
       "program": "app.js",
       "args": ["3099", "true"]
     }

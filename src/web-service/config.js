@@ -6,7 +6,7 @@ global.serv = require('http').Server(app);
 global.fs = require('fs');
 global.util = require('util')
 
-global.config = require("./settings.json");
+global.config = require("../settings.json");
 
 //--------------------------------SERVER CONFIGURATION-----------------------------------------------------
 global.debug = true;

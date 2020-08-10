@@ -3,11 +3,11 @@ const { spawn } = require('child_process');
 const processes = [
   {
     name: "web1",
-    process: spawn('node', ['./packages/hello-service/app.js', '8080'])
+    process: spawn('node', ['./hello-service/app.js', '8080'])
   },
   {
     name: "game1",
-    process: spawn('node', ['./packages/hello-service/app.js', '3001'])
+    process: spawn('node', ['./hello-service/app.js', '3001'])
   }
 ];
 
