@@ -25,7 +25,8 @@
   },
   "scripts": {
     "start": "node app.js",
-    "deploy": "eb deploy GameService-Production --staged"
+    "deploy": "eb deploy NamelessConflict-Production --staged",
+    "deploy:ci": "eb deploy NamelessConflict-Production"
   },
   "author": "",
   "license": "ISC",
