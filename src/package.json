@@ -24,13 +24,11 @@
     "node": "4.1.x"
   },
   "devDependencies": {
-    "cssnano": "^4.1.10",
-    "archiver": "^5.0.0"
+    "cssnano": "^4.1.10"
   },
   "scripts": {
-    "bootstrap": "lerna bootstrap",
-    "start": "node app.js 3000",
-    "deploy:game": "node ./scripts/zip.js game && eb deploy GameService-Production --staged"
+    "start": "node app.js",
+    "deploy": "eb deploy GameService-Production --staged"
   },
   "author": "",
   "license": "ISC",

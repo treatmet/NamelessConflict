@@ -1,5 +1,3 @@
-deploy:
-  artifact: artifacts/GameService.zip
 global:
   application_name: GameService
   branch: null
