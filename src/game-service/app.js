@@ -7,7 +7,7 @@ require('../shared/helperFunctions');
 require('../shared/engines/logEngine');
 
 //Crash handling
-processs
+process
   .on('unhandledRejection', (reason, p) => {
 	logg("--SERVER CRASH:Unhandled Rejection at Promise");
     logg("--" + reason);
