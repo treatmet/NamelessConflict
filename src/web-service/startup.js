@@ -45,7 +45,6 @@ function testDB(){
 function processArgs(){
 	logg("Command line arguments:");
 	isWebServer = true;
-	port = '8080';
 	for (let j = 0; j < process.argv.length; j++) {
 		if (j >= 2){
 			logg(j + ' -> ' + (process.argv[j]));

@@ -30,7 +30,7 @@ global.pcMode = 2; //1 = no, 2= yes
 //----------------------SERVER GLOBAL VARIABLES---------------------------------
 global.myIP = "";
 global.myUrl = "";
-global.port = 3000;
+global.port = 8080;
 global.serverHomePage = "/";
 global.isWebServer = false;
 global.isLocal = false;
