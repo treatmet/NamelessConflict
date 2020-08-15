@@ -9,6 +9,10 @@ const ifaces = os.networkInterfaces();
 const cookieParser = require('cookie-parser');
 const path = require('path');
 
+function getClientPath(relativePath) {
+	return path.join(__dirname, "../client", relativePath);
+}
+
 //Process command line arguments
 processArgs();
 testDB();
@@ -17,8 +21,8 @@ serv.listen(port);
 app.use(gameRouter);
 app.use(userRouter);
 
-app.use("/favicon.ico", express.static(path.join(__dirname, '../client/favicon.ico')));
-app.use("/client", express.static(path.join(__dirname, '../client')));
+app.use("/favicon.ico", express.static(getClientPath('favicon.ico')));
+app.use("/client", express.static(getClientPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 app.use(cookieParser());
 

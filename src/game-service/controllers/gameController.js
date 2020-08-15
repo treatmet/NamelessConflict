@@ -7,14 +7,29 @@ const express = require('express');
 const router = express.Router();
 const cookieParser = require('cookie-parser');
 const request = require('request-promise');
+const path = require("path");
+
+function getClientPath(relativePath) {
+	return path.join(__dirname, "../../client", relativePath);
+}
+function getClientFile(relativePath) {
+	return fs.readFileSync(getClientPath(relativePath), 'utf8')
+}
+
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 router.use(cookieParser());
 
 router.get('/', function(req, res) {
 	var pageData = {};
-	var pageContent = fs.readFileSync('./client/game.html', 'utf8');
+	var pageContent = getClientFile('game.html');
 	pageContent = replaceValues(pageData, pageContent);	
 	res.send(pageContent);
+});
+
+router.get('/s/:server/:port/ping', function(req, res) {
+	res.send({
+		ip: myUrl
+	});
 });
 
 router.post('/playNow', async function (req, res) {
