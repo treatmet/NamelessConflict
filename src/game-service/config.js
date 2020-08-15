@@ -152,7 +152,7 @@ global.enemySkillDifferenceDivider = 20;
 //----------------------SERVER GLOBAL VARIABLES---------------------------------
 global.myIP = "";
 global.myUrl = "";
-global.port = 3000;
+global.port = '3001';
 global.serverHomePage = "/";
 
 //Game global variables

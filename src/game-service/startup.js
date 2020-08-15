@@ -8,6 +8,7 @@ const os = require('os');
 const ifaces = os.networkInterfaces();
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const hostname = os.hostname();
 
 function getClientPath(relativePath) {
 	return path.join(__dirname, "../client", relativePath);
@@ -46,8 +47,9 @@ function testDB(){
 }
 
 function processArgs(){
+	logg("Running on machine: " + hostname);
+
 	isWebServer = false;
-	port = "3001"; // Default port
 	logg("Command line arguments:");
 	for (let j = 0; j < process.argv.length; j++) {
 		if (j >= 2){
@@ -56,14 +58,13 @@ function processArgs(){
 				logg("Updating port based on cmd argument: " + process.argv[j]);
 				port = process.argv[j];
 			}
-			else if (j == 3 && process.argv[j] == "true"){
-				logg("Updating app to run locally: " + process.argv[j]);
-				isLocal = true;
-			}
 		}
 	}
+
+	isLocal = !hostname.toLowerCase().startsWith("ec2");
 		
 	if (isLocal){
+		logg("Updating app to run locally");
 		getIP();
 	}
 	else {

@@ -4,6 +4,8 @@ const cookieParser = require('cookie-parser');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 router.use(cookieParser());
 const path = require("path");
+var os = require("os");
+var hostname = os.hostname();
 
 function getClientPath(relativePath) {
 	return path.join(__dirname, "../../client", relativePath);
@@ -19,6 +21,12 @@ router.get('/', function(req, res) {
 	pageData["header"] = getClientFile('header.html');		
 	pageContent = replaceValues(pageData, pageContent);	
 	res.send(pageContent);
+});
+
+router.get('/s/:server/:port/ping', function(req, res) {
+	res.send({
+		ip: hostname
+	});
 });
 
 //User profile page
