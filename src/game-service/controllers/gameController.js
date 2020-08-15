@@ -8,6 +8,8 @@ const router = express.Router();
 const cookieParser = require('cookie-parser');
 const request = require('request-promise');
 const path = require("path");
+const os = require("os");
+const hostname = os.hostname();
 
 function getClientPath(relativePath) {
 	return path.join(__dirname, "../../client", relativePath);
@@ -28,6 +30,7 @@ router.get('/', function(req, res) {
 
 router.get('/s/:server/:port/ping', function(req, res) {
 	res.send({
+		host: hostname,
 		ip: myUrl
 	});
 });

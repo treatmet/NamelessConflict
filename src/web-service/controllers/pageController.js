@@ -25,7 +25,7 @@ router.get('/', function(req, res) {
 
 router.get('/s/:server/:port/ping', function(req, res) {
 	res.send({
-		ip: hostname
+		host: hostname
 	});
 });
 
