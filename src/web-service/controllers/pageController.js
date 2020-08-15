@@ -23,7 +23,7 @@ router.get('/', function(req, res) {
 	res.send(pageContent);
 });
 
-router.get('/s/:server/:port/ping', function(req, res) {
+router.get('/ping', function(req, res) {
 	res.send({
 		host: hostname
 	});
