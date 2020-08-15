@@ -7,6 +7,11 @@ var dataAccess = require('../shared/data_access/dataAccess.js');
 const os = require('os');
 const ifaces = os.networkInterfaces();
 const cookieParser = require('cookie-parser');
+const path = require("path");
+
+function getClientPath(relativePath) {
+	return path.join(__dirname, "../client", relativePath);
+}
 
 //Process command line arguments
 processArgs();
@@ -16,8 +21,8 @@ serv.listen(port);
 app.use(userRouter);
 app.use(serverRouter);
 app.use(pageRouter);
-app.use("/favicon.ico", express.static('client/favicon.ico'));
-app.use("/client", express.static('client'));
+app.use("/favicon.ico", express.static(getClientPath('favicon.ico')));
+app.use("/client", express.static(getClientPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 app.use(cookieParser());
 

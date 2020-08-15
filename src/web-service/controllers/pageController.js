@@ -3,12 +3,20 @@ const router = express.Router();
 const cookieParser = require('cookie-parser');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 router.use(cookieParser());
+const path = require("path");
+
+function getClientPath(relativePath) {
+	return path.join(__dirname, "../../client", relativePath);
+}
+function getClientFile(relativePath) {
+	return fs.readFileSync(getClientPath(relativePath), 'utf8')
+}
 
 //Homepage
 router.get('/', function(req, res) {
 	var pageData = {};
-	var pageContent = fs.readFileSync('./client/home.html', 'utf8');
-	pageData["header"] = fs.readFileSync('./client/header.html', 'utf8');		
+	var pageContent = getClientFile('home.html');
+	pageData["header"] = getClientFile('header.html');		
 	pageContent = replaceValues(pageData, pageContent);	
 	res.send(pageContent);
 });
@@ -16,8 +24,8 @@ router.get('/', function(req, res) {
 //User profile page
 router.get('/user/:cognitoSub', function(req, res) {
 	var pageData = {};
-	var pageContent = fs.readFileSync('./client/profile.html', 'utf8');
-	pageData["header"] = fs.readFileSync('./client/header.html', 'utf8');		
+	var pageContent = getClientFile('profile.html');
+	pageData["header"] = getClientFile('header.html');		
 	pageContent = replaceValues(pageData, pageContent);	
 	res.send(pageContent);
 });
@@ -25,8 +33,8 @@ router.get('/user/:cognitoSub', function(req, res) {
 //Player Search
 router.get('/search/:searchText', function(req, res) {
 	var pageData = {};
-	var pageContent = fs.readFileSync('./client/playerSearch.html', 'utf8');
-	pageData["header"] = fs.readFileSync('./client/header.html', 'utf8');		
+	var pageContent =  getClientFile('playerSearch.html');
+	pageData["header"] =  getClientFile('header.html');		
 	pageContent = replaceValues(pageData, pageContent);	
 	res.send(pageContent);
 });
