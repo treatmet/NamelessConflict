@@ -1111,7 +1111,12 @@ var getAllPlayersFromDB = function(cb){
 }
 
 var joinGame = function(cognitoSub, username, team, partyId){
+	log("Attempting to join game...");
 	var socket = SOCKET_LIST[getSocketIdFromCognitoSub(cognitoSub)];
+	if (!socket){
+		log("ERROR!!! Socket not yet connected to game server, or cognitoSub has not been set on socket!");
+		return;
+	}
 	socket.team = team;
 	socket.partyId = partyId;
 	var players = getNumPlayersInGame();

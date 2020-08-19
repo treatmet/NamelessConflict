@@ -15,7 +15,7 @@ io.sockets.on('connection', function(socket){
 			}
 		}
 		socket.cognitoSub = cognitoSub;
-		logg("updateSocketInfo for cognitoSub: " + SOCKET_LIST[socket.id].cognitoSub);
+		logg("updateSocketInfo for cognitoSub: " + SOCKET_LIST[socket.id].cognitoSub + " url=" + myUrl);
 		
 		dataAccessFunctions.getUserFromDB(cognitoSub, function(userData){
 			if (userData){
@@ -23,6 +23,7 @@ io.sockets.on('connection', function(socket){
 				socket.rating = userData.rating;
 				socket.experience = userData.experience;
 				socket.username = userData.USERNAME;	
+				socket.emit('socketInfoUpdated');
 			}
 		});	
 	});
@@ -38,7 +39,7 @@ io.sockets.on('connection', function(socket){
 	});
 
 	socket.on('disconnect', function(){
-		logg("Socket " + socket.id + " disconnected. SOCKET");
+		logg("Socket " + socket.id + " disconnected. cognitoSub=" + SOCKET_LIST[socket.id].cognitoSub);
 		delete SOCKET_LIST[socket.id];		
 	});
 }); //END socket.on(connection)

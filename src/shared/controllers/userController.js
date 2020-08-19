@@ -204,7 +204,7 @@ router.post('/getOnlineFriends', async function (req, res) {
 		cognitoSub:cognitoSub
 	};*/
 router.post('/getParty', async function (req, res) {
-	log("getParty endpoint called with:");
+	//log("getParty endpoint called with:");
 	console.log("--BODY");
 	console.log(req.body);
 	
@@ -224,7 +224,7 @@ router.post('/getParty', async function (req, res) {
 });
 
 router.post('/getRequests', async function (req, res) {
-	log("Get requests endpoint called with:");
+	//log("Get requests endpoint called with:");
 	console.log("--BODY");
 	console.log(req.body);
 	
@@ -294,7 +294,9 @@ router.post('/validateToken', async function (req, res) {
 	}
 	if (!result.cognitoSub){
 		logg("Authentication failed");
-		result.msg = "Authentication failed. Please log in.";
+		if (!result.msg){
+			result.msg = "Authentication failed. Please log in.";
+		}
 	}
 
 	var httpResult = {};

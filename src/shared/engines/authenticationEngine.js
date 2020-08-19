@@ -43,6 +43,7 @@ var getTokenFromCodeAndValidate = async function(code){
 
 	var tokens = {};
 	
+	log("Calling Cognito Get Token endpoint with: " + formBody);
 	await fetch(url, params)
 	.then(data=>{return data.json()})
 	.then(res=>{tokens = res;})
@@ -50,7 +51,7 @@ var getTokenFromCodeAndValidate = async function(code){
         logg(error);
         error = true;
     });
-    if (error){
+    if (error || !tokens.access_token){
 		return {msg:"ERROR - Unable to exchange code for token! " + code};
     }
 	
@@ -60,7 +61,10 @@ var getTokenFromCodeAndValidate = async function(code){
 }
 
 var validateTokenOrRefresh = async function(tokens){
-	//console.log("Validating token or refreshing..");
+	log("Validating token or refreshing..");
+	//log("access_token=" + tokens.access_token);
+	//log("id_token=" + tokens.id_token);
+	//log("refresh_token=" + tokens.refresh_token);
 	var validationResponse = await validateToken(tokens.access_token); //sets username and cognitoSub
 
 	validationResponse.refresh_token = tokens.refresh_token;

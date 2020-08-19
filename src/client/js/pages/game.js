@@ -6,6 +6,9 @@ function initializePage(){
 
 function loginSuccess(){
 	autoPlayNow();
+	if (document.getElementById("homeLink")){
+		document.getElementById("homeLink").href = serverHomePage;
+	}		
 }
 
 function loginFail(){
@@ -900,8 +903,12 @@ Notification.list = {};
 logg('Game code initialization');
 
 socket.on('signInResponse', function(data){
+	log("signInResponse result: ");
+	console.log(data);
+
 	if(data.success){
 		///////////////////////// INITIALIZE ////////////////////////		
+		log("Sign into server successful - INITIALIZING GRAPHICS");
 		myPlayer.id = data.id;
 		mapWidth = data.mapWidth;
 		mapHeight = data.mapHeight;
@@ -4877,3 +4884,4 @@ function randomInt(min,max)
     return Math.floor(Math.random()*(max-min+1)+min);
 }
 
+console.log("game.js loaded");

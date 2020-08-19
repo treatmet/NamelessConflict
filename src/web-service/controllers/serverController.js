@@ -14,16 +14,18 @@ router.post('/sendPlayerToGameServer', async function (req, res) {
 		cognitoSub: "1534523452345",
 		targetServer: "123.43.2345:3000"
 	}*/
-	log("HIT SEND PLAYER TO GAME SERVER ENDPOINT:");
-	console.log(req.body);
-	
+	log("HIT SEND PLAYER TO GAME SERVER ENDPOINT: cognitoSub=" + req.body.cognitoSub + " targetUrl=" + req.body.targetServer);
 	for (var s in SOCKET_LIST){
+		log("CHECKING SOCKET " + SOCKET_LIST[s].id);
 		if (SOCKET_LIST[s].cognitoSub == req.body.cognitoSub){
+			log("FOUND USER'S SOCKET (" + SOCKET_LIST[s].id + ") REDIRECTING USER");
 			SOCKET_LIST[s].emit('redirectToGame', 'http://' + req.body.targetServer);
 		}
 	}
 	res.send({msg:"Request received"});
 });
+
+
 
 router.post('/getServerList', async function (req, res) {
 	console.log("GET SERVER LIST");
@@ -232,7 +234,8 @@ function sendPartyToGameServer(party, targetServer) {
 			})
 			.catch(function (err) {
 				// POST failed...
-				logg("ERROR summoning party member!");
+				logg("ERROR summoning party member! Classic...");
+				logObj(err);
 		});
 	}
 }

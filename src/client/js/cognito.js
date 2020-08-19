@@ -1,11 +1,17 @@
 console.log("cognito.js loading");
+
+var socket = io();
 // TODO:set values based on game.html query string params
+/*
 var socket = io({
 	query: {
 		"server": "1",
 		"process": "1"
 	}
 });
+*/
+
+
 const cognitoClientId = '70ru3b3jgosqa5fpre6khrislj';
 const cognitoPoolId = 'us-east-2_SbevJL5zt';
 var page = "";
@@ -15,8 +21,10 @@ var partyId = "";
 var federatedUser = false;
 var pcMode = 1;
 var serverHomePage = "https://rw.treatmetcalf.com/";
-if (window.location.href.indexOf("localhost") > -1)
+if (window.location.href.indexOf("localhost") > -1){
+	console.log("localhost detected");
 	serverHomePage = "/";
+}
 
 function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
@@ -32,19 +40,19 @@ function getTokenFromUrlParameterAndLogin(){
     };
 	
     $.post(validateTokenEndpoint, data, function(data,status){ //validation
-        console.log("validateToken response:");
+        log("validateToken response:");
         console.log(data);
 		
         if (data && data.username){
             cognitoSub = data.cognitoSub;
-			console.log('emmiting updateSocketInfo');
+			log('emmiting updateSocketInfo');
 			socket.emit('updateSocketInfo', cognitoSub);
             username = data.username;					
 			federatedUser = data.federatedUser;
 	
 			setLocalStorage();
 			getOnlineFriendsAndParty();	
-			loginSuccess();
+			//loginSuccess(); wait for response from updateSocketInfo before triggering loginSuccess() -- socket.on('socketInfoUpdated')
 	    }
 		else {
 			loginFail();
@@ -85,9 +93,6 @@ function setPcModeAndIsLocalElements(data){
 		else {
 			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
 		}
-		if (document.getElementById("homeLink")){
-			document.getElementById("homeLink").href = serverHomePage;
-		}		
 	}
 }
 
@@ -100,6 +105,11 @@ function getJoinParams(){
 	return tokenParams;
 }
 
+socket.on('socketInfoUpdated', function(){
+	log("socket info updated");
+	loginSuccess();
+});
+
 socket.on('reloadHomePage', function(){
 	window.location.href = serverHomePage;
 });
@@ -109,26 +119,21 @@ socket.on('redirect', function(url){
 });
 
 socket.on('redirectToGame', function(url){
+	logg("Redirecting webpage to " + url);
 	url = url + getJoinParams();
 	window.location.href = url;
 });
 
 function autoPlayNow(){
-	if (getUrlParam("join", "false") == "true"){
-		var options = {};
-		options.server = getUrl();
-		playNow();
-	}
+	playNow();
 }
 
 function playNow(){
+	log("playNow on this server");
 	var options = {};
-	//options.partyId = partyId; //Getting from DB
-	//options.username = username; //Getting from DB
-	//options.cognitoSub = cognitoSub; cognitoSub can be gathered by getting authenticated user
 	
 	$.post('/playNow', options, function(data,status){
-		console.log("Play Now response:");
+		log("Play Now response:");
 		console.log(data);		
 		if (!data.success){
 			alert(data.msg);
@@ -149,7 +154,7 @@ function getJoinableServer(options){
 		hide("mainContent");
 		show("gameLoader");
 		$.post('/getJoinableServer', options, function(data,status){
-			console.log("Join Server response:");
+			log("Join Server response:");
 			console.log(data);		
 			if (data.server){
 				//Redirect happens on server side, do nothing here
