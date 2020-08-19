@@ -244,9 +244,24 @@ router.post('/getRequests', async function (req, res) {
 	});
 });
 
+function getShortenedValue(val){
+	if (val && val.length > 0){
+		if (val.length > 15){
+			return val.substring(0, 15) + "...";
+		}
+		else {
+			return val;
+		}
+	}
+	else {
+		return "";
+	}
+}
+
 router.post('/validateToken', async function (req, res) {
-	//log("VALIDATE TOKEN ENDPOINT");
 	var code = req.body.code;
+	logg("VALIDATE TOKEN ENDPOINT -- code:" + getShortenedValue(code) + " cookies: cog_a=" + getShortenedValue(req.cookies["cog_a"]) + " cog_r=" + getShortenedValue(req.cookies["cog_r"]) + " body: cog_a=" + req.body.cog_a + " cog_r=" + req.body.cog_r);
+
 	//console.log("--BODY");
 	//console.log(req.body);
 	
@@ -304,6 +319,7 @@ router.post('/validateToken', async function (req, res) {
 		};
 	}
 	else { //error
+		logg("Authentication failed");
 		res.status(200);
 		if (result){
 			httpResult = {
