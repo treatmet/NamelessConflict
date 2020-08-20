@@ -10,10 +10,6 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const hostname = os.hostname();
 
-function getClientPath(relativePath) {
-	return path.join(__dirname, "../client", relativePath);
-}
-
 //Process command line arguments
 processArgs();
 testDB();
@@ -32,6 +28,13 @@ logg('Express server started on port ' + port + '.');
 
 mapEngine.initializeBlocks(map);
 mapEngine.initializePickups(map);
+
+
+
+//-------------------------------------------------------------------------------------
+function getClientPath(relativePath) {
+	return path.join(__dirname, "../client", relativePath);
+}
 
 function testDB(){
 	logg('Initializing...');
