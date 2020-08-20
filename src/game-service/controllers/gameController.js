@@ -36,6 +36,7 @@ router.get('/ping', function(req, res) {
 });
 
 router.post('/playNow', async function (req, res) {
+	log("playNow endpoint");
 	if (myUrl == ""){
 		logg("res.send: " + "Url for current server not set");
 		res.send({autoJoin:false, error:"Url for current server not set"});

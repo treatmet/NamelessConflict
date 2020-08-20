@@ -1,6 +1,16 @@
 console.log("cognito.js loading");
 
-var socket = io();
+var serverP = getUrlParam("server", "");
+var processP = getUrlParam("process", "");
+var socket = io(getSocketParams());
+function getSocketParams(){
+	if (serverP != "" && processP != ""){
+		return { query: {"server": serverP,"process": processP}};
+	}
+	else {
+		return {};
+	}
+}
 // TODO:set values based on game.html query string params
 /*
 var socket = io({
@@ -21,9 +31,11 @@ var partyId = "";
 var federatedUser = false;
 var pcMode = 1;
 var serverHomePage = "https://rw.treatmetcalf.com/";
+var isLocal = false;
 if (window.location.href.indexOf("localhost") > -1){
 	console.log("localhost detected");
 	serverHomePage = "/";
+	isLocal = true;
 }
 
 function getTokenFromUrlParameterAndLogin(){
@@ -45,7 +57,10 @@ function getTokenFromUrlParameterAndLogin(){
 		
         if (data && data.username){
             cognitoSub = data.cognitoSub;
-			log('emmiting updateSocketInfo');
+			
+			
+			log('emmiting updateSocketInfo cognitoSub=' + cognitoSub);
+			console.log(socket);
 			socket.emit('updateSocketInfo', cognitoSub);
             username = data.username;					
 			federatedUser = data.federatedUser;
@@ -97,7 +112,7 @@ function setPcModeAndIsLocalElements(data){
 }
 
 function getJoinParams(){
-	var tokenParams = "?join=true";
+	var tokenParams = "";
 	if (getCookie("cog_a").length > 0){
 		tokenParams += "&cog_a=" + getCookie("cog_a");
 		tokenParams += "&cog_r=" + getCookie("cog_r");	
@@ -105,8 +120,8 @@ function getJoinParams(){
 	return tokenParams;
 }
 
-socket.on('socketInfoUpdated', function(){
-	log("socket info updated");
+socket.on('socketInfoUpdated', function(data){
+	log("socket info updated url:" +  data.url +" isWebServer:" + data.isWebServer);
 	loginSuccess();
 });
 
@@ -119,8 +134,8 @@ socket.on('redirect', function(url){
 });
 
 socket.on('redirectToGame', function(url){
-	logg("Redirecting webpage to " + url);
 	url = url + getJoinParams();
+	logg("Redirecting webpage to " + url);
 	window.location.href = url;
 });
 
@@ -131,8 +146,7 @@ function autoPlayNow(){
 function playNow(){
 	log("playNow on this server");
 	var options = {};
-	
-	$.post('/playNow', options, function(data,status){
+	$.post('https://rw.treatmetcalf.com/playNow?server=' + serverP + '&process=' + processP, options, function(data,status){
 		log("Play Now response:");
 		console.log(data);		
 		if (!data.success){

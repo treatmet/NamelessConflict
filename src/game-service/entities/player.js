@@ -6,6 +6,7 @@ var entityHelpers = require('./_entityHelpers.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
 
 var Player = function(id, cognitoSub, name, team, partyId){
+	log("Player initializing... cognitoSub=" + cognitoSub + " id:" + id);
 	var self = {
 		id:id,
 		cognitoSub:cognitoSub,

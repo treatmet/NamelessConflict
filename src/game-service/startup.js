@@ -119,7 +119,7 @@ function getIP(){
 //Get IP Address for RW_SERV (AWS)
 function getAwsIp() {
 	const request = require('request-promise');
-	request('http://169.254.169.254/latest/meta-data/public-ipv4', function (error, response, body) {
+	request('http://169.254.169.254/latest/meta-data/local-ipv4', function (error, response, body) {
 		if (!error && response.statusCode === 200 && response.body) {
 			myIP = response.body;
 			logEngine.reinitStream();

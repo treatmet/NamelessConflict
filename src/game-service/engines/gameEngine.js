@@ -1112,6 +1112,12 @@ var getAllPlayersFromDB = function(cb){
 
 var joinGame = function(cognitoSub, username, team, partyId){
 	log("Attempting to join game...");
+
+	log("Listing all currently connected sockets");
+	for (var s in SOCKET_LIST){
+		logg("id:" + SOCKET_LIST[s].id + " cognitoSub:" + SOCKET_LIST[s].cognitoSub);
+	}
+
 	var socket = SOCKET_LIST[getSocketIdFromCognitoSub(cognitoSub)];
 	if (!socket){
 		log("ERROR!!! Socket not yet connected to game server, or cognitoSub has not been set on socket!");
@@ -1219,6 +1225,7 @@ var sendFullGameStatus = function(socketId){
 	}
 	SOCKET_LIST[socketId].emit('sendFullGameStatus', playerPack, thugPack, pickupPack, blockPack, miscPack); //Goes to a single player
 }
+
 
 
 module.exports.changeTeams = changeTeams;

@@ -1,6 +1,5 @@
 var dataAccess = require('../../shared/data_access/dataAccess.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
-var authenticationEngine = require('../../shared/engines/authenticationEngine.js');
 const express = require('express');
 const router = express.Router();
 const cookieParser = require('cookie-parser');
@@ -14,12 +13,13 @@ router.post('/sendPlayerToGameServer', async function (req, res) {
 		cognitoSub: "1534523452345",
 		targetServer: "123.43.2345:3000"
 	}*/
+	req.body.targetServer = "https://rw.treatmetcalf.com/?server=1&process=1"; //POC
 	log("HIT SEND PLAYER TO GAME SERVER ENDPOINT: cognitoSub=" + req.body.cognitoSub + " targetUrl=" + req.body.targetServer);
 	for (var s in SOCKET_LIST){
 		log("CHECKING SOCKET " + SOCKET_LIST[s].id);
 		if (SOCKET_LIST[s].cognitoSub == req.body.cognitoSub){
 			log("FOUND USER'S SOCKET (" + SOCKET_LIST[s].id + ") REDIRECTING USER");
-			SOCKET_LIST[s].emit('redirectToGame', 'http://' + req.body.targetServer);
+			SOCKET_LIST[s].emit('redirectToGame', req.body.targetServer);
 		}
 	}
 	res.send({msg:"Request received"});

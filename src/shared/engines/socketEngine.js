@@ -23,7 +23,7 @@ io.sockets.on('connection', function(socket){
 				socket.rating = userData.rating;
 				socket.experience = userData.experience;
 				socket.username = userData.USERNAME;	
-				socket.emit('socketInfoUpdated');
+				socket.emit('socketInfoUpdated', {url:myUrl, isWebServer:isWebServer});
 			}
 		});	
 	});
