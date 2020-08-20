@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.724.0",
     "mongodb": "^3.5.9",
     "mongojs": "^3.1.0",
     "s3-streamlogger": "^1.7.0"
