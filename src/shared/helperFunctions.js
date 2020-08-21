@@ -246,7 +246,7 @@ global.getRankFromRating = function(rating){
 	];
 
 	for (var r in rankings){
-		var rPlus = parseInt(r)+1;
+		var rPlus = parseInt(r)+1; //ToInt32
 		var rMinus = parseInt(r)-1;
 		if (rating < rankings[rPlus].rating){
 			log(rankings[r].rank + " is his rank");
