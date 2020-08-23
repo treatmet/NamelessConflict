@@ -154,6 +154,7 @@ global.myIP = "";
 global.myUrl = "";
 global.port = '3001';
 global.serverHomePage = "/";
+global.myQueryString = "";
 
 //Game global variables
 global.pause = false;

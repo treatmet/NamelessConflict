@@ -7,26 +7,6 @@ const request = require('request-promise');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 router.use(cookieParser());
 
-router.post('/sendPlayerToGameServer', async function (req, res) {
-	/*req.body
-	{
-		cognitoSub: "1534523452345",
-		targetServer: "123.43.2345:3000"
-	}*/
-	req.body.targetServer = "https://rw.treatmetcalf.com/?server=1&process=1"; //POC
-	log("HIT SEND PLAYER TO GAME SERVER ENDPOINT: cognitoSub=" + req.body.cognitoSub + " targetUrl=" + req.body.targetServer);
-	for (var s in SOCKET_LIST){
-		log("CHECKING SOCKET " + SOCKET_LIST[s].id);
-		if (SOCKET_LIST[s].cognitoSub == req.body.cognitoSub){
-			log("FOUND USER'S SOCKET (" + SOCKET_LIST[s].id + ") REDIRECTING USER");
-			SOCKET_LIST[s].emit('redirectToGame', req.body.targetServer);
-		}
-	}
-	res.send({msg:"Request received"});
-});
-
-
-
 router.post('/getServerList', async function (req, res) {
 	console.log("GET SERVER LIST");
 	var serverList = [];
@@ -147,7 +127,6 @@ var getJoinableServer = function(options, cb){
 					console.log(currentUsers);
 					log("Percentage of match remaining: " + (serv[i].currentTimeLeft / serv[i].matchTime));
 					*/
-					
 
 					var moreWhitePlayers = 0; 
 					for (var u in currentUsers){
@@ -196,7 +175,10 @@ var getJoinableServer = function(options, cb){
 					dataAccess.dbUpdateAwait("RW_SERV", "set", {url: serv[selectedServer].url}, obj, async function(err2, res){
 						if (!err2){
 							logg("DB: UPDATING incomingUsers: " + serv[selectedServer].url + " with: " + JSON.stringify(obj));
-							cb("Found joinable server. Joining...", serv[selectedServer].url);
+							var targetUrl = serverHomePage + serv[selectedServer].queryString;
+							if (isLocal)
+								targetUrl = "http://" + serv[selectedServer].url + "/?join=true"; 
+							cb("Found joinable server. Joining...", targetUrl);
 						}
 						else {
 							cb("FAILED TO UPDATE INCOMING USERS", false);
@@ -213,7 +195,7 @@ var getJoinableServer = function(options, cb){
 	});
 }
 
-function sendPartyToGameServer(party, targetServer) {
+function sendPartyToGameServer(party, targetUrl) {
 	logg("function sendPartyToGameServer with this party:");
 	console.log(party);
 	for (var p = 0; p < party.length; p++){
@@ -222,7 +204,7 @@ function sendPartyToGameServer(party, targetServer) {
 			uri: 'http://' + party[p].serverUrl + '/sendPlayerToGameServer',
 			form: {
 				cognitoSub: party[p].cognitoSub,
-				targetServer: targetServer
+				targetUrl: targetUrl
 			}
 		};
 		 
@@ -239,5 +221,22 @@ function sendPartyToGameServer(party, targetServer) {
 		});
 	}
 }
+
+router.post('/sendPlayerToGameServer', async function (req, res) {
+	/*req.body
+	{
+		cognitoSub: "1534523452345",
+		targetUrl: "123.43.2345:3000"
+	}*/
+	log("HIT SEND PLAYER TO GAME SERVER ENDPOINT: cognitoSub=" + req.body.cognitoSub + " targetUrl=" + req.body.targetUrl);
+	for (var s in SOCKET_LIST){
+		log("CHECKING SOCKET " + SOCKET_LIST[s].id);
+		if (SOCKET_LIST[s].cognitoSub == req.body.cognitoSub){
+			log("FOUND USER'S SOCKET (" + SOCKET_LIST[s].id + ") REDIRECTING USER");
+			SOCKET_LIST[s].emit('redirectToGame', req.body.targetUrl);
+		}
+	}
+	res.send({msg:"Request received"});
+});
 
 module.exports = router;

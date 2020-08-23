@@ -555,7 +555,7 @@ var dbGameServerRemoveAndAdd = function(){
 }
 
 var dbGameServerUpdate = function() {
-	if (!myUrl || myUrl == ""){
+	if ((!myUrl || myUrl == "") || (!isLocal && myQueryString.length <= 0)){
 		logg("ERROR - NO SERVER URL - NOT READY TO SYNC WITH DB");
 		return;
 	}
@@ -610,7 +610,7 @@ var dbGameServerUpdate = function() {
 	}
 	
 	console.log(currentUsers);
-	var obj = {serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:currentUsers};
+	var obj = {serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:currentUsers, queryString:myQueryString};
 	
 	dataAccess.dbUpdateAwait("RW_SERV", "ups", {url: myUrl}, obj, async function(err, res){
 		//logg("dbGameServerUpdate DB: Set: " + myUrl + " with: ");
@@ -619,7 +619,7 @@ var dbGameServerUpdate = function() {
 }
 
 var syncGameServerWithDatabase = function(){	
-	if (myIP == ""){
+	if (myUrl == "" && (isLocal || (!isLocal && myQueryString.length > 0))){
 		logg("WARNING - Unable to get server IP. Retrying in " + syncServerWithDbInterval + " seconds...");
 		return;
 	}
@@ -627,7 +627,6 @@ var syncGameServerWithDatabase = function(){
 	
 	dataAccess.dbFindAwait("RW_SERV", {url:myUrl}, async function(err, res){
 		if (res && res[0]){
-			//log("Server " + myUrl + " present in IN_SERV. Grabbing server config...");
 			serverNumber = res[0].serverNumber;
 			
 			//serverName = res[0].serverName;
@@ -652,16 +651,12 @@ var syncGameServerWithDatabase = function(){
 				var usersToRemove = [];
 				var miliInterval = (staleOnlineTimestampThreshold /4 * 1000); //Stale incoming player threshold is a quarter of online timestamp threshold
 				var thresholdDate = new Date(Date.now() - miliInterval);
-
-
-				
 				for (var u = 0; u < incomingUsers.length; u++){
 					if (incomingUsers[u].timestamp < thresholdDate){
 						usersToRemove.push(u);
 					}
 				}
 				incomingUsers = removeIndexesFromArray(incomingUsers, usersToRemove);	
-
 			
 				dataAccess.dbUpdateAwait("RW_SERV", "set", {url: myUrl}, {incomingUsers:incomingUsers}, async function(err, res){
 					//logg("DB: Set: " + myUrl + " with: " + obj);
@@ -680,7 +675,7 @@ var syncGameServerWithDatabase = function(){
 					logg('There are no servers live');
 				}
 
-				console.log("ADDING SERVER WITH NO PARAMS");
+				log("ADDING SERVER WITH NO PARAMS");
 				dbGameServerUpdate();			
 			});
 		}	

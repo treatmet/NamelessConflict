@@ -32,11 +32,6 @@ var federatedUser = false;
 var pcMode = 1;
 var serverHomePage = "https://rw.treatmetcalf.com/";
 var isLocal = false;
-if (window.location.href.indexOf("localhost") > -1){
-	console.log("localhost detected");
-	serverHomePage = "/";
-	isLocal = true;
-}
 
 function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
@@ -64,6 +59,7 @@ function getTokenFromUrlParameterAndLogin(){
 			socket.emit('updateSocketInfo', cognitoSub);
             username = data.username;					
 			federatedUser = data.federatedUser;
+			isLocal = data.isLocal;
 	
 			setLocalStorage();
 			getOnlineFriendsAndParty();	
@@ -111,7 +107,7 @@ function setPcModeAndIsLocalElements(data){
 	}
 }
 
-function getJoinParams(){
+function getTokenUrlParams(){
 	var tokenParams = "";
 	if (getCookie("cog_a").length > 0){
 		tokenParams += "&cog_a=" + getCookie("cog_a");
@@ -134,7 +130,7 @@ socket.on('redirect', function(url){
 });
 
 socket.on('redirectToGame', function(url){
-	url = url + getJoinParams();
+	url = url + getTokenUrlParams();
 	logg("Redirecting webpage to " + url);
 	window.location.href = url;
 });
@@ -146,7 +142,12 @@ function autoPlayNow(){
 function playNow(){
 	log("playNow on this server");
 	var options = {};
-	$.post('https://rw.treatmetcalf.com/playNow?server=' + serverP + '&process=' + processP, options, function(data,status){
+	var postUrl = 'https://rw.treatmetcalf.com/playNow?server=' + serverP + '&process=' + processP;
+	if (isLocal) {
+		alert("LOCAL");
+		postUrl = "/playNow";
+	}
+	$.post(postUrl, options, function(data,status){
 		log("Play Now response:");
 		console.log(data);		
 		if (!data.success){

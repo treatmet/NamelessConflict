@@ -10,7 +10,7 @@ var s3stream = {};
 
 const { spawn } = require('child_process');
 
-const gameInstanceCount = 2;
+const gameInstanceCount = 4;
 const gameProcesses = [];
 
 for (let i = 1; i <= gameInstanceCount; i++) {
@@ -39,11 +39,11 @@ require('./web-service/app');
 if (hostname.toLowerCase().includes("compute")){
   getInstanceIdAndAddToLoadBalancer();
 }
-else {
+else { //Testing
   //var instanceId = "LOCAL";
-  var instanceId = "i-044f8b212e3dcb70a";
-  reinitStream(instanceId);
-  addGameServerToLoadBalancer(instanceId);
+  //var instanceId = "i-044f8b212e3dcb70a";
+  //reinitStream(instanceId);
+  //addGameServerToLoadBalancer(instanceId);
 }
 //-------------------------------------------------------------------------------------
 function getInstanceIdAndAddToLoadBalancer(){
@@ -55,11 +55,11 @@ function getInstanceIdAndAddToLoadBalancer(){
       addGameServerToLoadBalancer(instanceId);
 		}
 		else {
-			console.log("AWS API ERROR -- Unable to Get Instance Id");
+			log("AWS API ERROR -- Unable to Get Instance Id");
 		}
 	}).catch(function (err){
-		console.log("AWS API ERROR -- Unable to Get Instance Id:");
-		console.log(util.format(err));
+		log("AWS API ERROR -- Unable to Get Instance Id:");
+		log(util.format(err));
 	});
 }
 
@@ -128,43 +128,54 @@ function addGameServerToLoadBalancer(instanceId){
         });
       }
 
+
+      //ALSO NEED TO SKIP RULE CREATION IF THE TARGET GROUP ALREADY EXISTS!!!
+
+
       //Game processes registration      
 
-      //NEXT: The process loop is going faster than the API requests. Need to introduce recursion in a function call. Function calls itself ONLY when rule creation has been completed
       var portArray = [];
       for (let p = 1; p <= gameInstanceCount; p++) {
         portArray.push(3000 + p);
       }
-      //recursiveFunction(portArray);
-
-
-
-      //ALSO NEED TO SKIP RULE CREATION IF THE TARGET GROUP ALREADY EXISTS!!!
-
-      for (let p = 1; p <= gameInstanceCount; p++) {
-        var portToCheck = 3000 + p;
-        log("Checking if process on port " + portToCheck + " has been added to a game target group (Port math)");
-        upsertProcessToGameServerTargetGroup(targetGroupData, instanceId, portToCheck, function(upsertResult){
-          get443ListenerArn(loadBalancerArn, function(listenerArn){            
-            getNextRulePriority(listenerArn, function(priority){
-              if (listenerArn && upsertResult && priority){
-                createRuleWithRetries(instanceId, portToCheck, listenerArn, upsertResult, priority);
-              }
-              else {
-                log("ERROR - Didn't get enough data to create Rule (Need listenerArn:" + listenerArn + " upsertProcessToGameServerTargetGroup:" + upsertResult + " priority:" + priority + ")");
-              }
-            });
-          });          
-        });
-      }
-
+      addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, targetGroupData.gameTargetGroupArns, portArray);
 
     });
   });
 }
 
+function addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, gameTargetGroupArns, portArray){
+  if (!portArray[0]){
+    log("Add Processes To load balancer recursive COMPLETED");
+    return;
+  }
+  log("Adding Processes To load balancer for these ports:");
+  logObj(portArray);
+  var portToCheck = portArray[0];
+  portArray.shift();
 
-function getNextRulePriority(listenerArn, cb){
+  upsertProcessToGameServerTargetGroup(gameTargetGroupArns, instanceId, portToCheck, function(upsertResult){
+    get443ListenerArn(loadBalancerArn, function(listenerArn){            
+      checkRulesAndGetPriority(listenerArn, upsertResult.targetGroupArn, function(priority){ //Will return false if rule already exists pointing to this Target Group
+        if (listenerArn && upsertResult && priority){
+          createRuleWithRetries(instanceId, portToCheck, listenerArn, upsertResult.targetGroupArn, priority, function(createRuleResult){
+            addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, gameTargetGroupArns, portArray);
+          });
+        }
+        else {
+          log("ERROR - Didn't get enough data to create Rule, or rule already exists (Need listenerArn:" + listenerArn + " targetGroupArn:" + upsertResult.targetGroupArn + " priority:" + priority + ")");
+          addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, gameTargetGroupArns, portArray);
+        }
+      });
+    });          
+  });
+
+
+
+}
+
+
+function checkRulesAndGetPriority(listenerArn, targetGroupArn, cb){
   var params = {
     ListenerArn: listenerArn
   };
@@ -175,8 +186,20 @@ function getNextRulePriority(listenerArn, cb){
       cb(false);
     }
     else {
-      logg("443 Listeners:");
-      logObj(data);
+      logg("Getting Rules for Listener on Port 443:");
+
+      //Check if Rule already exists
+      for (var r in data.Rules){
+        logg("Rule: " + data.Rules[r].RuleArn + " conditions:");
+        logObj("Forward to:" + data.Rules[r].Actions[0].TargetGroupArn);
+        if (data.Rules[r].Actions[0].TargetGroupArn == targetGroupArn){
+          logg("Target Group already addded to load balancer rules.");
+          cb(false);
+          return;
+        }
+      }
+
+      //Add the rule
       for (var x = 1; x < 999; x++){ //Starting at 1...
         var availablePriority = true;
         for (var r in data.Rules){
@@ -198,12 +221,12 @@ function getNextRulePriority(listenerArn, cb){
 }
 
 
-function upsertProcessToGameServerTargetGroup(targetGroupData, instanceId, portToCheck, cb){
+function upsertProcessToGameServerTargetGroup(gameTargetGroupArns, instanceId, portToCheck, cb){
   portToCheck = parseInt(portToCheck);
   var targetGroupsChecked = 0;
   var presentInGameTargetGroup = false;
-  for (var tg = 0; tg < targetGroupData.gameTargetGroupArns.length; tg++){
-    getTargetsInTargetGroup(targetGroupData.gameTargetGroupArns[tg], function(targetGroupArn, targets){
+  for (var tg = 0; tg < gameTargetGroupArns.length; tg++){
+    getTargetsInTargetGroup(gameTargetGroupArns[tg], function(targetGroupArn, targets){
       log("TARGETS IN GAME SERVER targetGroupArn:" + targetGroupArn);
       logObj(targets);
       for (var t = 0; t < targets.length; t++){
@@ -214,7 +237,7 @@ function upsertProcessToGameServerTargetGroup(targetGroupData, instanceId, portT
           break;
         }
         targetGroupsChecked++;
-        if (targetGroupsChecked >= targetGroupData.gameTargetGroupArns.length && !presentInGameTargetGroup){
+        if (targetGroupsChecked >= gameTargetGroupArns.length && !presentInGameTargetGroup){
           //Create Target Group, and add Process
           log("Adding process on port " + portToCheck + " for instance " + instanceId + " to new Target Group");
           createTargetGroup("game-" + instanceId.substring(2) + "-" + portToCheck.toString().substring(2), portToCheck, function(createTargetGroupResult){
@@ -397,38 +420,45 @@ function registerEC2ToTargetGroup(targetGroupArn, instanceId, cb){
 
 
 
-function createRuleWithRetries(instanceId, portToCheck, listenerArn, upsertResult, priority){
-  createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, upsertResult.targetGroupArn, priority, function(createRuleResult){
+function createRuleWithRetries(instanceId, portToCheck, listenerArn, targetGroupArn, priority, cb){
+  createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, targetGroupArn, priority, function(createRuleResult){
     if (createRuleResult){
       log("FIRST TRY - Successfully created rule");
+      cb(createRuleResult.Rules[0].RuleArn);
     }
     else {
-      createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, upsertResult.targetGroupArn, priority+1, function(createRuleResult){
+      createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, targetGroupArn, priority+1, function(createRuleResult){
         if (createRuleResult){
           log("SECOND TRY - Successfully created rule");
+          cb(createRuleResult.Rules[0].RuleArn);
         }
         else {
-          createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, upsertResult.targetGroupArn, priority+2, function(createRuleResult){
+          createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, targetGroupArn, priority+2, function(createRuleResult){
             if (createRuleResult){
               log("THIRD TRY - Successfully created rule");
-            }
+              cb(createRuleResult.Rules[0].RuleArn);
+        }
             else {
-              createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, upsertResult.targetGroupArn, priority+3, function(createRuleResult){
+              createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, targetGroupArn, priority+3, function(createRuleResult){
                 if (createRuleResult){
                   log("FOURTH TRY - Successfully created rule on second try");
+                  cb(createRuleResult.Rules[0].RuleArn);
                 }
                 else {
-                  createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, upsertResult.targetGroupArn, priority+4, function(createRuleResult){
+                  createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, targetGroupArn, priority+4, function(createRuleResult){
                     if (createRuleResult){
                       log("FIFTH TRY - Successfully created rule");
+                      cb(createRuleResult.Rules[0].RuleArn);
                     }
                     else {
-                      createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, upsertResult.targetGroupArn, priority+5, function(createRuleResult){
+                      createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, targetGroupArn, priority+5, function(createRuleResult){
                         if (createRuleResult){
                           log("SIXTH TRY - Successfully created rule on second try");
+                          cb(createRuleResult.Rules[0].RuleArn);
                         }
                         else {
                           log("ERROR -- RULE CREATION FAILED AFTER 6 retries");
+                          cb(false);
                         }
                       });                  
                     }
