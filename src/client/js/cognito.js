@@ -144,7 +144,6 @@ function playNow(){
 	var options = {};
 	var postUrl = 'https://rw.treatmetcalf.com/playNow?server=' + serverP + '&process=' + processP;
 	if (isLocal) {
-		alert("LOCAL");
 		postUrl = "/playNow";
 	}
 	$.post(postUrl, options, function(data,status){
