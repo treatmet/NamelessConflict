@@ -1,0 +1,161 @@
+<head>
+	<title>R-Wars - User Profile</title>
+</head>
+
+<body style="margin: 0px;overflow-y: hidden;overflow-x: hidden;">
+{{header}}
+    
+<div style="display:none;" id="mainContent">
+	<div id="sectionTitles">
+		<div id="sectionTitle1" class="sectionTitle">{{username}}</div>
+		<div id="sectionTitle2" class="sectionTitle3">Progress</div>
+		<div id="sectionTitle3" class="sectionTitle3">Customize</div>
+	</div>
+
+
+	<!--PAGE COLUMNS-->
+	<div id="playerProfile" class="columnSection">
+		<div id="invitePlayerButtons" style="display:none;">
+			<button id="addFriendButton" class="RWButton" style="display:none;" onclick="addFriendButtonClick()">Add as Friend</button>
+			<button id="removeFriendButton" class="RWButton" style="display:none;" onclick="removeFriendButtonClick()">✓ Friends</button>
+			<button id="inviteToPartyButton" class="RWButton" style="display:none;" onclick="inviteToPartyButtonClick()">Invite to Party</button>
+			<button id="kickFromPartyButton" class="RWButton" style="display:none;" onclick="kickFromPartyButtonClick()">Kick from Party</button>
+		</div>
+		<div id="playerRankIcon">
+			<img src="/client/img/ranks/full-size/{{rank}}.png">
+		</div>
+		<div id="playerRating">
+			{{rankFullName}}
+		</div>
+		<div id="playerLevel">
+			Level {{playerLevel}} 
+		</div>
+		<br>
+
+		<div id="updateUserForm" style="display:none">
+			<button id="editUserButton" class="RWButton" style="display:none" onclick="editUserButtonClick()">Edit User Profile</button>
+			<div id="updateUserTextBoxes" style="display:none">
+				<div id="editUserPasswordText" style="display: block;padding-top: 5px;">First, enter password: </div>
+				<div>
+					<input id="oldPasswordText" onblur="onBlur(this)" type="text" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)">
+				</div>
+				<div id="updateFields">
+					<div id="editUserFieldText" style="display: block;padding-top: 5px;">
+						Select field you would like to change:
+					</div>
+					<button id="editUsernameButton" class="RWButton" onclick="editUsernameButtonClick()">Username</button>
+					<input id="newUsernameText" onblur="onBlur(this)" maxlength="20" autocomplete="off" type="text" value="Username" class="textBox" onclick="newUserNameClick()" onfocus="newUserNameClick()" style="display: none;">
+					<br>
+					<button id="editPasswordButton" class="RWButton" onclick="editPasswordButtonClick()">Password</button>
+					<div id="passys" style="display: inline-block;">
+						<input id="newPasswordText" onblur="onBlur(this)" autocomplete="off" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;">
+						<input id="newPasswordText2" onblur="onBlur(this)" autocomplete="off" value="Password Confirm" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;"> 
+					</div>
+					<br>
+					<input id="newEmailText" onblur="onBlur(this)" type="text" value="Email" class="textBox" onclick="newEmailClick()" onfocus="newEmailClick()">
+					<label id="updateInfo"></label>
+				</div>
+				<button id="editUserConfirmButton" class="RWButton" onclick="editUserConfirmButtonClick()">Confirm</button>
+				<button id="editUserCancelButton" class="RWButton" onclick="editUserCancelButtonClick()">Cancel</button>
+			</div>
+		</div>
+		
+		<div id="statsTables">
+			<table class="statsTable">
+				<tr>
+					<th>Rating</th>
+					<td>{{rating}}</td>
+				</tr>
+				<tr>
+					<th>Experience</th>
+					<td>{{experience}}</td>
+				</tr>
+			</table>
+			<br>
+			<table class="statsTable">
+				<tr>
+					<th>Kills</th>
+					<td>{{kills}}</td>
+				</tr>
+				<tr>
+					<th>Captures</th>
+					<td>{{captures}}</td>
+				</tr>
+				<tr>
+					<th>Deaths</th>
+					<td>{{deaths}}</td>
+				</tr>
+				<tr>
+					<th>Betrayals</th>
+					<td>{{benedicts}}</td>
+				</tr>
+				<tr>
+					<th>Steals</th>
+					<td>{{steals}}</td>
+				</tr>
+				<tr>
+					<th>Returns</th>
+					<td>{{returns}}</td>
+				</tr>
+				<tr>
+					<th>Games Played</th>
+					<td>{{gamesPlayed}}</td>
+				</tr>
+				<tr>
+					<th>Games Won</th>
+					<td>{{gamesWon}}</td>
+				</tr>
+				<tr>
+					<th>Games Lost</th>
+					<td>{{gamesLost}}</td>
+				</tr>
+			</table>
+			<br>
+			<table class="statsTable">
+				<tr>
+					<th>Date Joined</th>
+					<td>{{dateJoined}}</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+	<div id="progressColumn" class="columnSection">
+		<div id="progressColumnContent">
+			<div class="progressBarText">
+				Pts to Next Rank: {{ratingToNext}}
+			</div>
+			<div id="ratingBarDiv">
+				<div class="progressBar" id="ratingBar">
+					<div id="ratingProgress" style="width:{{rankProgressPercent}}%;">
+					</div>
+				</div>
+			</div>
+			<br>
+			<div class="progressBarText">
+				Exp to Next Level: {{expToNext}}
+			</div>
+			<div id="experienceBarDiv">
+				<div class="progressBar" id="experienceBar">
+					<div id="experienceProgress" style="width:{{levelProgressPercent}}%;">
+					</div>
+				</div>
+			</div>
+			<br>
+			<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+		</div>
+	</div>
+	<div id="customizationColumn" class="columnSection">
+		Aesthetic player customizations coming soon.
+	</div>
+</div>
+
+<div id="bottom"></div>
+
+<div id="code" style="margin: auto; width: 200px;">
+	<script src="/client/js/util.js"></script>
+	<script src="/client/js/cognito.js"></script>
+	<script src="/client/js/pages/profile.js"></script>	
+</div>
+
+</body></html>

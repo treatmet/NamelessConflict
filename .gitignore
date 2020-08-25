@@ -7,3 +7,12 @@ misc
 website
 .vscode
 *.bat
+settings.json
+package-lock.json
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.yml
+
+# Deployment artifacts
+artifacts

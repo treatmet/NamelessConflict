@@ -1,0 +1,14 @@
+global:
+  application_name: GameService
+  branch: null
+  default_ec2_keyname: DriveKeyPair
+  default_platform: Node.js 12 running on 64bit Amazon Linux 2
+  default_region: us-east-2
+  include_git_submodules: true
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: null
+  repository: null
+  sc: null
+  workspace_type: Application
