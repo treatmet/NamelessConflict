@@ -20,7 +20,6 @@ exports.handler = (event, context, callback) => {
     removeStaleServers(function(){
         getPublicServersFromDB(function(res){
             for (var s = 0; s < res.length; s++){
-                console.log
                 var players = getCurrentNumPlayers(res[s].currentUsers);
                 if (players >= res[s].maxPlayers){
                     fullServers++;
@@ -32,12 +31,12 @@ exports.handler = (event, context, callback) => {
                     emptyServers++;
                 }
             }	
-            console.log("fullServers: " + fullServers);
-            console.log("emptyServers: " + emptyServers);
-            console.log("playableServers: " + playableServers);
-            console.log("Updating EB instance count...");
+            log("fullServers: " + fullServers);
+            log("emptyServers: " + emptyServers);
+            log("playableServers: " + playableServers);
+            log("Updating EB instance count...");
             updateInstanceCount(3, function(){
-                console.log("EB updateInstnceCount callback");
+                log("EB updateInstnceCount callback");
                 callback(null, "fullServers: " + fullServers);
             });
         });	
@@ -45,12 +44,13 @@ exports.handler = (event, context, callback) => {
 };
 
 function removeStaleServers(cb){
+    logg("Removing stale servers from DB...");
     var acceptableLastHealthCheckTime = new Date();
     acceptableLastHealthCheckTime.setSeconds(acceptableLastHealthCheckTime.getUTCSeconds() - serverHealthCheckTimestampThreshold);
     var searchParams = { healthCheckTimestamp:{ $lt: acceptableLastHealthCheckTime } };
     dataAccess.dbUpdateAwait("RW_SERV", "rem", searchParams, {}, async function(err2, obj){
         if (!err2){
-            console.log("Unhealthy Servers successfully removed from database.");
+            logg("Unhealthy Servers successfully removed from database.");
         }
         cb();
     });	
@@ -80,12 +80,12 @@ function updateInstanceCount(targetCount, cb){
 
     elasticbeanstalk.updateEnvironment(params, function(err, data) {
         if (err){ 
-            console.log("ERROR FAILED BEANSTALK UPDATE");
-            console.log(err, err.stack); // an error occurred
+            log("ERROR FAILED BEANSTALK UPDATE");
+            log(err, err.stack); // an error occurred
         }
         else {
-            console.log("BEANSTALK UPDATE SUCCESS!!!");
-            console.log(data);           // successful response
+            log("BEANSTALK UPDATE SUCCESS!!!");
+            log(data);           // successful response
         }
         cb();
 

@@ -1,10 +1,10 @@
 const S3StreamLogger = require('s3-streamlogger').S3StreamLogger;
 global.util = require('util');
 
-var s3stream = new S3StreamLogger({ bucket: s3LoggingBucket, name_format: "ADMIN.txt"});
+var s3stream = new S3StreamLogger({ bucket: s3LoggingBucket, name_format: "LAMBDA_ADMIN.txt"});
 
 var reinitStream = function(){
-	var name_format = "ADMIN.txt";		
+	var name_format = "LAMBDA_ADMIN.txt";		
 
 	var reinitYear = (new Date().getUTCFullYear()).toString();
 	var reinitMonth = (new Date().getUTCMonth()+1).toString();
