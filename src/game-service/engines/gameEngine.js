@@ -5,12 +5,8 @@ var player = require('../entities/player.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
 var dataAccess = require('../../shared/data_access/dataAccess.js');
 var mapEngine = require('./mapEngine.js');
-const logEngine = require('../../shared/engines/logEngine.js');
 
 var secondsSinceLastServerSync = syncServerWithDbInterval - 2;
-var secondsSinceOnlineTimestampUpdate = 0;
-var secondsSinceStaleRequestCheck = 0;
-var currentStreamingDay = new Date().getUTCDate();
 
 var changeTeams = function(playerId){
 	var playerList = player.getPlayerList();
@@ -1018,45 +1014,15 @@ setInterval(
 			}
 		}	
 			
-		//Server monitoring
+		//Repeating game server DB sync
 		secondsSinceLastServerSync++;
 		if (secondsSinceLastServerSync > syncServerWithDbInterval){
-			if (isWebServer){
-				dataAccessFunctions.checkForUnhealthyServers();
-			}
-			else {
-				dataAccessFunctions.syncGameServerWithDatabase();
-			}			
+			dataAccessFunctions.syncGameServerWithDatabase();
+			secondsSinceLastServerSync = 0;
 			if (pregame == true && getNumPlayersInGame() >= 4){
 				restartGame();
 			}
-
-			secondsSinceLastServerSync = 0;
-		}		
-		
-		//Remove stale requests
-		secondsSinceStaleRequestCheck++;
-		if (secondsSinceStaleRequestCheck > staleRequestCheckInterval){
-			if (isWebServer){
-				dataAccessFunctions.removeStaleFriendRequests();
-				dataAccessFunctions.removeStalePartyRequests();
-			}
-			secondsSinceStaleRequestCheck = 0;
-		}
-		
-		//Set Player onlineTimestamp
-		secondsSinceOnlineTimestampUpdate++;
-		if (secondsSinceOnlineTimestampUpdate > updateOnlineTimestampInterval){
-			dataAccessFunctions.updateOnlineTimestampForUsers();
-			secondsSinceOnlineTimestampUpdate = 0;
-		}
-		
-		//Check if next UTC day for updating log file folder (reinitialize stream)
-		if (currentStreamingDay != new Date().getUTCDate()){
-			logEngine.reinitStream();
-			currentStreamingDay = new Date().getUTCDate();
-		}		
-
+		}						
 	},
 	1000/1 //Ticks per second
 );

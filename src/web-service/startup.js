@@ -3,6 +3,7 @@ const userRouter = require('../shared/controllers/userController.js');
 const serverRouter = require('./controllers/serverController.js');
 const pageRouter = require('./controllers/pageController.js');
 require('../shared/engines/socketEngine.js');
+require('../shared/engines/sharedTimerEngine.js');
 var dataAccess = require('../shared/data_access/dataAccess.js');
 const os = require('os');
 const ifaces = os.networkInterfaces();

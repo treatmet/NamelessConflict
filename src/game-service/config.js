@@ -15,16 +15,8 @@ global.allowDuplicateUsername = false;
 global.allowServerCommands = true;
 
 global.syncServerWithDbInterval = 15; //Seconds //Both sync and check for stale thresholds
-global.serverHealthCheckTimestampThreshold = 90; //Seconds
 
-global.updateOnlineTimestampInterval = 15; //Seconds
 global.staleOnlineTimestampThreshold = 60; //Seconds
-
-global.staleRequestCheckInterval = 60; //Seconds
-global.staleFriendRequestThreshold = 30; //Days
-global.stalePartyRequestThreshold = 300; //Seconds
-
-global.joinActiveGameThreshold = 0.5; //Percentage threshold for how far the game is allowed to be progressed and still accept incoming players (0.0 - 1.0)
 
 global.pcMode = 2; //1 = no, 2= yes
 

@@ -302,7 +302,7 @@ function updatePartySectionHtml(partyData){
 			}
 		}
 	}
-	html += " <button id='leavePartyButton' class='RWButton' onclick='leavePartyButtonClick(\"" + partyData.leader.cognitoSub + "\")'>🚫</button>";
+	html += " <button id='leavePartyButton' class='RWButton' onclick='leavePartyButtonClick(\"" + partyData.leader.cognitoSub + "\")'>Leave</button>";
 	section.innerHTML = html;
 }
 

@@ -2,7 +2,9 @@ global.updateEB = process.env.updateEB;
 global.mongoDbLocation = process.env.mongoDbLocation;
 global.s3LoggingBucket = process.env.s3LoggingBucket;
 global.EBName = process.env.EBName;
-global.serverHealthCheckTimestampThreshold = process.env.serverHealthCheckTimestampThreshold;
+global.serverHealthCheckTimestampThreshold = process.env.serverHealthCheckTimestampThreshold; 
+global.stalePartyRequestThreshold = process.env.stalePartyRequestThresholdDays; //30 (Days)
+global.staleFriendRequestThreshold = process.env.staleFriendRequestThresholdSeconds; //300 (Seconds)
 
 var AWS = require("aws-sdk");
 var elasticbeanstalk = new AWS.ElasticBeanstalk();
@@ -16,32 +18,76 @@ exports.handler = (event, context, callback) => {
     var emptyServers = 0;
     var playableServers = 0;
 
-
-    removeStaleServers(function(){
-        getPublicServersFromDB(function(res){
-            for (var s = 0; s < res.length; s++){
-                var players = getCurrentNumPlayers(res[s].currentUsers);
-                if (players >= res[s].maxPlayers){
-                    fullServers++;
-                }
-                else {
-                    playableServers++;
-                }
-                if (players == 0){
-                    emptyServers++;
-                }
-            }	
-            log("fullServers: " + fullServers);
-            log("emptyServers: " + emptyServers);
-            log("playableServers: " + playableServers);
-            log("Updating EB instance count...");
-            updateInstanceCount(3, function(){
-                log("EB updateInstnceCount callback");
-                callback(null, "fullServers: " + fullServers);
-            });
-        });	
+    removeStaleRequests(function(){
+        removeStaleServers(function(){
+            getPublicServersFromDB(function(res){
+                for (var s = 0; s < res.length; s++){
+                    var players = getCurrentNumPlayers(res[s].currentUsers);
+                    if (players >= res[s].maxPlayers){
+                        fullServers++;
+                    }
+                    else {
+                        playableServers++;
+                    }
+                    if (players == 0){
+                        emptyServers++;
+                    }
+                }	
+                log("fullServers: " + fullServers);
+                log("emptyServers: " + emptyServers);
+                log("playableServers: " + playableServers);
+                log("Updating EB instance count...");
+                updateInstanceCount(3, function(){
+                    log("EB updateInstnceCount callback");
+                    callback(null, "fullServers: " + fullServers);
+                });
+            });	
+        });
     });
 };
+
+function removeStaleRequests(cb){
+    logg("removing stale friend requests and party requets...");
+	removeStaleFriendRequests(function(fsuccess){
+        removeStalePartyRequests(function(psuccess){
+            cb();
+        });
+    });
+}
+
+function removeStaleFriendRequests(cb){
+    var miliInterval = (staleFriendRequestThreshold * 1000 * 60 * 60 * 24);
+	var thresholdDate = new Date(Date.now() - miliInterval);
+	var searchParams = { type:"friend", timestamp:{ $lt: thresholdDate } };
+
+	dataAccess.dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
+		if (err){
+			logg("DB ERROR - removeStaleFriendRequests() - RW_REQUEST.remove: " + err);
+            cb(false);
+		}
+        else {
+            logg("removed " + res + " stale friend requests");
+            cb(true);
+        }
+	});
+}
+
+function removeStalePartyRequests(cb){
+	var miliInterval = (stalePartyRequestThreshold * 1000);
+	var thresholdDate = new Date(Date.now() - miliInterval);
+	var searchParams = { type:"party", timestamp:{ $lt: thresholdDate } };
+	
+	dataAccess.dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
+		if (err){
+			logg("DB ERROR - removeStalePartyRequests() - RW_REQUEST.remove: " + err);
+            cb(false);
+		}
+        else {
+            logg("removed " + res + " stale party requests");
+            cb(true);
+        }
+	});
+}
 
 function removeStaleServers(cb){
     logg("Removing stale servers from DB...");

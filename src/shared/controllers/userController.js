@@ -56,7 +56,7 @@ router.post('/kickFromParty', async function (req, res) {
 
 router.post('/requestResponse', async function (req, res) {
 	log("1REQUEST RESPONSE ENDPOINT CALLED WITH:");
-	console.log(req.body);
+	logObj(req.body);
 
 	//First look up request by req.body.id
 	dataAccessFunctions.getRequestById(req.body.id, async function(request){

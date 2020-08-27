@@ -1,4 +1,5 @@
 var dataAccess = require('./dataAccess.js');
+const ObjectId = require('mongodb').ObjectID;
 
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
 var getUserFromDB = function(cognitoSub,cb){
@@ -265,7 +266,7 @@ var upsertRequest = function(data,cb){
 		dataAccess.dbFindAwait("RW_REQUEST", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, function(err,friendRes){
 			if (friendRes[0]){
 				logg("REQUEST ALREADY EXISTS SPAMMER, exiting");
-				cb(false);
+				cb({error:"REQUEST ALREADY EXISTS"});
 			}
 			else {
 				dataAccess.dbUpdateAwait("RW_REQUEST", "ups", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, {cognitoSub:data.cognitoSub, username:data.username, targetCognitoSub:data.targetCognitoSub, type:data.type, timestamp:new Date()}, async function(err, doc){
@@ -350,30 +351,6 @@ var removeRequestById = function(id){
 	dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {"_id": ObjectId(id)}, {}, async function(err, res){
 		if (err){
 			logg("DB ERROR - removeRequestById() - RW_REQUEST.remove: " + err);
-		}
-	});
-}
-
-var removeStaleFriendRequests = function(){
-	var miliInterval = (staleFriendRequestThreshold * 1000 * 60 * 60 * 24);
-	var thresholdDate = new Date(Date.now() - miliInterval);
-	var searchParams = { type:"friend", timestamp:{ $lt: thresholdDate } };
-
-	dataAccess.dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
-		if (err){
-			logg("DB ERROR - removeStaleFriendRequests() - RW_REQUEST.remove: " + err);
-		}
-	});
-}
-
-var removeStalePartyRequests = function(){
-	var miliInterval = (stalePartyRequestThreshold * 1000);
-	var thresholdDate = new Date(Date.now() - miliInterval);
-	var searchParams = { type:"party", timestamp:{ $lt: thresholdDate } };
-	
-	dataAccess.dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
-		if (err){
-			logg("DB ERROR - removeStalePartyRequests() - RW_REQUEST.remove: " + err);
 		}
 	});
 }
@@ -727,8 +704,6 @@ module.exports.getFriendRequests = getFriendRequests;
 module.exports.getPartyRequests = getPartyRequests;
 module.exports.getRequestById = getRequestById;
 module.exports.removeRequestById = removeRequestById;
-module.exports.removeStaleFriendRequests = removeStaleFriendRequests;
-module.exports.removeStalePartyRequests = removeStalePartyRequests;
 module.exports.getOnlineFriends = getOnlineFriends;
 module.exports.getPlayerRelationshipFromDB = getPlayerRelationshipFromDB;
 module.exports.upsertFriend = upsertFriend;

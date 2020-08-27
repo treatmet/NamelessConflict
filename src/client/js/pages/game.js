@@ -4858,6 +4858,7 @@ function disconnect(){
 }
 
 window.onbeforeunload = function(){
+	//alert("onbeforeunload");
 	if ((myPlayer.team == "white" || myPlayer.team == "black") && (!gameOver && !pregame)){
 		return "warn";
 	}
@@ -4867,10 +4868,12 @@ window.onbeforeunload = function(){
 };
 
 window.onunload = function(){
-  disconnect();
+	//alert("unlaoded");
+	disconnect();
 };
 
 window.addEventListener("beforeunload", function (e) {
+	//alert("addEventListener");
 	if (myPlayer.team == "white" || myPlayer.team == "black" && (!gameOver && !pregame)){
 		return "warn";
 	}

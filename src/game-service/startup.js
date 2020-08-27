@@ -3,6 +3,7 @@ const userRouter = require('../shared/controllers/userController.js');
 const logEngine = require('../shared/engines/logEngine.js');
 const mapEngine = require('./engines/mapEngine.js');
 require('../shared/engines/socketEngine.js');
+require('../shared/engines/sharedTimerEngine.js');
 var dataAccess = require('../shared/data_access/dataAccess.js');
 const os = require('os');
 
