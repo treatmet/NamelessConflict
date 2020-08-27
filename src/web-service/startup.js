@@ -24,13 +24,13 @@ processArgs();//Process command line arguments, reinit logging stream, register 
 testDB();
 
 serv.listen(port);
+app.use(cookieParser());
 app.use(userRouter);
 app.use(serverRouter);
 app.use(pageRouter);
 app.use("/favicon.ico", express.static(getClientPath('favicon.ico')));
 app.use("/client", express.static(getClientPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
-app.use(cookieParser());
 
 logg("----------------------SERVER STARTUP-----------------------");
 logg('Express server started on port ' + port + '.');

@@ -4,9 +4,7 @@ var authenticationEngine = require('../engines/authenticationEngine.js');
 
 const express = require('express');
 const router = express.Router();
-const cookieParser = require('cookie-parser');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
-router.use(cookieParser());
 
 router.post('/getPlayerRelationship', async function (req, res) {
 	//log("Get player Relationship endpoint called with:");
@@ -306,8 +304,11 @@ router.post('/validateToken', async function (req, res) {
 		dataAccessFunctions.updateOnlineTimestampForUser(result.cognitoSub);
 		dataAccessFunctions.updateServerUrlForUser(result.cognitoSub);
 		res.status(200);
-		res.cookie("cog_a", result.access_token, { httpOnly: httpOnlyCookies });
-		res.cookie("cog_r", result.refresh_token, { httpOnly: httpOnlyCookies });
+		res.cookie("cog_a", result.access_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
+		res.cookie("cog_r", result.refresh_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
+		console.log("ABOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOUT 10 years");
+
+
 		httpResult = {
 			cognitoSub:result.cognitoSub,
 			username:result.username,

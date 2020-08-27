@@ -5,7 +5,6 @@ var gameEngine = require('../engines/gameEngine.js');
 
 const express = require('express');
 const router = express.Router();
-const cookieParser = require('cookie-parser');
 const request = require('request-promise');
 const path = require("path");
 const os = require("os");
@@ -19,7 +18,6 @@ function getClientFile(relativePath) {
 }
 
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
-router.use(cookieParser());
 
 router.get('/', function(req, res) {
 	var pageData = {};

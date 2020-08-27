@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const cookieParser = require('cookie-parser');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
-router.use(cookieParser());
 const path = require("path");
 var os = require("os");
 var hostname = os.hostname();

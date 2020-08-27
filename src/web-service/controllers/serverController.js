@@ -2,10 +2,8 @@ var dataAccess = require('../../shared/data_access/dataAccess.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
 const express = require('express');
 const router = express.Router();
-const cookieParser = require('cookie-parser');
 const request = require('request-promise');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
-router.use(cookieParser());
 
 router.post('/getServerList', async function (req, res) {
 	console.log("GET SERVER LIST");

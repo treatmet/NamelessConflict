@@ -16,6 +16,9 @@ const hostname = os.hostname();
 processArgs();
 testDB();
 
+app.use(cookieParser());
+
+
 serv.listen(port);
 app.use(gameRouter);
 app.use(userRouter);
@@ -23,7 +26,7 @@ app.use(userRouter);
 app.use("/favicon.ico", express.static(getClientPath('favicon.ico')));
 app.use("/client", express.static(getClientPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
-app.use(cookieParser());
+
 
 logg("----------------------SERVER STARTUP-----------------------");
 logg('Express server started on port ' + port + '.');
