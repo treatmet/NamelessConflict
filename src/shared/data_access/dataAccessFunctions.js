@@ -232,6 +232,15 @@ var updateServerUrlForUser = function(cognitoSub){
 	});
 }
 
+var dbGetUserCustomizations = function(cognitoSub) {
+	dataAccess.dbUpdateAwait("RW_USER", action, {cognitoSub: cognitoSub}, obj, async function(err, obj){
+	});		
+}
+
+var dbUpdateUserCustomizations = function(action, cognitoSub, obj) {
+	dataAccess.dbUpdateAwait("RW_USER", action, {cognitoSub: cognitoSub}, obj, async function(err, obj){
+	});		
+}
 
 ///////////////////////////////REQUEST FUNCTIONS////////////////////////////////
 var removeRequest = function(data){

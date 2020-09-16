@@ -251,7 +251,7 @@ socket.on('pingResponse', function (socketId){
 
 var blinkOn = false;
 socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
-	if (myPlayer.name == "" || !Player.list[myPlayer.id])
+	if (typeof myPlayer == 'undefined' || myPlayer.name == "" || !Player.list[myPlayer.id])
 		return;
 		
 	minutesLeft = minutesLeftData;
@@ -430,8 +430,6 @@ Img.blackPlayerMGReloading4 = new Image();
 Img.blackPlayerMGReloading4.src = "/client/img/blackPlayerMGReloading4.png";
 Img.blackPlayerMGReloading5 = new Image();
 Img.blackPlayerMGReloading5.src = "/client/img/blackPlayerMGReloading5.png";
-Img.bloodyBorder = new Image();
-Img.bloodyBorder.src = "/client/img/bloody-border.png";
 
 Img.whitePlayerPistol = new Image();
 Img.whitePlayerPistol.src = "/client/img/whitePlayerPistolNaked.png";
@@ -506,7 +504,7 @@ Img.ammoSG = new Image();
 Img.ammoSG.src = "/client/img/ammo-SG-24.png";
 var ammoWidth = 0;
 Img.infinity = new Image();
-Img.infinity.src = "/client/img/infinity.png";
+Img.infinity.src = "/client/img/infinity2.png";
 Img.weapon1Key = new Image();
 Img.weapon1Key.src = "/client/img/1p.png";
 Img.weapon2Key = new Image();
@@ -651,6 +649,26 @@ Img.diamond.src = "/client/img/ranks/full-size/diamond.png";
 Img.diamond2 = new Image();
 Img.diamond2.src = "/client/img/ranks/full-size/diamond2.png";
 
+Img.pistolStaticTorso = new Image();
+Img.pistolStaticTorso.src = "/client/img/dynamic/pistolStatic/torso.png";
+Img.pistolStaticTorsoZebra = new Image();
+Img.pistolStaticTorsoZebra.src = "/client/img/dynamic/pistolStatic/torsoZebra.png";
+Img.pistolStaticArms = new Image();
+Img.pistolStaticArms.src = "/client/img/dynamic/pistolStatic/arms.png";
+Img.pistolStaticGun = new Image();
+Img.pistolStaticGun.src = "/client/img/dynamic/pistolStatic/gun.png";
+Img.pistolStaticHair = new Image();
+Img.pistolStaticHair.src = "/client/img/dynamic/pistolStatic/hair.png";
+Img.pistolStaticHead = new Image();
+Img.pistolStaticHead.src = "/client/img/dynamic/pistolStatic/head.png";
+Img.patternPyramids = new Image();
+Img.patternPyramids.src = "/client/img/dynamic/patterns/pyramids.png";
+Img.patternZebra = new Image();
+Img.patternZebra.src = "/client/img/dynamic/patterns/zebra.png";
+
+//----------------------------- Final image to load--------------------------------
+Img.bloodyBorder = new Image();
+Img.bloodyBorder.src = "/client/img/bloody-border.png";
 //-----------------------------Loading Sounds-------------------------------
 var mute = true;
 
@@ -703,8 +721,8 @@ sfxWhoosh.volume(.25);
 var sfxPunch = new Howl({src: ['/client/sfx/punch.mp3']});
 var sfxCharge = new Howl({src: ['/client/sfx/recharge-plus-halo.mp3']});
 sfxCharge.volume(.7);
-var sfxDecharge = new Howl({src: ['/client/sfx/decharge-loud.mp3']});
-sfxDecharge.volume(.6);
+var sfxDecharge = new Howl({src: ['/client/sfx/decharge3.mp3']});
+//sfxDecharge.volume(.6);
 var sfxBoost = new Howl({src: ['/client/sfx/boost5.mp3']});
 var sfxBoostEmpty = new Howl({src: ['/client/sfx/boostEmpty.mp3']});
 sfxBoostEmpty.volume(1);
@@ -916,7 +934,7 @@ socket.on('signInResponse', function(data){
 		whiteScore = data.whiteScore;
 		blackScore = data.blackScore;	
 		logg("ID: " + myPlayer.id);
-		mute = false;
+		//mute = false;
 	}
 	else {
 		alert(data.message);
@@ -2237,7 +2255,7 @@ function drawTorsos(){
 		if (Player.list[i].health > 0 && Player.list[i].team != "none"){
 			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){
 				normalShadow();
-				var img = Img.whitePlayerPistol;
+				var img = e_canvas;
 				if (Player.list[i].team == "white"){
 					if (Player.list[i].weapon == 2){
 						img = Img.whitePlayerDP;
@@ -2526,43 +2544,24 @@ function drawTorsos(){
 						}
 					}
 
-					/*
-					var dArr = [-1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1], // offset array
-					sd = 2,  // thickness scale
-					xd = -35.25,  // final position
-					yd = -31.5;
-						var xy = 0;
-						var yy = 0;
-
-					for(var itera = 0; itera < dArr.length; itera += 2){
-						
-						xy = xd + dArr[itera]*sd;
-						yy = yd + dArr[itera+1]*sd;
-						
-						//console.log("drawing x:" + xy + " y:" + yy);
-						
-						drawImage(img, xd + dArr[itera]*sd, yd + dArr[itera+1]*sd, img.width * zoom, img.height * zoom);
-						
-					}
-					
-					xy = -img.width/2 * zoom;
-					yy = (-img.height/2+5) * zoom;
-					
-					ctx.globalCompositeOperation = "source-in";
-					ctx.fillStyle = "blue";
-					ctx.fillRect(-50,-50,100,100);
-					
-					// draw original image in normal mode
-					ctx.globalCompositeOperation = "source-over";	
-					*/
-					
+				
 					//Actually draw the torso
-					//if (Player.list[i].cloak > 0.98){noShadow();}
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
-						
-					drawImage(img,-img.width/2 * zoom, (-img.height/2+5) * zoom, img.width * zoom, img.height * zoom);	//Draw torso	
+					
+					
+					
+					drawImage(img, -img.width/2 * zoom, (-img.height/2+5) * zoom, img.width * zoom, img.height * zoom); //Draw torso	
+
+
+
+
+
+
+
+					//-------------------------------------------------------------------------------------	
+					
 					ctx.globalAlpha = 1;
 					
 					//Player damage flashing over
@@ -2587,8 +2586,6 @@ function drawTorsos(){
 						if (Player.list[i].weapon == 1 || Player.list[i].weapon == 2){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2+5) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
 						else if (Player.list[i].weapon == 3){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2+10) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
 					}				
-				//ctx.rotate(-(getRotation(Player.list[i].shootingDir)));
-				//ctx.translate(-(centerX - myPlayer.x * zoom + Player.list[i].x * zoom), -(centerY - myPlayer.y * zoom + Player.list[i].y * zoom)); //Center camera on controlled player		
                 ctx.restore();	
 			}
 		}//End health > 0 check
@@ -2900,6 +2897,7 @@ function drawPlayerTags(){
 }
 
 function drawShop(){
+	calculateShopMechanics();
 	if (shop.active){
 		if (Player.list[myPlayer.id].team == "white"){
 			Player.list[myPlayer.id].shootingDir = 7;
@@ -3160,18 +3158,23 @@ function drawInformation(){
 //Bloody border
 function drawBloodyBorder(){
 	noShadow();
-	if (Player.list[myPlayer.id].health < 100){
-		var alph2 = 1 - (Player.list[myPlayer.id].health / 100);
+	var bloodyScale = Player.list[myPlayer.id].health;
+	if (bloodyScale < 100){
+
+		if (bloodyScale > 0)
+			bloodyScale += ((100 - bloodyScale) / 3);
+
+		var alph2 = 1 - (bloodyScale / 100);
 		alph2 += .1; 
 		if (alph2 < 0){
 			alph2 = 0;
 		}	
-		if (Player.list[myPlayer.id].health < 0){
-			Player.list[myPlayer.id].health = 0;
+		if (bloodyScale < 0){
+			bloodyScale = 0;
 		}
 		ctx.globalAlpha = Math.round(alph2 * 100) / 100;
 		var bloodyBorderScale = 3; //increase to push blood more to edges upon low damage
-		drawImage(Img.bloodyBorder, -(Player.list[myPlayer.id].health * bloodyBorderScale)/2, -(Player.list[myPlayer.id].health * bloodyBorderScale)/2, canvasWidth + Player.list[myPlayer.id].health*bloodyBorderScale, canvasHeight + Player.list[myPlayer.id].health*bloodyBorderScale);
+		drawImage(Img.bloodyBorder, -(bloodyScale * bloodyBorderScale)/2, -(bloodyScale * bloodyBorderScale)/2, canvasWidth + bloodyScale*bloodyBorderScale, canvasHeight + bloodyScale*bloodyBorderScale);
 		ctx.globalAlpha = 1;
 	}
 }
@@ -3253,14 +3256,14 @@ function drawHUD(){
 		else if (Player.list[myPlayer.id].weapon == 3){
 			clipCount = Player.list[myPlayer.id].MGClip;
 			ammoCount = Player.list[myPlayer.id].MGAmmo;		
-			ammoWidth = 152 - ((30 - Player.list[myPlayer.id].MGClip) * 5);
+			ammoWidth = 182 - ((30 - Player.list[myPlayer.id].MGClip) * 6);
 			ctx.drawImage(Img.ammoMG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		else if (Player.list[myPlayer.id].weapon == 4){
 			clipCount = Player.list[myPlayer.id].SGClip;
 			ammoCount = Player.list[myPlayer.id].SGAmmo;		
-			ammoWidth = 135 - ((12 - Player.list[myPlayer.id].SGClip) * 11);
-			ctx.drawImage(Img.ammoSG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+			ammoWidth = 190 - ((12 - Player.list[myPlayer.id].SGClip) * 16); //Was 135, 11
+	 		ctx.drawImage(Img.ammoSG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		
 		//Draw separating line
@@ -3280,7 +3283,7 @@ function drawHUD(){
 		ctx.font = '63px Electrolize';
 		fillText("/", canvasWidth - 65, canvasHeight - 15 - liftBottomHUD);
 		if (Player.list[myPlayer.id].weapon == 1){
-			drawImage(Img.infinity, canvasWidth - 77, canvasHeight - 44 - liftBottomHUD);		
+			drawImage(Img.infinity, canvasWidth - 77, canvasHeight - 42 - liftBottomHUD);		
 		}
 		else {
 			ctx.font = '44px Electrolize';
@@ -4172,10 +4175,158 @@ function drawEverything(){
 	drawPlayerTags();
 	drawNotifications();
 
-	calculateShopMechanics();
+	
 	drawShop();	
 	drawUILayer();
+
+	//ctx.drawImage(e_canvas, 0, 0);
 }
+
+
+
+//Each player will have their own canvas
+var e_canvas = document.createElement('canvas');
+var eCtx = e_canvas.getContext("2d");
+e_canvas.width = 94;
+e_canvas.height = 94;
+
+
+
+$(Img.bloodyBorder).load(function() { //All images loaded
+	eCtx.globalCompositeOperation='source-over';
+	eCtx.clearRect(0,0,9000,9000);
+	drawOnCanvas(eCtx, Img.pistolStaticArms, 0, 0, "#6a4118");
+	drawOnCanvas(eCtx, Img.pistolStaticTorso, 0, 0, "#FFF", Img.patternZebra);
+	drawOnCanvas(eCtx, Img.pistolStaticHead, 0, 0, "#6a4118");
+	drawOnCanvas(eCtx, Img.pistolStaticHair, 0, 0, "#381f07");
+	drawOnCanvas(eCtx, Img.pistolStaticGun, 0, 0, "#ffe400");
+	//drawOnCanvas(eCtx, Img.patternPyramids, false, );
+});
+//source-atop
+//d21abe pink
+//1adc55 limegreen
+
+function drawOnCanvas(destCanvasCtx, img, x, y, color = false, pattern = false){
+	var tCan = document.createElement('canvas');
+	var tCtx = tCan.getContext("2d");
+	tCan.width = 94;
+	tCan.height = 94;
+	
+	tCtx.clearRect(0,0,tCan.width,tCan.height); //Clears previous frame!!!	
+	
+	//draw the image
+	tCtx.drawImage(img, x, y);
+
+	if (pattern){
+		tCtx.globalCompositeOperation = "multiply";
+		tCtx.drawImage(pattern, 0, 0);
+	}
+	
+	if (color){
+		tCtx.fillStyle = color;
+
+		//Brightness
+		tCtx.globalCompositeOperation = "multiply";
+		tCtx.fillRect(0, 0, tCan.width, tCan.height);
+
+		//Color transformation
+		tCtx.globalCompositeOperation = "color";
+		tCtx.fillRect(0, 0, tCan.width, tCan.height);
+
+		//Clip the color shader outside image  
+		tCtx.globalCompositeOperation = "destination-in";
+		tCtx.drawImage(img, x, y);
+	}
+
+	destCanvasCtx.drawImage(tCan, 0, 0);
+}
+
+function drawExperiments(){
+
+	const img = Img.pistolStaticTorso;
+	var color = "#2e68af";
+	eCtx.fillStyle = color;
+
+	eCtx.clearRect(0,0,9000,9000); //Clears previous frame!!!	
+	
+	//draw the image
+	eCtx.drawImage(img, 10, 10);
+	
+	//Brightness
+	eCtx.globalCompositeOperation = "multiply";
+	eCtx.fillRect(0, 0, 500, 500);
+
+	//Color transformation
+	eCtx.globalCompositeOperation = "color";
+	eCtx.fillRect(0, 0, 500, 500);
+
+
+	//Clip the color shader outside image  
+	eCtx.globalCompositeOperation = "destination-in";
+	eCtx.drawImage(img, 10, 10);
+
+
+    // reset compositing to its default mode
+	eCtx.globalCompositeOperation='source-over';
+}
+
+/*
+Working merged colored circles with stroke
+
+eCtx.clearRect(0,0,9000,9000); //Clears previous frame!!!!!!
+// draw all rects with strokes
+// fill the double-circles with any color
+eCtx.fillStyle = 'blue';
+eCtx.beginPath();
+eCtx.ellipse(100, 100, 50, 75, Math.PI / 4, 0, 2 * Math.PI);
+eCtx.ellipse(150, 150, 50, 75, Math.PI / 4, 0, 2 * Math.PI);
+eCtx.lineWidth = 4;
+eCtx.stroke();
+
+//eCtx.globalCompositeOperation='destination-over';
+eCtx.beginPath();
+eCtx.ellipse(100, 100, 50, 75, Math.PI / 4, 0, 2 * Math.PI);
+eCtx.ellipse(150, 150, 50, 75, Math.PI / 4, 0, 2 * Math.PI);
+eCtx.fill();
+
+// draw your new content
+// The new content will be visible only inside the double-circles
+//eCtx.stroke();
+
+// reset compositing to its default mode
+eCtx.globalCompositeOperation='source-over';
+
+drawECanvas();
+*/
+
+/*
+	// draw all rects with strokes
+	ctx.fillStyle = 'green';
+	ctx.lineWidth = 1;
+
+	ctx.beginPath();
+	ctx.ellipse(100, 100, 50, 75, Math.PI, 0, 2 * Math.PI);
+	ctx.stroke();
+	//ctx.beginPath();
+	ctx.ellipse(150, 150, 50, 75, Math.PI, 0, 2 * Math.PI);
+	ctx.stroke();
+
+    // set compositing to erase existing drawings 
+    // new drawings will erase existing drawings where the two overlap
+    ctx.globalCompositeOperation='destination-out';
+	//ctx.fill();
+
+    // fill all rects
+    // This "erases" all but the outline stroke
+
+    // reset compositing to its default mode
+	ctx.globalCompositeOperation='source-over';
+*/
+
+
+
+
+
 
 //--------------------------------END TIMER 1--------------------------------	
 	
@@ -4473,6 +4624,7 @@ Body.list = {};
 //Key Presses
 document.onkeydown = function(event){
 	if(event.keyCode === 87 && chatInput.style.display == "none"){ //W
+		
 		myPlayer.pressingW = true;
 		if (!shop.active){
 			socket.emit('keyPress',{inputId:87,state:true});
@@ -4814,6 +4966,114 @@ function getNewTip(){
 
 
 //Handy handy functions
+function hexToDarkness(H) {
+	// Convert hex to RGB first
+	let r = 0, g = 0, b = 0;
+	if (H.length == 4) {
+		r = "0x" + H[1] + H[1];
+		g = "0x" + H[2] + H[2];
+		b = "0x" + H[3] + H[3];
+	} else if (H.length == 7) {
+		r = "0x" + H[1] + H[2];
+		g = "0x" + H[3] + H[4];
+		b = "0x" + H[5] + H[6];
+	}
+
+	const darkness = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 100; 
+
+	return darkness;
+}
+
+function hexToHSL(H) {
+	// Convert hex to RGB first
+	let r = 0, g = 0, b = 0;
+	if (H.length == 4) {
+		r = "0x" + H[1] + H[1];
+		g = "0x" + H[2] + H[2];
+		b = "0x" + H[3] + H[3];
+	} else if (H.length == 7) {
+		r = "0x" + H[1] + H[2];
+		g = "0x" + H[3] + H[4];
+		b = "0x" + H[5] + H[6];
+	}
+	// Then to HSL
+	r /= 255;
+	g /= 255;
+	b /= 255;
+	let cmin = Math.min(r,g,b),
+		cmax = Math.max(r,g,b),
+		delta = cmax - cmin,
+		h = 0,
+		s = 0,
+		l = 0;
+
+	if (delta == 0)
+		h = 0;
+	else if (cmax == r)
+		h = ((g - b) / delta) % 6;
+	else if (cmax == g)
+		h = (b - r) / delta + 2;
+	else
+		h = (r - g) / delta + 4;
+
+	h = Math.round(h * 60);
+
+	if (h < 0)
+		h += 360;
+
+	l = (cmax + cmin) / 2;
+	s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+	s = +(s * 100).toFixed(1);
+	l = +(l * 100).toFixed(1);
+
+	return "hsl(" + h + "," + s + "%," + l + "%)";
+}
+
+function hexToHSL(H) {
+	// Convert hex to RGB first
+	let r = 0, g = 0, b = 0;
+	if (H.length == 4) {
+	  r = "0x" + H[1] + H[1];
+	  g = "0x" + H[2] + H[2];
+	  b = "0x" + H[3] + H[3];
+	} else if (H.length == 7) {
+	  r = "0x" + H[1] + H[2];
+	  g = "0x" + H[3] + H[4];
+	  b = "0x" + H[5] + H[6];
+	}
+	// Then to HSL
+	r /= 255;
+	g /= 255;
+	b /= 255;
+	let cmin = Math.min(r,g,b),
+		cmax = Math.max(r,g,b),
+		delta = cmax - cmin,
+		h = 0,
+		s = 0,
+		l = 0;
+  
+	if (delta == 0)
+	  h = 0;
+	else if (cmax == r)
+	  h = ((g - b) / delta) % 6;
+	else if (cmax == g)
+	  h = (b - r) / delta + 2;
+	else
+	  h = (r - g) / delta + 4;
+  
+	h = Math.round(h * 60);
+  
+	if (h < 0)
+	  h += 360;
+  
+	l = (cmax + cmin) / 2;
+	s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+	s = +(s * 100).toFixed(1);
+	l = +(l * 100).toFixed(1);
+  
+	return "hsl(" + h + "," + s + "%," + l + "%)";
+}
+  
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -4857,6 +5117,7 @@ function disconnect(){
 	socket.disconnect();
 }
 
+/*
 window.onbeforeunload = function(){
 	//alert("onbeforeunload");
 	if ((myPlayer.team == "white" || myPlayer.team == "black") && (!gameOver && !pregame)){
@@ -4881,6 +5142,7 @@ window.addEventListener("beforeunload", function (e) {
 		disconnect();
 	}
 });
+*/
 
 function randomInt(min,max)
 {

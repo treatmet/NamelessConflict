@@ -306,7 +306,6 @@ router.post('/validateToken', async function (req, res) {
 		res.status(200);
 		res.cookie("cog_a", result.access_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
 		res.cookie("cog_r", result.refresh_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
-		console.log("ABOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOUT 10 years");
 
 
 		httpResult = {

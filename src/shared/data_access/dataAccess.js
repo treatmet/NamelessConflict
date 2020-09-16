@@ -1,5 +1,5 @@
 const mongojs = require('mongojs');
-var db = mongojs(config.mongoDbLocation, ['RW_USER','RW_USER_PROG','RW_SERV','RW_FRIEND', 'RW_REQUEST']);
+var db = mongojs(config.mongoDbLocation, ['RW_USER','RW_USER_PROG','RW_SERV','RW_FRIEND', 'RW_REQUEST'], {retryReads: true});
 
 var dbUpdateAwait = function(table, action, searchObj, updateObj, cb){
 	if (action == "set"){
