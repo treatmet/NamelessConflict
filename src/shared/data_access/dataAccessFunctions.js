@@ -1,6 +1,8 @@
 var dataAccess = require('./dataAccess.js');
 const ObjectId = require('mongodb').ObjectID;
 
+var defaultCustomizations = require("./defaultCustomizations.json");
+
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
 var getUserFromDB = function(cognitoSub,cb){
 	//log("searching for user: " + cognitoSub);
@@ -232,14 +234,27 @@ var updateServerUrlForUser = function(cognitoSub){
 	});
 }
 
-var dbGetUserCustomizations = function(cognitoSub) {
-	dataAccess.dbUpdateAwait("RW_USER", action, {cognitoSub: cognitoSub}, obj, async function(err, obj){
+var updateUserCustomizations = function(cognitoSub, obj) {
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: obj}, async function(err, obj){
 	});		
 }
 
-var dbUpdateUserCustomizations = function(action, cognitoSub, obj) {
-	dataAccess.dbUpdateAwait("RW_USER", action, {cognitoSub: cognitoSub}, obj, async function(err, obj){
-	});		
+
+var getUserCustomizations = function(cognitoSub,cb){
+	//log("searching for user: " + cognitoSub);
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+		if (res && res[0]){
+			var customizations = res[0].customizations;
+			if (typeof customizations === 'undefined' || typeof res[0].customizations.red === 'undefined'){
+				customizations = defaultCustomizations;
+				updateUserCustomizations(cognitoSub, customizations);
+			}
+			cb(customizations);
+		}
+		else {
+			cb(defaultCustomizations);
+		}
+	});
 }
 
 ///////////////////////////////REQUEST FUNCTIONS////////////////////////////////
@@ -251,7 +266,7 @@ var removeRequest = function(data){
 	};*/
 	try {
 		logg("Removing request:");
-		console.log(data);
+		logObj(data);
 		dataAccess.dbUpdateAwait("RW_REQUEST", "rem", data, {}, async function(err, res){
 		});
 	}
@@ -705,6 +720,9 @@ module.exports.searchUserFromDB = searchUserFromDB;
 module.exports.dbUserUpdate = dbUserUpdate;
 module.exports.updateOnlineTimestampForUsers = updateOnlineTimestampForUsers;
 module.exports.updateOnlineTimestampForUser = updateOnlineTimestampForUser;
+module.exports.updateUserCustomizations = updateUserCustomizations;
+module.exports.getUserCustomizations = getUserCustomizations;
+module.exports.defaultCustomizations = defaultCustomizations;
 module.exports.setPartyIdIfEmpty = setPartyIdIfEmpty;
 module.exports.updateServerUrlForUser = updateServerUrlForUser;
 module.exports.removeRequest = removeRequest;

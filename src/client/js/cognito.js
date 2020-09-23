@@ -32,6 +32,7 @@ var federatedUser = false;
 var pcMode = 1;
 var serverHomePage = "https://rw.treatmetcalf.com/";
 var isLocal = false;
+var defaultCustomizations = {red:{}, blue:{}};
 
 function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
@@ -60,6 +61,7 @@ function getTokenFromUrlParameterAndLogin(){
             username = data.username;					
 			federatedUser = data.federatedUser;
 			isLocal = data.isLocal;
+			defaultCustomizations = data.defaultCustomizations;
 	
 			setLocalStorage();
 			getOnlineFriendsAndParty();	

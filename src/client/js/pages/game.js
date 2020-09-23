@@ -502,7 +502,6 @@ Img.ammoDP = new Image();
 Img.ammoDP.src = "/client/img/ammo-double-9mm-30.png";
 Img.ammoSG = new Image();
 Img.ammoSG.src = "/client/img/ammo-SG-24.png";
-var ammoWidth = 0;
 Img.infinity = new Image();
 Img.infinity.src = "/client/img/infinity2.png";
 Img.weapon1Key = new Image();
@@ -649,22 +648,6 @@ Img.diamond.src = "/client/img/ranks/full-size/diamond.png";
 Img.diamond2 = new Image();
 Img.diamond2.src = "/client/img/ranks/full-size/diamond2.png";
 
-Img.pistolStaticTorso = new Image();
-Img.pistolStaticTorso.src = "/client/img/dynamic/pistolStatic/torso.png";
-Img.pistolStaticTorsoZebra = new Image();
-Img.pistolStaticTorsoZebra.src = "/client/img/dynamic/pistolStatic/torsoZebra.png";
-Img.pistolStaticArms = new Image();
-Img.pistolStaticArms.src = "/client/img/dynamic/pistolStatic/arms.png";
-Img.pistolStaticGun = new Image();
-Img.pistolStaticGun.src = "/client/img/dynamic/pistolStatic/gun.png";
-Img.pistolStaticHair = new Image();
-Img.pistolStaticHair.src = "/client/img/dynamic/pistolStatic/hair.png";
-Img.pistolStaticHead = new Image();
-Img.pistolStaticHead.src = "/client/img/dynamic/pistolStatic/head.png";
-Img.patternPyramids = new Image();
-Img.patternPyramids.src = "/client/img/dynamic/patterns/pyramids.png";
-Img.patternZebra = new Image();
-Img.patternZebra.src = "/client/img/dynamic/patterns/zebra.png";
 
 //----------------------------- Final image to load--------------------------------
 Img.bloodyBorder = new Image();
@@ -720,7 +703,10 @@ var sfxWhoosh = new Howl({src: ['/client/sfx/whoosh.mp3']});
 sfxWhoosh.volume(.25);
 var sfxPunch = new Howl({src: ['/client/sfx/punch.mp3']});
 var sfxCharge = new Howl({src: ['/client/sfx/recharge-plus-halo.mp3']});
-sfxCharge.volume(.7);
+sfxCharge.volume(.3);
+sfxCharge.on('fade', function(){
+	sfxCharge.stop();
+});
 var sfxDecharge = new Howl({src: ['/client/sfx/decharge3.mp3']});
 //sfxDecharge.volume(.6);
 var sfxBoost = new Howl({src: ['/client/sfx/boost5.mp3']});
@@ -779,6 +765,8 @@ var Player = function(id){
 		width:94,
 		reloading:0,
 		triggerTapLimitTimer:0,
+		customizations: defaultCustomizations,
+		images:{ red:{}, blue:{} }
 	}
 	Player.list[id] = self;
 }
@@ -1004,7 +992,7 @@ for (var i=0; i<chatText.childNodes[i].length; i++){
 }
 chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to R-Wars!</div>';
 
-socket.on('addToChat', function(data, playerId){
+socket.on('addToChat', function(data, playerId){ //Player chat
 var color = "#FFFFFF";
 	if (Player.list[playerId]){
 		if (Player.list[playerId].team == "white"){
@@ -1017,12 +1005,11 @@ var color = "#FFFFFF";
 	addToChat(data, color);
 });
 
-socket.on('addMessageToChat', function(text){
+socket.on('addMessageToChat', function(text){ //Server message
 	addToChat(text, "#FFFFFF");
 });
 
 var maxChatMessages = 9;
-
 function addToChat(data, color){
 	var nodes = chatText.childNodes.length;
 	for (var i=0; i<nodes - (maxChatMessages - 1); i++){
@@ -1098,25 +1085,27 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 			}
 		}
 								
-		//Update player list. This has to be located here because of adjacent code comparisons between Pack and player.list[i] values
-		if (Player.list[playerDataPack[i].id]){
-			Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
-		}
-		else {
-			var player = Player(playerDataPack[i].id);
-			Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
-		}
-		
-
-		//!!!Remove this when we totally remove the myPlayer
-		//Update myPlayer AND create Player in local client Player list if they don't exist yet on this Client
+		//Update myPlayer and add blue border for armor
 		if (playerDataPack[i].id == myPlayer.id){
 			myPlayer[playerDataPack[i].property] = playerDataPack[i].value;
 			if (playerDataPack[i].property == "health" && ((myPlayer.team == "black" && bagBlue.captured == false) || (myPlayer.team == "white" && bagRed.captured == false))){
 				determineBorderStyle();
 			}
 		}
+
+		//Update player list. This has to be last because of previous code comparisons between Pack and player.list[i] values
+		if (Player.list[playerDataPack[i].id]){
+			Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
+		}
+		else {
+			Player(playerDataPack[i].id);
+			Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
+		}
 		
+		//Draw customizations
+		if (playerDataPack[i].property == "customizations"){
+			drawCustomizations(playerDataPack[i].id);
+		}
 ////////////Put future client updates after this line /////////////////
 	
 		//Play punch sfx if boosting gets halted (contact)
@@ -1380,14 +1369,14 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 		if (playerPack[i].id == myPlayer.id){
 			myPlayer = playerPack[i];
 		}
-		if (Player.list[playerPack[i].id]){
-			//Keeps certain values from being overwritten by server
+		if (Player.list[playerPack[i].id]){ //It's fine that this overwrites client-side values like legSwing since this only happens on respawn or gamestart where those values should be reset anyway
 			Player.list[playerPack[i].id] = playerPack[i];
 		}
 		else {
-			var player = Player(playerPack[i].id);
+			Player(playerPack[i].id);
 			Player.list[playerPack[i].id] = playerPack[i];
 		}
+		drawCustomizations(playerPack[i].id);
 	}
 	
 	Thug.list = [];
@@ -2255,30 +2244,30 @@ function drawTorsos(){
 		if (Player.list[i].health > 0 && Player.list[i].team != "none"){
 			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){
 				normalShadow();
-				var img = e_canvas;
+				var img = Player.list[i].images.red.pistol;
 				if (Player.list[i].team == "white"){
 					if (Player.list[i].weapon == 2){
-						img = Img.whitePlayerDP;
+						img = Player.list[i].images.red.DP;
 					}
 					else if (Player.list[i].weapon == 3){
-						img = Img.whitePlayerMG;
+						img = Player.list[i].images.red.MG;
 					}
 					else if (Player.list[i].weapon == 4){
-						img = Img.whitePlayerSG;
+						img = Player.list[i].images.red.SG;
 					}
 				}
 				else if (Player.list[i].team == "black"){
 					if (Player.list[i].weapon == 3){
-						img = Img.blackPlayerMG;
+						img = Player.list[i].images.blue.MG;
 					}
 					else if (Player.list[i].weapon == 2){
-						img = Img.blackPlayerDP;
+						img = Player.list[i].images.blue.DP;
 					}
 					else if (Player.list[i].weapon == 4){
-						img = Img.blackPlayerSG;
+						img = Player.list[i].images.blue.SG;
 					}
 					else {
-						img = Img.blackPlayerPistol;
+						img = Player.list[i].images.blue.pistol;
 					}
 				}
 				
@@ -2314,160 +2303,160 @@ function drawTorsos(){
 						if (Player.list[i].weapon == 1){
 							if (Player.list[i].reloading < 12){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerPistolReloading3;
+									img = Player.list[i].images.blue.pistolReloading3;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerPistolReloading3;
+									img = Player.list[i].images.red.pistolReloading3;
 								}
 							}
 							else if (Player.list[i].reloading < 24){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerPistolReloading4;
+									img = Player.list[i].images.blue.pistolReloading4;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerPistolReloading4;
+									img = Player.list[i].images.red.pistolReloading4;
 								}
 							}
 							else if (Player.list[i].reloading < 36){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerPistolReloading3;
+									img = Player.list[i].images.blue.pistolReloading3;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerPistolReloading3;
+									img = Player.list[i].images.red.pistolReloading3;
 								}
 							}
 							else if (Player.list[i].reloading < 48){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerPistolReloading2;
+									img = Player.list[i].images.blue.pistolReloading2;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerPistolReloading2;
+									img = Player.list[i].images.red.pistolReloading2;
 								}
 							}
 							else if (Player.list[i].reloading <= 60){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerPistolReloading1;
+									img = Player.list[i].images.blue.pistolReloading1;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerPistolReloading1;
+									img = Player.list[i].images.red.pistolReloading1;
 								}
 							}
 						}
 						if (Player.list[i].weapon == 2){
 							if (Player.list[i].reloading < 20){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerDPReloading3;
+									img = Player.list[i].images.blue.DPReloading3;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerDPReloading3;
+									img = Player.list[i].images.red.DPReloading3;
 								}
 							}
 							else if (Player.list[i].reloading < 60){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerDPReloading2;
+									img = Player.list[i].images.blue.DPReloading2;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerDPReloading2;
+									img = Player.list[i].images.red.DPReloading2;
 								}
 							}
 							else if (Player.list[i].reloading <= 80){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerDPReloading1;
+									img = Player.list[i].images.blue.DPReloading1;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerDPReloading1;
+									img = Player.list[i].images.red.DPReloading1;
 								}
 							}
 						}
 						else if (Player.list[i].weapon == 3){
 							if (Player.list[i].reloading < 22){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading4;
+									img = Player.list[i].images.blue.MGReloading4;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading4;
+									img = Player.list[i].images.red.MGReloading4;
 								}
 							}
 							else if (Player.list[i].reloading < 30){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading5;
+									img = Player.list[i].images.blue.MGReloading5;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading5;
+									img = Player.list[i].images.red.MGReloading5;
 								}
 							}
 							else if (Player.list[i].reloading < 48){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading4;
+									img = Player.list[i].images.blue.MGReloading4;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading4;
+									img = Player.list[i].images.red.MGReloading4;
 								}
 							}
 							else if (Player.list[i].reloading < 60){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading1;
+									img = Player.list[i].images.blue.MGReloading1;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading1;
+									img = Player.list[i].images.red.MGReloading1;
 								}
 							}
 							else if (Player.list[i].reloading <= 72){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading2;
+									img = Player.list[i].images.blue.MGReloading2;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading2;
+									img = Player.list[i].images.red.MGReloading2;
 								}
 							}
 							else if (Player.list[i].reloading < 90){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading3;
+									img = Player.list[i].images.blue.MGReloading3;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading3;
+									img = Player.list[i].images.red.MGReloading3;
 								}
 							}
 							else if (Player.list[i].reloading < 102){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading2;
+									img = Player.list[i].images.blue.MGReloading2;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading2;
+									img = Player.list[i].images.red.MGReloading2;
 								}
 							}
 							else if (Player.list[i].reloading <= 114){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading1;
+									img = Player.list[i].images.blue.MGReloading1;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading1;
+									img = Player.list[i].images.red.MGReloading1;
 								}
 							}						
 						}
 						if (Player.list[i].weapon == 4){
 							if (Player.list[i].reloading < 10){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSGReloading3;
+									img = Player.list[i].images.blue.SGReloading3;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSGReloading3;
+									img = Player.list[i].images.red.SGReloading3;
 								}
 							}
 							else if (Player.list[i].reloading < 20){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSGReloading2;
+									img = Player.list[i].images.blue.SGReloading2;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSGReloading2;
+									img = Player.list[i].images.red.SGReloading2;
 								}
 							}
 							else if (Player.list[i].reloading <= 30){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSGReloading1;
+									img = Player.list[i].images.blue.SGReloading1;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSGReloading1;
+									img = Player.list[i].images.red.SGReloading1;
 								}
 							}
 							if (Player.list[i].reloading == 20 && !mute){								
@@ -2496,26 +2485,26 @@ function drawTorsos(){
 							}
 							if (Player.list[i].triggerTapLimitTimer > 30){
 								if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSG;
+									img = Player.list[i].images.red.SG;
 								}
 								else if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSG;
+									img = Player.list[i].images.blue.SG;
 								}
 							}
 							else if (Player.list[i].triggerTapLimitTimer > 10){
 								if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSGCock;
+									img = Player.list[i].images.red.SGCock;
 								}
 								else if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSGCock;
+									img = Player.list[i].images.blue.SGCock;
 								}
 							}
 							else {
 								if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSG;
+									img = Player.list[i].images.red.SG;
 								}
 								else if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSG;
+									img = Player.list[i].images.blue.SGCock;
 								}							
 							}
 						}
@@ -2544,17 +2533,18 @@ function drawTorsos(){
 						}
 					}
 
-				
-					//Actually draw the torso
+					img = Player.list[i].images.red.pistol;
+
+
+					if (typeof img == 'undefined'){ //Load default images if customizations not yet drawn
+						img = Player.list[i].team == "white" ? Img.whitePlayerPistol : Img.blackPlayerPistol;
+					}
+
+					//actually draw the torso Actually
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
-					
-					
-					
 					drawImage(img, -img.width/2 * zoom, (-img.height/2+5) * zoom, img.width * zoom, img.height * zoom); //Draw torso	
-
-
 
 
 
@@ -3147,6 +3137,10 @@ function drawInformation(){
 		if (showStatOverlay == true){
 			fillText("Health:" + Player.list[myPlayer.id].health, 5, 35); //debug
 			fillText(version + "  |  ping:" + ping, 5, 15);
+			// fillText("PressingW: " + myPlayer.pressingW, 5, 55); //debug
+			// fillText("PressingA: " + myPlayer.pressingA, 5, 75); //debug
+			// fillText("PressingS: " + myPlayer.pressingS, 5, 95); //debug
+			// fillText("PressingD: " + myPlayer.pressingD, 5, 115); //debug
 
 		}
 		//fillText("walkingDir:" + Player.list[myPlayer.id].walkingDir, 5, 35); //debug
@@ -3162,7 +3156,7 @@ function drawBloodyBorder(){
 	if (bloodyScale < 100){
 
 		if (bloodyScale > 0)
-			bloodyScale += ((100 - bloodyScale) / 3);
+			bloodyScale += ((100 - bloodyScale) / 3); // increase this last number to increase the amount of blood on damage levels less than dead. Remove this line entirely to have the bloodyBorder scale smoothly all the way up until death
 
 		var alph2 = 1 - (bloodyScale / 100);
 		alph2 += .1; 
@@ -3244,25 +3238,25 @@ function drawHUD(){
 		var ammoCount = "0";
 		if (Player.list[myPlayer.id].weapon == 1){
 			clipCount = Player.list[myPlayer.id].PClip;
-			ammoWidth = 136 - ((15 - Player.list[myPlayer.id].PClip) * 9);
+			const ammoWidth = 136 - ((15 - Player.list[myPlayer.id].PClip) * 9);
 			ctx.drawImage(Img.ammo9mm, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		else if (Player.list[myPlayer.id].weapon == 2){
 			clipCount = Player.list[myPlayer.id].DPClip;
 			ammoCount = Player.list[myPlayer.id].DPAmmo;		
-			ammoWidth = 180 - ((20 - Player.list[myPlayer.id].DPClip) * 9) + 1;
+			const ammoWidth = 180 - ((20 - Player.list[myPlayer.id].DPClip) * 9) + 1;
 			ctx.drawImage(Img.ammoDP, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		else if (Player.list[myPlayer.id].weapon == 3){
 			clipCount = Player.list[myPlayer.id].MGClip;
 			ammoCount = Player.list[myPlayer.id].MGAmmo;		
-			ammoWidth = 182 - ((30 - Player.list[myPlayer.id].MGClip) * 6);
+			const ammoWidth = 182 - ((30 - Player.list[myPlayer.id].MGClip) * 6);
 			ctx.drawImage(Img.ammoMG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		else if (Player.list[myPlayer.id].weapon == 4){
 			clipCount = Player.list[myPlayer.id].SGClip;
 			ammoCount = Player.list[myPlayer.id].SGAmmo;		
-			ammoWidth = 190 - ((12 - Player.list[myPlayer.id].SGClip) * 16); //Was 135, 11
+			const ammoWidth = 190 - ((12 - Player.list[myPlayer.id].SGClip) * 16); //Was 135, 11
 	 		ctx.drawImage(Img.ammoSG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		
@@ -4129,7 +4123,7 @@ function animate() {
         // Get ready for next frame by setting then=now, but...
         // Also, adjust for fpsInterval not being multiple of 16.67
         then = now - (elapsed % fpsInterval);
-        drawEverything();
+		drawEverything();
     }
 }
 
@@ -4188,29 +4182,235 @@ function drawEverything(){
 var e_canvas = document.createElement('canvas');
 var eCtx = e_canvas.getContext("2d");
 e_canvas.width = 94;
-e_canvas.height = 94;
-
+e_canvas.height = 116;
 
 
 $(Img.bloodyBorder).load(function() { //All images loaded
-	eCtx.globalCompositeOperation='source-over';
-	eCtx.clearRect(0,0,9000,9000);
-	drawOnCanvas(eCtx, Img.pistolStaticArms, 0, 0, "#6a4118");
-	drawOnCanvas(eCtx, Img.pistolStaticTorso, 0, 0, "#FFF", Img.patternZebra);
-	drawOnCanvas(eCtx, Img.pistolStaticHead, 0, 0, "#6a4118");
-	drawOnCanvas(eCtx, Img.pistolStaticHair, 0, 0, "#381f07");
-	drawOnCanvas(eCtx, Img.pistolStaticGun, 0, 0, "#ffe400");
-	//drawOnCanvas(eCtx, Img.patternPyramids, false, );
+	console.log("images loaded");
+	for (var i in Player.list){
+		drawCustomizations(i);
+	}
 });
 //source-atop
 //d21abe pink
 //1adc55 limegreen
 
+
+//!!! put in handy functions
+//imgArr is a list of strings containing the paths to images (src property)
+function loadImages(imgArr,callback) {
+	//Keep track of the images that are loaded
+	var imagesLoaded = 0;
+	function _loadAllImages(callback){
+		//Create an temp image and load the url
+		var img = new Image();
+		$(img).attr('src',imgArr[imagesLoaded]); //Second parameter must be the src of the image
+
+		if (img.complete || img.readyState === 4) {
+			// image is cached
+			imagesLoaded++;
+			//Check if all images are loaded
+			if(imagesLoaded == imgArr.length) {
+				//If all images loaded do the callback
+				callback();
+			} else {
+				//If not all images are loaded call own function again
+				_loadAllImages(callback);
+			}
+		} else {
+			$(img).load(function(){
+				//Increment the images loaded variable
+				imagesLoaded++;
+				//Check if all images are loaded
+				if(imagesLoaded == imgArr.length) {
+					//If all images loaded do the callback
+					callback();
+				} else {
+					//If not all images are loaded call own function again
+					_loadAllImages(callback);
+				}
+			});
+		}
+	};		
+	_loadAllImages(callback);
+}
+
+
+//player Enters game > draCustomizations(id) //Draw with default customizations at first 
+//Load all the images for all animations
+//Redraw player animations
+
+
+//!!! Test with using the same image and switching it for each push to the imagesArray rather than newing it up every time
+function drawCustomizations(id){			
+	//Variants
+
+	var customizations = Player.list[id].customizations;
+
+	const teams = [
+		"red",
+		"blue"
+	];
+
+	const animations = [
+		"pistol",
+		"pistolReloading1",
+		"pistolReloading2",
+		"pistolReloading3",
+		"pistolReloading4",
+		"DP",
+		"DPReloading1",
+		"DPReloading2",
+		"DPReloading3",
+		"MG",
+		"MGReloading1",
+		"MGReloading2",
+		"MGReloading3",
+		"MGReloading4",
+		"MGReloading5",
+		"SG",
+		"SGCock",
+		"SGReloading1",
+		"SGReloading2",
+		"SGReloading3",
+		"Body",
+		"BodyWall"
+	];
+
+	var layers = {};
+	var imgSources = [];
+	for (var t = 0; t < teams.length; t++){
+		layers[teams[t]] = {};
+		for (var a = 0; a < animations.length; a++){
+			layers[teams[t]][animations[a]] = [];
+		}
+	}
+
+	for (var t = 0; t < teams.length; t++){
+		for (var a = 0; a < animations.length; a++){
+			if (animations[a] == "pistol"){
+				//Arms
+				var arms = new Image();
+				arms.src = "/client/img/dynamic/pistol/arms.png";	
+				layers[teams[t]][animations[a]].push({
+					img: arms,
+					x: 0,
+					y: 0,
+					color: customizations[teams[t]].shirt >= 100 ? customizations[teams[t]].shirtColor : customizations[teams[t]].skinColor,
+					pattern: customizations[teams[t]].shirt >= 100 && customizations[teams[t]].shirtPattern ? shirtPattern : false
+				});
+				imgSources.push(arms.src);
+				//Hands
+				var hands = new Image();
+				hands.src = "/client/img/dynamic/pistol/hands.png";	
+				layers[teams[t]][animations[a]].push({
+					img: hands,
+					x: 0,
+					y: 0,
+					color: customizations[teams[t]].gloves ? customizations[teams[t]].glovesColor : customizations[teams[t]].skinColor
+				});
+				imgSources.push(hands.src);
+				//Torso
+				var shirtPattern = new Image();
+				if (customizations[teams[t]].shirtPattern){
+					if (customizations[teams[t]].shirtPattern == 1){
+						shirtPattern.src = "/client/img/dynamic/patterns/zebra.png";
+					}
+					else if (customizations[teams[t]].shirtPattern == 2){
+						shirtPattern.src = "/client/img/dynamic/patterns/pyramids.png";
+					}
+				}				
+				var torso = new Image();
+				torso.src = "/client/img/dynamic/pistol/torso.png";	
+				layers[teams[t]][animations[a]].push({
+					img: torso,
+					x: 0,
+					y: 0,
+					color: customizations[teams[t]].shirtColor,
+					pattern: customizations[teams[t]].shirtPattern ? shirtPattern : false
+				});
+				imgSources.push(torso.src);
+				//Head
+				var head = new Image();
+				head.src = "/client/img/dynamic/pistol/head.png";	
+				layers[teams[t]][animations[a]].push({
+					img: head,
+					x: 0,
+					y: 0,
+					color: customizations[teams[t]].skinColor
+				});
+				imgSources.push(head.src);
+				//Hair
+				var hair = new Image();
+				hair.src = "/client/img/dynamic/pistol/hair.png";	
+				layers[teams[t]][animations[a]].push({
+					img: hair,
+					x: 0,
+					y: 0,
+					color: customizations[teams[t]].hairColor
+				});
+				imgSources.push(hair.src);
+				//Gun
+				var gun = new Image();
+				gun.src = "/client/img/dynamic/pistol/gun.png";	
+				layers[teams[t]][animations[a]].push({
+					img: gun,
+					x: 0,
+					y: 0,
+					color: customizations[teams[t]].pistolColor
+				});
+				imgSources.push(gun.src);
+				//Hat
+				if (customizations[teams[t]].hat != 0){
+					var hat = new Image();
+					hat.src = "/client/img/small.png";	
+					layers[teams[t]][animations[a]].push({
+						img: hat,
+						x: 0,
+						y: 0,
+						color: false
+					});
+					imgSources.push(hat.src);
+				}
+			}
+		}
+	}
+	
+	log("Loading images");
+	loadImages(imgSources, function(){
+		log("Images loaded");
+		for (var t = 0; t < teams.length; t++){
+			for (var a = 0; a < animations.length; a++){
+
+				if (animations[a] != "pistol")
+					continue;
+
+					Player.list[id].images[teams[t]][animations[a]] = drawLayeredImage(94, 116, layers[teams[t]][animations[a]]);
+			}
+		}
+	});
+
+
+}
+
+function drawLayeredImage(w, h, imagesArray){
+	var p_canvas = document.createElement('canvas');
+	var pCtx = p_canvas.getContext("2d");
+	p_canvas.width = w;
+	p_canvas.height = h;
+
+	for (var i = 0; i < imagesArray.length; i++){
+		drawOnCanvas(pCtx, imagesArray[i].img, imagesArray[i].x, imagesArray[i].y, imagesArray[i].color, imagesArray[i].pattern);
+	}
+	
+	return p_canvas;
+}
+
 function drawOnCanvas(destCanvasCtx, img, x, y, color = false, pattern = false){
 	var tCan = document.createElement('canvas');
 	var tCtx = tCan.getContext("2d");
 	tCan.width = 94;
-	tCan.height = 94;
+	tCan.height = 116;
 	
 	tCtx.clearRect(0,0,tCan.width,tCan.height); //Clears previous frame!!!	
 	
@@ -4241,90 +4441,7 @@ function drawOnCanvas(destCanvasCtx, img, x, y, color = false, pattern = false){
 	destCanvasCtx.drawImage(tCan, 0, 0);
 }
 
-function drawExperiments(){
-
-	const img = Img.pistolStaticTorso;
-	var color = "#2e68af";
-	eCtx.fillStyle = color;
-
-	eCtx.clearRect(0,0,9000,9000); //Clears previous frame!!!	
-	
-	//draw the image
-	eCtx.drawImage(img, 10, 10);
-	
-	//Brightness
-	eCtx.globalCompositeOperation = "multiply";
-	eCtx.fillRect(0, 0, 500, 500);
-
-	//Color transformation
-	eCtx.globalCompositeOperation = "color";
-	eCtx.fillRect(0, 0, 500, 500);
-
-
-	//Clip the color shader outside image  
-	eCtx.globalCompositeOperation = "destination-in";
-	eCtx.drawImage(img, 10, 10);
-
-
-    // reset compositing to its default mode
-	eCtx.globalCompositeOperation='source-over';
-}
-
-/*
-Working merged colored circles with stroke
-
-eCtx.clearRect(0,0,9000,9000); //Clears previous frame!!!!!!
-// draw all rects with strokes
-// fill the double-circles with any color
-eCtx.fillStyle = 'blue';
-eCtx.beginPath();
-eCtx.ellipse(100, 100, 50, 75, Math.PI / 4, 0, 2 * Math.PI);
-eCtx.ellipse(150, 150, 50, 75, Math.PI / 4, 0, 2 * Math.PI);
-eCtx.lineWidth = 4;
-eCtx.stroke();
-
-//eCtx.globalCompositeOperation='destination-over';
-eCtx.beginPath();
-eCtx.ellipse(100, 100, 50, 75, Math.PI / 4, 0, 2 * Math.PI);
-eCtx.ellipse(150, 150, 50, 75, Math.PI / 4, 0, 2 * Math.PI);
-eCtx.fill();
-
-// draw your new content
-// The new content will be visible only inside the double-circles
-//eCtx.stroke();
-
-// reset compositing to its default mode
-eCtx.globalCompositeOperation='source-over';
-
-drawECanvas();
-*/
-
-/*
-	// draw all rects with strokes
-	ctx.fillStyle = 'green';
-	ctx.lineWidth = 1;
-
-	ctx.beginPath();
-	ctx.ellipse(100, 100, 50, 75, Math.PI, 0, 2 * Math.PI);
-	ctx.stroke();
-	//ctx.beginPath();
-	ctx.ellipse(150, 150, 50, 75, Math.PI, 0, 2 * Math.PI);
-	ctx.stroke();
-
-    // set compositing to erase existing drawings 
-    // new drawings will erase existing drawings where the two overlap
-    ctx.globalCompositeOperation='destination-out';
-	//ctx.fill();
-
-    // fill all rects
-    // This "erases" all but the outline stroke
-
-    // reset compositing to its default mode
-	ctx.globalCompositeOperation='source-over';
-*/
-
-
-
+//drawExperiments
 
 
 
@@ -4392,7 +4509,7 @@ function compare(a,b) {
 	
 //Socket On
 socket.on('sendLog', function(log){
-	console.log(log);
+	log("SERVER: " + log);
 });
 
 socket.on('endGameProgressResults', function(endGameProgressResults){
@@ -4624,29 +4741,28 @@ Body.list = {};
 //Key Presses
 document.onkeydown = function(event){
 	if(event.keyCode === 87 && chatInput.style.display == "none"){ //W
-		
-		myPlayer.pressingW = true;
-		if (!shop.active){
+		if (!myPlayer.pressingW && !shop.active){
 			socket.emit('keyPress',{inputId:87,state:true});
 		}
+		myPlayer.pressingW = true;
 	}
 	else if(event.keyCode === 68 && chatInput.style.display == "none"){ //D
-		myPlayer.pressingD = true;
-		if (!shop.active){
+		if (!myPlayer.pressingD && !shop.active){
 			socket.emit('keyPress',{inputId:68,state:true});
 		}
+		myPlayer.pressingD = true;
 	}
 	else if(event.keyCode === 83 && chatInput.style.display == "none"){ //S
-		myPlayer.pressingS = true;
-		if (!shop.active){
+		if (!myPlayer.pressingS && !shop.active){
 			socket.emit('keyPress',{inputId:83,state:true});
 		}
+		myPlayer.pressingS = true;
 	}
 	else if(event.keyCode === 65 && chatInput.style.display == "none"){ //A
-		myPlayer.pressingA = true;
-		if (!shop.active){
+		if (!myPlayer.pressingA && !shop.active){
 			socket.emit('keyPress',{inputId:65,state:true});
 		}
+		myPlayer.pressingA = true;
 	}		
 	else if((event.keyCode === 38 || event.keyCode === 80) && chatInput.style.display == "none"){ //Up
 		//if (event.keyCode === 38)
@@ -4773,7 +4889,7 @@ document.onkeydown = function(event){
 		canvasDiv.style.backgroundColor="black";
 		if (chatInput.style.display == "inline"){
 			if (chatInput.value != "") {
-				if(chatInput.value[0] === '/' && chatInput.value[1] === '.'){
+				if(chatInput.value[0] === '/' && chatInput.value[1] === '.'){ //Server command cmd
 					if (chatInput.value == '//shadow' || chatInput.value == '//shadows'){
 						if (noShadows){
 							noShadows = false;
@@ -4782,7 +4898,7 @@ document.onkeydown = function(event){
 							noShadows = true;
 						}
 					}
-					else if (chatInput.value == '/zoom'){
+					else if (chatInput.value == '/.zoom' || chatInput.value == '/.zoom1'){
 						if (zoom == 1){
 							zoom = 0.75;
 						}

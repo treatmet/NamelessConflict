@@ -1,0 +1,40 @@
+{
+	"red": {
+		"nameColor": "#000",
+		"hat": 0,
+		"hair": 1,
+		"hairColor": "#7f5227",
+		"shirt": 1,
+		"shirtColor": "#bf421c",
+		"shirtPattern": 0,
+		"skinColor": "#d2aa7d",
+		"gloves": 0,
+		"glovesColor": "#222",
+		"pistolColor": "#707070",
+		"dpColor": "#707070",
+		"mgColor": "#707070",
+		"sgColor": "#707070",
+		"boost": 1,
+		"boostColor": "",
+		"pantsColor": "#000247"
+	},
+	"blue": {
+		"nameColor": "#000",
+		"hat": 0,
+		"hair": 1,
+		"hairColor": "#381f07",
+		"shirt": 1,
+		"shirtColor": "#d54b14",
+		"shirtPattern": 0,
+		"skinColor": "#6a4118",
+		"gloves": 0,
+		"glovesColor": "#222",
+		"pistolColor": "#707070",
+		"dpColor": "#707070",
+		"mgColor": "#707070",
+		"sgColor": "#707070",
+		"boost": 1,
+		"boostColor": "",
+		"pantsColor": "#000247"
+	}
+}

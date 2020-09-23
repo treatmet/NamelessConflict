@@ -317,6 +317,7 @@ router.post('/validateToken', async function (req, res) {
 			isWebServer:isWebServer,
 			isLocal:isLocal,
 			pcMode:pcMode,
+			defaultCustomizations:dataAccessFunctions.defaultCustomizations,
 			msg:result.msg || "(no response message)"
 		};
 	}
@@ -335,7 +336,7 @@ router.post('/validateToken', async function (req, res) {
 		return;
 	}
 
-	//Get or create mongo username, and then return to the client
+	//(Auth success) Get or create mongo username, and then return to the client
 	dataAccessFunctions.getUserFromDB(httpResult.cognitoSub, function(mongoRes){
 		if (mongoRes && mongoRes.username){
 			httpResult.username = mongoRes.username;
