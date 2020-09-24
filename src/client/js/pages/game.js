@@ -2533,7 +2533,7 @@ function drawTorsos(){
 						}
 					}
 
-					img = Player.list[i].images.red.pistol;
+					//img = Player.list[i].images.red.pistol;
 
 
 					if (typeof img == 'undefined'){ //Load default images if customizations not yet drawn
@@ -4186,9 +4186,9 @@ e_canvas.height = 116;
 
 
 $(Img.bloodyBorder).load(function() { //All images loaded
-	console.log("images loaded");
+	//console.log("images loaded");
 	for (var i in Player.list){
-		drawCustomizations(i);
+		//drawCustomizations(i);
 	}
 });
 //source-atop
@@ -4206,7 +4206,9 @@ function loadImages(imgArr,callback) {
 		var img = new Image();
 		$(img).attr('src',imgArr[imagesLoaded]); //Second parameter must be the src of the image
 
+		//log("loading " + imagesLoaded + "/" + imgArr.length + " " + img.src);
 		if (img.complete || img.readyState === 4) {
+			//log("CACHED " + (imagesLoaded + 1) + "/" + imgArr.length + " " + img.src);
 			// image is cached
 			imagesLoaded++;
 			//Check if all images are loaded
@@ -4219,6 +4221,7 @@ function loadImages(imgArr,callback) {
 			}
 		} else {
 			$(img).load(function(){
+				//log("DONE " + imagesLoaded + "/" + imgArr.length + " " + img.src);
 				//Increment the images loaded variable
 				imagesLoaded++;
 				//Check if all images are loaded
@@ -4243,15 +4246,11 @@ function loadImages(imgArr,callback) {
 
 //!!! Test with using the same image and switching it for each push to the imagesArray rather than newing it up every time
 function drawCustomizations(id){			
-	//Variants
-
 	var customizations = Player.list[id].customizations;
-
 	const teams = [
 		"red",
 		"blue"
 	];
-
 	const animations = [
 		"pistol",
 		"pistolReloading1",
@@ -4278,112 +4277,92 @@ function drawCustomizations(id){
 	];
 
 	var layers = {};
-	var imgSources = [];
 	for (var t = 0; t < teams.length; t++){
 		layers[teams[t]] = {};
 		for (var a = 0; a < animations.length; a++){
 			layers[teams[t]][animations[a]] = [];
 		}
 	}
+	
+	var imgSources = [];
+
 
 	for (var t = 0; t < teams.length; t++){
-		for (var a = 0; a < animations.length; a++){
-			if (animations[a] == "pistol"){
-				//Arms
-				var arms = new Image();
-				arms.src = "/client/img/dynamic/pistol/arms.png";	
-				layers[teams[t]][animations[a]].push({
-					img: arms,
-					x: 0,
-					y: 0,
-					color: customizations[teams[t]].shirt >= 100 ? customizations[teams[t]].shirtColor : customizations[teams[t]].skinColor,
-					pattern: customizations[teams[t]].shirt >= 100 && customizations[teams[t]].shirtPattern ? shirtPattern : false
-				});
-				imgSources.push(arms.src);
-				//Hands
-				var hands = new Image();
-				hands.src = "/client/img/dynamic/pistol/hands.png";	
-				layers[teams[t]][animations[a]].push({
-					img: hands,
-					x: 0,
-					y: 0,
-					color: customizations[teams[t]].gloves ? customizations[teams[t]].glovesColor : customizations[teams[t]].skinColor
-				});
-				imgSources.push(hands.src);
-				//Torso
-				var shirtPattern = new Image();
-				if (customizations[teams[t]].shirtPattern){
-					if (customizations[teams[t]].shirtPattern == 1){
-						shirtPattern.src = "/client/img/dynamic/patterns/zebra.png";
-					}
-					else if (customizations[teams[t]].shirtPattern == 2){
-						shirtPattern.src = "/client/img/dynamic/patterns/pyramids.png";
-					}
-				}				
-				var torso = new Image();
-				torso.src = "/client/img/dynamic/pistol/torso.png";	
-				layers[teams[t]][animations[a]].push({
-					img: torso,
-					x: 0,
-					y: 0,
-					color: customizations[teams[t]].shirtColor,
-					pattern: customizations[teams[t]].shirtPattern ? shirtPattern : false
-				});
-				imgSources.push(torso.src);
-				//Head
-				var head = new Image();
-				head.src = "/client/img/dynamic/pistol/head.png";	
-				layers[teams[t]][animations[a]].push({
-					img: head,
-					x: 0,
-					y: 0,
-					color: customizations[teams[t]].skinColor
-				});
-				imgSources.push(head.src);
-				//Hair
-				var hair = new Image();
-				hair.src = "/client/img/dynamic/pistol/hair.png";	
-				layers[teams[t]][animations[a]].push({
-					img: hair,
-					x: 0,
-					y: 0,
-					color: customizations[teams[t]].hairColor
-				});
-				imgSources.push(hair.src);
-				//Gun
-				var gun = new Image();
-				gun.src = "/client/img/dynamic/pistol/gun.png";	
-				layers[teams[t]][animations[a]].push({
-					img: gun,
-					x: 0,
-					y: 0,
-					color: customizations[teams[t]].pistolColor
-				});
-				imgSources.push(gun.src);
-				//Hat
-				if (customizations[teams[t]].hat != 0){
-					var hat = new Image();
-					hat.src = "/client/img/small.png";	
-					layers[teams[t]][animations[a]].push({
-						img: hat,
-						x: 0,
-						y: 0,
-						color: false
-					});
-					imgSources.push(hat.src);
-				}
+		var shirtPattern = new Image(); //Each team can have their own shirt pattern
+		shirtPattern.src = "/client/img/small.png";
+		if (customizations[teams[t]].shirtPattern){
+			if (customizations[teams[t]].shirtPattern == 1){
+				shirtPattern.src = "/client/img/dynamic/patterns/zebra.png";
 			}
-		}
-	}
+			else if (customizations[teams[t]].shirtPattern == 2){
+				shirtPattern.src = "/client/img/dynamic/patterns/pyramids.png";
+			}
+		}	
+		imgSources.push(shirtPattern.src);
 	
-	log("Loading images");
+		for (var a = 0; a < animations.length; a++){
+
+			var layerOrder = [];
+			if (animations[a] == "pistol"){
+				layerOrder = ["arms", "hands", "pistol", "torso", "head", "hair"];
+			}			
+			else if (animations[a] == "pistolReloading1"){		
+				layerOrder = ["arms", "hands", "pistol", "torso", "head", "hair"];
+			}
+			else if (animations[a] == "pistolReloading2"){
+				layerOrder = ["arms", "pistol", "hands", "torso", "head", "hair"];
+			}
+			else if (animations[a] == "pistolReloading3"){
+				layerOrder = ["arms", "pistol", "hands", "torso", "head", "hair"];		
+			}
+			else if (animations[a] == "pistolReloading4"){
+				layerOrder = ["arms", "pistol", "hands", "torso", "head", "hair"];		
+			}
+
+			for (var l in layerOrder){
+				//log("Rendering " + teams[t]+ " " + animations[a] + " " + layerOrder[l]);
+				var color = false;
+				var pattern = false;
+				if (layerOrder[l] == "arms"){
+					color = customizations[teams[t]].shirt >= 100 ? customizations[teams[t]].shirtColor : customizations[teams[t]].skinColor;
+					pattern = customizations[teams[t]].shirt >= 100 && customizations[teams[t]].shirtPattern ? shirtPattern : false;
+				}
+				else if (layerOrder[l] == "hands"){
+					color = customizations[teams[t]].gloves ? customizations[teams[t]].glovesColor : customizations[teams[t]].skinColor;
+				}
+				else if (layerOrder[l] == "torso"){
+					color = customizations[teams[t]].shirtColor,
+					pattern = customizations[teams[t]].shirtPattern ? shirtPattern : false
+				}
+				else if (layerOrder[l] == "head"){
+					color = customizations[teams[t]].skinColor;
+				}
+				else if (layerOrder[l] == "hair"){
+					color = customizations[teams[t]].hairColor;
+				}
+				else if (layerOrder[l] == "pistol"){
+					color = customizations[teams[t]].pistolColor;
+				}
+
+				var layer = new Image();
+				layer.src = "/client/img/dynamic/" + animations[a] + "/" + layerOrder[l] + ".png";	
+				layers[teams[t]][animations[a]].push({
+					img: layer,
+					x: 0,
+					y: 0,
+					color: color,
+					pattern: pattern
+				});
+				imgSources.push(layer.src);
+			} // layers loop
+		} //animations loop
+	} // teams loop
+	
+	log("Loading images:");
 	loadImages(imgSources, function(){
 		log("Images loaded");
 		for (var t = 0; t < teams.length; t++){
 			for (var a = 0; a < animations.length; a++){
-
-				if (animations[a] != "pistol")
-					continue;
 
 					Player.list[id].images[teams[t]][animations[a]] = drawLayeredImage(94, 116, layers[teams[t]][animations[a]]);
 			}
