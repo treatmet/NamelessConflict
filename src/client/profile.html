@@ -9,7 +9,7 @@
 	<div id="sectionTitles">
 		<div id="sectionTitle1" class="sectionTitle">{{username}}</div>
 		<div id="sectionTitle2" class="sectionTitle3">Progress</div>
-		<div id="sectionTitle3" class="sectionTitle3">Customize</div>
+		<div id="sectionTitle3" class="sectionTitle3">Appearance</div>
 	</div>
 
 
@@ -146,7 +146,14 @@
 		</div>
 	</div>
 	<div id="customizationColumn" class="columnSection">
-		Aesthetic player customizations coming soon.
+		
+		
+		<!--CANVAS-->
+		<div id="appearance" style="display:unset; margin: auto; width: 150px; margin-top: 8px;">	
+			<canvas id="ctx" width="150" height="150"></canvas>
+		</div> <!--End Canvas -->
+
+
 	</div>
 </div>
 
@@ -155,6 +162,7 @@
 <div id="code" style="margin: auto; width: 200px;">
 	<script src="/client/js/util.js"></script>
 	<script src="/client/js/cognito.js"></script>
+	<script src="/client/js/drawCustomizations.js"></script>
 	<script src="/client/js/pages/profile.js"></script>	
 </div>
 

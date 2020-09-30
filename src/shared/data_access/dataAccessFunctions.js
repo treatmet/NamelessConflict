@@ -246,12 +246,16 @@ var getUserCustomizations = function(cognitoSub,cb){
 		if (res && res[0]){
 			var customizations = res[0].customizations;
 			if (typeof customizations === 'undefined' || typeof res[0].customizations.red === 'undefined'){
+				console.log("ERROR - COULD NOT GET CUSTOMIZATIONS FOR " + cognitoSub);
 				customizations = defaultCustomizations;
 				updateUserCustomizations(cognitoSub, customizations);
 			}
+			console.log("RETURNING CUSTOMIZATIONS FOR " + cognitoSub);
+			console.log(customizations);
 			cb(customizations);
 		}
 		else {
+			console.log("ERROR - COULD NOT FIND USER WHEN GETTING CUSTOMIZATIONS FOR " + cognitoSub);
 			cb(defaultCustomizations);
 		}
 	});

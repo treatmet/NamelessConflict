@@ -460,6 +460,15 @@ router.post('/logOut', async function (req, res) {
 	res.send({msg:"Logout - Successfully removed auth cookies"});
 });
 
+router.post('/getPlayerCustomizations', async function (req, res) {
+	console.log("GETTING CUSTOMIZATIONS FOR: " + req.body.cognitoSub);
+	console.log(req.body);
+	dataAccessFunctions.getUserCustomizations(req.body.cognitoSub, function(dbResults){
+		res.status(200);
+		res.send(dbResults);
+	});
+});
+
 function getLeaderFromParty(partyData){
 	for (var p = 0; p < partyData.party.length; p++){
 		if (partyData.party[p].leader == true){

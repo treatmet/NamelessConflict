@@ -289,7 +289,7 @@ socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
 });
 
 function determineBorderStyle(){
-	canvas.style.margin = "-2px";
+	log("Determine border style");
 	canvas.style.border = "2px solid #000000";
 	if (myPlayer.health >= 175){
 		canvas.style.margin = "-5px";
@@ -1104,7 +1104,10 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		
 		//Draw customizations
 		if (playerDataPack[i].property == "customizations"){
-			drawCustomizations(playerDataPack[i].id);
+			drawCustomizations(Player.list[playerDataPack[i].id].customizations, playerDataPack[i].id, function(playerAnimations, id){
+				Player.list[id].images = playerAnimations;
+			});
+
 		}
 ////////////Put future client updates after this line /////////////////
 	
@@ -1376,7 +1379,11 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 			Player(playerPack[i].id);
 			Player.list[playerPack[i].id] = playerPack[i];
 		}
-		drawCustomizations(playerPack[i].id);
+		console.log("outside playerPack[i].id: " + playerPack[i].id);
+		drawCustomizations(Player.list[playerPack[i].id].customizations, playerPack[i].id, function(playerAnimations, id = 0){
+			console.log("inseide playerPack[i].id: " + id);
+			Player.list[id].images = playerAnimations;
+		});
 	}
 	
 	Thug.list = [];
@@ -2509,7 +2516,6 @@ function drawTorsos(){
 							}
 						}
 					}
-
 					
 					//Player damage flashing under
 					if (!(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
@@ -2536,7 +2542,7 @@ function drawTorsos(){
 					//img = Player.list[i].images.red.pistol;
 
 
-					if (typeof img == 'undefined'){ //Load default images if customizations not yet drawn
+					if (typeof img == 'undefined'){ //Load default images if animation frames not yet drawn
 						img = Player.list[i].team == "white" ? Img.whitePlayerPistol : Img.blackPlayerPistol;
 					}
 
@@ -3217,6 +3223,7 @@ function drawHUD(){
 		}	
 		if (myPlayer.drawnEnergy == 100 || myPlayer.drawnEnergy >= 200){
 			drawImage(Img.white, canvasWidth - (canvasWidth * (myPlayer.drawnEnergy / 200)), canvasHeight - 4 - liftBottomHUD, canvasWidth * (myPlayer.drawnEnergy / 200), 6);
+
 		}
 		else if (myPlayer.drawnEnergy <= 25 && myPlayer.drawnEnergy > 0){
 			drawImage(Img.red, canvasWidth - (canvasWidth * (myPlayer.drawnEnergy / 200)), canvasHeight - 4 - liftBottomHUD, canvasWidth * (myPlayer.drawnEnergy / 200), 6);
@@ -4172,253 +4179,9 @@ function drawEverything(){
 	
 	drawShop();	
 	drawUILayer();
-
-	//ctx.drawImage(e_canvas, 0, 0);
 }
 
 
-
-//Each player will have their own canvas
-var e_canvas = document.createElement('canvas');
-var eCtx = e_canvas.getContext("2d");
-e_canvas.width = 94;
-e_canvas.height = 116;
-
-
-$(Img.bloodyBorder).load(function() { //All images loaded
-	//console.log("images loaded");
-	for (var i in Player.list){
-		//drawCustomizations(i);
-	}
-});
-//source-atop
-//d21abe pink
-//1adc55 limegreen
-
-
-//!!! put in handy functions
-//imgArr is a list of strings containing the paths to images (src property)
-function loadImages(imgArr,callback) {
-	//Keep track of the images that are loaded
-	var imagesLoaded = 0;
-	function _loadAllImages(callback){
-		//Create an temp image and load the url
-		var img = new Image();
-		$(img).attr('src',imgArr[imagesLoaded]); //Second parameter must be the src of the image
-
-		//log("loading " + imagesLoaded + "/" + imgArr.length + " " + img.src);
-		if (img.complete || img.readyState === 4) {
-			//log("CACHED " + (imagesLoaded + 1) + "/" + imgArr.length + " " + img.src);
-			// image is cached
-			imagesLoaded++;
-			//Check if all images are loaded
-			if(imagesLoaded == imgArr.length) {
-				//If all images loaded do the callback
-				callback();
-			} else {
-				//If not all images are loaded call own function again
-				_loadAllImages(callback);
-			}
-		} else {
-			$(img).load(function(){
-				//log("DONE " + imagesLoaded + "/" + imgArr.length + " " + img.src);
-				//Increment the images loaded variable
-				imagesLoaded++;
-				//Check if all images are loaded
-				if(imagesLoaded == imgArr.length) {
-					//If all images loaded do the callback
-					callback();
-				} else {
-					//If not all images are loaded call own function again
-					_loadAllImages(callback);
-				}
-			});
-		}
-	};		
-	_loadAllImages(callback);
-}
-
-
-//player Enters game > draCustomizations(id) //Draw with default customizations at first 
-//Load all the images for all animations
-//Redraw player animations
-
-
-//!!! Test with using the same image and switching it for each push to the imagesArray rather than newing it up every time
-function drawCustomizations(id){			
-	var customizations = Player.list[id].customizations;
-	const teams = [
-		"red",
-		"blue"
-	];
-	const animations = [
-		"pistol",
-		"pistolReloading1",
-		"pistolReloading2",
-		"pistolReloading3",
-		"pistolReloading4",
-		"DP",
-		"DPReloading1",
-		"DPReloading2",
-		"DPReloading3",
-		"MG",
-		"MGReloading1",
-		"MGReloading2",
-		"MGReloading3",
-		"MGReloading4",
-		"MGReloading5",
-		"SG",
-		"SGCock",
-		"SGReloading1",
-		"SGReloading2",
-		"SGReloading3",
-		"Body",
-		"BodyWall"
-	];
-
-	var layers = {};
-	for (var t = 0; t < teams.length; t++){
-		layers[teams[t]] = {};
-		for (var a = 0; a < animations.length; a++){
-			layers[teams[t]][animations[a]] = [];
-		}
-	}
-	
-	var imgSources = [];
-
-
-	for (var t = 0; t < teams.length; t++){
-		var shirtPattern = new Image(); //Each team can have their own shirt pattern
-		shirtPattern.src = "/client/img/small.png";
-		if (customizations[teams[t]].shirtPattern){
-			if (customizations[teams[t]].shirtPattern == 1){
-				shirtPattern.src = "/client/img/dynamic/patterns/zebra.png";
-			}
-			else if (customizations[teams[t]].shirtPattern == 2){
-				shirtPattern.src = "/client/img/dynamic/patterns/pyramids.png";
-			}
-		}	
-		imgSources.push(shirtPattern.src);
-	
-		for (var a = 0; a < animations.length; a++){
-
-			var layerOrder = [];
-			if (animations[a] == "pistol"){
-				layerOrder = ["arms", "hands", "pistol", "torso", "head", "hair"];
-			}			
-			else if (animations[a] == "pistolReloading1"){		
-				layerOrder = ["arms", "hands", "pistol", "torso", "head", "hair"];
-			}
-			else if (animations[a] == "pistolReloading2"){
-				layerOrder = ["arms", "pistol", "hands", "torso", "head", "hair"];
-			}
-			else if (animations[a] == "pistolReloading3"){
-				layerOrder = ["arms", "pistol", "hands", "torso", "head", "hair"];		
-			}
-			else if (animations[a] == "pistolReloading4"){
-				layerOrder = ["arms", "pistol", "hands", "torso", "head", "hair"];		
-			}
-
-			for (var l in layerOrder){
-				//log("Rendering " + teams[t]+ " " + animations[a] + " " + layerOrder[l]);
-				var color = false;
-				var pattern = false;
-				if (layerOrder[l] == "arms"){
-					color = customizations[teams[t]].shirt >= 100 ? customizations[teams[t]].shirtColor : customizations[teams[t]].skinColor;
-					pattern = customizations[teams[t]].shirt >= 100 && customizations[teams[t]].shirtPattern ? shirtPattern : false;
-				}
-				else if (layerOrder[l] == "hands"){
-					color = customizations[teams[t]].gloves ? customizations[teams[t]].glovesColor : customizations[teams[t]].skinColor;
-				}
-				else if (layerOrder[l] == "torso"){
-					color = customizations[teams[t]].shirtColor,
-					pattern = customizations[teams[t]].shirtPattern ? shirtPattern : false
-				}
-				else if (layerOrder[l] == "head"){
-					color = customizations[teams[t]].skinColor;
-				}
-				else if (layerOrder[l] == "hair"){
-					color = customizations[teams[t]].hairColor;
-				}
-				else if (layerOrder[l] == "pistol"){
-					color = customizations[teams[t]].pistolColor;
-				}
-
-				var layer = new Image();
-				layer.src = "/client/img/dynamic/" + animations[a] + "/" + layerOrder[l] + ".png";	
-				layers[teams[t]][animations[a]].push({
-					img: layer,
-					x: 0,
-					y: 0,
-					color: color,
-					pattern: pattern
-				});
-				imgSources.push(layer.src);
-			} // layers loop
-		} //animations loop
-	} // teams loop
-	
-	log("Loading images:");
-	loadImages(imgSources, function(){
-		log("Images loaded");
-		for (var t = 0; t < teams.length; t++){
-			for (var a = 0; a < animations.length; a++){
-
-					Player.list[id].images[teams[t]][animations[a]] = drawLayeredImage(94, 116, layers[teams[t]][animations[a]]);
-			}
-		}
-	});
-
-
-}
-
-function drawLayeredImage(w, h, imagesArray){
-	var p_canvas = document.createElement('canvas');
-	var pCtx = p_canvas.getContext("2d");
-	p_canvas.width = w;
-	p_canvas.height = h;
-
-	for (var i = 0; i < imagesArray.length; i++){
-		drawOnCanvas(pCtx, imagesArray[i].img, imagesArray[i].x, imagesArray[i].y, imagesArray[i].color, imagesArray[i].pattern);
-	}
-	
-	return p_canvas;
-}
-
-function drawOnCanvas(destCanvasCtx, img, x, y, color = false, pattern = false){
-	var tCan = document.createElement('canvas');
-	var tCtx = tCan.getContext("2d");
-	tCan.width = 94;
-	tCan.height = 116;
-	
-	tCtx.clearRect(0,0,tCan.width,tCan.height); //Clears previous frame!!!	
-	
-	//draw the image
-	tCtx.drawImage(img, x, y);
-
-	if (pattern){
-		tCtx.globalCompositeOperation = "multiply";
-		tCtx.drawImage(pattern, 0, 0);
-	}
-	
-	if (color){
-		tCtx.fillStyle = color;
-
-		//Brightness
-		tCtx.globalCompositeOperation = "multiply";
-		tCtx.fillRect(0, 0, tCan.width, tCan.height);
-
-		//Color transformation
-		tCtx.globalCompositeOperation = "color";
-		tCtx.fillRect(0, 0, tCan.width, tCan.height);
-
-		//Clip the color shader outside image  
-		tCtx.globalCompositeOperation = "destination-in";
-		tCtx.drawImage(img, x, y);
-	}
-
-	destCanvasCtx.drawImage(tCan, 0, 0);
-}
 
 //drawExperiments
 
@@ -4884,6 +4647,8 @@ document.onkeydown = function(event){
 						else {
 							zoom = 1;
 						}
+						drawMapElementsOnMapCanvas();
+						drawBlocksOnBlockCanvas();
 					}
 					socket.emit('evalServer',chatInput.value.substring(2));
 				}

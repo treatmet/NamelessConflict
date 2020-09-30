@@ -76,17 +76,14 @@ function populateProfilePage(){
 	const params = {
 		cognitoSub:getViewedProfileCognitoSub()
 	}
-
 	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){	
 		$.post('/getProfile', params, function(data,status){
+            console.log("getProfilePage response from server:");
+            console.log(data);		
 			if (!data.success){
 				document.getElementById("mainContent").innerHTML = '<div id="fullScreenError" class="sectionTitle">Invalid User</div>';
 			}
-			else {
-
-				console.log("getProfilePage response from server:");
-				console.log(data);		
-
+			else { //Viewing valid player profile
 				var mainContentHTML = document.getElementById("mainContent").innerHTML;
 				for (var element in data){
 					var regex = new RegExp("{{" + element + "}}","g");
@@ -94,9 +91,39 @@ function populateProfilePage(){
 				}
 
 				document.getElementById("mainContent").innerHTML = mainContentHTML;
+
+                $.post('/getPlayerCustomizations', params, function(data,status){
+                    console.log("getCustomizations response from server:");
+                    console.log(data);		
+                    if (!data){
+                        alert("Error retrieving player customiaztions.");
+                    }
+                    else { //Got customizations
+                        var appearanceFrames = drawCustomizations(data, 0, function(frames, id){
+                            displayAppearanceFrame(frames.red.pistol, 1);
+                        });
+                    }
+                });
+
+
 			}
 		});
 	}	
+}
+
+function displayAppearanceFrame(image, zoom){
+    var ctx = document.getElementById("ctx").getContext("2d", { alpha: false });
+    var canvas = document.getElementById("ctx");
+
+    var backgroundImg = new Image();
+    backgroundImg.src = "/client/img/factory-floor.png";
+
+    loadImages([backgroundImg.src], function(){
+		log("Background image loaded");
+        drawOnCanvas(ctx, backgroundImg, 0, 0, false, false, 1, true, false);
+        drawOnCanvas(ctx, image, (canvas.width/2 - ((image.width * zoom) / 2)), (canvas.height/2 - ((image.height*zoom)/2)), false, false, zoom, false, false);
+	});
+
 }
 
 /////////////////////////// EDIT PROFILE /////////////////////

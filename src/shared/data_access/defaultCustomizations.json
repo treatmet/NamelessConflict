@@ -13,10 +13,11 @@
 		"pistolColor": "#707070",
 		"dpColor": "#707070",
 		"mgColor": "#707070",
-		"sgColor": "#707070",
+		"sgColor": "#3d3d3d",
 		"boost": 1,
 		"boostColor": "",
-		"pantsColor": "#000247"
+		"pantsColor": "#000247",
+		"icon": 0
 	},
 	"blue": {
 		"nameColor": "#000",
@@ -32,9 +33,10 @@
 		"pistolColor": "#707070",
 		"dpColor": "#707070",
 		"mgColor": "#707070",
-		"sgColor": "#707070",
+		"sgColor": "#3d3d3d",
 		"boost": 1,
 		"boostColor": "",
-		"pantsColor": "#000247"
+		"pantsColor": "#000247",
+		"icon": 0
 	}
 }
