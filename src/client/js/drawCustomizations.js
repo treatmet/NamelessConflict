@@ -41,7 +41,6 @@ function drawCustomizations(customizations, id, cb){
 	
 	var imgSources = [];
 
-
 	for (var t = 0; t < teams.length; t++){
 		var shirtPattern = new Image(); //Each team can have their own shirt pattern
 		shirtPattern.src = "/client/img/small.png";

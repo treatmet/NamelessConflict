@@ -149,11 +149,45 @@
 		
 		
 		<!--CANVAS-->
-		<div id="appearance" style="display:unset; margin: auto; width: 150px; margin-top: 8px;">	
+		<div id="appearance">	
 			<canvas id="ctx" width="150" height="150"></canvas>
 		</div> <!--End Canvas -->
 
 
+		<div class="tab">
+			<button class="tablinks" onclick="showContent(event)">Hats</button>
+			<button class="tablinks" onclick="showContent(event)">Hair</button>
+			<button class="tablinks" onclick="showContent(event)">Skin</button>
+			<button class="tablinks" onclick="showContent(event)">Shirt</button>
+			<button class="tablinks" onclick="showContent(event)">Pants</button>
+			<button class="tablinks" onclick="showContent(event)">Boost</button>
+			<button class="tablinks" onclick="showContent(event)">Name</button>
+			<button class="tablinks" onclick="showContent(event)">Icon</button>
+		</div>
+		<div id="HatsDiv" class="tabcontent active">
+			<p>Hats is my city.</p>
+		</div>		  
+		<div id="HairDiv" class="tabcontent">
+			<p>Hair is my city.</p>
+		</div>		  
+		<div id="SkinDiv" class="tabcontent">
+			<p>Skin is my city.</p>
+		</div>
+		<div id="ShirtDiv" class="tabcontent active">
+			<p>Shirt is my city.</p>
+		</div>		  
+		<div id="PantsDiv" class="tabcontent">
+			<p>Pants is my city.</p>
+		</div>		  
+		<div id="BoostDiv" class="tabcontent">
+			<p>Boost is my city.</p>
+		</div>
+		<div id="NameDiv" class="tabcontent active">
+			<p>Name is my city.</p>
+		</div>		  
+		<div id="IconDiv" class="tabcontent">
+			<p>Icon is my city.</p>
+		</div>		  
 	</div>
 </div>
 
@@ -163,7 +197,29 @@
 	<script src="/client/js/util.js"></script>
 	<script src="/client/js/cognito.js"></script>
 	<script src="/client/js/drawCustomizations.js"></script>
-	<script src="/client/js/pages/profile.js"></script>	
+	<script>
+		function showContent(event) {
+			console.log("--------------event------------3");
+			console.log(event);
+			var tabcontent, tablinks;
+			tabcontent = document.getElementsByClassName("tabcontent");
+			for (var i = 0; i < tabcontent.length; i++) {
+				tabcontent[i].style.display = "none";
+			}
+			tablinks = document.getElementsByClassName("tablinks");
+			for (var i = 0; i < tablinks.length; i++) {
+				tablinks[i].className = tablinks[i].className.replace(" active", "");
+			}
+			document.getElementById(event.currentTarget.innerHTML + "Div").style.display = "block";
+			event.currentTarget.className += " active";
+		}
+
+		var tabLinks = document.getElementsByClassName("tablinks");
+
+	</script>
+	<script src="/client/js/pages/profile.js"></script>		
 </div>
+
+
 
 </body></html>

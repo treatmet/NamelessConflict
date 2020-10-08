@@ -287,7 +287,7 @@ div#progressColumn {
 .sectionTitle {
     display: inline-block;
     float: left;
-    width: 33%;
+    width: 33.2%;
     text-align: center;
     padding-top: 5px;
     line-height: 70px;
@@ -296,7 +296,7 @@ div#progressColumn {
 .sectionTitle2 {
     display: inline-block;
     float: left;
-    width: 33%;
+    width: 33.2%;
     text-align: center;
     padding-top: 5px;
     font-size: 30px;
@@ -305,7 +305,7 @@ div#progressColumn {
 .sectionTitle3 {
     display: none;
     float: left;
-    width: 33%;
+    width: 33.2%;
     text-align: center;
     padding-top: 5px;
     font-size: 30px;
@@ -593,7 +593,7 @@ div#progressColumnContent{
 /*--------COLUMN SECTIONS----------*/
 
 #learnToPlay {
-	width: 33%;
+	width: 33.2%;
     height: 100%;
     display: inline-block;
     float: left;
@@ -606,7 +606,7 @@ div#progressColumnContent{
 }
 
 .columnSection {
-	width: 33%;
+	width: 33.2%;
     height: 100%;
     display: inline-block;
     float: left;
@@ -853,3 +853,43 @@ table.statsTable {
     position: relative;
 }
 
+div#appearance {
+    margin-bottom: 10px;
+}
+
+/* Customization Tabs */
+.tab {
+    overflow: hidden;
+    border-bottom: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    /*border: 1px solid #ccc;*/
+    /*background-color: #f1f1f1;*/
+}
+
+.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 12px;
+    color: white;
+}
+  
+.tab button:hover {
+    background-color: #aaa;
+}
+
+.tab button.active {
+    background-color: #DDD;
+    color: black;
+}
+  
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    /*border-left: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;*/
+}
