@@ -16,7 +16,7 @@ function loginFail(){
 	window.location.href = serverHomePage;
 }
 
-function loginFinally(){
+function loginAlways(){
 	updateProfileLink();
 }
 

@@ -41,6 +41,7 @@ function drawCustomizations(customizations, id, cb){
 	
 	var imgSources = [];
 
+
 	for (var t = 0; t < teams.length; t++){
 		var shirtPattern = new Image(); //Each team can have their own shirt pattern
 		shirtPattern.src = "/client/img/small.png";
@@ -250,8 +251,7 @@ function drawOnCanvas(destCanvasCtx, img, x, y, color = false, pattern = false, 
 	var tCtx = tCan.getContext("2d");
 	tCan.width = img.width * zoom;
 	tCan.height = img.height * zoom;
-	x /= zoom;
-	y /= zoom;
+
 	if (clearFrame)
 		tCtx.clearRect(0,0,tCan.width,tCan.height); //Clears previous frame!!!	
 	

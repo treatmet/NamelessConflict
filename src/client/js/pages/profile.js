@@ -8,6 +8,7 @@ function initializePage(){
 
 function loginSuccess(){
 	checkViewedProfileIsFriendOrParty();
+	getAppearanceOptions();
 	showAuthorizedLoginButtons();            
 	getRequests();
 }
@@ -16,7 +17,7 @@ function loginFail(){
 	showDefaultLoginButtons();
 }
 
-function loginFinally(){
+function loginAlways(){
 	showUnset("mainContent");
 }
 
@@ -459,6 +460,29 @@ function kickFromPartyButtonClick() {
 		//show("inviteToPartyButton");
 	});
 }
+
+//////////////////////////////// APPEARANCE ////////////////////////
+function getAppearanceOptions() {
+    
+}
+
+function showContent(event) {
+    console.log("--------------event------------3");
+    console.log(event);
+    var tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (var i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(event.currentTarget.innerHTML + "Div").style.display = "block";
+    event.currentTarget.className += " active";
+}
+
+
 
 function onBlur(element){
     if (element.value == ""){

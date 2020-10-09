@@ -71,7 +71,7 @@ function getTokenFromUrlParameterAndLogin(){
 			loginFail();
 		}
 		setPcModeAndIsLocalElements({isLocal:data.isLocal, pcMode:data.pcMode});
-		loginFinally();
+		loginAlways();
 		removeUrlParams();
     });
 }
