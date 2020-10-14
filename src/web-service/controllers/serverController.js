@@ -88,7 +88,7 @@ var getJoinableServer = function(options, cb){
 		params = {url:options.server, privateServer:false};
 		options.matchmaking = false;
 	}
-	else if (options.server.indexOf('any') > -1) { //Server IP provided
+	else if (options.server.indexOf('any') > -1) { //Server IP provided //contains
 		//params = {privateServer:false};
 		params = {privateServer:false};
 		options.matchmaking = false;

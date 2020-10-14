@@ -11,15 +11,6 @@ function getSocketParams(){
 		return {};
 	}
 }
-// TODO:set values based on game.html query string params
-/*
-var socket = io({
-	query: {
-		"server": "1",
-		"process": "1"
-	}
-});
-*/
 
 
 const cognitoClientId = '70ru3b3jgosqa5fpre6khrislj';

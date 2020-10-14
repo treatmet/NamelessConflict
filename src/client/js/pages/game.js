@@ -289,7 +289,6 @@ socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
 });
 
 function determineBorderStyle(){
-	log("Determine border style");
 	canvas.style.border = "2px solid #000000";
 	if (myPlayer.health >= 175){
 		canvas.style.margin = "-5px";
@@ -335,6 +334,9 @@ var healthFlashTimer = 100;
 
 //----------------Loading Images----------------
 var Img = {};
+Img.small = new Image();
+Img.small.src = "/client/img/small.png";
+
 Img.block = new Image();
 Img.block.src = "/client/img/block.png";
 Img.redBlock = new Image();

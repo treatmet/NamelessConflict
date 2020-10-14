@@ -6,6 +6,18 @@ const express = require('express');
 const router = express.Router();
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
+
+router.get('/getAppearanceOptions', async function(req, res) {
+	//req.query.cognitoSub
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	console.log("==========AUTH USER==========");
+	console.log(authorizedUser);
+	
+	res.status(200);
+	res.send("data");
+});
+
+
 router.post('/getPlayerRelationship', async function (req, res) {
 	//log("Get player Relationship endpoint called with:");
 	//console.log("--BODY");

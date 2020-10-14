@@ -22,16 +22,15 @@ function loginAlways(){
 }
 
 function checkViewedProfileIsFriendOrParty(){	
-	console.log("passed profile page check, making call with:");
-
+    if (getViewedProfileCognitoSub() == cognitoSub)
+        return;
+        
 	const params = {
 		callerCognitoSub:cognitoSub,
 		targetCognitoSub:getViewedProfileCognitoSub()
 	};
 
 	$.post('/getPlayerRelationship', params, function(data,status){
-		console.log("getPlayerRelationship response:");
-		console.log(data);
 		if (data.friends == true){
 			hide("addFriendButton");
 			show("removeFriendButton");								
@@ -463,7 +462,12 @@ function kickFromPartyButtonClick() {
 
 //////////////////////////////// APPEARANCE ////////////////////////
 function getAppearanceOptions() {
-    
+    if (getViewedProfileCognitoSub() == cognitoSub && cognitoSub != "") {        
+        $.get( '/getAppearanceOptions', function(data) {
+            console.log("GOT DATA:");
+            console.log(data);
+        });
+    }
 }
 
 function showContent(event) {
