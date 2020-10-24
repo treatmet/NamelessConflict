@@ -29,8 +29,8 @@ const animations = [
 
 //!!! Error handling! What if png does not exist or fails to load? This will crash the client
 function drawCustomizations(customizations, id, cb){			
-	console.log("customizations:");
-	console.log(customizations);
+	// console.log("customizations:");
+	// console.log(customizations);
 	var layers = {};
 	for (var t = 0; t < teams.length; t++){
 		layers[teams[t]] = {};
@@ -108,89 +108,89 @@ function drawCustomizations(customizations, id, cb){
 									{layer:"hands", animationVariant:animations[a], x:0, y:0},
 									{layer:"gun", animationVariant:animations[a], x:0, y:0},
 									{layer: "torso", animationVariant:animations[a], x:0, y:0},
-									{layer:"head", x:0, y:0},
-									{layer:"hair", x:0, y:0},
-									{layer:"hat", x:0, y:0}];
+									{layer:"head", x:-1, y:0},
+									{layer:"hair", x:-1, y:0},
+									{layer:"hat", x:-1, y:0}];
 					break;
 				case "DPReloading1":		
 					layerOrder = [{layer: "arms", animationVariant:animations[a], x:0, y:0},
 									{layer:"hands", animationVariant:animations[a], x:0, y:0},
 									{layer:"gun", animationVariant:animations[a], x:0, y:0},
 									{layer: "torso", animationVariant:"DP", x:0, y:0},
-									{layer:"head", x:0, y:0},
-									{layer:"hair", x:0, y:0},
-									{layer:"hat", x:0, y:0}];
+									{layer:"head", x:-1, y:0},
+									{layer:"hair", x:-1, y:0},
+									{layer:"hat", x:-1, y:0}];
 					break;
 				case "DPReloading2":
 					layerOrder = [{layer: "arms", animationVariant:animations[a], x:0, y:0},
 									{layer:"hands", animationVariant:animations[a], x:0, y:0},
 									{layer: "torso", animationVariant:"DP", x:0, y:0},
-									{layer:"head", x:0, y:0},
-									{layer:"hair", x:0, y:0},
-									{layer:"hat", x:0, y:0}];
+									{layer:"head", x:-1, y:0},
+									{layer:"hair", x:-1, y:0},
+									{layer:"hat", x:-1, y:0}];
 					break;
 				case "DPReloading3":
 					layerOrder = [{layer: "arms", animationVariant:animations[a], x:0, y:0},
 									{layer:"hands", animationVariant:animations[a], x:0, y:0},
 									{layer:"gun", animationVariant:animations[a], x:0, y:0},
 									{layer: "torso", animationVariant:"DP", x:0, y:0},
-									{layer:"head", x:0, y:0},
-									{layer:"hair", x:0, y:0},
-									{layer:"hat", x:0, y:0}];
+									{layer:"head", x:-1, y:0},
+									{layer:"hair", x:-1, y:0},
+									{layer:"hat", x:-1, y:0}];
 					break;
 				case "MG":
 					layerOrder = [{layer: "arms", animationVariant:animations[a], x:0, y:0},
 									{layer:"hands", animationVariant:animations[a], x:0, y:0},
 									{layer:"gun", animationVariant:animations[a], x:0, y:0},
 									{layer: "torso", animationVariant:animations[a], x:0, y:0},
-									{layer:"head", x:-1, y:2},
-									{layer:"hair", x:-1, y:2},
-									{layer:"hat", x:-1, y:2}];
+									{layer:"head", x:-2, y:2},
+									{layer:"hair", x:-2, y:2},
+									{layer:"hat", x:-2, y:2}];
 					break;
 				case "MGReloading1":
 					layerOrder = [{layer: "arms", animationVariant:animations[a], x:0, y:0},
 									{layer:"hands", animationVariant:animations[a], x:0, y:0},
 									{layer:"gun", animationVariant:animations[a], x:0, y:0},
 									{layer: "torso", animationVariant:"MG", x:0, y:2},
-									{layer:"head", x:-1, y:4},
-									{layer:"hair", x:-1, y:4},
-									{layer:"hat", x:-1, y:4}];
+									{layer:"head", x:-2, y:4},
+									{layer:"hair", x:-2, y:4},
+									{layer:"hat", x:-2, y:4}];
 					break;
 				case "MGReloading2":
 					layerOrder = [{layer: "arms", animationVariant:animations[a], x:0, y:0},
 									{layer:"hands", animationVariant:animations[a], x:0, y:0},
 									{layer:"gun", animationVariant:animations[a], x:0, y:0},
 									{layer: "torso", animationVariant:"MG", x:0, y:3},
-									{layer:"head", x:-1, y:5},
-									{layer:"hair", x:-1, y:5},
-									{layer:"hat", x:-1, y:5}];
+									{layer:"head", x:-2, y:5},
+									{layer:"hair", x:-2, y:5},
+									{layer:"hat", x:-2, y:5}];
 					break;
 				case "MGReloading3":
 					layerOrder = [{layer: "arms", animationVariant:animations[a], x:0, y:0},
 									{layer:"hands", animationVariant:animations[a], x:0, y:0},
 									{layer:"gun", animationVariant:animations[a], x:0, y:0},
 									{layer: "torso", animationVariant:"MG", x:0, y:3},
-									{layer:"head", x:-1, y:5},
-									{layer:"hair", x:-1, y:5},
-									{layer:"hat", x:-1, y:5}];
+									{layer:"head", x:-2, y:5},
+									{layer:"hair", x:-2, y:5},
+									{layer:"hat", x:-2, y:5}];
 					break;
 				case "MGReloading4":
 					layerOrder = [{layer: "arms", animationVariant:animations[a], x:0, y:0},
 									{layer:"gun", animationVariant:"MG", x:0, y:-1},
 									{layer:"hands", animationVariant:animations[a], x:0, y:0},
 									{layer: "torso", animationVariant:"MG", x:0, y:-1},
-									{layer:"head", x:-1, y:1},
-									{layer:"hair", x:-1, y:1},
-									{layer:"hat", x:-1, y:1}];
+									{layer:"head", x:-2, y:1},
+									{layer:"hair", x:-2, y:1},
+									{layer:"hat", x:-2, y:1}];
 					break;
 				case "MGReloading5":
 					layerOrder = [{layer: "arms", animationVariant:animations[a], x:0, y:0},
 									{layer:"gun", animationVariant:"MG", x:0, y:1},
 									{layer:"hands", animationVariant:animations[a], x:0, y:0},
 									{layer: "torso", animationVariant:"MG", x:0, y:0},
-									{layer:"head", x:-1, y:2},
-									{layer:"hair", x:-1, y:2},
-									{layer:"hat", x:-1, y:2}];
+									{layer:"head", x:-2, y:2},
+									{layer:"hair", x:-2, y:2},
+									{layer:"hat", x:-2, y:2}];
 					break;
 				case "SG":
 					layerOrder = [{layer: "arms", animationVariant:animations[a], x:0, y:0},
@@ -253,7 +253,7 @@ function drawCustomizations(customizations, id, cb){
 				var type = "default";				
 				var animationVariant = layerOrder[l].animationVariant ? "/" + layerOrder[l].animationVariant : "";
 
-				log(animations[a] + " " + layerOrder[l].layer + " animationVariant: " + animationVariant);
+				// log(animations[a] + " " + layerOrder[l].layer + " animationVariant: " + animationVariant);
 
 				switch(String(layerOrder[l].layer)){
 					case "arms":
@@ -274,6 +274,8 @@ function drawCustomizations(customizations, id, cb){
 					case "shell":
 						break;
 					case "hair":
+						if (customizations[teams[t]].hair == "bald" || customizations[teams[t]].hat == "skiMask")
+							continue;
 						color = customizations[teams[t]].hairColor;
 						type = customizations[teams[t]].hair;
 						break;
@@ -295,7 +297,6 @@ function drawCustomizations(customizations, id, cb){
 
 				var layer = new Image();
 				layer.src = "/client/img/dynamic/" + layerOrder[l].layer + animationVariant + "/" + type + ".png";	
-				log(layer.src);
 				imgSources.push(layer.src);
 
 
@@ -315,9 +316,9 @@ function drawCustomizations(customizations, id, cb){
 		playerAnimations[teams[t]] = {};	
 	}	
 
-	log("Loading images:");
+	//log("Loading images:");
 	loadImages(imgSources, function(invalidSrcPaths){
-		log("Images loaded");
+		//log("Images loaded");
 		for (var t = 0; t < teams.length; t++){
 			for (var a = 0; a < animations.length; a++){
 

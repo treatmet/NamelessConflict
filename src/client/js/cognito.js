@@ -500,16 +500,6 @@ function showAuthorizedLoginButtons(){
         document.getElementById('userWelcomeText').style.display = "inline-block";
 		document.getElementById('userWelcomeText').innerHTML = "<a href='/user/" + cognitoSub + "'>Logged in as " + printedUsername + "</a>";	
 	}
-    if (document.getElementById('updateUserForm')){
-		if (getUrl().includes(cognitoSub)){
-			document.getElementById('updateUserForm').style.display = '';
-			document.getElementById('editUserButton').style.display = '';
-			showSecondaySectionTitles();
-		}
-		else {
-			showUnset("invitePlayerButtons");			
-		}
-    }
 }
 
 function showSecondaySectionTitles(){
@@ -587,6 +577,7 @@ function localPlayNowClick(){
 }
 
 function show(element){
+	//log("Showing element: " + element);
 	if (document.getElementById(element)) {
 		document.getElementById(element).style.display = "inline-block";
 	}

@@ -26,12 +26,21 @@ var reinitStream = function(){
 	  bucket: config.s3LoggingBucket,
 	  access_key_id: config.awsAccessKeyId,
 	  secret_access_key: config.awsSecretAccessKey,
+	  maxRetrides: 15,
 	  folder: reinitYear + '_' + reinitMonth + '_' + reinitDate,
 	  name_format: name_format,
 	  max_file_size: 500000000,
 	  rotate_every: 86405000
 	});
-	s3stream.write("\r\n");
+
+	s3stream.on('error', function(err){
+		console.log("-----CAUGHT ERROR WHEN WRITING TO REMOTE LOGS:------");
+		console.log(err);
+	});
+
+
+
+	logg("\r\n");
 	logg("----------STREAMWRITER INITIALIZED WITH IP: " + myIP + "---------FOLDER: " + reinitYear + "_" + reinitMonth + "_" + reinitDate + "------------\r\n");		
 }
 

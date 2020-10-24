@@ -2260,6 +2260,7 @@ function drawTorsos(){
 					}
 					else if (Player.list[i].weapon == 3){
 						img = Player.list[i].images.red.MG;
+						img = Img.whitePlayerMG;
 					}
 					else if (Player.list[i].weapon == 4){
 						img = Player.list[i].images.red.SG;
@@ -2533,7 +2534,7 @@ function drawTorsos(){
 								ctx.shadowColor = "white";
 								ctx.shadowOffsetX = 0; 
 								ctx.shadowOffsetY = 0;
-								ctx.shadowBlur = 0;		
+								ctx.shadowBlur = 0;
 							}
 							if (healthFlashTimer <= 0 || healthFlashTimer > Player.list[i].health){
 								//healthFlashTimer = Player.list[i].health * .75; 						
@@ -2552,7 +2553,7 @@ function drawTorsos(){
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
-					drawImage(img, -img.width/2 * zoom, (-img.height/2+5) * zoom, img.width * zoom, img.height * zoom); //Draw torso	
+					drawImage(img, -img.width/2 * zoom, (-img.height/2 + 4) * zoom, img.width * zoom, img.height * zoom); //Draw torso	
 
 
 
@@ -2581,7 +2582,7 @@ function drawTorsos(){
 						
 					//Strap
 					if (Player.list[i].holdingBag == true){
-						if (Player.list[i].weapon == 1 || Player.list[i].weapon == 2){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2+5) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
+						if (Player.list[i].weapon == 1 || Player.list[i].weapon == 2){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2+15) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
 						else if (Player.list[i].weapon == 3){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2+10) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
 					}				
                 ctx.restore();	

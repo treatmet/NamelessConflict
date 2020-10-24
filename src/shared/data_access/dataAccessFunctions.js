@@ -234,7 +234,15 @@ var updateServerUrlForUser = function(cognitoSub){
 	});
 }
 
-var updateUserCustomizations = function(cognitoSub, obj) {
+var updateUserCustomizations = function(cognitoSub, team, key, value) {
+	getUserCustomizations(cognitoSub, function(customizations){
+		customizations[team][key] = value;
+		dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: customizations}, async function(err, obj){
+		});		
+	});
+}
+
+var updateAllUserCustomizations = function(cognitoSub, obj) {
 	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: obj}, async function(err, obj){
 	});		
 }
@@ -725,6 +733,7 @@ module.exports.dbUserUpdate = dbUserUpdate;
 module.exports.updateOnlineTimestampForUsers = updateOnlineTimestampForUsers;
 module.exports.updateOnlineTimestampForUser = updateOnlineTimestampForUser;
 module.exports.updateUserCustomizations = updateUserCustomizations;
+module.exports.updateAllUserCustomizations = updateAllUserCustomizations;
 module.exports.getUserCustomizations = getUserCustomizations;
 module.exports.defaultCustomizations = defaultCustomizations;
 module.exports.setPartyIdIfEmpty = setPartyIdIfEmpty;

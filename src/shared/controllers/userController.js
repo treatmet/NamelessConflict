@@ -7,17 +7,6 @@ const router = express.Router();
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
 
-router.get('/getAppearanceOptions', async function(req, res) {
-	//req.query.cognitoSub
-	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
-	console.log("==========AUTH USER==========");
-	console.log(authorizedUser);
-	
-	res.status(200);
-	res.send("data");
-});
-
-
 router.post('/getPlayerRelationship', async function (req, res) {
 	//log("Get player Relationship endpoint called with:");
 	//console.log("--BODY");
@@ -81,7 +70,7 @@ router.post('/requestResponse', async function (req, res) {
 			}		
 			//Perform decline operation			
 			if (req.body.accept == "false"){
-				dataAccessFunctions.dataAccessFunctions.removeRequestById(req.body.id);
+				dataAccessFunctions.removeRequestById(req.body.id);
 				res.status(200);
 				res.send({msg:"Removed request"});
 			}
@@ -90,7 +79,7 @@ router.post('/requestResponse', async function (req, res) {
 				if(req.body.type == "friend") {
 					dataAccessFunctions.upsertFriend({cognitoSub:authorizedUser.cognitoSub, targetCognitoSub:request.cognitoSub}, function(dbResults){
 						if (!dbResults.error){
-							dataAccessFunctions.dataAccessFunctions.removeRequestById(req.body.id);
+							dataAccessFunctions.removeRequestById(req.body.id);
 						}
 						res.status(200);
 						res.send(dbResults);
@@ -480,6 +469,36 @@ router.post('/getPlayerCustomizations', async function (req, res) {
 		res.send(dbResults);
 	});
 });
+
+router.get('/getPlayerCustomizationOptions', async function(req, res) {
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	//authorizedUser.cognitoSub
+	
+	
+
+
+	res.status(200);
+	res.send("data");
+});
+
+router.post('/setPlayerCustomizations', async function (req, res) {
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	
+	console.log("SETTING CUSTOMIZATIONS FOR: " + authorizedUser.cognitoSub);
+	console.log(req.body);
+	if (authorizedUser.cognitoSub == req.body.cognitoSub && typeof req.body.team != 'undefined' && typeof req.body.key != 'undefined' && typeof req.body.value != 'undefined'){
+		dataAccessFunctions.updateUserCustomizations(authorizedUser.cognitoSub, req.body.team, req.body.key, req.body.value);
+		response = {msg:"Successfully Updated User Customizations"};
+	}
+	else {
+		response = {msg:"Failed to update User Customizations. Either the user was not authorized, or insuficient data was provided."};
+	}
+
+	res.status(200);
+	res.send(response);
+});
+
+
 
 function getLeaderFromParty(partyData){
 	for (var p = 0; p < partyData.party.length; p++){

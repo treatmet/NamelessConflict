@@ -1,4 +1,9 @@
 page = "profile";
+var currentCustomizations = {};
+var displayAnimation = "";
+var displayTeam = "red";
+var customizationOptions = {};
+
 initializePage();
 function initializePage(){
     showLocalElements();
@@ -8,9 +13,9 @@ function initializePage(){
 
 function loginSuccess(){
 	checkViewedProfileIsFriendOrParty();
-	getAppearanceOptions();
 	showAuthorizedLoginButtons();            
 	getRequests();
+    showSelfProfileOptions();
 }
 
 function loginFail(){
@@ -91,24 +96,36 @@ function populateProfilePage(){
 				}
 
 				document.getElementById("mainContent").innerHTML = mainContentHTML;
-
                 $.post('/getPlayerCustomizations', params, function(data,status){
-                    console.log("getCustomizations response from server:");
-                    console.log(data);		
                     if (!data){
                         alert("Error retrieving player customiaztions.");
                     }
                     else { //Got customizations
-                        var appearanceFrames = drawCustomizations(data, 0, function(frames, id){
-                            displayAppearanceFrame(frames.red.pistol, 1);
-                        });
+                        currentCustomizations = data;
+                        cycleAppearance();
                     }
                 });
-
-
 			}
 		});
 	}	
+}
+
+function showSelfProfileOptions(){
+    if (getViewedProfileCognitoSub() == cognitoSub && cognitoSub != "") {
+        show('updateUserForm');
+        show('editUserButton');
+        showSecondaySectionTitles();
+        show("appearanceOptions");
+        $.get( '/getPlayerCustomizationOptions', function(data) {
+            console.log("GOT DATA:");
+            console.log(data);
+            customizationOptions = data;
+            populateCustomizationOptions();
+        });
+    }
+    else {
+        showUnset("invitePlayerButtons");			
+    }
 }
 
 function displayAppearanceFrame(image, zoom){
@@ -119,7 +136,6 @@ function displayAppearanceFrame(image, zoom){
     backgroundImg.src = "/client/img/factory-floor.png";
 
     loadImages([backgroundImg.src], function(){
-		log("Background image loaded");
         drawOnCanvas(ctx, backgroundImg, 0, 0, false, false, 1, true, false);
         drawOnCanvas(ctx, image, (canvas.width/2 - ((image.width * zoom) / 2)), (canvas.height/2 - ((image.height*zoom)/2)), false, false, zoom, false, false);
 	});
@@ -444,7 +460,7 @@ function upsertRequest(data){
 }
 
 function kickFromPartyButtonClick() {
-	document.getElementById("kickFromPartyButton").style.backgrounColor = "gray";
+	document.getElementById("kickFromPartyButton").style.backgroundColor = "gray";
 	
 	const data = {
 		cognitoSub: cognitoSub,
@@ -461,18 +477,38 @@ function kickFromPartyButtonClick() {
 }
 
 //////////////////////////////// APPEARANCE ////////////////////////
-function getAppearanceOptions() {
-    if (getViewedProfileCognitoSub() == cognitoSub && cognitoSub != "") {        
-        $.get( '/getAppearanceOptions', function(data) {
-            console.log("GOT DATA:");
-            console.log(data);
-        });
+
+function toggleAppearanceMode(event) {
+    var tablinks = document.getElementsByClassName("toggleIcons");
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
+    event.currentTarget.className += " active";
+
+    var appearanceOptions = document.getElementById("appearanceOptions");
+    var shopOptions = document.getElementById("shopOptions");
+
+    if (appearanceOptions && shopOptions){
+        switch (event.currentTarget.id){
+            case "customizeToggleIcon":
+                appearanceOptions.style.display = "block";
+                shopOptions.style.display = "none";
+                break;
+            case "shopToggleIcon":
+                appearanceOptions.style.display = "none";
+                shopOptions.style.display = "block";            
+                break;
+            default:
+                log("Unknown appearance mode clicked...");
+                break;
+        }
+    }
+    else {
+        log("DETECTED NONEXISTANT DIV");
+    }    
 }
 
 function showContent(event) {
-    console.log("--------------event------------3");
-    console.log(event);
     var tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabcontent");
     for (var i = 0; i < tabcontent.length; i++) {
@@ -482,14 +518,226 @@ function showContent(event) {
     for (var i = 0; i < tablinks.length; i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
-    document.getElementById(event.currentTarget.innerHTML + "Div").style.display = "block";
+    document.getElementById(event.currentTarget.id + "Div").style.display = "block";
     event.currentTarget.className += " active";
 }
 
+function selectTeam(event) {
+    var tablinks;
+    tablinks = document.getElementsByClassName("teamTablinks");
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].id = tablinks[i].id.replace("Active", "");
+    }
+    event.currentTarget.id += "Active";
+    displayTeam = event.currentTarget.innerHTML.toLowerCase();
+    drawProfileCustomizations();
+    populateCustomizationOptions();
+}
 
+function drawProfileCustomizations(){
+    drawCustomizations(currentCustomizations, 0, function(frames, id){
+        displayAppearanceFrame(frames[displayTeam][displayAnimation], 1);
+    });
+}
 
 function onBlur(element){
     if (element.value == ""){
         resetElement(element);
     }    
+}
+
+function cycleAppearance(){
+    if (displayAnimation == "pistol"){
+        displayAnimation = "DP";
+    }
+    else if (displayAnimation == "DP"){
+        displayAnimation = "MG";
+    }
+    else if (displayAnimation == "MG"){
+        displayAnimation = "SG";
+    }
+    else if (displayAnimation == "SG"){
+        displayAnimation = "pistol";
+    }
+    else {
+        displayAnimation = "pistol";
+    }
+    
+    drawProfileCustomizations();
+}
+
+function populateCustomizationOptions(){
+    var options = customizationOptions;
+
+    options = {
+        red: {
+            hat: {
+                Type:[
+                    {
+                        id:"default",
+                        title:"None",
+                        text:"",
+                        img:"none.png"
+                    },
+                    {
+                        id:"halo",
+                        title:"Halo",
+                        text:"Conflict Progressed",
+                        img:"hat/halo.png"
+                    },
+                    {
+                        id:"skiMask",
+                        title:"Ski Mask",
+                        text:"Thug life",
+                        img:"hat/skiMask.png"
+                    },
+                    {
+                        id:"sunglasses",
+                        title:"Shades",
+                        text:"Cool as a cucumber",
+                        img:"hat/sunglasses.png"
+                    },
+                    {
+                        id:"googly",
+                        title:"Googly Eyes",
+                        text:"These eyes be poppin",
+                        img:"hat/googly.png"
+                    }
+                ]
+            },
+            hair: {
+                Type:[
+                    {
+                        id:"bald",
+                        title:"Bald",
+                        text:"",
+                        img:"hair/bald.png"
+                    },
+                    {
+                        id:"crew",
+                        title:"Crew Cut",
+                        text:"Military standard",
+                        img:"hair/crew.png"
+                    },
+                    {
+                        id:"afro",
+                        title:"Afro",
+                        text:"It's an afro",
+                        img:"hair/afro.png"
+                    },
+                    {
+                        id:"bigAfro",
+                        title:"Big Afro",
+                        text:"Let's bring back the 80s!",
+                        img:"hair/bigAfro.png"
+                    },
+                    {
+                        id:"cornrows",
+                        title:"Cornrows",
+                        text:"Hey now, don't be culturally appropriating the Greeks",
+                        img:"hair/cornrows.png"
+                    }                    
+                ],
+                Color:[
+                    {
+                        id:"#603913",
+                        title:"Brown",
+                        text:"It's brown"
+                    },
+                    {
+                        id:"#130900",
+                        title:"Black",
+                        text:"Jet black"
+                    },
+                    {
+                        id:"#fff3b3",
+                        title:"Slim Shady",
+                        text:"I'm back!"
+                    },
+                    {
+                        id:"#c6c6c6",
+                        title:"Grey",
+                        text:"Wise beyond your years"
+                    }
+                ]                
+            }
+        },
+        blue: {
+            hat: {
+                Type:[
+                    {
+                        id:"googly",
+                        title:"Googly Eyes",
+                        text:"These eyes be poppin",
+                        img:"hat/googly.png"
+                    }
+                ],
+                Color:[
+                    {
+                        id:"#0000FF",
+                        title:"Blue",
+                        text:"Rrrrrroyal blue"
+                    }
+                ]
+            }
+        }
+    }
+
+
+    for (const category in options[displayTeam]){
+        var HTML = "";
+        log("Grabbing ID " + category + "Div");
+        var div = document.getElementById(category + "Div");
+        if (typeof div === 'undefined')
+            continue;
+
+        for (const subCategory in options[displayTeam][category]){
+            var displaySubCategory = subCategory;
+            if (subCategory == "Type")
+                displaySubCategory = "";
+
+            HTML += "<div class='shopCategory'>" + displaySubCategory + "</div>"
+
+            for (const item in options[displayTeam][category][subCategory]){
+                var shopIconClass = "shopIcon";
+                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].id){
+                    shopIconClass += " active";
+                }
+
+                if (subCategory == 'Type'){
+                    HTML += "<div class='shopItem'><div class='" + shopIconClass + "' id ='" + options[displayTeam][category][subCategory][item].id + "' onclick='customizationSelect(event, \"" + displayTeam + "\",\"" + category + displaySubCategory + "\")'><img src='/client/img/shopIcons/" + options[displayTeam][category][subCategory][item].img + "'></div>";
+                }
+                else if(subCategory == 'Color'){
+                    HTML += "<div class='shopItem'><div class='" + shopIconClass + "' id='" + options[displayTeam][category][subCategory][item].id + "' onclick='customizationSelect(event, \"" + displayTeam + "\",\"" + category + displaySubCategory + "\")' style='background-color:" + options[displayTeam][category][subCategory][item].id + "'></div>";
+                }
+                HTML += "<div class='shopTitle'>" + options[displayTeam][category][subCategory][item].title + "</div><br>";
+                HTML += "<div class='shopText'>" + options[displayTeam][category][subCategory][item].text + "</div>";
+                HTML += "</div>";
+            }
+        }
+        div.innerHTML = HTML;
+    }
+}
+
+
+// event.currentTarget.innerHTML.toLowerCase()
+// tablinks[i].className = tablinks[i].className.replace(" active", "")
+
+
+
+function customizationSelect(event, team, key){
+    currentCustomizations[team][key] = event.currentTarget.id;
+    drawProfileCustomizations();
+    populateCustomizationOptions();
+
+    var params = {
+        team:team,
+        key:key,
+        value:event.currentTarget.id,
+        cognitoSub:getViewedProfileCognitoSub()
+    };
+	$.post('/setPlayerCustomizations', params, function(data,status){
+        log("/setPlayerCustomizations response:");
+		log(data.msg);
+	});
 }
