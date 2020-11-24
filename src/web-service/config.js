@@ -26,4 +26,8 @@ global.serverHomePage = "/";
 global.isWebServer = false;
 global.isLocal = false;
 
+global.defaultShopSlotsUnlocked = 2; //Guess
+global.maxShopSlotsUnlocked = 5; //Upper limit on how many shop slots can be unlocked
+global.resetPrice = 10000; //Cost to reset shop
+
 global.SOCKET_LIST = [];

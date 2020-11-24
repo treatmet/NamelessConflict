@@ -27,6 +27,9 @@ const animations = [
 	"BodyWall"
 ];
 
+var smallImg = new Image();
+smallImg.src = "/client/img/small.png";
+
 //!!! Error handling! What if png does not exist or fails to load? This will crash the client
 function drawCustomizations(customizations, id, cb){			
 	// console.log("customizations:");
@@ -280,7 +283,7 @@ function drawCustomizations(customizations, id, cb){
 						type = customizations[teams[t]].hair;
 						break;
 					case "hat":
-						if (customizations[teams[t]].hat == "default")
+						if (customizations[teams[t]].hat == "default" || customizations[teams[t]].hat == "noneHat")
 							continue;
 						type = customizations[teams[t]].hat;
 						break;
@@ -326,7 +329,7 @@ function drawCustomizations(customizations, id, cb){
 					for (var l = 0; l < layers[teams[t]][animations[a]].length; l++){						
 						for (var p = 0; p < invalidSrcPaths.length; p++){
 							if (invalidSrcPaths[p] == layers[teams[t]][animations[a]][l].img.src){
-								layers[teams[t]][animations[a]][l].img = Img.small;
+								layers[teams[t]][animations[a]][l].img = smallImg;
 							}
 						}
 					}

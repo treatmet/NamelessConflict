@@ -19,11 +19,13 @@ var page = "";
 var cognitoSub = "";
 var username = "";
 var partyId = "";
+var userCash = 0;
 var federatedUser = false;
 var pcMode = 1;
 var serverHomePage = "https://rw.treatmetcalf.com/";
 var isLocal = false;
 var defaultCustomizations = {red:{}, blue:{}};
+
 
 function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
@@ -44,6 +46,8 @@ function getTokenFromUrlParameterAndLogin(){
 		
         if (data && data.username){
             cognitoSub = data.cognitoSub;
+			userCash = data.cash;
+			updateCashHeaderDisplay(data.cash);
 			
 			
 			log('emmiting updateSocketInfo cognitoSub=' + cognitoSub);
@@ -52,8 +56,12 @@ function getTokenFromUrlParameterAndLogin(){
             username = data.username;					
 			federatedUser = data.federatedUser;
 			isLocal = data.isLocal;
+			if (isLocal){
+				serverHomePage = "/";
+			}
+			console.log("SET SERVER HOMEPAGE: " + serverHomePage);
 			defaultCustomizations = data.defaultCustomizations;
-	
+
 			setLocalStorage();
 			getOnlineFriendsAndParty();	
 			//loginSuccess(); wait for response from updateSocketInfo before triggering loginSuccess() -- socket.on('socketInfoUpdated')
@@ -65,6 +73,11 @@ function getTokenFromUrlParameterAndLogin(){
 		loginAlways();
 		removeUrlParams();
     });
+}
+
+function updateCashHeaderDisplay(cash){
+	document.getElementById("cashHeaderValue").innerHTML = "$" + numberWithCommas(cash);
+	show("cashHeaderDisplay");
 }
 
 function updateProfileLink(){
@@ -618,4 +631,25 @@ setInterval(
 	},
 	1000/1 //Ticks per second
 );
+
+//Shared Functions
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function removeIndexesFromArray(array, indexes){
+	for (var i = 0; i < indexes.length; i++){
+		array.splice(indexes[i], 1);
+	}
+	return array;
+}
+
+function capitalizeFirstLetter(str){
+	if (!str){
+		logg("ERROR CAPITALIZING FIRST LETTER OF STRING: " + str);
+		return "";
+	}
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 console.log("cognito.js loaded");

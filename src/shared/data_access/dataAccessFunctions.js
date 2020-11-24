@@ -2,6 +2,11 @@ var dataAccess = require('./dataAccess.js');
 const ObjectId = require('mongodb').ObjectID;
 
 var defaultCustomizations = require("./defaultCustomizations.json");
+var defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
+var defaultShopList = require("./defaultPlayerShopList.json");
+
+var fullShopList = require("./shopList.json");
+
 
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
 var getUserFromDB = function(cognitoSub,cb){
@@ -234,19 +239,6 @@ var updateServerUrlForUser = function(cognitoSub){
 	});
 }
 
-var updateUserCustomizations = function(cognitoSub, team, key, value) {
-	getUserCustomizations(cognitoSub, function(customizations){
-		customizations[team][key] = value;
-		dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: customizations}, async function(err, obj){
-		});		
-	});
-}
-
-var updateAllUserCustomizations = function(cognitoSub, obj) {
-	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: obj}, async function(err, obj){
-	});		
-}
-
 
 var getUserCustomizations = function(cognitoSub,cb){
 	//log("searching for user: " + cognitoSub);
@@ -254,20 +246,263 @@ var getUserCustomizations = function(cognitoSub,cb){
 		if (res && res[0]){
 			var customizations = res[0].customizations;
 			if (typeof customizations === 'undefined' || typeof res[0].customizations.red === 'undefined'){
-				console.log("ERROR - COULD NOT GET CUSTOMIZATIONS FOR " + cognitoSub);
+				logg("ERROR - COULD NOT GET CUSTOMIZATIONS FOR " + cognitoSub);
 				customizations = defaultCustomizations;
 				updateUserCustomizations(cognitoSub, customizations);
 			}
 			console.log("RETURNING CUSTOMIZATIONS FOR " + cognitoSub);
 			console.log(customizations);
-			cb(customizations);
+			cb({msg: "Successfully got customizations", result:customizations});
 		}
 		else {
 			console.log("ERROR - COULD NOT FIND USER WHEN GETTING CUSTOMIZATIONS FOR " + cognitoSub);
-			cb(defaultCustomizations);
+			cb({msg: "Failed to get customizations for [" + cognitoSub + "] from DB", result:defaultCustomizations});
 		}
 	});
 }
+
+var updateUserCustomization = function(cognitoSub, team, key, value) {
+	getUserCustomizations(cognitoSub, function(customizations){
+		customizations[team][key] = value;
+		dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: customizations}, async function(err, obj){
+		});		
+	});
+}
+
+var updateUserCustomizations = function(cognitoSub, obj) {
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: obj}, async function(err, obj){
+	});		
+}
+
+var getUserCustomizationOptions = function(cognitoSub,cb){
+	//log("searching for user: " + cognitoSub);
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+		if (res && res[0]){
+			var customizationOptions = res[0].customizationOptions;
+			if (typeof customizationOptions === 'undefined'){
+				console.log("ERROR - COULD NOT GET CUSTOMIZATION OPTIONS FOR " + cognitoSub);
+				customizationOptions = defaultCustomizationOptions;
+				updateUserCustomizationOptions(cognitoSub, customizationOptions);
+			}
+			customizationOptions = transformToClientCustomizationOptions(customizationOptions);
+			console.log("RETURNING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
+			console.log(customizationOptions);
+			cb({msg: "Successfully got customization options", result:customizationOptions});
+		}
+		else {
+			console.log("ERROR - COULD NOT FIND USER WHEN GETTING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
+			cb({msg: "Failed to get customization options for [" + cognitoSub + "] from DB", result:defaultCustomizationOptions});
+		}
+	});
+}
+
+function transformToClientCustomizationOptions(customizationOptions){ //customizationOptions = list of strings (id of shopList)
+	var clientOptions = getEmptyClientCustomizationOptions();
+  	
+	for (var o = 0; o < customizationOptions.length; o++){
+		var shopItem = fullShopList.find(item => item.id == customizationOptions[o]); //LINQ
+		if (!shopItem)
+			continue;
+
+		if (shopItem.category == "other")
+			continue;
+
+		var optionDataType = "canvasPng"; //color || canvasPng			
+		if (shopItem.subCategory == "color"){
+				optionDataType = "color"; 
+		}
+
+		var customizationOption = {
+			title: shopItem.title,
+			text: shopItem.text,
+			icon: shopItem.icon
+		};
+		customizationOption[optionDataType] = shopItem.canvasPngOrColor;		
+
+		if (shopItem.team == 0 || shopItem.team == 1){
+			clientOptions["red"][shopItem.category][shopItem.subCategory].push(customizationOption);
+		}
+		if (shopItem.team == 0 || shopItem.team == 2){
+			clientOptions["blue"][shopItem.category][shopItem.subCategory].push(customizationOption);
+		}
+	}
+	return clientOptions;
+}
+
+function getEmptyClientCustomizationOptions(){
+	return {
+        red: {
+            hat: {
+                type:[]
+			},
+            hair: {
+                type:[],
+				color:[]
+            },
+            skin: {
+				color:[]
+            },
+            shirt: {
+				type:[],
+				color:[],
+				pattern:[]
+            },
+            pants: {
+				color:[]
+            },
+            boost: {
+				type:[]
+            },
+            name: {
+				color:[]
+            },
+            icon: {
+				type:[]
+            }
+        },
+        blue: {
+            hat: {
+                type:[]
+			},
+            hair: {
+                type:[],
+				color:[]
+            },
+            skin: {
+				color:[]
+            },
+            shirt: {
+				type:[],
+				color:[],
+				pattern:[]
+            },
+            pants: {
+				color:[]
+            },
+            boost: {
+				type:[]
+            },
+            name: {
+				color:[]
+            },
+            icon: {
+				type:[]
+            }        
+        }
+    };
+}
+
+
+var updateUserCustomizationOptions = function(cognitoSub, obj) {
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizationOptions: obj}, async function(err, obj){
+	});		
+}
+
+
+var getUserShopList = function(cognitoSub,cb){
+	//log("searching for user: " + cognitoSub);
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+		if (res && res[0]){
+			var shopList = res[0].shopList;
+			
+			var lastMidnight = new Date();
+			lastMidnight.setUTCHours(0,0,0,0);
+			var nextMidnight = lastMidnight.setUTCDate(lastMidnight.getUTCDate() + 1); 
+
+			var shopSlotsUnlocked = res[0].shopSlotsUnlocked;
+
+
+			var updateUserObj = {};
+			if (typeof shopSlotsUnlocked === 'undefined'){
+				shopSlotsUnlocked = defaultShopSlotsUnlocked;
+				updateUserObj.shopSlotsUnlocked = defaultShopSlotsUnlocked;
+			}
+			
+			//delete res[0].shopList; //Testing
+			if (typeof res[0].shopRefreshTimestamp === 'undefined' || typeof res[0].shopList === 'undefined' || res[0].shopRefreshTimestamp > lastMidnight){
+
+				console.log("REFRESHING STORE BECAUSE " + res[0].shopRefreshTimestamp + "IS LESS THAN " + lastMidnight)
+				updateUserObj.shopRefreshTimestamp = new Date();
+				
+				shopList = getNewUserShopList(shopSlotsUnlocked);
+				updateUserObj.shopList = shopList;
+			}
+
+			if (Object.keys(updateUserObj).length > 0){
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, updateUserObj, async function(err, obj){
+				});
+			}
+
+			var clientShopList = transformToClientShop(shopList, nextMidnight);
+
+			console.log("RETURNING SHOP LIST FOR " + cognitoSub);
+			console.log(clientShopList);
+			cb({msg:"Successfully authenticated user, and got shop list", result:clientShopList});
+		}
+		else {
+			console.log("ERROR - COULD NOT FIND USER WHEN GETTING SHOP LIST FOR " + cognitoSub);
+			cb({msg: "Failed to get shopList for [" + cognitoSub + "] from DB", result:transformToClientShop([], new Date())});
+		}
+	});
+}
+
+function getNewUserShopList(shopSlotsUnlocked){
+	var newShopList = [];
+	for (var s = 0; s < shopSlotsUnlocked; s++){
+		newShopList.push(fullShopList[randomInt(2, fullShopList.length - 1)].id); //Random element from shop, starting with index 2 (to skip unlock and refresh)
+	}
+	if (shopSlotsUnlocked < maxShopSlotsUnlocked){
+		newShopList.push(fullShopList[1].id);
+	}
+	return newShopList;
+}
+
+function transformToClientShop(shopList, nextRefreshTime){ //shopList is list of id's
+	var clientShop = getEmptyClientShop();
+	clientShop.timer.time = Math.floor((nextRefreshTime - new Date()) / 1000); //Seconds until next refresh
+	clientShop.timer.resetPrice = resetPrice; //Seconds until next refresh
+
+	//transform from list of id's to full shop object
+	var clientShopList = [];
+	for (var i = 0; i < shopList.length; i++){
+		var shopItem = fullShopList.find(item => item.id == shopList[i]);
+		if (shopItem){
+			clientShopList.push(shopItem);
+		}
+	}
+	clientShop.shop = clientShopList;
+
+	return clientShop;
+}
+
+function getEmptyClientShop(){
+	return {
+		timer: {
+			time:0,
+			resetPrice: resetPrice
+		},
+		shop: []
+	};
+}
+
+var updateUserShopList = function(cognitoSub, obj) {
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {shopList: obj}, async function(err, obj){
+	});		
+}
+
+var getShopItem = function(id, cb){
+	dataAccess.dbFindAwait("RW_SHOPLIST", {id:id}, function(err,res){
+		if (res && res[0]){
+			cb(res[0]);
+		}
+		else{
+			console.log("ERROR - COULD NOT GET SHOP ITEM : " + id + "!!!");
+			cb(false);
+		}
+	});
+}
+
+
 
 ///////////////////////////////REQUEST FUNCTIONS////////////////////////////////
 var removeRequest = function(data){
@@ -732,10 +967,13 @@ module.exports.searchUserFromDB = searchUserFromDB;
 module.exports.dbUserUpdate = dbUserUpdate;
 module.exports.updateOnlineTimestampForUsers = updateOnlineTimestampForUsers;
 module.exports.updateOnlineTimestampForUser = updateOnlineTimestampForUser;
+module.exports.updateUserCustomization = updateUserCustomization;
 module.exports.updateUserCustomizations = updateUserCustomizations;
-module.exports.updateAllUserCustomizations = updateAllUserCustomizations;
 module.exports.getUserCustomizations = getUserCustomizations;
+module.exports.getUserCustomizationOptions = getUserCustomizationOptions;
 module.exports.defaultCustomizations = defaultCustomizations;
+module.exports.getShopItem = getShopItem;
+module.exports.getUserShopList = getUserShopList;
 module.exports.setPartyIdIfEmpty = setPartyIdIfEmpty;
 module.exports.updateServerUrlForUser = updateServerUrlForUser;
 module.exports.removeRequest = removeRequest;

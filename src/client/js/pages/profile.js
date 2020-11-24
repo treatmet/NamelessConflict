@@ -1,14 +1,18 @@
 page = "profile";
+var viewedProfileCognitoSub = "";
 var currentCustomizations = {};
 var displayAnimation = "";
 var displayTeam = "red";
 var customizationOptions = {};
+var shopOptions = {};
+var shopRefreshTimer = 0;
 
 initializePage();
 function initializePage(){
+    viewedProfileCognitoSub = getViewedProfileCognitoSub();
     showLocalElements();
 	populateProfilePage();
-	getTokenFromUrlParameterAndLogin(); 	
+	getTokenFromUrlParameterAndLogin();
 }
 
 function loginSuccess(){
@@ -27,18 +31,18 @@ function loginAlways(){
 }
 
 function checkViewedProfileIsFriendOrParty(){	
-    if (getViewedProfileCognitoSub() == cognitoSub)
+    if (viewedProfileCognitoSub == cognitoSub)
         return;
         
 	const params = {
 		callerCognitoSub:cognitoSub,
-		targetCognitoSub:getViewedProfileCognitoSub()
+		targetCognitoSub:viewedProfileCognitoSub
 	};
 
 	$.post('/getPlayerRelationship', params, function(data,status){
 		if (data.friends == true){
 			hide("addFriendButton");
-			show("removeFriendButton");								
+			show("removeFriendButton");		
 		}
 		else {
 			hide("removeFriendButton");											
@@ -48,7 +52,6 @@ function checkViewedProfileIsFriendOrParty(){
 }
 
 function updateKickInviteToPartyButtons(data){
-	var viewedProfileCognitoSub = getViewedProfileCognitoSub();
 	var isInParty = false;
 	for (var p = 0; p < data.party.length; p++){
 		if (viewedProfileCognitoSub == data.party[p].cognitoSub){
@@ -79,14 +82,15 @@ function getViewedProfileCognitoSub(){
 
 function populateProfilePage(){
 	const params = {
-		cognitoSub:getViewedProfileCognitoSub()
+		cognitoSub:viewedProfileCognitoSub
 	}
 	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){	
 		$.post('/getProfile', params, function(data,status){
             console.log("getProfilePage response from server:");
             console.log(data);		
 			if (!data.success){
-				document.getElementById("mainContent").innerHTML = '<div id="fullScreenError" class="sectionTitle">Invalid User</div>';
+                ///!!! Invalid user page constantly refreshes
+				document.getElementById("mainContent").innerHTML = '<div id="fullScreenError" class="sectionTitle">Invalid User Page</div>';
 			}
 			else { //Viewing valid player profile
 				var mainContentHTML = document.getElementById("mainContent").innerHTML;
@@ -94,34 +98,50 @@ function populateProfilePage(){
 					var regex = new RegExp("{{" + element + "}}","g");
 					mainContentHTML = mainContentHTML.replace(regex, data[element]);
 				}
-
-				document.getElementById("mainContent").innerHTML = mainContentHTML;
-                $.post('/getPlayerCustomizations', params, function(data,status){
-                    if (!data){
-                        alert("Error retrieving player customiaztions.");
+                $.get('/getUserCustomizations', params, function(data,status){
+                    console.log("GET USER CUSTOMIZATIONS RESPONSE:");
+                    console.log(data);
+                    if (!data.result){
+                        alert("Error retrieving user customiaztions.");
                     }
                     else { //Got customizations
-                        currentCustomizations = data;
+                        currentCustomizations = data.result;
                         cycleAppearance();
                     }
                 });
+				document.getElementById("mainContent").innerHTML = mainContentHTML;
 			}
 		});
 	}	
 }
 
 function showSelfProfileOptions(){
-    if (getViewedProfileCognitoSub() == cognitoSub && cognitoSub != "") {
+    if (viewedProfileCognitoSub == cognitoSub && cognitoSub != "") {
+        show("appearanceOptions");			
+        show("shopCustomizeToggle");			
         show('updateUserForm');
         show('editUserButton');
         showSecondaySectionTitles();
         show("appearanceOptions");
-        $.get( '/getPlayerCustomizationOptions', function(data) {
-            console.log("GOT DATA:");
+        $.get( '/getUserCustomizationOptions', {cognitoSub:viewedProfileCognitoSub}, function(data) {
+            console.log("GET CUSTOMIZATION OPTIONS RESPONSE:");
             console.log(data);
-            customizationOptions = data;
+            if (data.result)
+                customizationOptions = data.result;
             populateCustomizationOptions();
         });
+        $.get( '/getUserShopList', {cognitoSub:viewedProfileCognitoSub}, function(data) {
+            console.log("GET SHOP LIST RESPONSE:");
+            console.log(data);
+            if (data.result)
+                shopOptions = data.result;
+
+            console.log("GOT SHOP OPTIONS:");
+            console.log(shopOptions);
+            console.log("CALLING POPULATRE SHOP OPTIONS");
+            populateShopOptions();
+        });
+        
     }
     else {
         showUnset("invitePlayerButtons");			
@@ -486,17 +506,17 @@ function toggleAppearanceMode(event) {
     event.currentTarget.className += " active";
 
     var appearanceOptions = document.getElementById("appearanceOptions");
-    var shopOptions = document.getElementById("shopOptions");
+    var shopOptionsDiv = document.getElementById("shopOptions");
 
-    if (appearanceOptions && shopOptions){
+    if (appearanceOptions && shopOptionsDiv){
         switch (event.currentTarget.id){
             case "customizeToggleIcon":
                 appearanceOptions.style.display = "block";
-                shopOptions.style.display = "none";
+                shopOptionsDiv.style.display = "none";
                 break;
             case "shopToggleIcon":
                 appearanceOptions.style.display = "none";
-                shopOptions.style.display = "block";            
+                shopOptionsDiv.style.display = "block";            
                 break;
             default:
                 log("Unknown appearance mode clicked...");
@@ -507,6 +527,37 @@ function toggleAppearanceMode(event) {
         log("DETECTED NONEXISTANT DIV");
     }    
 }
+
+function toggleShopSelected(event) {
+    var tablinks = document.getElementsByClassName("toggleIcons");
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    event.currentTarget.className += " active";
+
+    var appearanceOptions = document.getElementById("appearanceOptions");
+    var shopOptionsDiv = document.getElementById("shopOptions");
+
+    if (appearanceOptions && shopOptionsDiv){
+        switch (event.currentTarget.id){
+            case "customizeToggleIcon":
+                appearanceOptions.style.display = "block";
+                shopOptionsDiv.style.display = "none";
+                break;
+            case "shopToggleIcon":
+                appearanceOptions.style.display = "none";
+                shopOptionsDiv.style.display = "block";            
+                break;
+            default:
+                log("Unknown appearance mode clicked...");
+                break;
+        }
+    }
+    else {
+        log("DETECTED NONEXISTANT DIV");
+    }    
+}
+
 
 function showContent(event) {
     var tabcontent, tablinks;
@@ -568,120 +619,7 @@ function cycleAppearance(){
 
 function populateCustomizationOptions(){
     var options = customizationOptions;
-
-    options = {
-        red: {
-            hat: {
-                Type:[
-                    {
-                        id:"default",
-                        title:"None",
-                        text:"",
-                        img:"none.png"
-                    },
-                    {
-                        id:"halo",
-                        title:"Halo",
-                        text:"Conflict Progressed",
-                        img:"hat/halo.png"
-                    },
-                    {
-                        id:"skiMask",
-                        title:"Ski Mask",
-                        text:"Thug life",
-                        img:"hat/skiMask.png"
-                    },
-                    {
-                        id:"sunglasses",
-                        title:"Shades",
-                        text:"Cool as a cucumber",
-                        img:"hat/sunglasses.png"
-                    },
-                    {
-                        id:"googly",
-                        title:"Googly Eyes",
-                        text:"These eyes be poppin",
-                        img:"hat/googly.png"
-                    }
-                ]
-            },
-            hair: {
-                Type:[
-                    {
-                        id:"bald",
-                        title:"Bald",
-                        text:"",
-                        img:"hair/bald.png"
-                    },
-                    {
-                        id:"crew",
-                        title:"Crew Cut",
-                        text:"Military standard",
-                        img:"hair/crew.png"
-                    },
-                    {
-                        id:"afro",
-                        title:"Afro",
-                        text:"It's an afro",
-                        img:"hair/afro.png"
-                    },
-                    {
-                        id:"bigAfro",
-                        title:"Big Afro",
-                        text:"Let's bring back the 80s!",
-                        img:"hair/bigAfro.png"
-                    },
-                    {
-                        id:"cornrows",
-                        title:"Cornrows",
-                        text:"Hey now, don't be culturally appropriating the Greeks",
-                        img:"hair/cornrows.png"
-                    }                    
-                ],
-                Color:[
-                    {
-                        id:"#603913",
-                        title:"Brown",
-                        text:"It's brown"
-                    },
-                    {
-                        id:"#130900",
-                        title:"Black",
-                        text:"Jet black"
-                    },
-                    {
-                        id:"#fff3b3",
-                        title:"Slim Shady",
-                        text:"I'm back!"
-                    },
-                    {
-                        id:"#c6c6c6",
-                        title:"Grey",
-                        text:"Wise beyond your years"
-                    }
-                ]                
-            }
-        },
-        blue: {
-            hat: {
-                Type:[
-                    {
-                        id:"googly",
-                        title:"Googly Eyes",
-                        text:"These eyes be poppin",
-                        img:"hat/googly.png"
-                    }
-                ],
-                Color:[
-                    {
-                        id:"#0000FF",
-                        title:"Blue",
-                        text:"Rrrrrroyal blue"
-                    }
-                ]
-            }
-        }
-    }
+ 
 
 
     for (const category in options[displayTeam]){
@@ -692,23 +630,25 @@ function populateCustomizationOptions(){
             continue;
 
         for (const subCategory in options[displayTeam][category]){
-            var displaySubCategory = subCategory;
-            if (subCategory == "Type")
+            var displaySubCategory = capitalizeFirstLetter(subCategory);
+
+            if (subCategory == "type")
                 displaySubCategory = "";
 
             HTML += "<div class='shopCategory'>" + displaySubCategory + "</div>"
 
             for (const item in options[displayTeam][category][subCategory]){
                 var shopIconClass = "shopIcon";
-                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].id){
+                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasPng){
                     shopIconClass += " active";
                 }
 
-                if (subCategory == 'Type'){
-                    HTML += "<div class='shopItem'><div class='" + shopIconClass + "' id ='" + options[displayTeam][category][subCategory][item].id + "' onclick='customizationSelect(event, \"" + displayTeam + "\",\"" + category + displaySubCategory + "\")'><img src='/client/img/shopIcons/" + options[displayTeam][category][subCategory][item].img + "'></div>";
+                HTML += "<div class='shopItem' id ='" + options[displayTeam][category][subCategory][item].canvasPng + "' onclick='customizationSelect(event, \"" + displayTeam + "\",\"" + category + displaySubCategory + "\")'>";
+                if (subCategory == 'type'){
+                    HTML += "<div class='" + shopIconClass + "'><img src='/client/img/shopIcons/" + options[displayTeam][category][subCategory][item].icon + "'></div>";
                 }
-                else if(subCategory == 'Color'){
-                    HTML += "<div class='shopItem'><div class='" + shopIconClass + "' id='" + options[displayTeam][category][subCategory][item].id + "' onclick='customizationSelect(event, \"" + displayTeam + "\",\"" + category + displaySubCategory + "\")' style='background-color:" + options[displayTeam][category][subCategory][item].id + "'></div>";
+                else if(subCategory == 'color'){
+                    HTML += "<div class='" + shopIconClass + "' style='background-color:" + options[displayTeam][category][subCategory][item].icon + "'></div>";
                 }
                 HTML += "<div class='shopTitle'>" + options[displayTeam][category][subCategory][item].title + "</div><br>";
                 HTML += "<div class='shopText'>" + options[displayTeam][category][subCategory][item].text + "</div>";
@@ -719,9 +659,87 @@ function populateCustomizationOptions(){
     }
 }
 
+function populateShopOptions(){
 
-// event.currentTarget.innerHTML.toLowerCase()
-// tablinks[i].className = tablinks[i].className.replace(" active", "")
+
+    console.log("shopOptions OPTIONS:");
+    console.log(shopOptions);
+
+    var options = shopOptions;
+
+
+    shopRefreshTimer = options.timer.time;
+
+    var div = document.getElementById("shopOptions");
+    var HTML = "<div class='shopCategory'></div>";
+	HTML += "<div class='refreshItem' id='refresh' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
+	HTML += "<div class='shopIcon' id='default'><img src='/client/img/shopIcons/refresh.png'></div>";
+	HTML += "<div class='shopTitle'>Refresh Store Now</div><br><div class='shopText'>$" + numberWithCommas(options.timer.resetPrice) + "</div>";
+    HTML +=	"</div>";
+    HTML += "<div id='refreshTimer'>" + getRefreshTimerTextHTML() + "</div>";
+    HTML += "<div class='shopCategory'>Store</div>";
+
+    for (const item in options.shop){
+        HTML += "<div class='shopItem' id='" + options.shop[item].id + "' onclick='shopClick(\"" + options.shop[item].id + "\"," + options.shop[item].price + ")'>";
+        if (options.shop[item].subCategory == "color"){
+            HTML += "<div class='shopIcon' id='" + options.shop[item].color + "' style='background-color:" + options.shop[item].icon + "'></div>";
+        }
+        else {
+            HTML += "<div class='shopIcon' id ='" + options.shop[item].canvasPng + "'><img src='/client/img/shopIcons/" + options.shop[item].icon + "'></div>";
+        }
+
+        var rarityImg;
+        switch(options.shop[item].rarity){
+            case 0:
+                rarityImg = "rarities/common.png";
+                break;
+            case 1:
+                rarityImg = "rarities/rare.png";
+                break;
+            case 2:
+                rarityImg = "rarities/epic.png";
+                break;
+            case 3:
+                rarityImg = "rarities/legendary.png";
+                break;
+            default:            
+                break;
+        }
+
+        if (rarityImg)
+            HTML += "<div class='shopIconOverlay' id ='" + options.shop[item].id + "' onclick='shopClick(\"" + options.shop[item].id + "\"," + options.shop[item].price + ")'><img src='/client/img/shopIcons/" + rarityImg + "'></div>";
+        if (options.shop[item].title)
+            HTML += "<div class='shopTitle'>" + options.shop[item].title + "</div><br>";
+        if (options.shop[item].price)
+            HTML += "<div id='shopTextPrice' class='shopText'>$" + numberWithCommas(options.shop[item].price) + "</div><br>";
+
+        var displayCategory = "";
+        if (options.shop[item].category != "other"){
+            displayCategory += capitalizeFirstLetter(options.shop[item].category);
+            if (options.shop[item].subCategory != "type"){
+                displayCategory += (" " + capitalizeFirstLetter(options.shop[item].subCategory));
+            }
+        }
+        if (displayCategory.length > 0)
+            HTML += "<div id='shopTextCategory' class='shopText'>" + displayCategory + "</div>";
+
+        switch(options.shop[item].team){
+            case 1:
+                HTML += "<div class='shopText' style='color: #bf1f1f;'>| Red team item</div>";
+                break;
+            case 2:
+                HTML += "<div class='shopText' style='color: #476aeb;'>| Blue team item</div>";
+                break;
+            default:
+                break;
+        }       
+
+        HTML += "</div>"; 
+    }
+    HTML += "</div>"; 
+    div.innerHTML = HTML;    
+}
+
 
 
 
@@ -734,10 +752,234 @@ function customizationSelect(event, team, key){
         team:team,
         key:key,
         value:event.currentTarget.id,
-        cognitoSub:getViewedProfileCognitoSub()
+        cognitoSub:viewedProfileCognitoSub
     };
-	$.post('/setPlayerCustomizations', params, function(data,status){
-        log("/setPlayerCustomizations response:");
+	$.post('/setUserCustomizations', params, function(data,status){
+        log("/setUserCustomizations response:");
 		log(data.msg);
 	});
 }
+
+function shopClick(id, price){
+    logg("SHOP ID");
+    console.log(id);
+    logg("SHOP PRICE");
+    console.log(price);
+    if (userCash >= price){
+
+    }
+
+}
+
+function secondsToTimer(seconds){
+    if (seconds < 0 ){
+        seconds = 0;
+        window.location.reload();
+    }
+
+    var colon = seconds % 2 == 0 ? ":" : " ";
+
+    var hours = Math.floor(seconds / (60 * 60));
+    seconds -= hours * (60 * 60);
+    if (hours < 10){
+        hours = "0" + hours;
+    }
+
+    var minutes = Math.floor(seconds / (60));
+    seconds -= minutes * (60);
+    if (minutes < 10){
+        minutes = "0" + minutes;
+    }
+        
+    if (seconds < 10){
+        seconds = "0" + seconds;
+    }
+
+    var formattedTime = hours + colon + minutes + " " + seconds + "s";
+
+    return formattedTime;
+}
+
+function getRefreshTimerTextHTML(){
+    return '<div id="refreshTimerText">⟳ in </div><div id="refreshTimerTimer">' + secondsToTimer(shopRefreshTimer) + '</div>';
+}
+
+
+setInterval( 
+	function(){	
+		//Tick clock
+        shopRefreshTimer--;
+        document.getElementById('refreshTimer').innerHTML = getRefreshTimerTextHTML();
+	},
+	1000/1 // 1000/Ticks per second
+);
+
+//shopOptions example
+/*
+    var options = {
+        timer: {
+            time: 10000,
+            resetPrice: 10000
+        },
+        shop: [
+            {
+                id:"skiMaskHat",
+                title: "Ski Mask",
+                price: 5000,
+                category: "hat",
+                subCategory: "type",
+                color: "",
+                canvasPng: "skiMaskHat",
+                icon: "hat/skiMask.png",
+                team:0,
+                rarity: 0
+            },
+            {
+                id:"slimShadyHairColor",
+                title: "Slim Shady",
+                price: 5000,
+                category: "hair",
+                subCategory: "color",
+                color: "#fff3b3",
+                canvasPng: "",
+                icon: "#fff3b3",
+                team:1,
+                rarity: 1
+            },
+            {
+                id:"unlock",
+                title: "Unlock New Store Slot",
+                category: "other",
+                subCategory: "",
+                price: 10000,
+                icon: "locked.png",
+                color: "",
+                canvasPng: "",                
+                team:0,
+                rarity: 3
+            }
+        ]
+    };
+    */
+
+//Customization Options example
+/*
+   options = {
+        red: {
+            hat: {
+                type:[
+                    {
+                        canvasPng:"noneHat",
+                        title:"None",
+                        text:"",
+                        icon:"none.png"
+                    },
+                    {
+                        canvasPng:"haloHat",
+                        title:"Halo",
+                        text:"Conflict Progressed",
+                        icon:"hat/halo.png"
+                    },
+                    {
+                        canvasPng:"skiMaskHat",
+                        title:"Ski Mask",
+                        text:"Thug life",
+                        icon:"hat/skiMask.png"
+                    },
+                    {
+                        canvasPng:"sunglassesHat",
+                        title:"Shades",
+                        text:"Cool as a cucumber",
+                        icon:"hat/sunglasses.png"
+                    },
+                    {
+                        canvasPng:"googlyHat",
+                        title:"Googly Eyes",
+                        text:"These eyes be poppin",
+                        icon:"hat/googly.png"
+                    }
+                ]
+            },
+            hair: {
+                type:[
+                    {
+                        canvasPng:"bald",
+                        title:"Bald",
+                        text:"",
+                        icon:"hair/bald.png"
+                    },
+                    {
+                        canvasPng:"crewHair",
+                        title:"Crew Cut",
+                        text:"Military standard",
+                        icon:"hair/crew.png"
+                    },
+                    {
+                        canvasPng:"afroHair",
+                        title:"Afro",
+                        text:"It's an afro",
+                        icon:"hair/afro.png"
+                    },
+                    {
+                        canvasPng:"bigAfro",
+                        title:"Big Afro",
+                        text:"Let's bring back the 80s!",
+                        icon:"hair/bigAfro.png"
+                    },
+                    {
+                        canvasPng:"cornrowsHair",
+                        title:"Cornrows",
+                        text:"Hey now, don't be culturally appropriating the Greeks",
+                        icon:"hair/cornrows.png"
+                    }                    
+                ],
+                color:[
+                    {
+                        color:"#603913",
+                        title:"Brown",
+                        text:"It's brown",
+                        icon:"#603913"
+                    },
+                    {
+                        color:"#130900",
+                        title:"Black",
+                        text:"Jet black",
+                        icon:"#130900"
+                    },
+                    {
+                        color:"#fff3b3",
+                        title:"Slim Shady",
+                        text:"I'm back!",
+                        icon:"#fff3b3"
+                    },
+                    {
+                        color:"#c6c6c6",
+                        title:"Grey",
+                        text:"Wise beyond your years",
+                        icon:"#c6c6c6"
+                    }
+                ]                
+            }
+        },
+        blue: {
+            hat: {
+                type:[
+                    {
+                        canvasPng:"googly",
+                        title:"Googly Eyes",
+                        text:"These eyes be poppin",
+                        icon:"hat/googly.png"
+                    }
+                ],
+                color:[
+                    {
+                        color:"#0000FF",
+                        title:"Blue",
+                        text:"Rrrrrroyal blue",
+                        icon:"#0000FF"
+                    }
+                ]
+            }
+        }
+    }
+*/

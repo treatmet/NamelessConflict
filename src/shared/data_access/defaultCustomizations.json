@@ -1,8 +1,8 @@
 {
 	"red": {
 		"nameColor": "#000",
-		"hat": "default",
-		"hair": "crew",
+		"hat": "noneHat",
+		"hair": "crewHair",
 		"hairColor": "#7f5227",
 		"shirt": "default",
 		"shirtColor": "#bf421c",
@@ -21,8 +21,8 @@
 	},
 	"blue": {
 		"nameColor": "#000",
-		"hat": "default",
-		"hair": "crew",
+		"hat": "noneHat",
+		"hair": "crewHair",
 		"hairColor": "#381f07",
 		"shirt": "default",
 		"shirtColor": "#d54b14",

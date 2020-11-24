@@ -58,6 +58,26 @@ div#titleText a {
     font-size: 16;
 }
 
+#cashHeaderDisplay{
+    size: 12px;
+    font-size: 16;
+    display: inline-block;
+}
+
+#cashHeaderText{
+    display: inline-block;
+    color:#11e448;
+}
+
+#cashHeaderValue{
+    display: inline-block;
+    color:#11e448;
+}
+
+#cashHeaderDivider{
+    display: inline-block;
+}
+
 #userWelcomeText a {
     color: white;
     text-decoration: none;
@@ -478,6 +498,7 @@ button#feedbackH {
 
 div#playerRankIcon {
     text-align: center;
+    margin-top: 5px;
 }
 
 #playerRankIcon img {
@@ -846,6 +867,7 @@ div#shopCustomizeToggle {
     width: 100%;
     display: inline-block;
     margin-bottom: 5px;
+    display: none;
 }
 
 .toggleIcons {
@@ -877,7 +899,7 @@ div#shopCustomizeToggle {
 }
 
 #shopToggleIcon {
-    background-color: #1c3511;
+    background-color: #064536;
 }
 
 #customizeToggleIcon {
@@ -911,36 +933,41 @@ div#shopCustomizeToggle {
 
 #shopOptions {
     padding-left: 12px;
-    padding-top:6px;
     /*border-left: 1px solid #ccc;
     border-bottom: 1px solid #ccc;*/
-    height: calc(100% - 340px);
+    height: calc(100% - 250px);
     overflow-y: auto;
     overflow-x: hidden;
     border-top: 1px solid white;
     border-bottom: 1px solid white;
     background-color: #263320;
+    background-image: url("/client/img/shopIcons/background-small.png");
+    /* background-position: center center; */
+    /* background-attachment: fixed; */
 }
 
 div#refreshTimer {
     float: right;
     display: inline-block;
     margin-top: 5px;
-    font-weight: bold;
     padding: 5px;
     background-color: #aa0808;
     border: 1px white solid;
+    width: 140px;
+    font-weight: bold;
 }
 
 #refreshTimerText {
     display: inline-block;
     float: left;
-    margin-right: 4px;
 }
 
 #refreshTimerTimer {
     display: inline-block;
     float: left;
+    margin-left: 5px;
+    font-family: 'Roboto Mono';
+    font-size: 16px;
 }
 
 
@@ -949,6 +976,17 @@ div#refreshTimer {
     float: left;
     margin-top: 5px;
     margin-left: 15px;
+    position: relative; 
+    left: 0; 
+    top: 0;
+    width: 250px;
+    padding:1px;
+}
+
+.refreshItem:hover {
+    background-image: url("/client/img/white-trans.png"); 
+    background-size: cover;
+    cursor: pointer;
 }
 
 div#appearance {
@@ -1002,6 +1040,7 @@ div#appearance {
 /* Customization Tabs */
 div#appearanceOptions {
     width: 100%;
+    display: none;
 }
 
 .tab {
@@ -1039,7 +1078,7 @@ div#appearanceOptions {
 
 .tabcontent {
     display: none;
-    padding: 6px 12px;
+    padding-left: 12px;
     /*border-left: 1px solid #ccc;
     border-bottom: 1px solid #ccc;*/
     height: calc(100% - 340px);
@@ -1047,13 +1086,6 @@ div#appearanceOptions {
     overflow-x: hidden;
 }
 
-.shopItem {
-    margin: auto;
-    float: left;
-    width: 100%;
-    margin-top: 5px;
-    margin-left: 15px;
-}
 
 .shopCategory {
     float: left;
@@ -1064,6 +1096,25 @@ div#appearanceOptions {
     text-align: left;
 }
 
+.shopItem {
+    margin: auto;
+    float: left;
+    width: 100%;
+    margin-top: 5px;
+    margin-left: 15px;
+    position: relative; 
+    left: 0; 
+    top: 0;
+    padding:1px;    
+}
+
+.shopItem:hover {
+    background-image: url("/client/img/white-trans.png"); 
+    background-size: cover;
+    cursor: pointer;
+}
+
+
 .shopTitle {
     float: left;
     margin-right: auto;
@@ -1073,6 +1124,9 @@ div#appearanceOptions {
 .shopText {
     float: left;
     font-size: 14px;
+    max-width: 200px;
+    text-align: left;
+    margin-right: 5px;
 }
 
 .shopIcon {
@@ -1083,6 +1137,15 @@ div#appearanceOptions {
     border: 1px solid black;
     box-sizing: border-box;
     cursor: pointer;
+    position: relative; 
+    left: 0; 
+    top: 0;
+}
+
+.shopIconOverlay {
+    position: absolute; 
+    left: 0; 
+    top: 0;
 }
 
 .shopIcon.active {
@@ -1090,14 +1153,15 @@ div#appearanceOptions {
     box-sizing: border-box;
 }
 
-.shopIcon:hover {
+/* .shopIcon:hover {
     width: 74px;
     height: 74px;
     float: left;
     margin-right: 10px;
     border: 2px solid rgb(207, 207, 207);
     box-sizing: border-box;
-}
+} */
+
 
 .shopIcon img {
     width: 100%;

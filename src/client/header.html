@@ -4,6 +4,7 @@
 <link href='https://fonts.googleapis.com/css?family=Electrolize' rel='stylesheet'>
 <link href='https://fonts.googleapis.com/css?family=Iceberg' rel='stylesheet'>
 <link href='https://fonts.googleapis.com/css?family=Iceland' rel='stylesheet'>
+<link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet'>
 <link type="text/css" rel="stylesheet" href="/client/style/style.css">
 
 <script src="/client/js/socket.io-1.4.5.js"></script>
@@ -21,15 +22,22 @@
 			RW
 		</div>
 		
+
 		<div id="loginForm">
+			<div id="cashHeaderDisplay" style="display: none;">
+					<div id="cashHeaderText">Cash: </div>
+					<div id="cashHeaderValue">$0</div>
+					<div id="cashHeaderDivider">|</div>
+			</div>
 			<div id="userWelcomeText" style="display: none;">Not logged in</div>
-			<input id="JWToken" type="text" value="" class="textBox" style="display: none; color: #8c8c8c;  margin:3px;">
 			<button id="logOutH" class="RWButton" style="display: none" onclick="logOutClick()">Log Out</button>
 			<button id="logInH" class="RWButton" style="display: none" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://rw.treatmetcalf.com/';">Log In</button>
 			<button id="createAccountH" class="RWButton" style="display: none" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://rw.treatmetcalf.com/';">Create Account</button>
 			<button id="playNowH" class="RWButton" style="display: none" onclick="getJoinableServer({server:'any'})">Play Now!</button>
+			<!--
 			<button id="feedbackH" class="RWButton" style="display:unset" onclick="window.open('https://tinyurl.com/yar65nbe','_blank')">Give Feedback</button>
 			<button id="localPlayNow" class="RWButton" style="display: none" onclick="localClick()">Local Server</button>
+			-->
 		</div>
 	</div>
 	<div id="friendsBar">

@@ -341,6 +341,7 @@ router.post('/validateToken', async function (req, res) {
 	dataAccessFunctions.getUserFromDB(httpResult.cognitoSub, function(mongoRes){
 		if (mongoRes && mongoRes.username){
 			httpResult.username = mongoRes.username;
+			httpResult.cash = mongoRes.cash;
 			res.send(httpResult);
 		}
 		else {
@@ -461,30 +462,38 @@ router.post('/logOut', async function (req, res) {
 	res.send({msg:"Logout - Successfully removed auth cookies"});
 });
 
-router.post('/getPlayerCustomizations', async function (req, res) {
-	console.log("GETTING CUSTOMIZATIONS FOR: " + req.body.cognitoSub);
+router.get('/getUserCustomizations', async function (req, res) {
+	//Transform to get, cog will be at req.query.cognitoSub
+	console.log("GETTING CUSTOMIZATIONS FOR: " + req.query.cognitoSub);
 	console.log(req.body);
-	dataAccessFunctions.getUserCustomizations(req.body.cognitoSub, function(dbResults){
+	dataAccessFunctions.getUserCustomizations(req.query.cognitoSub, function(dbResults){
 		res.status(200);
 		res.send(dbResults);
 	});
 });
 
-router.get('/getPlayerCustomizationOptions', async function(req, res) {
+router.get('/getUserCustomizationOptions', async function(req, res) {
+	console.log("/getUserCustomizationOptions with BODY:");
+	console.log(req.query.cognitoSub);
 	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
-	//authorizedUser.cognitoSub
-	
-	
-
-
-	res.status(200);
-	res.send("data");
+	logg("GETTING USER CUSTOMIZATIONS FOR PAGE:" + req.query.cognitoSub + ". REQUEST FROM USER:" + authorizedUser.cognitoSub);
+	if (authorizedUser.cognitoSub == req.query.cognitoSub){
+		dataAccessFunctions.getUserCustomizationOptions(req.query.cognitoSub, function(dbResults){
+			res.status(200);
+			res.send(dbResults);
+		});
+	}
+	else {
+		res.status(200);
+		var msg = "Did not get userCustomizationOptions because User's cognitoSub[" + authorizedUser.cognitoSub + "] did not match viewed profile cognitoSub[" + req.query.cognitoSub + "]";
+		res.send({msg:msg, result:false});
+	}
 });
 
-router.post('/setPlayerCustomizations', async function (req, res) {
+router.post('/setUserCustomizations', async function (req, res) {
 	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
 	
-	console.log("SETTING CUSTOMIZATIONS FOR: " + authorizedUser.cognitoSub);
+	console.log("SETTING CUSTOMIZATIONS FOR: " + req.body.cognitoSub + ". REQUESTING USER:" + authorizedUser.cognitoSub);
 	console.log(req.body);
 	if (authorizedUser.cognitoSub == req.body.cognitoSub && typeof req.body.team != 'undefined' && typeof req.body.key != 'undefined' && typeof req.body.value != 'undefined'){
 		dataAccessFunctions.updateUserCustomizations(authorizedUser.cognitoSub, req.body.team, req.body.key, req.body.value);
@@ -496,6 +505,24 @@ router.post('/setPlayerCustomizations', async function (req, res) {
 
 	res.status(200);
 	res.send(response);
+});
+
+router.get('/getUserShopList', async function(req, res) {
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	console.log("/getUserShopList ENDPOINT");
+	logg("GETTING USER SHOP LIST FOR PAGE:" + req.query.cognitoSub + ". REQUEST FROM USER:" + authorizedUser.cognitoSub);
+	if (authorizedUser.cognitoSub == req.query.cognitoSub){
+		dataAccessFunctions.getUserShopList(authorizedUser.cognitoSub, function(userShopList){
+			res.status(200);
+			res.send(userShopList);
+		});
+
+	}
+	else {
+		res.status(200);
+		var msg = "Did not get userShopList because User's cognitoSub[" + authorizedUser.cognitoSub + "] did not match viewed profile cognitoSub[" + req.query.cognitoSub + "]";
+		res.send({msg:msg, result:false});
+	}
 });
 
 

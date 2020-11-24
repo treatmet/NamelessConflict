@@ -26,7 +26,7 @@ var reinitStream = function(){
 	  bucket: config.s3LoggingBucket,
 	  access_key_id: config.awsAccessKeyId,
 	  secret_access_key: config.awsSecretAccessKey,
-	  maxRetrides: 15,
+	  maxRetries: 15,
 	  folder: reinitYear + '_' + reinitMonth + '_' + reinitDate,
 	  name_format: name_format,
 	  max_file_size: 500000000,

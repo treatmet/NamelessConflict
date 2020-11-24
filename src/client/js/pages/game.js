@@ -4937,16 +4937,7 @@ function hexToHSL(H) {
 	return "hsl(" + h + "," + s + "%," + l + "%)";
 }
   
-function numberWithCommas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
 
-function removeIndexesFromArray(array, indexes){
-	for (var i = 0; i < indexes.length; i++){
-		array.splice(indexes[i], 1);
-	}
-	return array;
-}
 
 Object.size = function(obj) {
     var size = 0, key;
