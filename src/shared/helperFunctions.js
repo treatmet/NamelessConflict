@@ -34,6 +34,13 @@ global.getCurrentPlayersFromUsers = function(users){
 	return players;
 }
 
+global.removeDuplicates = function(array){
+	array = array.filter((item, index) => {
+		return array.indexOf(item) === index;
+	});
+	return array;
+}
+
 global.removeIndexesFromArray = function(array, indexes){
 	for (var i = indexes.length-1; i >= 0; i--){
 		array.splice(indexes[i],1);

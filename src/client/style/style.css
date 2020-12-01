@@ -951,7 +951,7 @@ div#refreshTimer {
     display: inline-block;
     margin-top: 5px;
     padding: 5px;
-    background-color: #aa0808;
+    /* background-color: #aa0808; */
     border: 1px white solid;
     width: 140px;
     font-weight: bold;
@@ -1099,17 +1099,20 @@ div#appearanceOptions {
 .shopItem {
     margin: auto;
     float: left;
-    width: 100%;
+    width: 90%;
     margin-top: 5px;
     margin-left: 15px;
     position: relative; 
     left: 0; 
     top: 0;
     padding:1px;    
+    border: 1px solid transparent;
 }
 
 .shopItem:hover {
-    background-image: url("/client/img/white-trans.png"); 
+    /* background-image: url("/client/img/white-trans.png");  */
+    background-image: url("/client/img/black-trans.png"); 
+    border: 1px solid white;
     background-size: cover;
     cursor: pointer;
 }
@@ -1117,8 +1120,8 @@ div#appearanceOptions {
 
 .shopTitle {
     float: left;
-    margin-right: auto;
-    font-weight: bold;
+    margin-right: 10px;
+    font-weight: bold;    
 }
 
 .shopText {

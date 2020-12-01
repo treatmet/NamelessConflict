@@ -477,7 +477,7 @@ function logOutClick(){
 function showLocalElements(){
   $(document).ready(function() {
     if (window.location.href.indexOf("localhost") > -1) {
-      document.getElementById("localPlayNow").style.display = "";
+      showUnset("localPlayNow");
     }
   });
 }
@@ -632,7 +632,20 @@ setInterval(
 	1000/1 //Ticks per second
 );
 
-//Shared Functions
+//Shared Functions handy handy
+function getCountInArray(string, array){
+    var count = 0;
+    if (!array || !array.length)
+        return count;
+    
+    for (var i = 0; i < array.length; i++){
+        if (array[i] == string)
+            count++;
+    }
+
+	return count;
+}
+
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }

@@ -55,7 +55,7 @@
 		"text":"For protection against windburn, or identification",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":1,
 		"icon":"hat/skiMask.png",
 		"canvasPngOrColor":"skiMaskHat"
 	},
@@ -67,7 +67,7 @@
 		"text":"Thug life",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":1,
 		"icon":"hat/sunglasses.png",
 		"canvasPngOrColor":"sunglassesHat"
 	},
@@ -79,7 +79,7 @@
 		"text":"These eyes be poppin",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":1,
 		"icon":"hat/googly.png",
 		"canvasPngOrColor":"googlyHat"
 	},
@@ -91,7 +91,7 @@
 		"text":"beautiful",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":1,
 		"icon":"hair/bald.png",
 		"canvasPngOrColor":"baldHair"
 	},
@@ -103,7 +103,7 @@
 		"text":"Military standard",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":1,
 		"icon":"hair/crew.png",
 		"canvasPngOrColor":"crewHair"
 	},
@@ -115,7 +115,7 @@
 		"text":"It's complicated",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":2,
 		"icon":"hair/afro.png",
 		"canvasPngOrColor":"afroHair"
 	},
@@ -127,7 +127,7 @@
 		"text":"Bring back the 80's",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":2,
 		"icon":"hair/bigAfro.png",
 		"canvasPngOrColor":"bigAfroHair"
 	},
@@ -139,9 +139,9 @@
 		"text":"Don't be culturally appropriating the Greeks",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":2,
 		"icon":"hair/cornrows.png",
-		"canvasPngOrColor":"bigAfroHair"
+		"canvasPngOrColor":"cornrowsHair"
 	},
 	{
 		"id":"brownHairColor",
@@ -151,7 +151,7 @@
 		"text":"",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":3,
 		"icon":"#603913",
 		"canvasPngOrColor":"#603913"
 	},
@@ -163,7 +163,7 @@
 		"text":"",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":3,
 		"icon":"#130900",
 		"canvasPngOrColor":"#130900"
 	},
@@ -175,7 +175,7 @@
 		"text":"I'm back",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":3,
 		"icon":"#fff3b3",
 		"canvasPngOrColor":"#fff3b3"
 	},
@@ -187,7 +187,7 @@
 		"text":"",
 		"price": 5000,
 		"team":0,
-		"rarity":0,
+		"rarity":3,
 		"icon":"#c6c6c6",
 		"canvasPngOrColor":"#c6c6c6"
 	}

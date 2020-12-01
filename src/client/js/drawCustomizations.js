@@ -277,7 +277,7 @@ function drawCustomizations(customizations, id, cb){
 					case "shell":
 						break;
 					case "hair":
-						if (customizations[teams[t]].hair == "bald" || customizations[teams[t]].hat == "skiMask")
+						if (customizations[teams[t]].hair == "baldHair" || customizations[teams[t]].hat == "skiMask")
 							continue;
 						color = customizations[teams[t]].hairColor;
 						type = customizations[teams[t]].hair;

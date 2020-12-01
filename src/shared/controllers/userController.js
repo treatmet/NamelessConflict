@@ -496,7 +496,7 @@ router.post('/setUserCustomizations', async function (req, res) {
 	console.log("SETTING CUSTOMIZATIONS FOR: " + req.body.cognitoSub + ". REQUESTING USER:" + authorizedUser.cognitoSub);
 	console.log(req.body);
 	if (authorizedUser.cognitoSub == req.body.cognitoSub && typeof req.body.team != 'undefined' && typeof req.body.key != 'undefined' && typeof req.body.value != 'undefined'){
-		dataAccessFunctions.updateUserCustomizations(authorizedUser.cognitoSub, req.body.team, req.body.key, req.body.value);
+		dataAccessFunctions.setUserCustomization(authorizedUser.cognitoSub, req.body.team, req.body.key, req.body.value);
 		response = {msg:"Successfully Updated User Customizations"};
 	}
 	else {
@@ -522,6 +522,27 @@ router.get('/getUserShopList', async function(req, res) {
 		res.status(200);
 		var msg = "Did not get userShopList because User's cognitoSub[" + authorizedUser.cognitoSub + "] did not match viewed profile cognitoSub[" + req.query.cognitoSub + "]";
 		res.send({msg:msg, result:false});
+	}
+});
+
+router.post('/buyItem', async function (req, res) {
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	var authorizedUserCognitoSub = authorizedUser.cognitoSub;
+	var viewedProfileCognitoSub = req.body.viewedProfileCognitoSub;
+	var itemId = req.body.itemId;
+
+	logg("/buyItem Endpoint")
+	logg("BUYING ITEM FOR USER: " + viewedProfileCognitoSub + ". REQUESTING USER:" + authorizedUserCognitoSub + ". TRYING TO BUY: " + itemId);
+	if (authorizedUserCognitoSub && authorizedUserCognitoSub == viewedProfileCognitoSub && typeof itemId != 'undefined'){
+		dataAccessFunctions.buyItem({cognitoSub:authorizedUserCognitoSub, itemId:itemId}, function(dbBuyResponse){
+			res.status(200);
+			res.send(dbBuyResponse);
+		});		
+	}
+	else {
+		response = {msg:"Failed to Purchase item. Either the user was not authorized, or insuficient data was provided."};
+		res.status(200);
+		res.send(response);
 	}
 });
 

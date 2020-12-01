@@ -3,7 +3,6 @@ const ObjectId = require('mongodb').ObjectID;
 
 var defaultCustomizations = require("./defaultCustomizations.json");
 var defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
-var defaultShopList = require("./defaultPlayerShopList.json");
 
 var fullShopList = require("./shopList.json");
 
@@ -248,7 +247,7 @@ var getUserCustomizations = function(cognitoSub,cb){
 			if (typeof customizations === 'undefined' || typeof res[0].customizations.red === 'undefined'){
 				logg("ERROR - COULD NOT GET CUSTOMIZATIONS FOR " + cognitoSub);
 				customizations = defaultCustomizations;
-				updateUserCustomizations(cognitoSub, customizations);
+				setUserCustomizations(cognitoSub, customizations);
 			}
 			console.log("RETURNING CUSTOMIZATIONS FOR " + cognitoSub);
 			console.log(customizations);
@@ -261,15 +260,17 @@ var getUserCustomizations = function(cognitoSub,cb){
 	});
 }
 
-var updateUserCustomization = function(cognitoSub, team, key, value) {
+var setUserCustomization = function(cognitoSub, team, key, value) {
 	getUserCustomizations(cognitoSub, function(customizations){
-		customizations[team][key] = value;
-		dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: customizations}, async function(err, obj){
-		});		
+		customizations.result[team][key] = value;
+		if (customizations.result){
+			dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: customizations.result}, async function(err, obj){
+			});		
+		}
 	});
 }
 
-var updateUserCustomizations = function(cognitoSub, obj) {
+var setUserCustomizations = function(cognitoSub, obj) {
 	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: obj}, async function(err, obj){
 	});		
 }
@@ -298,9 +299,14 @@ var getUserCustomizationOptions = function(cognitoSub,cb){
 
 function transformToClientCustomizationOptions(customizationOptions){ //customizationOptions = list of strings (id of shopList)
 	var clientOptions = getEmptyClientCustomizationOptions();
-  	
+	clientOptions.fullList = customizationOptions;
+
+
+  	customizationOptions = removeDuplicates(customizationOptions);
+
 	for (var o = 0; o < customizationOptions.length; o++){
-		var shopItem = fullShopList.find(item => item.id == customizationOptions[o]); //LINQ
+		var shopItem = getShopItem(customizationOptions[o]); 
+
 		if (!shopItem)
 			continue;
 
@@ -313,9 +319,11 @@ function transformToClientCustomizationOptions(customizationOptions){ //customiz
 		}
 
 		var customizationOption = {
+			id:shopItem.id,
 			title: shopItem.title,
 			text: shopItem.text,
-			icon: shopItem.icon
+			icon: shopItem.icon,
+			rarity: shopItem.rarity
 		};
 		customizationOption[optionDataType] = shopItem.canvasPngOrColor;		
 
@@ -407,7 +415,9 @@ var getUserShopList = function(cognitoSub,cb){
 			
 			var lastMidnight = new Date();
 			lastMidnight.setUTCHours(0,0,0,0);
-			var nextMidnight = lastMidnight.setUTCDate(lastMidnight.getUTCDate() + 1); 
+			var nextMidnight = new Date();
+			nextMidnight.setUTCHours(0,0,0,0);
+			nextMidnight.setUTCDate(nextMidnight.getUTCDate() + 1); 
 
 			var shopSlotsUnlocked = res[0].shopSlotsUnlocked;
 
@@ -419,13 +429,16 @@ var getUserShopList = function(cognitoSub,cb){
 			}
 			
 			//delete res[0].shopList; //Testing
-			if (typeof res[0].shopRefreshTimestamp === 'undefined' || typeof res[0].shopList === 'undefined' || res[0].shopRefreshTimestamp > lastMidnight){
-
-				console.log("REFRESHING STORE BECAUSE " + res[0].shopRefreshTimestamp + "IS LESS THAN " + lastMidnight)
+			lastMidnight = nextMidnight; //Testing
+			if (typeof res[0].shopRefreshTimestamp === 'undefined' || typeof res[0].shopList === 'undefined' || res[0].shopRefreshTimestamp < lastMidnight){				
+				console.log("REFRESHING STORE BECAUSE LAST REFRESH [" + res[0].shopRefreshTimestamp.toUTCString() + "] IS LESS THAN LASTMIDNIGHT[" + lastMidnight.toUTCString() + "]. CURRENT TIME IS " + new Date().toUTCString() + ". ADDING...")
 				updateUserObj.shopRefreshTimestamp = new Date();
 				
 				shopList = getNewUserShopList(shopSlotsUnlocked);
 				updateUserObj.shopList = shopList;
+			}
+			else {
+				console.log("NOTTT REFRESHING STORE BECAUSE LAST REFRESH [" + res[0].shopRefreshTimestamp.toUTCString() + "] IS GREATER THAN LASTMIDNIGHT[" + lastMidnight.toUTCString() + "]. CURRENT TIME IS " + new Date().toUTCString())
 			}
 
 			if (Object.keys(updateUserObj).length > 0){
@@ -448,8 +461,24 @@ var getUserShopList = function(cognitoSub,cb){
 
 function getNewUserShopList(shopSlotsUnlocked){
 	var newShopList = [];
+
 	for (var s = 0; s < shopSlotsUnlocked; s++){
-		newShopList.push(fullShopList[randomInt(2, fullShopList.length - 1)].id); //Random element from shop, starting with index 2 (to skip unlock and refresh)
+
+		var shopIndex = 0;
+		while (true){
+			shopIndex = randomInt(2, fullShopList.length - 1);
+			console.log("IS " + fullShopList[shopIndex].id + " WHITHIN");
+			console.log(defaultCustomizationOptions);
+
+			//New shop rules
+			if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
+				if (newShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item already added to new shop?
+					break;				
+				}
+			}
+		}
+
+		newShopList.push(fullShopList[shopIndex].id); //Random element from shop, starting with index 2 (to skip unlock and refresh)
 	}
 	if (shopSlotsUnlocked < maxShopSlotsUnlocked){
 		newShopList.push(fullShopList[1].id);
@@ -490,14 +519,61 @@ var updateUserShopList = function(cognitoSub, obj) {
 	});		
 }
 
-var getShopItem = function(id, cb){
-	dataAccess.dbFindAwait("RW_SHOPLIST", {id:id}, function(err,res){
+var getShopItem = function(itemId){
+	var shopItem = fullShopList.find(item => item.id == itemId); //LINQ
+	if (!shopItem){
+		shopItem = false;
+	}
+	return shopItem;
+}
+
+var buyItem = function(data, cb){
+	var cognitoSub = data.cognitoSub;
+	var itemId = data.itemId;
+	var price = getShopItem(itemId).price;
+	var msg = "";
+
+	//price = 100000000000;
+
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
-			cb(res[0]);
+			if (res[0].cash >= price){
+				//purchase item
+				dataAccess.dbUpdateAwait("RW_USER", "inc", {cognitoSub: cognitoSub}, {cash: -price}, async function(err, obj){
+					if (!err){
+						var updatedCustomizationOptions = res[0].customizationOptions
+						updatedCustomizationOptions.push(itemId);
+						dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizationOptions: updatedCustomizationOptions}, async function(err2, obj){
+							if (!err2){
+								msg = "Successful purchase";
+								logg(msg);
+								cb({msg:msg, result:true});
+							}
+							else {
+								msg = "Database error during purchase. Please try again.";
+								logg(msg);
+								cb({msg:msg, result:false});						
+							}
+						});
+
+					}
+					else {
+						msg = "Database error during purchase. Please try again. You should not have been charged any money.";
+						logg(msg);
+						cb({msg:msg, result:false});						
+					}
+				});		
+			}
+			else {
+				msg = "ERROR - User[" + cognitoSub +  "] does not have enough cash[" + res[0].cash + "] to purchase [" + itemId + "] for [" + price + "]";
+				logg(msg);
+				cb({msg:msg, result:false});				
+			}
 		}
 		else{
-			console.log("ERROR - COULD NOT GET SHOP ITEM : " + id + "!!!");
-			cb(false);
+			msg = "ERROR - COULD NOT FIND USER : " + cognitoSub + "!!!";
+			logg(msg);
+			cb({msg:msg, result:false});
 		}
 	});
 }
@@ -967,13 +1043,14 @@ module.exports.searchUserFromDB = searchUserFromDB;
 module.exports.dbUserUpdate = dbUserUpdate;
 module.exports.updateOnlineTimestampForUsers = updateOnlineTimestampForUsers;
 module.exports.updateOnlineTimestampForUser = updateOnlineTimestampForUser;
-module.exports.updateUserCustomization = updateUserCustomization;
-module.exports.updateUserCustomizations = updateUserCustomizations;
+module.exports.setUserCustomization = setUserCustomization;
+module.exports.setUserCustomizations = setUserCustomizations;
 module.exports.getUserCustomizations = getUserCustomizations;
 module.exports.getUserCustomizationOptions = getUserCustomizationOptions;
 module.exports.defaultCustomizations = defaultCustomizations;
 module.exports.getShopItem = getShopItem;
 module.exports.getUserShopList = getUserShopList;
+module.exports.buyItem = buyItem;
 module.exports.setPartyIdIfEmpty = setPartyIdIfEmpty;
 module.exports.updateServerUrlForUser = updateServerUrlForUser;
 module.exports.removeRequest = removeRequest;
