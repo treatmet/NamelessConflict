@@ -419,8 +419,7 @@ var getUserShopList = function(cognitoSub,cb){
 			nextMidnight.setUTCHours(0,0,0,0);
 			nextMidnight.setUTCDate(nextMidnight.getUTCDate() + 1); 
 
-			var shopSlotsUnlocked = res[0].shopSlotsUnlocked;
-
+			var shopSlotsUnlocked = defaultShopSlotsUnlocked + getCountInArray("unlock", res[0].customizationOptions);
 
 			var updateUserObj = {};
 			if (typeof shopSlotsUnlocked === 'undefined'){
@@ -429,7 +428,7 @@ var getUserShopList = function(cognitoSub,cb){
 			}
 			
 			//delete res[0].shopList; //Testing
-			lastMidnight = nextMidnight; //Testing
+			//lastMidnight = nextMidnight; //Testing
 			if (typeof res[0].shopRefreshTimestamp === 'undefined' || typeof res[0].shopList === 'undefined' || res[0].shopRefreshTimestamp < lastMidnight){				
 				console.log("REFRESHING STORE BECAUSE LAST REFRESH [" + res[0].shopRefreshTimestamp.toUTCString() + "] IS LESS THAN LASTMIDNIGHT[" + lastMidnight.toUTCString() + "]. CURRENT TIME IS " + new Date().toUTCString() + ". ADDING...")
 				updateUserObj.shopRefreshTimestamp = new Date();
@@ -465,7 +464,8 @@ function getNewUserShopList(shopSlotsUnlocked){
 	for (var s = 0; s < shopSlotsUnlocked; s++){
 
 		var shopIndex = 0;
-		while (true){
+		var loopCount = 0;
+		while (loopCount < 1000){
 			shopIndex = randomInt(2, fullShopList.length - 1);
 			console.log("IS " + fullShopList[shopIndex].id + " WHITHIN");
 			console.log(defaultCustomizationOptions);
@@ -476,6 +476,7 @@ function getNewUserShopList(shopSlotsUnlocked){
 					break;				
 				}
 			}
+			loopCount++;
 		}
 
 		newShopList.push(fullShopList[shopIndex].id); //Random element from shop, starting with index 2 (to skip unlock and refresh)
@@ -489,7 +490,7 @@ function getNewUserShopList(shopSlotsUnlocked){
 function transformToClientShop(shopList, nextRefreshTime){ //shopList is list of id's
 	var clientShop = getEmptyClientShop();
 	clientShop.timer.time = Math.floor((nextRefreshTime - new Date()) / 1000); //Seconds until next refresh
-	clientShop.timer.resetPrice = resetPrice; //Seconds until next refresh
+	clientShop.timer.resetPrice = fullShopList.find(item => item.id == "refresh").price;
 
 	//transform from list of id's to full shop object
 	var clientShopList = [];
@@ -508,7 +509,7 @@ function getEmptyClientShop(){
 	return {
 		timer: {
 			time:0,
-			resetPrice: resetPrice
+			resetPrice: fullShopList.find(item => item.id == "refresh").price
 		},
 		shop: []
 	};
@@ -541,9 +542,17 @@ var buyItem = function(data, cb){
 				//purchase item
 				dataAccess.dbUpdateAwait("RW_USER", "inc", {cognitoSub: cognitoSub}, {cash: -price}, async function(err, obj){
 					if (!err){
-						var updatedCustomizationOptions = res[0].customizationOptions
-						updatedCustomizationOptions.push(itemId);
-						dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizationOptions: updatedCustomizationOptions}, async function(err2, obj){
+						var updateObject = {};
+						if (itemId != "refresh"){
+							var updatedCustomizationOptions = res[0].customizationOptions
+							updatedCustomizationOptions.push(itemId);
+							updateObject = {customizationOptions: updatedCustomizationOptions};						
+						}
+						else {
+							var shopSlotsUnlocked = defaultShopSlotsUnlocked + getCountInArray("unlock", res[0].customizationOptions);
+							updateObject = {shopList:getNewUserShopList(shopSlotsUnlocked)};
+						}
+						dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, updateObject, async function(err2, obj){
 							if (!err2){
 								msg = "Successful purchase";
 								logg(msg);

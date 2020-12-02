@@ -500,6 +500,7 @@ function kickFromPartyButtonClick() {
 //////////////////////////////// APPEARANCE ////////////////////////
 
 function toggleAppearanceMode(event) {
+    removeConfirmationMessage();
     var tablinks = document.getElementsByClassName("toggleIcons");
     for (var i = 0; i < tablinks.length; i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
@@ -649,25 +650,11 @@ function populateCustomizationOptions(){
                 else if(subCategory == 'color'){
                     pngOrColor = options[displayTeam][category][subCategory][item].color;
                 }
-
-                HTML += "<div class='shopItem' id ='" + options[displayTeam][category][subCategory][item].canvasPng + "' onclick='customizationSelect(\"" + pngOrColor + "\", \"" + displayTeam + "\",\"" + category + displaySubCategory + "\")'>";
-                if (subCategory == 'type'){
-                    HTML += "<div class='" + shopIconClass + "'><img src='/client/img/shopIcons/" + options[displayTeam][category][subCategory][item].icon + "'></div>";
-                }
-                else if(subCategory == 'color'){
-                    HTML += "<div class='" + shopIconClass + "' style='background-color:" + options[displayTeam][category][subCategory][item].icon + "'></div>";
-                }
-                HTML += "<div class='shopTitle'>" + options[displayTeam][category][subCategory][item].title + "</div><br>";
-
-                var ownedHTML = "";
-                var ownedCount = getItemOwnedCount(options[displayTeam][category][subCategory][item].id);
-                if (ownedCount > 1)
-                    ownedHTML += "[" + ownedCount + " owned]";
-                if (options[displayTeam][category][subCategory][item].text) //No need for break if no description subtext
-                    ownedHTML = "<br>" + ownedHTML;
-                HTML += "<div class='shopText'>" + options[displayTeam][category][subCategory][item].text + ownedHTML + "</div>";
-
-                HTML += "</div>";
+                
+                options[displayTeam][category][subCategory][item].customizationCategory = category + displaySubCategory;
+                options[displayTeam][category][subCategory][item].pngOrColor = pngOrColor;
+                options[displayTeam][category][subCategory][item].subCategory = subCategory;
+                HTML += getShopItemHTML(options[displayTeam][category][subCategory][item], shopIconClass, false);
             }
         }
         div.innerHTML = HTML;
@@ -675,83 +662,117 @@ function populateCustomizationOptions(){
 }
 
 function populateShopOptions(){
-
-
     console.log("shopOptions OPTIONS:");
     console.log(shopOptions);
 
     var options = shopOptions;
     var div = document.getElementById("shopOptions");
     var HTML = "<div class='shopCategory'></div>";
-	HTML += "<div class='refreshItem' id='refresh' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
+	HTML += "<div class='shopItem' id='refresh' style='width: 250px;' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
 	HTML += "<div class='shopIcon' id='default'><img src='/client/img/shopIcons/refresh.png'></div>";
-	HTML += "<div class='shopTitle'>Refresh Store Now</div><br><div class='shopText'>$" + numberWithCommas(options.timer.resetPrice) + "</div>";
+	HTML += "<div id='shopTitle' style='color:#FFFFFF;' class='shopTitle'>Refresh Store Now</div><br><div class='shopText'>$" + numberWithCommas(options.timer.resetPrice) + "</div>";
+    HTML += "<div id='rarityText' class='shopTitle' style='float:right;'></div>";
     HTML +=	"</div>";
     HTML += "<div id='refreshTimer'>" + getRefreshTimerTextHTML() + "</div>";
     HTML += "<div class='shopCategory'>Store</div>";
 
     for (const item in options.shop){
-        HTML += "<div class='shopItem' id='" + options.shop[item].id + "' onclick='shopClick(\"" + options.shop[item].id + "\"," + options.shop[item].price + ")'>";
-        if (options.shop[item].subCategory == "color"){
-            HTML += "<div class='shopIcon' id='" + options.shop[item].color + "' style='background-color:" + options.shop[item].icon + "'></div>";
+        HTML += getShopItemHTML(options.shop[item], "shopIcon", true);
+    }
+
+    HTML += "</div>"; 
+    div.innerHTML = HTML;    
+}
+
+function getShopItemHTML(item, shopIconClass, isInShop){
+    var ownedHTML = "";
+    var ownedCount = getItemOwnedCount(item.id);
+    if (ownedCount > 0){
+        if (isInShop){
+            ownedHTML += " | ";
         }
-        else {
-            HTML += "<div class='shopIcon' id ='" + options.shop[item].canvasPng + "'><img src='/client/img/shopIcons/" + options.shop[item].icon + "'></div>";
+        ownedHTML += "[" + ownedCount + " owned]";
+        if (!isInShop && item.text){ //No need for break if no description subtext
+            ownedHTML = "<br>" + ownedHTML;
         }
-
-        var rarityImg;
-        var rarityText;
-        var rarityColor;
-        switch(options.shop[item].rarity){
-            case 0:
-                rarityImg = false;
-                rarityText = "";
-                rarityColor = "#ffffff";
-                break;
-            case 1:
-                rarityImg = "rarities/rare.png";
-                rarityText = "Rare";
-                rarityColor = "#005fb7";
-                break;
-            case 2:
-                rarityImg = "rarities/epic.png";
-                rarityText = "Epic";
-                rarityColor = "#820099";                
-                break;
-            case 3:
-                rarityImg = "rarities/legendary.png";
-                rarityText = "Legendary";
-                rarityColor = "#e2ba00";
-                break;
-            default:            
-                break;
+        if (!isInShop && ownedCount < 2){
+            ownedHTML = "";
         }
+    }
 
-        var ownedHTML = "";
-        var ownedCount = getItemOwnedCount(options.shop[item].id);
-        if (ownedCount > 0)
-           ownedHTML += " |  [" + ownedCount + " owned]";
-
-        if (rarityImg)
-            HTML += "<div class='shopIconOverlay' id ='" + options.shop[item].id + "''><img src='/client/img/shopIcons/" + rarityImg + "'></div>";
-        if (options.shop[item].title)
-            HTML += "<div class='shopTitle' style='color:" + rarityColor + "'>" + options.shop[item].title + "</div>";
-        if (options.shop[item].rarity)
-            HTML += "<div class='shopTitle' style='float:right; color:" + rarityColor + "'>" + rarityText + "</div>";
-        if (options.shop[item].price)
-            HTML += "<br><div id='shopTextPrice' class='shopText'>$" + numberWithCommas(options.shop[item].price) + ownedHTML + "</div><br>";
-
-        var displayCategory = "";
-        if (options.shop[item].category != "other"){
-            displayCategory += capitalizeFirstLetter(options.shop[item].category);
-            if (options.shop[item].subCategory != "type"){
-                displayCategory += (" " + capitalizeFirstLetter(options.shop[item].subCategory));
+    var displayCategory = "";
+    if (item.category){
+        if (item.category != "other"){
+            displayCategory += capitalizeFirstLetter(item.category);
+            if (item.subCategory != "type"){
+                displayCategory += (" " + capitalizeFirstLetter(item.subCategory));
             }
         }
-        if (displayCategory.length > 0)
-            HTML += "<div id='shopTextCategory' class='shopText'>" + displayCategory + "</div>";
+    }
 
-        switch(options.shop[item].team){
+    var onClickHTML = "";
+    if (isInShop){
+        onClickHTML = "onclick='shopClick(\"" + item.id + "\"," + item.price + ")'";
+    }
+    else {
+        onClickHTML = "onclick='customizationSelect(\"" + item.pngOrColor + "\", \"" + displayTeam + "\",\"" + item.customizationCategory + "\")'";
+    }
+
+    var HTML = "<div class='shopItem' id='" + item.id + "' " + onClickHTML + ">";
+    if (item.subCategory == "color"){
+        HTML += "<div class='" + shopIconClass + "' id='" + item.color + "' style='background-color:" + item.icon + "'></div>";
+    }
+    else {
+        HTML += "<div class='" + shopIconClass + "' id ='" + item.canvasPng + "'><img src='/client/img/shopIcons/" + item.icon + "'></div>";
+    }
+
+    var rarityImg;
+    var rarityText;
+    var rarityColor;
+    switch(item.rarity){
+        case 0:
+            rarityImg = false;
+            rarityText = "";
+            rarityColor = "#ffffff";
+            break;
+        case 1:
+            rarityImg = "rarities/rare.png";
+            rarityText = "Rare";
+            rarityColor = "#005fb7";
+            break;
+        case 2:
+            rarityImg = "rarities/epic.png";
+            rarityText = "Epic";
+            rarityColor = "#820099";                
+            break;
+        case 3:
+            rarityImg = "rarities/legendary.png";
+            rarityText = "Legendary";
+            rarityColor = "#e2ba00";
+            break;
+        default:            
+            break;
+    }
+
+
+
+    if (rarityImg)
+        HTML += "<div class='shopIconOverlay' id ='" + item.id + "''><img src='/client/img/shopIcons/" + rarityImg + "'></div>";
+    if (item.title)
+        HTML += "<div id='shopTitle' class='shopTitle' style='color:" + rarityColor + "'>" + item.title + "</div>";
+    HTML += "<div id='rarityText' class='shopTitle' style='float:right; color:" + rarityColor + "'>" + rarityText + "</div>";
+    if (item.price)
+        HTML += "<br><div id='shopTextPrice' class='shopText'>$" + numberWithCommas(item.price) + ownedHTML + "</div>";
+    HTML += "<br>";
+    if (item.text && !isInShop)
+        HTML += "<div class='shopText'>" + item.text + ownedHTML + "</div>";
+
+
+    if (displayCategory.length > 0)
+        HTML += "<div id='shopTextCategory' class='shopText'>" + displayCategory + "</div>";
+
+    if (item.team){
+        switch(item.team){
             case 1:
                 HTML += "<div class='shopText' style='color: #bf1f1f;'>| Red team item</div>";
                 break;
@@ -761,13 +782,11 @@ function populateShopOptions(){
             default:
                 break;
         }       
-
-        HTML += "</div>"; 
     }
     HTML += "</div>"; 
-    div.innerHTML = HTML;    
-}
 
+    return HTML;
+}
 
 
 
@@ -789,19 +808,57 @@ function customizationSelect(pngOrColor, team, key){
 }
 
 function shopClick(itemId, price){
-    logg("SHOP ID");
-    console.log(itemId);
-    logg("SHOP PRICE");
-    console.log(price);
+    var item = document.getElementById(itemId);
+    var rarityText = item.getElementById("rarityText");
+    var confirmationMessage = "Confirm?";
+
     if (userCash >= price){
-        $.post('/buyItem', {viewedProfileCognitoSub:viewedProfileCognitoSub, itemId:itemId}, function(data,status){
-            log("/buyItem response:");
-            console.log(data);
-            if (data.result){
-                window.location.reload();
-            }
-        });        
+        if (rarityText.innerHTML != confirmationMessage){
+            removeConfirmationMessage();
+            rarityText.innerHTML = confirmationMessage;
+            rarityText.style.color = "#FFF";
+            item.style.backgroundColor = "#BBB";
+        }
+        else {
+            $.post('/buyItem', {viewedProfileCognitoSub:viewedProfileCognitoSub, itemId:itemId}, function(data,status){
+                log("/buyItem response:");
+                console.log(data);
+                if (data.result){
+                    window.location.reload();
+                }
+            });        
+        }
     }
+    else {
+        rarityText.innerHTML = "Too Poor!";
+        rarityText.style.color = "red";
+    }
+}
+
+function removeConfirmationMessage(){
+    var shopItems = document.getElementsByClassName("shopItem");
+    for (var i = 0; i < shopItems.length; i++) {
+        console.log("RIGHT HERE");
+        if (!shopItems[i].getElementById("shopTitle")){
+            alert("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
+            continue;
+        }
+        shopItems[i].getElementById("rarityText").style.color = shopItems[i].getElementById("shopTitle").style.color;
+        shopItems[i].style.backgroundColor = "transparent";
+
+        if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#005fb7"){
+            shopItems[i].getElementById("rarityText").innerHTML = "Rare";
+        }
+        else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#820099"){
+            shopItems[i].getElementById("rarityText").innerHTML = "Epic";
+        }
+        else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#e2ba00"){
+            shopItems[i].getElementById("rarityText").innerHTML = "Legendary";
+        }
+        else {
+            shopItems[i].getElementById("rarityText").innerHTML = "";
+        }
+    }    
 }
 
 function secondsToTimer(seconds){

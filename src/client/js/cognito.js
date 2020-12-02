@@ -665,4 +665,42 @@ function capitalizeFirstLetter(str){
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+Element.prototype.getElementById = function(req) {
+    var elem = this, children = elem.childNodes, i, len, id;
+ 
+    for (i = 0, len = children.length; i < len; i++) {
+        elem = children[i];
+        
+        //we only want real elements
+        if (elem.nodeType !== 1 )
+            continue;
+
+        id = elem.id || elem.getAttribute('id');
+        
+        if (id === req) {
+            return elem;
+        }
+        //recursion ftw
+        //find the correct element (or nothing) within the child node
+        id = elem.getElementById(req);
+
+        if (id)
+            return id;
+    }
+    //no match found, return null
+    return null;
+}
+
+//Function to convert rgb color to hex format
+function rgb2hex(rgb) {
+ rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+ return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+}
+
+function hex(x) {
+  return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
+}
+var hexDigits = new Array
+        ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); 
+
 console.log("cognito.js loaded");

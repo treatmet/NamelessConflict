@@ -224,6 +224,19 @@ global.isNumBetween = function(numBetween, num1, num2){
 	return false
 }
 
+global.getCountInArray = function(string, array){
+    var count = 0;
+    if (!array || !array.length)
+        return count;
+    
+    for (var i = 0; i < array.length; i++){
+        if (array[i] == string)
+            count++;
+    }
+
+	return count;
+}
+
 global.Object.size = function(obj) {
     var size = 0, key;
     for (key in obj) {
