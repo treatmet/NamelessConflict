@@ -1107,7 +1107,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		//Draw customizations
 		if (playerDataPack[i].property == "customizations"){
 			drawCustomizations(Player.list[playerDataPack[i].id].customizations, playerDataPack[i].id, function(playerAnimations, id){
-				Player.list[id].images = playerAnimations;
+				Player.list[playerDataPack[i].id].images = playerAnimations;
 			});
 
 		}
@@ -1384,7 +1384,7 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 		console.log("outside playerPack[i].id: " + playerPack[i].id);
 		drawCustomizations(Player.list[playerPack[i].id].customizations, playerPack[i].id, function(playerAnimations, id = 0){
 			console.log("inseide playerPack[i].id: " + id);
-			Player.list[id].images = playerAnimations;
+			Player.list[playerPack[i].id].images = playerAnimations;
 		});
 	}
 	

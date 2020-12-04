@@ -659,7 +659,7 @@ function removeIndexesFromArray(array, indexes){
 
 function capitalizeFirstLetter(str){
 	if (!str){
-		logg("ERROR CAPITALIZING FIRST LETTER OF STRING: " + str);
+		logg("ERROR CAPITALIZING FIRST LETTER OF STRING!");
 		return "";
 	}
 	return str.charAt(0).toUpperCase() + str.slice(1);

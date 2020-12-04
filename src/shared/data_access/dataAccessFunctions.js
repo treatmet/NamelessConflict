@@ -299,7 +299,7 @@ var getUserCustomizationOptions = function(cognitoSub,cb){
 
 function transformToClientCustomizationOptions(customizationOptions){ //customizationOptions = list of strings (id of shopList)
 	var clientOptions = getEmptyClientCustomizationOptions();
-	clientOptions.fullList = customizationOptions;
+	clientOptions.fullList = customizationOptions.filter(option => option != "unlock");
 
 
   	customizationOptions = removeDuplicates(customizationOptions);
@@ -313,25 +313,11 @@ function transformToClientCustomizationOptions(customizationOptions){ //customiz
 		if (shopItem.category == "other")
 			continue;
 
-		var optionDataType = "canvasPng"; //color || canvasPng			
-		if (shopItem.subCategory == "color"){
-				optionDataType = "color"; 
-		}
-
-		var customizationOption = {
-			id:shopItem.id,
-			title: shopItem.title,
-			text: shopItem.text,
-			icon: shopItem.icon,
-			rarity: shopItem.rarity
-		};
-		customizationOption[optionDataType] = shopItem.canvasPngOrColor;		
-
 		if (shopItem.team == 0 || shopItem.team == 1){
-			clientOptions["red"][shopItem.category][shopItem.subCategory].push(customizationOption);
+			clientOptions["red"][shopItem.category][shopItem.subCategory].push(shopItem);
 		}
 		if (shopItem.team == 0 || shopItem.team == 2){
-			clientOptions["blue"][shopItem.category][shopItem.subCategory].push(customizationOption);
+			clientOptions["blue"][shopItem.category][shopItem.subCategory].push(shopItem);
 		}
 	}
 	return clientOptions;
@@ -546,7 +532,7 @@ var buyItem = function(data, cb){
 						if (itemId != "refresh"){
 							var updatedCustomizationOptions = res[0].customizationOptions
 							updatedCustomizationOptions.push(itemId);
-							updateObject = {customizationOptions: updatedCustomizationOptions};						
+							updateObject = {customizationOptions: updatedCustomizationOptions};	 		
 						}
 						else {
 							var shopSlotsUnlocked = defaultShopSlotsUnlocked + getCountInArray("unlock", res[0].customizationOptions);

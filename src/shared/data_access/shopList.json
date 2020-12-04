@@ -9,7 +9,7 @@
 		"team":0,
 		"rarity":0,
 		"icon":"refresh.png",
-		"canvasPngOrColor":""
+		"canvasValue":""
 	},
 	{
 		"id":"unlock",
@@ -21,7 +21,7 @@
 		"team":0,
 		"rarity":0,
 		"icon":"unlock.png",
-		"canvasPngOrColor":""
+		"canvasValue":""
 	},
 	{
 		"id":"noneHat",
@@ -33,7 +33,7 @@
 		"team":0,
 		"rarity":0,
 		"icon":"none.png",
-		"canvasPngOrColor":"noneHat"
+		"canvasValue":"noneHat"
 	},
 	{
 		"id":"haloHat",
@@ -45,7 +45,7 @@
 		"team":0,
 		"rarity":0,
 		"icon":"hat/halo.png",
-		"canvasPngOrColor":"haloHat"
+		"canvasValue":"haloHat"
 	},
 	{
 		"id":"skiMaskHat",
@@ -57,7 +57,7 @@
 		"team":0,
 		"rarity":1,
 		"icon":"hat/skiMask.png",
-		"canvasPngOrColor":"skiMaskHat"
+		"canvasValue":"skiMaskHat"
 	},
 	{
 		"id":"sunglassesHat",
@@ -69,7 +69,7 @@
 		"team":0,
 		"rarity":1,
 		"icon":"hat/sunglasses.png",
-		"canvasPngOrColor":"sunglassesHat"
+		"canvasValue":"sunglassesHat"
 	},
 	{
 		"id":"googlyHat",
@@ -81,7 +81,7 @@
 		"team":0,
 		"rarity":1,
 		"icon":"hat/googly.png",
-		"canvasPngOrColor":"googlyHat"
+		"canvasValue":"googlyHat"
 	},
 	{
 		"id":"baldHair",
@@ -93,7 +93,7 @@
 		"team":0,
 		"rarity":1,
 		"icon":"hair/bald.png",
-		"canvasPngOrColor":"baldHair"
+		"canvasValue":"baldHair"
 	},
 	{
 		"id":"crewHair",
@@ -105,7 +105,7 @@
 		"team":0,
 		"rarity":1,
 		"icon":"hair/crew.png",
-		"canvasPngOrColor":"crewHair"
+		"canvasValue":"crewHair"
 	},
 	{
 		"id":"afroHair",
@@ -117,7 +117,7 @@
 		"team":0,
 		"rarity":2,
 		"icon":"hair/afro.png",
-		"canvasPngOrColor":"afroHair"
+		"canvasValue":"afroHair"
 	},
 	{
 		"id":"bigAfroHair",
@@ -129,7 +129,7 @@
 		"team":0,
 		"rarity":2,
 		"icon":"hair/bigAfro.png",
-		"canvasPngOrColor":"bigAfroHair"
+		"canvasValue":"bigAfroHair"
 	},
 	{
 		"id":"cornrowsHair",
@@ -141,7 +141,7 @@
 		"team":0,
 		"rarity":2,
 		"icon":"hair/cornrows.png",
-		"canvasPngOrColor":"cornrowsHair"
+		"canvasValue":"cornrowsHair"
 	},
 	{
 		"id":"brownHairColor",
@@ -153,7 +153,7 @@
 		"team":0,
 		"rarity":3,
 		"icon":"#603913",
-		"canvasPngOrColor":"#603913"
+		"canvasValue":"#603913"
 	},
 	{
 		"id":"blackHairColor",
@@ -165,7 +165,7 @@
 		"team":0,
 		"rarity":3,
 		"icon":"#130900",
-		"canvasPngOrColor":"#130900"
+		"canvasValue":"#130900"
 	},
 	{
 		"id":"slimShadyHairColor",
@@ -177,7 +177,7 @@
 		"team":0,
 		"rarity":3,
 		"icon":"#fff3b3",
-		"canvasPngOrColor":"#fff3b3"
+		"canvasValue":"#fff3b3"
 	},
 	{
 		"id":"grayHairColor",
@@ -189,6 +189,6 @@
 		"team":0,
 		"rarity":3,
 		"icon":"#c6c6c6",
-		"canvasPngOrColor":"#c6c6c6"
+		"canvasValue":"#c6c6c6"
 	}
 ]

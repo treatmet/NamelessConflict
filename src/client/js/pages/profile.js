@@ -150,6 +150,13 @@ function showSelfProfileOptions(){
     }
 }
 
+function drawProfileCustomizations(){
+    drawCustomizations(currentCustomizations, 0, function(frames, id){
+        displayAppearanceFrame(frames[displayTeam][displayAnimation], 1);
+    });
+}
+
+
 function displayAppearanceFrame(image, zoom){
     var ctx = document.getElementById("ctx").getContext("2d", { alpha: false });
     var canvas = document.getElementById("ctx");
@@ -158,11 +165,30 @@ function displayAppearanceFrame(image, zoom){
     backgroundImg.src = "/client/img/factory-floor.png";
 
     loadImages([backgroundImg.src], function(){
-        drawOnCanvas(ctx, backgroundImg, 0, 0, false, false, 1, true, false);
-        drawOnCanvas(ctx, image, (canvas.width/2 - ((image.width * zoom) / 2)), (canvas.height/2 - ((image.height*zoom)/2)), false, false, zoom, false, false);
+        drawOnCanvas(ctx, backgroundImg, 0, 0, false, false, 1, true);
+        drawOnCanvas(ctx, image, (canvas.width/2 - ((image.width * zoom) / 2)), (canvas.height/2 - ((image.height*zoom)/2)), false, false, zoom, false);
 	});
-
 }
+
+function drawShopIcon(shopItem, iconId){
+    console.log("SHOPITEM: ");
+    console.log(shopItem);
+    console.log("GETTING CANVAS FOR: " + iconId);
+    var zoom = 1; //Zoom config of all shop icons
+    var canvas = document.getElementById(iconId);
+    if (!canvas){logg("ERROR: CAN NOT FIND SHOP ICON:" + iconId); return;}
+    canvas.width = 72;
+    canvas.height = 72;
+    var ctx = canvas.getContext("2d", { alpha: false });
+
+    ctx.fillStyle="#37665a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    getMannequinFrame(shopItem, function(image){
+        drawOnCanvas(ctx, image, -10, -10, false, false, zoom, false);
+    });
+}
+
 
 /////////////////////////// EDIT PROFILE /////////////////////
 function resetEditUserElements(){
@@ -587,11 +613,6 @@ function selectTeam(event) {
     populateCustomizationOptions();
 }
 
-function drawProfileCustomizations(){
-    drawCustomizations(currentCustomizations, 0, function(frames, id){
-        displayAppearanceFrame(frames[displayTeam][displayAnimation], 1);
-    });
-}
 
 function onBlur(element){
     if (element.value == ""){
@@ -624,7 +645,6 @@ function populateCustomizationOptions(){
 
     for (const category in options[displayTeam]){
         var HTML = "";
-        log("Grabbing ID " + category + "Div");
         var div = document.getElementById(category + "Div");
         if (typeof div === 'undefined')
             continue;
@@ -639,25 +659,30 @@ function populateCustomizationOptions(){
 
             for (const item in options[displayTeam][category][subCategory]){
                 var shopIconClass = "shopIcon";
-                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasPng || currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].color){
+                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasValue){
                     shopIconClass += " active";
                 }
-
-                var pngOrColor = "";
-                if (subCategory == 'type'){
-                    pngOrColor = options[displayTeam][category][subCategory][item].canvasPng;
-                }
-                else if(subCategory == 'color'){
-                    pngOrColor = options[displayTeam][category][subCategory][item].color;
-                }
-                
+               
                 options[displayTeam][category][subCategory][item].customizationCategory = category + displaySubCategory;
-                options[displayTeam][category][subCategory][item].pngOrColor = pngOrColor;
                 options[displayTeam][category][subCategory][item].subCategory = subCategory;
                 HTML += getShopItemHTML(options[displayTeam][category][subCategory][item], shopIconClass, false);
             }
         }
         div.innerHTML = HTML;
+
+        //draw on icon canvases
+        for (const team in options){
+            if (team == "fullList"){logg("Skipping fullList"); continue;}
+            for (const category in options[team]){
+                for (const subCategory in options[team][category]){
+                    for (const item in options[team][category][subCategory]){
+                        //Logic for not drawing if already drawn
+                        //if (document.getElementById(options[team][category][subCategory][item].id + "CustomizeCtx"))
+                            drawShopIcon(options[team][category][subCategory][item], options[team][category][subCategory][item].id + "CustomizeCtx");
+                    }
+                }
+            }
+        }        
     }
 }
 
@@ -681,7 +706,12 @@ function populateShopOptions(){
     }
 
     HTML += "</div>"; 
-    div.innerHTML = HTML;    
+    div.innerHTML = HTML;
+
+    //draw on icon canvases
+    for (const item in options.shop){
+        drawShopIcon(options.shop[item], options.shop[item].id + "ShopCtx");
+    }
 }
 
 function getShopItemHTML(item, shopIconClass, isInShop){
@@ -715,16 +745,21 @@ function getShopItemHTML(item, shopIconClass, isInShop){
         onClickHTML = "onclick='shopClick(\"" + item.id + "\"," + item.price + ")'";
     }
     else {
-        onClickHTML = "onclick='customizationSelect(\"" + item.pngOrColor + "\", \"" + displayTeam + "\",\"" + item.customizationCategory + "\")'";
+        onClickHTML = "onclick='customizationSelect(\"" + item.canvasValue + "\", \"" + displayTeam + "\",\"" + item.customizationCategory + "\")'";
     }
+    var HTML = "<div id='" + item.id + "' class='shopItem' " + onClickHTML + ">";
 
-    var HTML = "<div class='shopItem' id='" + item.id + "' " + onClickHTML + ">";
-    if (item.subCategory == "color"){
-        HTML += "<div class='" + shopIconClass + "' id='" + item.color + "' style='background-color:" + item.icon + "'></div>";
-    }
-    else {
-        HTML += "<div class='" + shopIconClass + "' id ='" + item.canvasPng + "'><img src='/client/img/shopIcons/" + item.icon + "'></div>";
-    }
+    // if (item.subCategory == "color"){
+    //     HTML += "<div id='" + item.id + "' class='" + shopIconClass + "' style='background-color:" + item.icon + "'></div>";
+    // }
+    // else {
+    //     HTML += "<div id ='" + item.id + "' class='" + shopIconClass + "'><img src='/client/img/shopIcons/" + item.icon + "'></div>";
+    // }
+    var iconCtxId = isInShop ? item.id + "ShopCtx" : item.id + "CustomizeCtx";
+    HTML += "<div class='" + shopIconClass + "' id ='" + item.canvasValue + "'><canvas id='" + iconCtxId + "'></canvas></div>";
+    
+
+
 
     var rarityImg;
     var rarityText;
@@ -761,14 +796,15 @@ function getShopItemHTML(item, shopIconClass, isInShop){
     if (item.title)
         HTML += "<div id='shopTitle' class='shopTitle' style='color:" + rarityColor + "'>" + item.title + "</div>";
     HTML += "<div id='rarityText' class='shopTitle' style='float:right; color:" + rarityColor + "'>" + rarityText + "</div>";
-    if (item.price)
+    if (item.price && isInShop)
         HTML += "<br><div id='shopTextPrice' class='shopText'>$" + numberWithCommas(item.price) + ownedHTML + "</div>";
     HTML += "<br>";
-    if (item.text && !isInShop)
+    if (item.text && !isInShop){
         HTML += "<div class='shopText'>" + item.text + ownedHTML + "</div>";
+    }
 
 
-    if (displayCategory.length > 0)
+    if (displayCategory.length > 0 && isInShop)
         HTML += "<div id='shopTextCategory' class='shopText'>" + displayCategory + "</div>";
 
     if (item.team){
@@ -790,15 +826,15 @@ function getShopItemHTML(item, shopIconClass, isInShop){
 
 
 
-function customizationSelect(pngOrColor, team, key){
-    currentCustomizations[team][key] = pngOrColor;
+function customizationSelect(canvasValue, team, key){
+    currentCustomizations[team][key] = canvasValue;
     drawProfileCustomizations();
     populateCustomizationOptions();
 
     var params = {
         team:team,
         key:key,
-        value:pngOrColor,
+        value:canvasValue,
         cognitoSub:viewedProfileCognitoSub
     };
 	$.post('/setUserCustomizations', params, function(data,status){
@@ -838,9 +874,9 @@ function shopClick(itemId, price){
 function removeConfirmationMessage(){
     var shopItems = document.getElementsByClassName("shopItem");
     for (var i = 0; i < shopItems.length; i++) {
-        console.log("RIGHT HERE");
         if (!shopItems[i].getElementById("shopTitle")){
-            alert("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
+            //alert("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
+            logg("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
             continue;
         }
         shopItems[i].getElementById("rarityText").style.color = shopItems[i].getElementById("shopTitle").style.color;
@@ -933,8 +969,7 @@ setInterval(
                 price: 5000,
                 category: "hat",
                 subCategory: "type",
-                color: "",
-                canvasPng: "skiMaskHat",
+                canvasValue: "skiMaskHat",
                 icon: "hat/skiMask.png",
                 team:0,
                 rarity: 0
@@ -945,8 +980,7 @@ setInterval(
                 price: 5000,
                 category: "hair",
                 subCategory: "color",
-                color: "#fff3b3",
-                canvasPng: "",
+                canvasValue: "#fff3b3",
                 icon: "#fff3b3",
                 team:1,
                 rarity: 1
@@ -959,7 +993,7 @@ setInterval(
                 price: 10000,
                 icon: "locked.png",
                 color: "",
-                canvasPng: "",                
+                canvasValue: "",                
                 team:0,
                 rarity: 3
             }
@@ -974,35 +1008,40 @@ setInterval(
             hat: {
                 type:[
                     {
-                        canvasPng:"noneHat",
+                        id: "noneHat",
+                        canvasValue:"noneHat",
                         title:"None",
                         text:"",
                         icon:"none.png",
                         rarity:1
                     },
                     {
-                        canvasPng:"haloHat",
+                        id:"haloHat",
+                        canvasValue:"haloHat",
                         title:"Halo",
                         text:"Conflict Progressed",
                         icon:"hat/halo.png"
                         rarity:1
                     },
                     {
-                        canvasPng:"skiMaskHat",
+                        id:"skiMaskHat",
+                        canvasValue:"skiMaskHat",
                         title:"Ski Mask",
                         text:"Thug life",
                         icon:"hat/skiMask.png"
                         rarity:1
                     },
                     {
-                        canvasPng:"sunglassesHat",
+                        id:"sunglassesHat",
+                        canvasValue:"sunglassesHat",
                         title:"Shades",
                         text:"Cool as a cucumber",
                         icon:"hat/sunglasses.png"
                         rarity:1
                     },
                     {
-                        canvasPng:"googlyHat",
+                        id:"googlyHat",
+                        canvasValue:"googlyHat",
                         title:"Googly Eyes",
                         text:"These eyes be poppin",
                         icon:"hat/googly.png"
@@ -1013,35 +1052,40 @@ setInterval(
             hair: {
                 type:[
                     {
-                        canvasPng:"bald",
+                        id:"bald",
+                        canvasValue:"bald",
                         title:"Bald",
                         text:"",
                         icon:"hair/bald.png"
                         rarity:1
                     },
                     {
-                        canvasPng:"crewHair",
+                        id:"crewHair",
+                        canvasValue:"crewHair",
                         title:"Crew Cut",
                         text:"Military standard",
                         icon:"hair/crew.png"
                         rarity:1
                     },
                     {
-                        canvasPng:"afroHair",
+                        id:"afroHair",
+                        canvasValue:"afroHair",
                         title:"Afro",
                         text:"It's an afro",
                         icon:"hair/afro.png"
                         rarity:1
                     },
                     {
-                        canvasPng:"bigAfro",
+                        id:"bigAfro",
+                        canvasValue:"bigAfro",
                         title:"Big Afro",
                         text:"Let's bring back the 80s!",
                         icon:"hair/bigAfro.png"
                         rarity:1
                     },
                     {
-                        canvasPng:"cornrowsHair",
+                        id:"cornrowsHair",
+                        canvasValue:"cornrowsHair",
                         title:"Cornrows",
                         text:"Hey now, don't be culturally appropriating the Greeks",
                         icon:"hair/cornrows.png"
@@ -1050,28 +1094,29 @@ setInterval(
                 ],
                 color:[
                     {
-                        color:"#603913",
+                        id:"#603913",
+                        canvasValue:"#603913",
                         title:"Brown",
                         text:"It's brown",
                         icon:"#603913"
                         rarity:1
                     },
                     {
-                        color:"#130900",
+                        canvasValue:"#130900",
                         title:"Black",
                         text:"Jet black",
                         icon:"#130900"
                         rarity:1
                     },
                     {
-                        color:"#fff3b3",
+                        canvasValue:"#fff3b3",
                         title:"Slim Shady",
                         text:"I'm back!",
                         icon:"#fff3b3"
                         rarity:1
                     },
                     {
-                        color:"#c6c6c6",
+                        canvasValue:"#c6c6c6",
                         title:"Grey",
                         text:"Wise beyond your years",
                         icon:"#c6c6c6"
@@ -1084,7 +1129,7 @@ setInterval(
             hat: {
                 type:[
                     {
-                        canvasPng:"googly",
+                        canvasValue:"googly",
                         title:"Googly Eyes",
                         text:"These eyes be poppin",
                         icon:"hat/googly.png"
@@ -1093,7 +1138,7 @@ setInterval(
                 ],
                 color:[
                     {
-                        color:"#0000FF",
+                        canvasValue:"#0000FF",
                         title:"Blue",
                         text:"Rrrrrroyal blue",
                         icon:"#0000FF"
