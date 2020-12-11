@@ -8,8 +8,7 @@
 		"price": 10000,
 		"team":0,
 		"rarity":0,
-		"icon":"refresh.png",
-		"canvasValue":""
+		"canvasValue":"refresh.png"
 	},
 	{
 		"id":"unlock",
@@ -20,20 +19,7 @@
 		"price": 10000,
 		"team":0,
 		"rarity":0,
-		"icon":"unlock.png",
-		"canvasValue":""
-	},
-	{
-		"id":"noneHat",
-        "category":"hat",
-		"subCategory":"type",
-		"title":"None",
-		"text":"",
-		"price": 5000,
-		"team":0,
-		"rarity":0,
-		"icon":"none.png",
-		"canvasValue":"noneHat"
+		"canvasValue":"unlock.png"
 	},
 	{
 		"id":"haloHat",
@@ -44,7 +30,6 @@
 		"price": 5000,
 		"team":0,
 		"rarity":0,
-		"icon":"hat/halo.png",
 		"canvasValue":"haloHat"
 	},
 	{
@@ -56,8 +41,39 @@
 		"price": 5000,
 		"team":0,
 		"rarity":1,
-		"icon":"hat/skiMask.png",
 		"canvasValue":"skiMaskHat"
+	},	{
+		"id":"blueCapHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Blue Cap",
+		"text":"A blue baseball hat",
+		"price": 5000,
+		"team":2,
+		"rarity":0,
+		"canvasValue":"blueCapHat"
+	},
+	{
+		"id":"redCapHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Red Cap",
+		"text":"Just a normal red hat",
+		"price": 5000,
+		"team":1,
+		"rarity":0,
+		"canvasValue":"redCapHat"
+	},
+	{
+		"id":"greenCapHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Green Cap",
+		"text":"It's a nice green hat",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"greenCapHat"
 	},
 	{
 		"id":"sunglassesHat",
@@ -68,7 +84,6 @@
 		"price": 5000,
 		"team":0,
 		"rarity":1,
-		"icon":"hat/sunglasses.png",
 		"canvasValue":"sunglassesHat"
 	},
 	{
@@ -80,7 +95,6 @@
 		"price": 5000,
 		"team":0,
 		"rarity":1,
-		"icon":"hat/googly.png",
 		"canvasValue":"googlyHat"
 	},
 	{
@@ -92,7 +106,6 @@
 		"price": 5000,
 		"team":0,
 		"rarity":1,
-		"icon":"hair/bald.png",
 		"canvasValue":"baldHair"
 	},
 	{
@@ -104,7 +117,6 @@
 		"price": 5000,
 		"team":0,
 		"rarity":1,
-		"icon":"hair/crew.png",
 		"canvasValue":"crewHair"
 	},
 	{
@@ -116,7 +128,6 @@
 		"price": 5000,
 		"team":0,
 		"rarity":2,
-		"icon":"hair/afro.png",
 		"canvasValue":"afroHair"
 	},
 	{
@@ -128,7 +139,6 @@
 		"price": 5000,
 		"team":0,
 		"rarity":2,
-		"icon":"hair/bigAfro.png",
 		"canvasValue":"bigAfroHair"
 	},
 	{
@@ -139,9 +149,19 @@
 		"text":"Don't be culturally appropriating the Greeks",
 		"price": 5000,
 		"team":0,
-		"rarity":2,
-		"icon":"hair/cornrows.png",
+		"rarity":1,
 		"canvasValue":"cornrowsHair"
+	},
+	{
+		"id":"mohawkHair",
+        "category":"hair",
+		"subCategory":"type",
+		"title":"Mohawk",
+		"text":"Punk never dies",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"mohawkHair"
 	},
 	{
 		"id":"brownHairColor",
@@ -151,8 +171,7 @@
 		"text":"",
 		"price": 5000,
 		"team":0,
-		"rarity":3,
-		"icon":"#603913",
+		"rarity":1,
 		"canvasValue":"#603913"
 	},
 	{
@@ -163,8 +182,7 @@
 		"text":"",
 		"price": 5000,
 		"team":0,
-		"rarity":3,
-		"icon":"#130900",
+		"rarity":1,
 		"canvasValue":"#130900"
 	},
 	{
@@ -175,8 +193,7 @@
 		"text":"I'm back",
 		"price": 5000,
 		"team":0,
-		"rarity":3,
-		"icon":"#fff3b3",
+		"rarity":1,
 		"canvasValue":"#fff3b3"
 	},
 	{
@@ -187,8 +204,425 @@
 		"text":"",
 		"price": 5000,
 		"team":0,
+		"rarity":1,
+		"canvasValue":"#9e9e9e"
+	},
+	{
+		"id":"whiteSkinColor1",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Albino",
+		"text":"Sun = death",
+		"price": 5000,
+		"team":1,
+		"rarity":1,
+		"canvasValue":"#ffe9ed"
+	},		
+	{
+		"id":"whiteSkinColor2",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Medium",
+		"text":"We aren't so different",
+		"price": 5000,
+		"team":1,
+		"rarity":1,
+		"canvasValue":"#ddaa71"
+	},
+	{
+		"id":"whiteSkinColor3",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Fair Skin",
+		"text":"Really lacking in melanin",
+		"price": 5000,
+		"team":1,
 		"rarity":3,
-		"icon":"#c6c6c6",
-		"canvasValue":"#c6c6c6"
-	}
+		"canvasValue":"#f2cfa8"
+	},		
+	{
+		"id":"whiteSkinColor4",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Simpsons Skin",
+		"text":"Simpsons reference",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#fbbd00"
+	},		
+	{
+		"id":"whiteSkinColor5",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Jaundice",
+		"text":"Caused by the buildup of bilirubin in the blood",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#fffdbe"
+	},		
+	{
+		"id":"whiteSkinColor6",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Sunburn",
+		"text":"YOWCH!",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#ffa8a6"
+	},
+	{
+		"id":"blackSkinColor1",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Espresso",
+		"text":"Brown like Beyonce",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#6a4118"
+	},	
+	{
+		"id":"blackSkinColor2",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Chocolate",
+		"text":"Well don't you look delicious",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#321f11"
+	},	
+	{
+		"id":"blackSkinColor3",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Golden brown",
+		"text":"What you want your marshmallow to look like",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#7f4829"
+	},		
+	{
+		"id":"blackSkinColor4",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Chestnut",
+		"text":"In a nutshell, we're all the same",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#895434"
+	},			
+	{
+		"id":"blackSkinColor5",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Sand",
+		"text":"Ain't this about a beach",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#ad8b65"
+	},	
+	{
+		"id":"blackShirtColor1",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Lime Green",
+		"text":"#41bd09",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#41bd09"
+	},	
+	{
+		"id":"blackShirtColor2",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Aqua",
+		"text":"#09bf7b",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#09bf7b"
+	},	
+	{
+		"id":"blackShirtColor3",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Cyan",
+		"text":"#09b8c2",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#09b8c2"
+	},	
+	{
+		"id":"blackShirtColor4",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Sky Blue",
+		"text":"#098bc3",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#098bc3"
+	},	
+	{
+		"id":"blackShirtColor5",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Charcoal",
+		"text":"#2a2a2a",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#2a2a2a"
+	},	
+	{
+		"id":"blackShirtColor6",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Regular Blue",
+		"text":"#0942c2",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#0942c2"
+	},	
+	{
+		"id":"blackShirtColor7",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Navy",
+		"text":"#071b9b",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#071b9b"
+	},	
+	{
+		"id":"blackShirtColor8",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Purple",
+		"text":"#2a0577",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#2a0577"
+	},	
+	{
+		"id":"blackShirtColor9",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Light Purple",
+		"text":"#520bec",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#520bec"
+	},	
+	{
+		"id":"blackShirtColor10",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Dino Green",
+		"text":"#2c7b06",
+		"price": 5000,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#2c7b06"
+	},		
+	{
+		"id":"whiteShirtColor1",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Light Pink",
+		"text":"#ff6bb9",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#ff6bb9"
+	},	
+	{
+		"id":"whiteShirtColor2",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Gold",
+		"text":"#d7b50b",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#d7b50b"
+	},	
+	{
+		"id":"whiteShirtColor3",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Honey",
+		"text":"#de900b",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#de900b"
+	},	
+	{
+		"id":"whiteShirtColor4",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Orangecide",
+		"text":"#e9630c",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#e9630c"
+	},	
+	{
+		"id":"whiteShirtColor5",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Tor Orange",
+		"text":"#c82f0a",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#c82f0a"
+	},	
+	{
+		"id":"whiteShirtColor6",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Red",
+		"text":"#c80a0a",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#c80a0a"
+	},	
+	{
+		"id":"whiteShirtColor7",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Raspberry",
+		"text":"#c40a4c",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#c40a4c"
+	},	
+	{
+		"id":"whiteShirtColor8",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Hot Pink",
+		"text":"#fb0c84",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#fb0c84"
+	},	
+	{
+		"id":"whiteShirtColor9",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Dark Red",
+		"text":"#770606",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#770606"
+	},	
+	{
+		"id":"whiteShirtColor10",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Neon",
+		"text":"#f9fa0c",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#f9fa0c"
+	},	
+	{
+		"id":"whiteShirtColor11",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Slate",
+		"text":"#dfdfdf",
+		"price": 5000,
+		"team":1,
+		"rarity":3,
+		"canvasValue":"#dfdfdf"
+	},	
+	{
+		"id":"noSleevesShirtType",
+        "category":"shirt",
+		"subCategory":"type",
+		"title":"No sleeves",
+		"text":"Guns out",
+		"price": 5000,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"default"
+	},	
+	{
+		"id":"longSleevesShirtType",
+        "category":"shirt",
+		"subCategory":"type",
+		"title":"Long sleeves",
+		"text":"Toasty",
+		"price": 50000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"longSleevesShirtType"
+	},	
+	{
+		"id":"zebraShirtPattern",
+        "category":"shirt",
+		"subCategory":"pattern",
+		"title":"Zebra",
+		"text":"Confuse your predators!",
+		"price": 50000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":1
+	},	
+	{
+		"id":"defaultShirtPattern",
+        "category":"shirt",
+		"subCategory":"pattern",
+		"title":"None",
+		"text":"",
+		"price": 50000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"default"
+	},	
+	{
+		"id":"pyramidShirtPattern",
+        "category":"shirt",
+		"subCategory":"pattern",
+		"title":"Pyramids",
+		"text":"Not made with slave labor",
+		"price": 50000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":2
+	},	
+	{
+		"id":"noneHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"None",
+		"text":"",
+		"price": 5000,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"noneHat"
+	}	
 ]

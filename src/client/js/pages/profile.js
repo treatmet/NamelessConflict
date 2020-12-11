@@ -5,7 +5,7 @@ var displayAnimation = "";
 var displayTeam = "red";
 var customizationOptions = {};
 var shopOptions = {};
-var shopRefreshTimer = 0;
+var shopRefreshTimer = 10000000;
 
 initializePage();
 function initializePage(){
@@ -99,7 +99,7 @@ function populateProfilePage(){
 					mainContentHTML = mainContentHTML.replace(regex, data[element]);
 				}
                 $.get('/getUserCustomizations', params, function(data,status){
-                    console.log("GET USER CUSTOMIZATIONS RESPONSE:");
+                    logg("GET USER CUSTOMIZATIONS RESPONSE:");
                     console.log(data);
                     if (!data.result){
                         alert("Error retrieving user customiaztions.");
@@ -124,26 +124,24 @@ function showSelfProfileOptions(){
         showSecondaySectionTitles();
         show("appearanceOptions");
         $.get( '/getUserCustomizationOptions', {cognitoSub:viewedProfileCognitoSub}, function(data) {
-            console.log("GET CUSTOMIZATION OPTIONS RESPONSE:");
+            logg("GET CUSTOMIZATION OPTIONS RESPONSE:");
             console.log(data);
             if (data.result)
                 customizationOptions = data.result;
             populateCustomizationOptions();
-        });
-        $.get( '/getUserShopList', {cognitoSub:viewedProfileCognitoSub}, function(data) {
-            console.log("GET SHOP LIST RESPONSE:");
-            console.log(data);
-            if (data.result){
-                shopOptions = data.result;
-                shopRefreshTimer = shopOptions.timer.time;
-            }
+            $.get( '/getUserShopList', {cognitoSub:viewedProfileCognitoSub}, function(data) {
+                logg("GET SHOP LIST RESPONSE:");
+                console.log(data);
+                if (data.result){
+                    shopOptions = data.result;
+                    shopRefreshTimer = shopOptions.timer.time;
+                }
 
-            console.log("GOT SHOP OPTIONS:");
-            console.log(shopOptions);
-            console.log("CALLING POPULATRE SHOP OPTIONS");
-            populateShopOptions();
-        });
-        
+                // logg("GOT SHOP OPTIONS:");
+                // logg(shopOptions);
+                populateShopOptions();
+            });
+        });        
     }
     else {
         showUnset("invitePlayerButtons");			
@@ -171,21 +169,19 @@ function displayAppearanceFrame(image, zoom){
 }
 
 function drawShopIcon(shopItem, iconId){
-    console.log("SHOPITEM: ");
-    console.log(shopItem);
-    console.log("GETTING CANVAS FOR: " + iconId);
+    // console.log("GETTING CANVAS FOR: " + iconId);
     var zoom = 1; //Zoom config of all shop icons
     var canvas = document.getElementById(iconId);
     if (!canvas){logg("ERROR: CAN NOT FIND SHOP ICON:" + iconId); return;}
-    canvas.width = 72;
-    canvas.height = 72;
+    canvas.width = 70;
+    canvas.height = 70;
     var ctx = canvas.getContext("2d", { alpha: false });
 
     ctx.fillStyle="#37665a";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     getMannequinFrame(shopItem, function(image){
-        drawOnCanvas(ctx, image, -10, -10, false, false, zoom, false);
+        drawOnCanvas(ctx, image, -11, -11, false, false, zoom, false);
     });
 }
 
@@ -669,21 +665,20 @@ function populateCustomizationOptions(){
             }
         }
         div.innerHTML = HTML;
-
-        //draw on icon canvases
-        for (const team in options){
-            if (team == "fullList"){logg("Skipping fullList"); continue;}
-            for (const category in options[team]){
-                for (const subCategory in options[team][category]){
-                    for (const item in options[team][category][subCategory]){
-                        //Logic for not drawing if already drawn
-                        //if (document.getElementById(options[team][category][subCategory][item].id + "CustomizeCtx"))
-                            drawShopIcon(options[team][category][subCategory][item], options[team][category][subCategory][item].id + "CustomizeCtx");
-                    }
+    }
+    //draw on icon canvases
+    for (const team in options){
+        if (team == "fullList"){continue;}
+        for (const category in options[team]){
+            for (const subCategory in options[team][category]){
+                for (const item in options[team][category][subCategory]){
+                    //Logic for not drawing if already drawn
+                    //if (document.getElementById(options[team][category][subCategory][item].id + "CustomizeCtx"))
+                        drawShopIcon(options[team][category][subCategory][item], options[team][category][subCategory][item].id + "CustomizeCtx");
                 }
             }
-        }        
-    }
+        }
+    }        
 }
 
 function populateShopOptions(){
@@ -710,6 +705,7 @@ function populateShopOptions(){
 
     //draw on icon canvases
     for (const item in options.shop){
+        if (options.shop[item].category == "other"){continue;}
         drawShopIcon(options.shop[item], options.shop[item].id + "ShopCtx");
     }
 }
@@ -756,7 +752,12 @@ function getShopItemHTML(item, shopIconClass, isInShop){
     //     HTML += "<div id ='" + item.id + "' class='" + shopIconClass + "'><img src='/client/img/shopIcons/" + item.icon + "'></div>";
     // }
     var iconCtxId = isInShop ? item.id + "ShopCtx" : item.id + "CustomizeCtx";
-    HTML += "<div class='" + shopIconClass + "' id ='" + item.canvasValue + "'><canvas id='" + iconCtxId + "'></canvas></div>";
+    if (item.category == "other"){
+        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><img src='/client/img/shopIcons/" + item.canvasValue + "'></div>";
+    }
+    else {
+        HTML += "<div class='" + shopIconClass + "' id ='" + item.canvasValue + "'><canvas id='" + iconCtxId + "'></canvas></div>";
+    }
     
 
 
@@ -773,17 +774,17 @@ function getShopItemHTML(item, shopIconClass, isInShop){
         case 1:
             rarityImg = "rarities/rare.png";
             rarityText = "Rare";
-            rarityColor = "#005fb7";
+            rarityColor = "#0074e0";
             break;
         case 2:
             rarityImg = "rarities/epic.png";
             rarityText = "Epic";
-            rarityColor = "#820099";                
+            rarityColor = "#b700d8";                
             break;
         case 3:
             rarityImg = "rarities/legendary.png";
             rarityText = "Legendary";
-            rarityColor = "#e2ba00";
+            rarityColor = "#ffd200";
             break;
         default:            
             break;
@@ -807,7 +808,7 @@ function getShopItemHTML(item, shopIconClass, isInShop){
     if (displayCategory.length > 0 && isInShop)
         HTML += "<div id='shopTextCategory' class='shopText'>" + displayCategory + "</div>";
 
-    if (item.team){
+    if (item.team && isInShop){
         switch(item.team){
             case 1:
                 HTML += "<div class='shopText' style='color: #bf1f1f;'>| Red team item</div>";
@@ -862,6 +863,9 @@ function shopClick(itemId, price){
                 if (data.result){
                     window.location.reload();
                 }
+                else {
+                    alert(data.msg);
+                }
             });        
         }
     }
@@ -882,13 +886,13 @@ function removeConfirmationMessage(){
         shopItems[i].getElementById("rarityText").style.color = shopItems[i].getElementById("shopTitle").style.color;
         shopItems[i].style.backgroundColor = "transparent";
 
-        if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#005fb7"){
+        if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#0074e0"){
             shopItems[i].getElementById("rarityText").innerHTML = "Rare";
         }
-        else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#820099"){
+        else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#b700d8"){
             shopItems[i].getElementById("rarityText").innerHTML = "Epic";
         }
-        else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#e2ba00"){
+        else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#ffd200"){
             shopItems[i].getElementById("rarityText").innerHTML = "Legendary";
         }
         else {
@@ -947,7 +951,7 @@ setInterval(
             shopRefreshTimer--;
             if (shopRefreshTimer < 1 && document.getElementById("shopOptions") && document.getElementById("shopOptions").style.display != "none"){
                 alert("Shop refresh available! Refresh page to get new shop items!");
-                shopRefreshTimer = -1;
+                shopRefreshTimer = 86393;
             }
             document.getElementById('refreshTimer').innerHTML = getRefreshTimerTextHTML();
         }
@@ -970,7 +974,6 @@ setInterval(
                 category: "hat",
                 subCategory: "type",
                 canvasValue: "skiMaskHat",
-                icon: "hat/skiMask.png",
                 team:0,
                 rarity: 0
             },
@@ -981,7 +984,6 @@ setInterval(
                 category: "hair",
                 subCategory: "color",
                 canvasValue: "#fff3b3",
-                icon: "#fff3b3",
                 team:1,
                 rarity: 1
             },
@@ -991,7 +993,6 @@ setInterval(
                 category: "other",
                 subCategory: "",
                 price: 10000,
-                icon: "locked.png",
                 color: "",
                 canvasValue: "",                
                 team:0,
@@ -1012,7 +1013,6 @@ setInterval(
                         canvasValue:"noneHat",
                         title:"None",
                         text:"",
-                        icon:"none.png",
                         rarity:1
                     },
                     {
@@ -1020,7 +1020,6 @@ setInterval(
                         canvasValue:"haloHat",
                         title:"Halo",
                         text:"Conflict Progressed",
-                        icon:"hat/halo.png"
                         rarity:1
                     },
                     {
@@ -1028,7 +1027,6 @@ setInterval(
                         canvasValue:"skiMaskHat",
                         title:"Ski Mask",
                         text:"Thug life",
-                        icon:"hat/skiMask.png"
                         rarity:1
                     },
                     {
@@ -1036,7 +1034,6 @@ setInterval(
                         canvasValue:"sunglassesHat",
                         title:"Shades",
                         text:"Cool as a cucumber",
-                        icon:"hat/sunglasses.png"
                         rarity:1
                     },
                     {
@@ -1044,7 +1041,6 @@ setInterval(
                         canvasValue:"googlyHat",
                         title:"Googly Eyes",
                         text:"These eyes be poppin",
-                        icon:"hat/googly.png"
                         rarity:1
                     }
                 ]
@@ -1056,7 +1052,6 @@ setInterval(
                         canvasValue:"bald",
                         title:"Bald",
                         text:"",
-                        icon:"hair/bald.png"
                         rarity:1
                     },
                     {
@@ -1064,7 +1059,6 @@ setInterval(
                         canvasValue:"crewHair",
                         title:"Crew Cut",
                         text:"Military standard",
-                        icon:"hair/crew.png"
                         rarity:1
                     },
                     {
@@ -1072,7 +1066,6 @@ setInterval(
                         canvasValue:"afroHair",
                         title:"Afro",
                         text:"It's an afro",
-                        icon:"hair/afro.png"
                         rarity:1
                     },
                     {
@@ -1080,7 +1073,6 @@ setInterval(
                         canvasValue:"bigAfro",
                         title:"Big Afro",
                         text:"Let's bring back the 80s!",
-                        icon:"hair/bigAfro.png"
                         rarity:1
                     },
                     {
@@ -1088,7 +1080,6 @@ setInterval(
                         canvasValue:"cornrowsHair",
                         title:"Cornrows",
                         text:"Hey now, don't be culturally appropriating the Greeks",
-                        icon:"hair/cornrows.png"
                         rarity:1
                     }                    
                 ],
@@ -1098,28 +1089,24 @@ setInterval(
                         canvasValue:"#603913",
                         title:"Brown",
                         text:"It's brown",
-                        icon:"#603913"
                         rarity:1
                     },
                     {
                         canvasValue:"#130900",
                         title:"Black",
                         text:"Jet black",
-                        icon:"#130900"
                         rarity:1
                     },
                     {
                         canvasValue:"#fff3b3",
                         title:"Slim Shady",
                         text:"I'm back!",
-                        icon:"#fff3b3"
                         rarity:1
                     },
                     {
                         canvasValue:"#c6c6c6",
                         title:"Grey",
                         text:"Wise beyond your years",
-                        icon:"#c6c6c6"
                         rarity:1
                     }
                 ]                
@@ -1132,7 +1119,6 @@ setInterval(
                         canvasValue:"googly",
                         title:"Googly Eyes",
                         text:"These eyes be poppin",
-                        icon:"hat/googly.png"
                         rarity:1
                     }
                 ],
@@ -1141,7 +1127,6 @@ setInterval(
                         canvasValue:"#0000FF",
                         title:"Blue",
                         text:"Rrrrrroyal blue",
-                        icon:"#0000FF"
                         rarity:1
                     }
                 ]
@@ -1149,7 +1134,7 @@ setInterval(
         },
         fullList:[
             "slimShadyHair"
-            "bigAfro"
+            "bigAfroHair"
         ]
     }
 */

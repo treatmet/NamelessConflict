@@ -398,6 +398,7 @@ var getUserShopList = function(cognitoSub,cb){
 	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			var shopList = res[0].shopList;
+			var shopSlotsUnlocked = defaultShopSlotsUnlocked + getCountInArray("unlock", res[0].customizationOptions);
 			
 			var lastMidnight = new Date();
 			lastMidnight.setUTCHours(0,0,0,0);
@@ -405,7 +406,6 @@ var getUserShopList = function(cognitoSub,cb){
 			nextMidnight.setUTCHours(0,0,0,0);
 			nextMidnight.setUTCDate(nextMidnight.getUTCDate() + 1); 
 
-			var shopSlotsUnlocked = defaultShopSlotsUnlocked + getCountInArray("unlock", res[0].customizationOptions);
 
 			var updateUserObj = {};
 			if (typeof shopSlotsUnlocked === 'undefined'){
@@ -416,20 +416,32 @@ var getUserShopList = function(cognitoSub,cb){
 			//delete res[0].shopList; //Testing
 			//lastMidnight = nextMidnight; //Testing
 			if (typeof res[0].shopRefreshTimestamp === 'undefined' || typeof res[0].shopList === 'undefined' || res[0].shopRefreshTimestamp < lastMidnight){				
-				console.log("REFRESHING STORE BECAUSE LAST REFRESH [" + res[0].shopRefreshTimestamp.toUTCString() + "] IS LESS THAN LASTMIDNIGHT[" + lastMidnight.toUTCString() + "]. CURRENT TIME IS " + new Date().toUTCString() + ". ADDING...")
+				console.log("REFRESHING STORE BECAUSE LAST REFRESH [" + res[0].shopRefreshTimestamp + "] IS LESS THAN LASTMIDNIGHT[" + lastMidnight.toUTCString() + "]. CURRENT TIME IS " + new Date() + ". ADDING...");
 				updateUserObj.shopRefreshTimestamp = new Date();
 				
 				shopList = getNewUserShopList(shopSlotsUnlocked);
 				updateUserObj.shopList = shopList;
 			}
-			else {
-				console.log("NOTTT REFRESHING STORE BECAUSE LAST REFRESH [" + res[0].shopRefreshTimestamp.toUTCString() + "] IS GREATER THAN LASTMIDNIGHT[" + lastMidnight.toUTCString() + "]. CURRENT TIME IS " + new Date().toUTCString())
+			else if (shopList.filter(item => item != "unlock").length < shopSlotsUnlocked){
+				shopList.splice(shopList.length - 1, 0, getNewShopItem(shopList));
+				updateUserObj.shopList = shopList;
 			}
+			if (shopList.filter(item => item != "unlock").length >= maxShopSlotsUnlocked && shopList.filter(item => item == "unlock").length > 0){
+				shopList = shopList.filter(item => item != "unlock");
+				updateUserObj.shopList = shopList;
+			}
+			shopList.splice(maxShopSlotsUnlocked, 10); //Just makes sure list is shorter than the max allowed shop list
 
 			if (Object.keys(updateUserObj).length > 0){
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, updateUserObj, async function(err, obj){
 				});
 			}
+
+			shopList[0] = "whiteShirtColor11";
+			shopList[1] = "whiteShirtColor7";
+			shopList[2] = "whiteShirtColor8";
+			shopList[3] = "whiteShirtColor9";
+			shopList[4] = "whiteShirtColor10";
 
 			var clientShopList = transformToClientShop(shopList, nextMidnight);
 
@@ -448,29 +460,28 @@ function getNewUserShopList(shopSlotsUnlocked){
 	var newShopList = [];
 
 	for (var s = 0; s < shopSlotsUnlocked; s++){
-
-		var shopIndex = 0;
-		var loopCount = 0;
-		while (loopCount < 1000){
-			shopIndex = randomInt(2, fullShopList.length - 1);
-			console.log("IS " + fullShopList[shopIndex].id + " WHITHIN");
-			console.log(defaultCustomizationOptions);
-
-			//New shop rules
-			if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
-				if (newShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item already added to new shop?
-					break;				
-				}
-			}
-			loopCount++;
-		}
-
-		newShopList.push(fullShopList[shopIndex].id); //Random element from shop, starting with index 2 (to skip unlock and refresh)
+		newShopList.push(getNewShopItem(newShopList)); //Random element from shop, starting with index 2 (to skip unlock and refresh)
 	}
 	if (shopSlotsUnlocked < maxShopSlotsUnlocked){
-		newShopList.push(fullShopList[1].id);
+		newShopList.push(fullShopList[1].id); //unlock slot
 	}
 	return newShopList;
+}
+
+function getNewShopItem(currentShopList){
+	var shopIndex = 0;
+	var loopCount = 0;
+	while (loopCount < 1000){
+		shopIndex = randomInt(2, fullShopList.length - 1); //Random element from shop, starting with index 2 (to skip unlock and refresh)
+		//New shop rules
+		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
+			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item already added to new shop?
+				break;				
+			}
+		}
+		loopCount++;
+	}
+	return fullShopList[shopIndex].id;
 }
 
 function transformToClientShop(shopList, nextRefreshTime){ //shopList is list of id's
@@ -521,43 +532,49 @@ var buyItem = function(data, cb){
 	var msg = "";
 
 	//price = 100000000000;
-
 	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			if (res[0].cash >= price){
-				//purchase item
-				dataAccess.dbUpdateAwait("RW_USER", "inc", {cognitoSub: cognitoSub}, {cash: -price}, async function(err, obj){
-					if (!err){
-						var updateObject = {};
-						if (itemId != "refresh"){
-							var updatedCustomizationOptions = res[0].customizationOptions
-							updatedCustomizationOptions.push(itemId);
-							updateObject = {customizationOptions: updatedCustomizationOptions};	 		
-						}
-						else {
-							var shopSlotsUnlocked = defaultShopSlotsUnlocked + getCountInArray("unlock", res[0].customizationOptions);
-							updateObject = {shopList:getNewUserShopList(shopSlotsUnlocked)};
-						}
-						dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, updateObject, async function(err2, obj){
-							if (!err2){
-								msg = "Successful purchase";
-								logg(msg);
-								cb({msg:msg, result:true});
+				if (itemId == "unlock" && res[0].customizationOptions && res[0].customizationOptions.filter(item => item == "unlock").length + defaultShopSlotsUnlocked >= maxShopSlotsUnlocked){
+					msg = "Tried to buy too many unlock slots";
+					logg(msg);
+					cb({msg:msg, result:false});					
+				}
+				else {
+					//purchase item
+					dataAccess.dbUpdateAwait("RW_USER", "inc", {cognitoSub: cognitoSub}, {cash: -price}, async function(err, obj){
+						if (!err){
+							var updateObject = {};
+							if (itemId != "refresh"){
+								var updatedCustomizationOptions = res[0].customizationOptions
+								updatedCustomizationOptions.push(itemId);
+								updateObject = {customizationOptions: updatedCustomizationOptions};	 		
 							}
 							else {
-								msg = "Database error during purchase. Please try again.";
-								logg(msg);
-								cb({msg:msg, result:false});						
+								var shopSlotsUnlocked = defaultShopSlotsUnlocked + getCountInArray("unlock", res[0].customizationOptions);
+								updateObject = {shopList:getNewUserShopList(shopSlotsUnlocked)};
 							}
-						});
+							dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, updateObject, async function(err2, obj){
+								if (!err2){
+									msg = "Successful purchase";
+									logg(msg);
+									cb({msg:msg, result:true});
+								}
+								else {
+									msg = "Database error during purchase. Please try again.";
+									logg(msg);
+									cb({msg:msg, result:false});						
+								}
+							});
 
-					}
-					else {
-						msg = "Database error during purchase. Please try again. You should not have been charged any money.";
-						logg(msg);
-						cb({msg:msg, result:false});						
-					}
-				});		
+						}
+						else {
+							msg = "Database error during purchase. Please try again. You should not have been charged any money.";
+							logg(msg);
+							cb({msg:msg, result:false});						
+						}
+					});	
+				}	
 			}
 			else {
 				msg = "ERROR - User[" + cognitoSub +  "] does not have enough cash[" + res[0].cash + "] to purchase [" + itemId + "] for [" + price + "]";

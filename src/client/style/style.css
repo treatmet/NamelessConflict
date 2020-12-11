@@ -929,8 +929,6 @@ div#shopCustomizeToggle {
     position: relative;
 }
 
-
-
 #shopOptions {
     padding-left: 12px;
     /*border-left: 1px solid #ccc;
@@ -944,6 +942,7 @@ div#shopCustomizeToggle {
     background-image: url("/client/img/shopIcons/background-small.png");
     /* background-position: center center; */
     /* background-attachment: fixed; */
+    user-select: none;
 }
 
 div#refreshTimer {
@@ -1122,6 +1121,7 @@ div#appearanceOptions {
     float: left;
     margin-right: 10px;
     font-weight: bold;    
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
 }
 
 .shopText {
@@ -1137,7 +1137,7 @@ div#appearanceOptions {
     height: 74px;
     float: left;
     margin-right: 10px;
-    border: 1px solid black;
+    border: 2px solid #262626;
     box-sizing: border-box;
     cursor: pointer;
     position: relative; 
@@ -1147,8 +1147,8 @@ div#appearanceOptions {
 
 .shopIconOverlay {
     position: absolute; 
-    left: 0; 
-    top: 0;
+    left: -1; 
+    top: -1;
 }
 
 .shopIcon.active {

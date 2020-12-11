@@ -90,12 +90,12 @@ function getMannequinCustomizations(shopItem){
 			break;
 		case "shirttype":
 			customizations.shirt = shopItem.canvasValue;
-			customizations.shirtColor = "#0b3790";
+			customizations.shirtColor = "#8a8a8a";
 			break;
 		case "shirtcolor":
 			customizations.shirtColor = shopItem.canvasValue;
 			break;
-		case "shirtPattern":
+		case "shirtpattern":
 			customizations.shirtPattern = shopItem.canvasValue;
 			break;
 		case "pantscolor":
@@ -191,7 +191,7 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 	switch(String(layerData.layer)){
 		case "arms":
 			layer.color = teamCustomizations.shirt.indexOf('long') > -1 ? teamCustomizations.shirtColor : teamCustomizations.skinColor;
-			layer.pattern = teamCustomizations.shirt.indexOf('long') > -1 && teamCustomizations.shirtPattern != "default" ? shirtPattern : false;
+			layer.pattern = teamCustomizations.shirt.indexOf('long') > -1 ? getPattern(teamCustomizations.shirtPattern) : false;
 			break;
 		case "hands":
 			layer.color = teamCustomizations.gloves == "default" ? teamCustomizations.skinColor : teamCustomizations.glovesColor;
@@ -199,20 +199,9 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 			break;
 		case "torso":
 			layer.color = teamCustomizations.shirtColor;
-			if (teamCustomizations.shirtPattern){
-				var shirtPattern = new Image();
-				shirtPattern.src = "/client/img/small.png";
-				if (teamCustomizations.shirtPattern != "default"){
-					if (teamCustomizations.shirtPattern == 1){
-						shirtPattern.src = "/client/img/dynamic/patterns/zebra.png";
-					}
-					else if (teamCustomizations.shirtPattern == 2){
-						shirtPattern.src = "/client/img/dynamic/patterns/pyramids.png";
-					}
-					imgSources.push(shirtPattern.src);
-				}
-				layer.pattern = shirtPattern;
-			}
+			console.log("teamCustomizations.shirtPattern");
+			console.log(teamCustomizations.shirtPattern);
+			layer.pattern = getPattern(teamCustomizations.shirtPattern);
 			break;
 		case "head":
 			layer.color = teamCustomizations.skinColor;
@@ -220,14 +209,19 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 		case "shell":
 			break;
 		case "hair":
-			if (teamCustomizations.hair == "baldHair" || teamCustomizations.hat == "skiMask")
+			if (teamCustomizations.hair == "baldHair" || teamCustomizations.hat == "skiMaskHat")
 				return false;
 			layer.color = teamCustomizations.hairColor;
+			if (teamCustomizations.hair != "cornrowsHair") {layer.pattern = getPattern(3);}
 			type = teamCustomizations.hair;
 			break;
 		case "hat":
 			if (teamCustomizations.hat == "default" || teamCustomizations.hat == "noneHat")
 				return false;
+			if ((teamCustomizations.hat.indexOf('CapHat') > -1  || teamCustomizations.hat == "haloHat") && teamCustomizations.hair == "bigAfroHair")
+				layer.y += 7;
+			if (teamCustomizations.hat.indexOf('CapHat') > -1 && teamCustomizations.hair == "afroHair")
+				layer.y += 3;	
 			type = teamCustomizations.hat;
 			break;
 		case "gun":
@@ -246,6 +240,27 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 	return layer;
 }
 
+function getPattern(custPattern){
+	if (custPattern){
+		var pattern = new Image();
+		pattern.src = "/client/img/small.png";
+		if (custPattern != "default"){
+			if (custPattern == 3){
+				pattern.src = "/client/img/dynamic/patterns/hair.png";
+			}
+			else if (custPattern == 1){
+				pattern.src = "/client/img/dynamic/patterns/zebra.png";
+			}
+			else if (custPattern == 2){
+				pattern.src = "/client/img/dynamic/patterns/pyramids.png";
+			}
+		}
+		return pattern;
+	}
+	else {
+		return false;
+	}
+}
 
 function getLayerOrder(animationFrame){
 	var layerOrder = [];
