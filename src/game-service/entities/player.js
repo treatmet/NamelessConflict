@@ -1319,7 +1319,7 @@ function gunSwap(player){
 
 Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 	dataAccessFunctions.getUserCustomizations(cognitoSub, function(customizations){
-		var player = Player(socket.id, cognitoSub, name, team, customizations, partyId);
+		var player = Player(socket.id, cognitoSub, name, team, customizations.result, partyId);
 		gameEngine.ensureCorrectThugCount();
 
 		socket.on('keyPress', function(data){

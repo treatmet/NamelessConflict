@@ -1105,7 +1105,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		}
 		
 		//Draw customizations
-		if (playerDataPack[i].property == "customizations"){
+		if (playerDataPack[i].property == "customizations"){	
 			drawCustomizations(Player.list[playerDataPack[i].id].customizations, playerDataPack[i].id, function(playerAnimations, id){
 				Player.list[playerDataPack[i].id].images = playerAnimations;
 			});
@@ -1381,10 +1381,13 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 			Player(playerPack[i].id);
 			Player.list[playerPack[i].id] = playerPack[i];
 		}
-		console.log("outside playerPack[i].id: " + playerPack[i].id);
+		console.log("CUSTOMIZATIONS sendFullGameStatus ");
+		console.log(playerPack[i]);
 		drawCustomizations(Player.list[playerPack[i].id].customizations, playerPack[i].id, function(playerAnimations, id = 0){
-			console.log("inseide playerPack[i].id: " + id);
-			Player.list[playerPack[i].id].images = playerAnimations;
+			if (playerPack[i]){
+				console.log("inseide playerPack[i].id: " + playerPack[i]);
+				Player.list[playerPack[i].id].images = playerAnimations;
+			}
 		});
 	}
 	
@@ -2260,7 +2263,6 @@ function drawTorsos(){
 					}
 					else if (Player.list[i].weapon == 3){
 						img = Player.list[i].images.red.MG;
-						img = Img.whitePlayerMG;
 					}
 					else if (Player.list[i].weapon == 4){
 						img = Player.list[i].images.red.SG;

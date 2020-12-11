@@ -76,8 +76,10 @@ function getTokenFromUrlParameterAndLogin(){
 }
 
 function updateCashHeaderDisplay(cash){
-	document.getElementById("cashHeaderValue").innerHTML = "$" + numberWithCommas(cash);
-	show("cashHeaderDisplay");
+	if (document.getElementById("cashHeaderValue")){
+		document.getElementById("cashHeaderValue").innerHTML = "$" + numberWithCommas(cash);
+		show("cashHeaderDisplay");
+	}
 }
 
 function updateProfileLink(){
