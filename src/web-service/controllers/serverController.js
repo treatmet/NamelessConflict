@@ -167,7 +167,7 @@ var getJoinableServer = function(options, cb){
 						incomingUsers = removeCognitoSubFromArray(incomingUsers, options.party[p].cognitoSub); //Before merging arrays, remove duplicate cognitoSubs from incomingUser
 					}
 					
-					incomingUsers.push.apply(incomingUsers, options.party); //Merge 2 arrays mergeArrays				
+					incomingUsers.push.apply(incomingUsers, options.party); //Merge 2 arrays mergeArrays merge arrays append arrays			
 					var obj = {incomingUsers:incomingUsers};
 					var selectedServer = i;
 					dataAccess.dbUpdateAwait("RW_SERV", "set", {url: serv[selectedServer].url}, obj, async function(err2, res){

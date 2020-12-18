@@ -1,17 +1,19 @@
 page = "profile";
 var viewedProfileCognitoSub = "";
+var viewedProfileName = "";
+var viewedProfileRank = "bronze1";
 var currentCustomizations = {};
 var displayAnimation = "";
 var displayTeam = "red";
 var customizationOptions = {};
 var shopOptions = {};
 var shopRefreshTimer = 10000000;
+var playerCenterOffset = 4;
 
 initializePage();
 function initializePage(){
     viewedProfileCognitoSub = getViewedProfileCognitoSub();
     showLocalElements();
-	populateProfilePage();
 	getTokenFromUrlParameterAndLogin();
 }
 
@@ -27,6 +29,7 @@ function loginFail(){
 }
 
 function loginAlways(){
+	populateProfilePage();
 	showUnset("mainContent");
 }
 
@@ -93,6 +96,8 @@ function populateProfilePage(){
 				document.getElementById("mainContent").innerHTML = '<div id="fullScreenError" class="sectionTitle">Invalid User Page</div>';
 			}
 			else { //Viewing valid player profile
+                viewedProfileName = data.USERNAME;
+                viewedProfileRank = data.rank;
 				var mainContentHTML = document.getElementById("mainContent").innerHTML;
 				for (var element in data){
 					var regex = new RegExp("{{" + element + "}}","g");
@@ -150,12 +155,12 @@ function showSelfProfileOptions(){
 
 function drawProfileCustomizations(){
     drawCustomizations(currentCustomizations, 0, function(frames, id){
-        displayAppearanceFrame(frames[displayTeam][displayAnimation], 1);
+        displayAppearanceFrame(frames[displayTeam][displayAnimation], 1, frames[displayTeam]["legs"]);
     });
 }
 
 
-function displayAppearanceFrame(image, zoom){
+function displayAppearanceFrame(image, zoom = 1, secondImage = false){
     var ctx = document.getElementById("ctx").getContext("2d", { alpha: false });
     var canvas = document.getElementById("ctx");
 
@@ -164,7 +169,14 @@ function displayAppearanceFrame(image, zoom){
 
     loadImages([backgroundImg.src], function(){
         drawOnCanvas(ctx, backgroundImg, 0, 0, false, false, 1, true);
+        if (secondImage){drawOnCanvas(ctx, secondImage, (canvas.width/2 - ((secondImage.width * zoom) / 2)), (canvas.height/2 - (((secondImage.height - playerCenterOffset)*zoom)/2)), false, false, zoom, false);}
         drawOnCanvas(ctx, image, (canvas.width/2 - ((image.width * zoom) / 2)), (canvas.height/2 - ((image.height*zoom)/2)), false, false, zoom, false);
+        if (currentCustomizations[displayTeam].icon == "rank"){
+            currentCustomizations[displayTeam].icon = viewedProfileRank;
+        }
+        getUserIconImg(currentCustomizations[displayTeam].icon, false, function(iconImg, team){
+            drawName(ctx, viewedProfileName, currentCustomizations[displayTeam].nameColor, canvas.width/2, 20, iconImg);
+        });                
 	});
 }
 
@@ -172,7 +184,10 @@ function drawShopIcon(shopItem, iconId){
     // console.log("GETTING CANVAS FOR: " + iconId);
     var zoom = 1; //Zoom config of all shop icons
     var canvas = document.getElementById(iconId);
-    if (!canvas){logg("ERROR: CAN NOT FIND SHOP ICON:" + iconId); return;}
+    if (!canvas){
+        //logg("ERROR: CAN NOT FIND SHOP ICON:" + iconId); 
+        return;
+    }
     canvas.width = 70;
     canvas.height = 70;
     var ctx = canvas.getContext("2d", { alpha: false });
@@ -180,10 +195,33 @@ function drawShopIcon(shopItem, iconId){
     ctx.fillStyle="#37665a";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    getMannequinFrame(shopItem, function(image){
-        drawOnCanvas(ctx, image, -11, -11, false, false, zoom, false);
-    });
+    var drawY = 25;
+    if (shopItem.category == "name"){
+        drawName(ctx, username, shopItem.canvasValue, canvas.width/2, drawY);
+    }
+    else if (shopItem.category == "icon"){
+        if (shopItem.canvasValue == "rank"){
+            shopItem.canvasValue = viewedProfileRank;
+        }
+        getUserIconImg(shopItem.canvasValue, false, function(iconImg, team){
+            drawIcon(ctx, iconImg, canvas.width/2 - 10, drawY, 20, 20);   
+        });                             
+    }
+    else {
+        getMannequinFrame(shopItem, function(image){
+            var shiftDistForIconX = -11;
+            var shiftDistForIconY = -11;
+            if (shopItem.category == "boost"){
+                shiftDistForIconX = -1;
+                shiftDistForIconY = -3;
+            }
+            drawOnCanvas(ctx, image, shiftDistForIconX, shiftDistForIconY, false, false, zoom, false);
+        });
+    }
 }
+
+
+
 
 
 /////////////////////////// EDIT PROFILE /////////////////////
@@ -655,7 +693,10 @@ function populateCustomizationOptions(){
 
             for (const item in options[displayTeam][category][subCategory]){
                 var shopIconClass = "shopIcon";
-                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasValue){
+                console.log("BEFORE ERROR: displayTeam " + displayTeam);
+                console.log(currentCustomizations);
+                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasValue ||
+                (options[displayTeam][category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank)){
                     shopIconClass += " active";
                 }
                
@@ -745,18 +786,12 @@ function getShopItemHTML(item, shopIconClass, isInShop){
     }
     var HTML = "<div id='" + item.id + "' class='shopItem' " + onClickHTML + ">";
 
-    // if (item.subCategory == "color"){
-    //     HTML += "<div id='" + item.id + "' class='" + shopIconClass + "' style='background-color:" + item.icon + "'></div>";
-    // }
-    // else {
-    //     HTML += "<div id ='" + item.id + "' class='" + shopIconClass + "'><img src='/client/img/shopIcons/" + item.icon + "'></div>";
-    // }
     var iconCtxId = isInShop ? item.id + "ShopCtx" : item.id + "CustomizeCtx";
     if (item.category == "other"){
         HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><img src='/client/img/shopIcons/" + item.canvasValue + "'></div>";
     }
     else {
-        HTML += "<div class='" + shopIconClass + "' id ='" + item.canvasValue + "'><canvas id='" + iconCtxId + "'></canvas></div>";
+        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><canvas id='" + iconCtxId + "'></canvas></div>";
     }
     
 
@@ -828,6 +863,10 @@ function getShopItemHTML(item, shopIconClass, isInShop){
 
 
 function customizationSelect(canvasValue, team, key){
+    if (key == "icon" && canvasValue == viewedProfileRank){
+        canvasValue = "rank";
+    }
+
     currentCustomizations[team][key] = canvasValue;
     drawProfileCustomizations();
     populateCustomizationOptions();

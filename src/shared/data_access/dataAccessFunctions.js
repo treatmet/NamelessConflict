@@ -249,6 +249,11 @@ var getUserCustomizations = function(cognitoSub,cb){
 				customizations = defaultCustomizations;
 				setUserCustomizations(cognitoSub, customizations);
 			}
+			for (var t in customizations){
+				if (customizations[t].icon == "rank"){
+					customizations[t].icon = getRankFromRating(res[0].rating).rank;
+				}
+			}
 			console.log("RETURNING CUSTOMIZATIONS FOR " + cognitoSub);
 			console.log(customizations);
 			cb({msg: "Successfully got customizations", result:customizations});
@@ -285,6 +290,7 @@ var getUserCustomizationOptions = function(cognitoSub,cb){
 				customizationOptions = defaultCustomizationOptions;
 				updateUserCustomizationOptions(cognitoSub, customizationOptions);
 			}
+
 			customizationOptions = transformToClientCustomizationOptions(customizationOptions);
 			console.log("RETURNING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
 			console.log(customizationOptions);
@@ -344,6 +350,9 @@ function getEmptyClientCustomizationOptions(){
             pants: {
 				color:[]
             },
+            shoes: {
+				color:[]
+            },
             boost: {
 				type:[]
             },
@@ -371,6 +380,9 @@ function getEmptyClientCustomizationOptions(){
 				pattern:[]
             },
             pants: {
+				color:[]
+            },
+            shoes: {
 				color:[]
             },
             boost: {
@@ -437,11 +449,11 @@ var getUserShopList = function(cognitoSub,cb){
 				});
 			}
 
-			shopList[0] = "whiteShirtColor11";
-			shopList[1] = "whiteShirtColor7";
-			shopList[2] = "whiteShirtColor8";
-			shopList[3] = "whiteShirtColor9";
-			shopList[4] = "whiteShirtColor10";
+			shopList[0] = "rankIcon";
+			shopList[1] = "smileyIcon";
+			shopList[2] = "noneIcon";
+			shopList[3] = "brownShoesColor";
+			shopList[4] = "charcoalPantsColor";
 
 			var clientShopList = transformToClientShop(shopList, nextMidnight);
 

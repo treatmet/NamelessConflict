@@ -258,6 +258,9 @@ global.replaceValues = function(userData, content){
 }
 
 global.getRankFromRating = function(rating){
+	if (!rating)
+		return {rank:"bronze1", floor:0, nextRank:"bronze2", ceiling:100};
+		
 	const rankings = [
 		{rank:"bronze1",rating:0},
 		{rank:"bronze2",rating:100},

@@ -1,7 +1,4 @@
-const teams = [
-	"red",
-	"blue"
-];
+
 const animations = [
 	"pistol",
 	"pistolReloading1",
@@ -23,8 +20,8 @@ const animations = [
 	"SGReloading1",
 	"SGReloading2",
 	"SGReloading3",
-	"Body",
-	"BodyWall"
+	"legs",
+	"boost"
 ];
 
 var smallImg = new Image();
@@ -35,18 +32,41 @@ smallImg.src = "/client/img/small.png";
 function getMannequinFrame(shopItem, cb){
 	var imgSources = [];
 	var layers = [];
-	var layerOrder = getLayerOrder("pistol");
+
+	var legLayers = [];
+	if (shopItem.category == "pants" || shopItem.category == "shoes"){
+		legLayers = getLayerOrder("legs");
+	}
+	
+	var bodyLayers = getLayerOrder("pistol");
+	var layerOrder = [];
+	
+	if (shopItem.category == "boost"){
+		layerOrder = getLayerOrder("boost");
+	}
+	else {
+		layerOrder = legLayers.concat(bodyLayers);
+	}
 	var customizations = getMannequinCustomizations(shopItem);
 
 	for (var l in layerOrder){
 		var layer = getLayerDrawProperties(layerOrder[l], customizations)
 		if (!layer){continue;}
+		if (shopItem.category == "pants" || shopItem.category == "shoes"){
+			layer.y -= 6;
+		}
+		else if (shopItem.category == "boost"){
+			layer.x += 0;
+			layer.y += 5;
+		}
+
 		imgSources.push(layer.img.src);
 		if (layer.pattern){imgSources.push(layer.pattern.src);}
+
 		layers.push(layer);
 	}
 	loadImages(imgSources, function(invalidSrcPaths){
-		cb(drawLayeredImage(94, 116, layers, false));
+		cb(drawLayeredImage(layers, false));
 	});
 }
 
@@ -69,6 +89,7 @@ function getMannequinCustomizations(shopItem){
 		boost: "default",
 		boostColor: "",
 		pantsColor: "#FFFFFF",
+		shoesColor: "#FFFFFF",
 		icon: "default"		
 	}
 
@@ -101,14 +122,16 @@ function getMannequinCustomizations(shopItem){
 		case "pantscolor":
 			customizations.pantsColor = shopItem.canvasValue;
 			break;
+		case "shoescolor":
+			customizations.shoesColor = shopItem.canvasValue;
+			break;
 		case "boosttype":
 			customizations.boost = shopItem.canvasValue;
-			customizations.hairColor = shopItem.id;
 			break;
 		case "namecolor":
 			customizations.nameColor = shopItem.canvasValue;
 			break;
-		case "icon":
+		case "icontype":
 			customizations.icon = shopItem.canvasValue;
 			break;
 		default:
@@ -119,10 +142,7 @@ function getMannequinCustomizations(shopItem){
 	return customizations;
 }
 
-//!!! Error handling! What if png does not exist or fails to load? This will crash the client
-function drawCustomizations(customizations, id, cb){		//!!! We don't need id passed here anymore	
-	// console.log("customizations:");
-	// console.log(customizations);
+function getEmptyLayers(){
 	var layers = {};
 	for (var t = 0; t < teams.length; t++){
 		layers[teams[t]] = {};
@@ -130,6 +150,14 @@ function drawCustomizations(customizations, id, cb){		//!!! We don't need id pas
 			layers[teams[t]][animations[a]] = [];
 		}
 	}
+	return layers;
+}
+
+//!!! Error handling! What if png does not exist or fails to load? This will crash the client
+function drawCustomizations(customizations, id, cb){		//!!! We don't need id passed here anymore	
+	// console.log("customizations:");
+	// console.log(customizations);
+	var layers = getEmptyLayers();
 	
 	var imgSources = [];
 	imgSources.push("/client/img/small.png"); //Make sure small gets added to loaded images regardless of shirt pattern 
@@ -168,8 +196,8 @@ function drawCustomizations(customizations, id, cb){		//!!! We don't need id pas
 						}
 					}
 				}
-
-				playerAnimations[teams[t]][animations[a]] = drawLayeredImage(94, 116, layers[teams[t]][animations[a]]);
+				
+				playerAnimations[teams[t]][animations[a]] = drawLayeredImage(layers[teams[t]][animations[a]]);
 			}
 		}
 		cb(playerAnimations, id);
@@ -199,8 +227,6 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 			break;
 		case "torso":
 			layer.color = teamCustomizations.shirtColor;
-			console.log("teamCustomizations.shirtPattern");
-			console.log(teamCustomizations.shirtPattern);
 			layer.pattern = getPattern(teamCustomizations.shirtPattern);
 			break;
 		case "head":
@@ -231,10 +257,21 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 			else if (layerData.animationVariant.indexOf('MG') > -1) {layer.color = teamCustomizations.mgColor;}
 			else {layer.color = "#707070";}							
 			break;
+		case "legs":
+			layer.color = teamCustomizations.pantsColor;
+			break;
+		case "boost":
+			type = teamCustomizations.boost;
+			break;
+		case "shoes":
+			layer.color = teamCustomizations.shoesColor;
+			break;
 		default:
 			log("RENDERING ERROR - invalid layer: [" + String(layerData.layer) + "]");
+			break;
 	}
 	layer.img = new Image();
+	//console.log("LOADING IMAGE: " + "/client/img/dynamic/" + layerData.layer + animationVariant + "/" + type + ".png");
 	layer.img.src = "/client/img/dynamic/" + layerData.layer + animationVariant + "/" + type + ".png";	
 
 	return layer;
@@ -445,75 +482,27 @@ function getLayerOrder(animationFrame){
 							{layer:"hair", x:-1, y:2},
 							{layer:"hat", x:-1, y:2}];
 			break;
-		case "Body":
+		case "legs":
+			layerOrder = [{layer: "legs", x:0, y:0},
+						{layer: "shoes", x:0, y:0}];
+			break;
+		case "boost":
+			layerOrder = [{layer: "boost", x:0, y:0}];
 			break;
 		case "BodyWall":
 			break;
 		default:
 			log("ERROR: Layer missing: " + animationFrame);
+			break;
 	}	
 	return layerOrder;
 }
 
-//imgArr is a list of strings containing the paths to images (src property)
-function loadImages(imgArr,callback) {
-	//Keep track of the images that are loaded
-	var imagesLoaded = 0;
-	var invalidSrcPaths = [];
-	function _loadAllImages(callback){
-		//Create an temp image and load the url
-		var img = new Image();
-		$(img).attr('src',imgArr[imagesLoaded]); //Second parameter must be the src of the image
-
-		//log("loading " + imagesLoaded + "/" + imgArr.length + " " + img.src);
-		if (img.complete || img.readyState === 4) {
-			//log("CACHED " + (imagesLoaded + 1) + "/" + imgArr.length + " " + img.src);
-			// image is cached
-			imagesLoaded++;
-			//Check if all images are loaded
-			if(imagesLoaded == imgArr.length) {
-				//If all images loaded do the callback
-				callback(invalidSrcPaths);
-			} else {
-				//If not all images are loaded call own function again
-				_loadAllImages(callback);
-			}
-		} else {
-			$(img).load(function(){
-				//log("DONE " + imagesLoaded + "/" + imgArr.length + " " + img.src);
-				//Increment the images loaded variable
-				imagesLoaded++;
-				//Check if all images are loaded
-				if(imagesLoaded == imgArr.length) {
-					//If all images loaded do the callback
-					callback(invalidSrcPaths);
-				} else {
-					//If not all images are loaded call own function again
-					_loadAllImages(callback);
-				}
-			});
-			$(img).error(function(){
-				log("ERROR LOADING IMAGE AT PATH : " + img.src);
-				invalidSrcPaths.push(img.src);
-				imagesLoaded++;
-				if(imagesLoaded == imgArr.length) {
-					callback(invalidSrcPaths);
-				} else {
-					_loadAllImages(callback);
-				}
-			});
-
-
-		}
-	};		
-	_loadAllImages(callback);
-}
-
-function drawLayeredImage(w, h, imagesArray, clearFrame = true){
+function drawLayeredImage(imagesArray, clearFrame = true){
 	var p_canvas = document.createElement('canvas');
 	var pCtx = p_canvas.getContext("2d");
-	p_canvas.width = w;
-	p_canvas.height = h;
+	p_canvas.width = imagesArray[0].img.width;
+	p_canvas.height = imagesArray[0].img.height;
 
 	for (var i = 0; i < imagesArray.length; i++){
 		drawOnCanvas(pCtx, imagesArray[i].img, imagesArray[i].x, imagesArray[i].y, imagesArray[i].color, imagesArray[i].pattern, 1, clearFrame);

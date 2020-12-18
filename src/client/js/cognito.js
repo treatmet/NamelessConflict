@@ -26,6 +26,12 @@ var serverHomePage = "https://rw.treatmetcalf.com/";
 var isLocal = false;
 var defaultCustomizations = {red:{}, blue:{}};
 
+var iconSize = 15;
+
+const teams = [
+	"red",
+	"blue"
+];
 
 function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
@@ -704,5 +710,142 @@ function hex(x) {
 }
 var hexDigits = new Array
         ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); 
+
+
+function drawName(drawingCanvas, playerUsername, color, x, y, icon = false){
+	drawingCanvas.save();
+        drawingCanvas.textAlign="center";
+        drawingCanvas.font = 'bold 12px Electrolize';        
+		drawingCanvas.fillStyle = color;
+		drawingCanvas.shadowColor = "white";
+		drawingCanvas.shadowOffsetX = 0; 
+		drawingCanvas.shadowOffsetY = 0;
+		drawingCanvas.shadowBlur = 3;
+
+		var txtWidth = drawingCanvas.measureText(playerUsername).width;
+		if (icon){
+			icon.width = iconSize;
+			icon.height = iconSize;
+			x += icon.width/2;
+			drawIcon(drawingCanvas, icon, x - (icon.width) - txtWidth/2 - 1, y - (icon.height/2) - 4, icon.width, icon.height);
+		}
+		drawingCanvas.fillText(playerUsername, x, y); 
+	drawingCanvas.restore();
+}
+
+function drawIcon(drawingCanvas, icon, x, y, width = false, height = false){
+	if (!icon)
+		return;
+	if (!width || !height){
+		width = iconSize;
+		height = iconSize;
+	}
+	drawingCanvas.drawImage(icon, x, y, width, height);
+}
+
+function getUserIconImg(iconCanvasValue, team, cb){
+    if (iconCanvasValue == "none"){
+        cb(false, team);
+		return;
+    }
+    var iconImg = new Image();
+    iconImg.src = "/client/img/dynamic/icon/" + iconCanvasValue + ".png";
+	loadImages([iconImg.src], function(invalidSrcPaths){
+    	cb(iconImg, team);
+	});
+}
+
+//imgArr is a list of strings containing the paths to images (src property)
+function loadImages(imgArr,callback) {
+	//Keep track of the images that are loaded
+	var imagesLoaded = 0;
+	var invalidSrcPaths = [];
+	if (!imgArr || imgArr.length == 0){callback([]); return;}
+	function _loadAllImages(callback){
+		//Create an temp image and load the url
+		var img = new Image();
+		$(img).attr('src',imgArr[imagesLoaded]); //Second parameter must be the src of the image
+
+		//log("loading " + imagesLoaded + "/" + imgArr.length + " " + img.src);
+		if (img.complete || img.readyState === 4) {
+			//log("CACHED " + (imagesLoaded + 1) + "/" + imgArr.length + " " + img.src);
+			// image is cached
+			imagesLoaded++;
+			//Check if all images are loaded
+			if(imagesLoaded == imgArr.length) {
+				//If all images loaded do the callback
+				callback(invalidSrcPaths);
+			} else {
+				//If not all images are loaded call own function again
+				_loadAllImages(callback);
+			}
+		} else {
+			$(img).load(function(){
+				//log("DONE " + imagesLoaded + "/" + imgArr.length + " " + img.src);
+				//Increment the images loaded variable
+				imagesLoaded++;
+				//Check if all images are loaded
+				if(imagesLoaded == imgArr.length) {
+					//If all images loaded do the callback
+					callback(invalidSrcPaths);
+				} else {
+					//If not all images are loaded call own function again
+					_loadAllImages(callback);
+				}
+			});
+			$(img).error(function(){
+				log("ERROR LOADING IMAGE AT PATH : " + img.src);
+				invalidSrcPaths.push(img.src);
+				imagesLoaded++;
+				if(imagesLoaded == imgArr.length) {
+					callback(invalidSrcPaths);
+				} else {
+					_loadAllImages(callback);
+				}
+			});
+
+
+		}
+	};		
+	_loadAllImages(callback);
+}
+
+function getRankFromRating(rating){
+	if (!rating)
+		return {rank:"bronze1", floor:0, nextRank:"bronze2", ceiling:100};
+		
+	const rankings = [
+		{rank:"bronze1",rating:0},
+		{rank:"bronze2",rating:100},
+		{rank:"bronze3",rating:200},
+		{rank:"silver1",rating:300},
+		{rank:"silver2",rating:500},
+		{rank:"silver3",rating:700},
+		{rank:"gold1",rating:1000},
+		{rank:"gold2",rating:1300},
+		{rank:"gold3",rating:1600},
+		{rank:"diamond",rating:2000},
+		{rank:"diamond2",rating:9999}
+	];
+
+	for (var r in rankings){
+		var rPlus = parseInt(r)+1; //ToInt32
+		var rMinus = parseInt(r)-1;
+		if (rating < rankings[rPlus].rating){
+			log(rankings[r].rank + " is his rank");
+			var response = {rank:rankings[r].rank, floor:rankings[r].rating, previousRank:"bronze1", nextRank:"diamond2", ceiling:9999};
+			if (rankings[rPlus]){
+				response.nextRank = rankings[rPlus].rank;
+				response.ceiling = rankings[rPlus].rating;
+			}
+			if (rankings[rMinus]){
+				response.previousRank = rankings[rMinus].rank;
+			}
+			return response;
+		}		
+	}
+	return {rank:"bronze1", floor:0, nextRank:"bronze2", ceiling:100};
+}
+
 
 console.log("cognito.js loaded");

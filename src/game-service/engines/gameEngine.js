@@ -1192,11 +1192,6 @@ var sendFullGameStatus = function(socketId){
 		miscPack.variant.timeLimit = false;
 	}
 	log("ABOUT TO SEND FULL GAME STATUS. FULL PLAYER PACK:");
-	console.log(playerPack);
-	for (var p = 0; p < playerPack.length; p++){
-		console.log("INDIVID CUSTOMIZATIONS");
-		console.log(playerPack[p].customizations);
-	}
 	SOCKET_LIST[socketId].emit('sendFullGameStatus', playerPack, thugPack, pickupPack, blockPack, miscPack); //Goes to a single player
 }
 

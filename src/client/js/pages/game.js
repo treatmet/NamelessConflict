@@ -75,6 +75,8 @@ var screenShakeScale = 0.5;
 var drawDistance = 10; 
 var bodyLimit = 16;
 var legSwingSpeed = 1;
+var maxLegHeight = 116;
+var playerCenterOffset = 4;
 
 //Offset is how many pixels away from the center the camera will go when aiming, greater value means player closer to edge of screen
 var camOffSet = 350;//doestn do anything
@@ -87,6 +89,7 @@ var zoom = 0.75;
 
 const maxCloakStrength = 0.99;
 const maxAlliedCloakOpacity = .2; 
+var dualBoostXOffset = 15;
 const BODY_AGE = 1500;
 
 var shopEnabled = false;
@@ -241,6 +244,8 @@ var bagBlue = {
 	y:mapHeight -150,
 	captured:false,
 };
+
+var strapOffset = 18;
 
 socket.on('pingResponse', function (socketId){
 	if (Player.list[socketId]){
@@ -1107,7 +1112,18 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		//Draw customizations
 		if (playerDataPack[i].property == "customizations"){	
 			drawCustomizations(Player.list[playerDataPack[i].id].customizations, playerDataPack[i].id, function(playerAnimations, id){
-				Player.list[playerDataPack[i].id].images = playerAnimations;
+				if (Player.list[id]){
+					console.log("playerAnimations update " + Player.list[id].name);
+					console.log(playerAnimations);
+					Player.list[id].images = playerAnimations;
+					for (var t in teams){
+						getUserIconImg(Player.list[id].customizations[teams[t]].icon, teams[t], function(iconImg, team){
+							Player.list[id].images[team].icon = iconImg;
+							console.log("SINGLE UPDATE PLAYER");
+							console.log(Player.list[id]);
+						});
+					}
+				}
 			});
 
 		}
@@ -1381,12 +1397,17 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 			Player(playerPack[i].id);
 			Player.list[playerPack[i].id] = playerPack[i];
 		}
-		console.log("CUSTOMIZATIONS sendFullGameStatus ");
-		console.log(playerPack[i]);
+
 		drawCustomizations(Player.list[playerPack[i].id].customizations, playerPack[i].id, function(playerAnimations, id = 0){
-			if (playerPack[i]){
-				console.log("inseide playerPack[i].id: " + playerPack[i]);
-				Player.list[playerPack[i].id].images = playerAnimations;
+			if (Player.list[id]){
+				Player.list[id].images = playerAnimations;
+				for (var t in teams){
+					getUserIconImg(Player.list[id].customizations[teams[t]].icon, teams[t], function(iconImg, team){
+						Player.list[id].images[team].icon = iconImg;
+						console.log("SINGLE UPDATE PLAYER");
+						console.log(Player.list[id]);
+					});
+				}
 			}
 		});
 	}
@@ -1988,10 +2009,11 @@ function drawMissingBags(){
 	}
 }
 
+///!!! Leg swing should be outside of drawLegs
 function drawLegs(){
 	normalShadow();
 	for (var i in Player.list) {
-		if (Player.list[i].health > 0 && Player.list[i].team != "none"){
+		if (Player.list[i].health > 0 && Player.list[i].team != "none" && Player.list[i].cloakEngaged == false){
 		
 			//Calculate LegSwing
 			if (!Player.list[i].legHeight){
@@ -2000,18 +2022,18 @@ function drawLegs(){
 			if (Player.list[i].walkingDir != 0){
 				if (Player.list[i].legSwingForward == true){
 					Player.list[i].legHeight += 7 * legSwingSpeed;
-					if (Player.list[i].legHeight > 94){
+					if (Player.list[i].legHeight > maxLegHeight){
 						Player.list[i].legSwingForward = false;
 					}
 				}
 				else {
 					Player.list[i].legHeight -= 7 * legSwingSpeed;
-					if (Player.list[i].legHeight < -94){
+					if (Player.list[i].legHeight < -maxLegHeight){
 						Player.list[i].legSwingForward = true;
 					}
 				}
 				if (Player.list[i].boosting > 0){
-					Player.list[i].legHeight = 94; 
+					Player.list[i].legHeight = maxLegHeight; 
 				}
 			}
 			else if(Player.list[i].walkingDir == 0 || isNaN(Player.list[i].walkingDir)){ //No movement input
@@ -2021,11 +2043,12 @@ function drawLegs(){
 			}
 		
 			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 - drawDistance < cameraY + canvasHeight){
-				var legs = Img.whitePlayerLegs;
-				if (Player.list[i].legHeight < 0 && Player.list[i].team == "white"){legs = Img.whitePlayerLegs2;}			
-				else if (Player.list[i].legHeight >= 0 && Player.list[i].team == "black"){legs = Img.blackPlayerLegs;}
-				else if (Player.list[i].legHeight < 0 && Player.list[i].team == "black"){legs = Img.blackPlayerLegs2;}
+				var legs = Player.list[i].images.red.legs;
+				if (Player.list[i].team == "black"){legs = Player.list[i].images.blue.legs;}
 				
+				if (typeof legs == 'undefined'){ //Load default images if animation frames not yet drawn
+					legs = Player.list[i].team == "white" ? Img.whitePlayerLegs : Img.blackPlayerLegs;
+				}
 				//This is for calculating where to put the legs according to the weapon wielded by the torso
 				var width = Img.whitePlayerPistol.width;
 				if (Player.list[i].weapon == 2){
@@ -2052,21 +2075,26 @@ function drawLegs(){
 				}
 
 				ctx.save();
-                ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
+                ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y  * zoom); //Center camera on controlled player
+
+				ctx.rotate(getRotation(Player.list[i].shootingDir));
+					ctx.translate(0, playerCenterOffset);
+				ctx.rotate(-getRotation(Player.list[i].shootingDir));
+
 				ctx.rotate(getRotation(Player.list[i].walkingDir));
+				if (Player.list[i].legHeight >= 0){
+					ctx.scale(-1, 1);
+				}
 					normalShadow();
-					//if walking dir different than shooting dir, calculate different rotation for legs than body
+					
 					var weaponYoffset = 0;
 					if (Player.list[i].weapon == 3){weaponYoffset = 5;}
-					if (Player.list[i].shootingDir != Player.list[i].walkingDir && Player.list[i].cloakEngaged == false){		
-						drawImage(legs,(-width/2 + twistOffset) * zoom, (-Player.list[i].legHeight/2 + 5) * zoom, width * zoom, Player.list[i].legHeight * zoom);
+					if (Player.list[i].shootingDir != Player.list[i].walkingDir){ //if walking dir different than shooting dir, calculate different rotation for legs than body
+						drawImage(legs,(-width/2 + twistOffset) * zoom, (-Player.list[i].legHeight/2) * zoom, width * zoom, Player.list[i].legHeight * zoom);
 					}
-					else if (Player.list[i].cloakEngaged == false) { 
-						//Only draw legs in this context (shooting direction rotation context) if walking and shooting dirs match (5 lower)
-						drawImage(legs,(-width/2 + twistOffset) * zoom, (-Player.list[i].legHeight/2 + weaponYoffset) * zoom, width * zoom, Player.list[i].legHeight * zoom);
+					else { 
+						drawImage(legs,(-width/2 + twistOffset) * zoom, (-Player.list[i].legHeight/2) * zoom, width * zoom, Player.list[i].legHeight * zoom);
 					}
-				//ctx.rotate(-(getRotation(Player.list[i].walkingDir)));
-				//ctx.translate(-(centerX - myPlayer.x * zoom + Player.list[i].x * zoom), -(centerY - myPlayer.y * zoom + Player.list[i].y * zoom)); //Center camera on controlled player				
                 ctx.restore();
 			}
 		}		
@@ -2555,7 +2583,7 @@ function drawTorsos(){
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
-					drawImage(img, -img.width/2 * zoom, (-img.height/2 + 4) * zoom, img.width * zoom, img.height * zoom); //Draw torso	
+					drawImage(img, -img.width/2 * zoom, (-img.height/2 + playerCenterOffset) * zoom, img.width * zoom, img.height * zoom); //Draw torso	
 
 
 
@@ -2584,7 +2612,7 @@ function drawTorsos(){
 						
 					//Strap
 					if (Player.list[i].holdingBag == true){
-						if (Player.list[i].weapon == 1 || Player.list[i].weapon == 2){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2+15) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
+						if (Player.list[i].weapon == 1 || Player.list[i].weapon == 2){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2 + strapOffset) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
 						else if (Player.list[i].weapon == 3){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2+10) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
 					}				
                 ctx.restore();	
@@ -2734,32 +2762,46 @@ function drawBoosts(){
 	for (var i in Player.list) {
 		if (BoostBlast.list[Player.list[i].id]){
             var blast = BoostBlast.list[Player.list[i].id];
-            var blastDir = Player.list[i].walkingDir - 4;
-            if (blastDir < 1) 
-                    blastDir += 8;
-            var imgblast = Img.boostBlast;
+            var blastDir = Player.list[i].walkingDir;
+
+			var imgblast = Player.list[i].images.red.boost;
+			var playerTeam = Player.list[i].team == "white" ? "red" : "blue" //!!!Get rid of this on team rename
+			if (Player.list[i].team == "black"){imgblast = Player.list[i].images.blue.boost;}			
+			if (typeof imgblast == 'undefined'){ //Load default images if animation frames not yet drawn
+				imgblast = Img.boostBlast;
+			}
             
             ctx.save();
             noShadow();
             ctx.globalAlpha = blast.alpha;
             blast.alpha -= .2;
+            blast.width = blast.width + 20 * 1;
+            blast.height = blast.height + 20 * 1;
             
-            var distanceOffset = blast.width;
             
             if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 - drawDistance < cameraY + canvasHeight){
                 ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
                 ctx.rotate(getRotation(blastDir));
-                    drawImage(imgblast, (-blast.width/2 - 15) * zoom, (-blast.height - 10) * zoom, blast.width * zoom, blast.height * zoom);
-                    drawImage(imgblast, (-blast.width/2 + 15) * zoom, (-blast.height - 10) * zoom, blast.width * zoom, blast.height * zoom);
+					if (Player.list[i].customizations[playerTeam].boost == "blast"){
+						drawImage(imgblast, (-blast.width/2 - dualBoostXOffset * 2) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);
+						drawImage(imgblast, (-blast.width/2 + dualBoostXOffset * 2) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);						
+						drawImage(imgblast, (-blast.width/2) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
+					}
+					else if (Player.list[i].customizations[playerTeam].boost == "streaks"){
+						drawImage(imgblast, (-blast.width/2 - dualBoostXOffset) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);
+						drawImage(imgblast, (-blast.width/2 + dualBoostXOffset) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);						
+						drawImage(imgblast, (-blast.width/2) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
+					}
+					else {
+						drawImage(imgblast, (-blast.width/2 - dualBoostXOffset) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
+						drawImage(imgblast, (-blast.width/2 + dualBoostXOffset) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
+					}
                 //ctx.rotate(-(getRotation(blastDir)));
                 //ctx.translate(-(centerX - myPlayer.x * zoom + Player.list[i].x * zoom), -(centerY - myPlayer.y * zoom + Player.list[i].y * zoom)); //Center camera on controlled player
             }
-            blast.width = blast.width + 20 * 1;
-            blast.height = blast.height + 20 * 1;
             if (blast.alpha <= 0){
                 delete BoostBlast.list[blast.id];
             }	
-            //ctx.globalAlpha = 1;
             ctx.restore();	
 		}
 	}
@@ -2862,9 +2904,8 @@ function drawNotifications(){
 	ctx.globalAlpha = 1;
 }
 
-//draw usernames
+//draw usernames drawNames
 function drawPlayerTags(){
-	ctx.fillStyle = "#000000";
 	ctx.textAlign="center";
 	ctx.font = 'bold 12px Electrolize';
 	for (var i in Player.list){
@@ -2876,11 +2917,8 @@ function drawPlayerTags(){
 			ctx.save();
             ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
 				if (Player.list[i].health > 0 && Player.list[i].team != "none" && !(Player.list[i].cloakEngaged == true && Player.list[i].team != Player.list[myPlayer.id].team)){
-					ctx.shadowColor = "white";
-					ctx.shadowOffsetX = 0; 
-					ctx.shadowOffsetY = 0;
-					ctx.shadowBlur = 3;
-					ctx.fillText(playerUsername,0, -Img.whitePlayerPistol.height/2 * zoom); //Draw myPlayer name above head, draw username, draw names			
+					var team = Player.list[i].team == "white" ? "red" : "blue";
+					drawName(ctx, playerUsername, Player.list[i].customizations[team].nameColor, 0, -Img.whitePlayerPistol.height/2 * zoom, Player.list[i].images[team].icon);
 				}			
 				if (Player.list[i].team != "none" && Player.list[i].chat && Player.list[i].chatDecay > 0 && !(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
 					if (Player.list[i].chat.length > 0){
@@ -4358,10 +4396,10 @@ var BoostBlast = function(id){
 	var self = {
 		id:id,
 		alpha:1.5,
-		//width:100, full size
-		//height:100, full size
-		width:Math.floor((Math.random() * 36) + 16),
-		height:Math.floor((Math.random() * 55) + 75),		
+		
+		
+		width:Math.floor(10), //width:100, full size
+		height:Math.floor(10), //height:100, full size
 	}	
 	BoostBlast.list[self.id] = self;		
 }
