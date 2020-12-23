@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
+
 router.post('/getPlayerRelationship', async function (req, res) {
 	//log("Get player Relationship endpoint called with:");
 	//console.log("--BODY");
@@ -69,7 +70,7 @@ router.post('/requestResponse', async function (req, res) {
 			}		
 			//Perform decline operation			
 			if (req.body.accept == "false"){
-				dataAccessFunctions.dataAccessFunctions.removeRequestById(req.body.id);
+				dataAccessFunctions.removeRequestById(req.body.id);
 				res.status(200);
 				res.send({msg:"Removed request"});
 			}
@@ -78,7 +79,7 @@ router.post('/requestResponse', async function (req, res) {
 				if(req.body.type == "friend") {
 					dataAccessFunctions.upsertFriend({cognitoSub:authorizedUser.cognitoSub, targetCognitoSub:request.cognitoSub}, function(dbResults){
 						if (!dbResults.error){
-							dataAccessFunctions.dataAccessFunctions.removeRequestById(req.body.id);
+							dataAccessFunctions.removeRequestById(req.body.id);
 						}
 						res.status(200);
 						res.send(dbResults);
@@ -306,7 +307,6 @@ router.post('/validateToken', async function (req, res) {
 		res.status(200);
 		res.cookie("cog_a", result.access_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
 		res.cookie("cog_r", result.refresh_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
-		console.log("ABOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOUT 10 years");
 
 
 		httpResult = {
@@ -318,6 +318,7 @@ router.post('/validateToken', async function (req, res) {
 			isWebServer:isWebServer,
 			isLocal:isLocal,
 			pcMode:pcMode,
+			defaultCustomizations:dataAccessFunctions.defaultCustomizations,
 			msg:result.msg || "(no response message)"
 		};
 	}
@@ -336,10 +337,11 @@ router.post('/validateToken', async function (req, res) {
 		return;
 	}
 
-	//Get or create mongo username, and then return to the client
+	//(Auth success) Get or create mongo username, and then return to the client
 	dataAccessFunctions.getUserFromDB(httpResult.cognitoSub, function(mongoRes){
 		if (mongoRes && mongoRes.username){
 			httpResult.username = mongoRes.username;
+			httpResult.cash = mongoRes.cash;
 			res.send(httpResult);
 		}
 		else {
@@ -459,6 +461,92 @@ router.post('/logOut', async function (req, res) {
 	res.cookie("cog_r", "", { httpOnly: httpOnlyCookies });
 	res.send({msg:"Logout - Successfully removed auth cookies"});
 });
+
+router.get('/getUserCustomizations', async function (req, res) {
+	//Transform to get, cog will be at req.query.cognitoSub
+	console.log("GETTING CUSTOMIZATIONS FOR: " + req.query.cognitoSub);
+	console.log(req.body);
+	dataAccessFunctions.getUserCustomizations(req.query.cognitoSub, function(dbResults){
+		res.status(200);
+		res.send(dbResults);
+	});
+});
+
+router.get('/getUserCustomizationOptions', async function(req, res) {
+	console.log("/getUserCustomizationOptions with BODY:");
+	console.log(req.query.cognitoSub);
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	logg("GETTING USER CUSTOMIZATIONS FOR PAGE:" + req.query.cognitoSub + ". REQUEST FROM USER:" + authorizedUser.cognitoSub);
+	if (authorizedUser.cognitoSub == req.query.cognitoSub){
+		dataAccessFunctions.getUserCustomizationOptions(req.query.cognitoSub, function(dbResults){
+			res.status(200);
+			res.send(dbResults);
+		});
+	}
+	else {
+		res.status(200);
+		var msg = "Did not get userCustomizationOptions because User's cognitoSub[" + authorizedUser.cognitoSub + "] did not match viewed profile cognitoSub[" + req.query.cognitoSub + "]";
+		res.send({msg:msg, result:false});
+	}
+});
+
+router.post('/setUserCustomizations', async function (req, res) {
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	
+	console.log("SETTING CUSTOMIZATIONS FOR: " + req.body.cognitoSub + ". REQUESTING USER:" + authorizedUser.cognitoSub);
+	console.log(req.body);
+	if (authorizedUser.cognitoSub == req.body.cognitoSub && typeof req.body.team != 'undefined' && typeof req.body.key != 'undefined' && typeof req.body.value != 'undefined'){
+		dataAccessFunctions.setUserCustomization(authorizedUser.cognitoSub, req.body.team, req.body.key, req.body.value);
+		response = {msg:"Successfully Updated User Customizations"};
+	}
+	else {
+		response = {msg:"Failed to update User Customizations. Either the user was not authorized, or insuficient data was provided."};
+	}
+
+	res.status(200);
+	res.send(response);
+});
+
+router.get('/getUserShopList', async function(req, res) {
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	console.log("/getUserShopList ENDPOINT");
+	logg("GETTING USER SHOP LIST FOR PAGE:" + req.query.cognitoSub + ". REQUEST FROM USER:" + authorizedUser.cognitoSub);
+	if (authorizedUser.cognitoSub == req.query.cognitoSub){
+		dataAccessFunctions.getUserShopList(authorizedUser.cognitoSub, function(userShopList){
+			res.status(200);
+			res.send(userShopList);
+		});
+
+	}
+	else {
+		res.status(200);
+		var msg = "Did not get userShopList because User's cognitoSub[" + authorizedUser.cognitoSub + "] did not match viewed profile cognitoSub[" + req.query.cognitoSub + "]";
+		res.send({msg:msg, result:false});
+	}
+});
+
+router.post('/buyItem', async function (req, res) {
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	var authorizedUserCognitoSub = authorizedUser.cognitoSub;
+	var viewedProfileCognitoSub = req.body.viewedProfileCognitoSub;
+	var itemId = req.body.itemId;
+
+	logg("/buyItem Endpoint")
+	logg("BUYING ITEM FOR USER: " + viewedProfileCognitoSub + ". REQUESTING USER:" + authorizedUserCognitoSub + ". TRYING TO BUY: " + itemId);
+	if (authorizedUserCognitoSub && authorizedUserCognitoSub == viewedProfileCognitoSub && typeof itemId != 'undefined'){
+		dataAccessFunctions.buyItem({cognitoSub:authorizedUserCognitoSub, itemId:itemId}, function(dbBuyResponse){
+			res.status(200);
+			res.send(dbBuyResponse);
+		});		
+	}
+	else {
+		response = {msg:"Failed to Purchase item. Either the user was not authorized, or insuficient data was provided."};
+		res.status(200);
+		res.send(response);
+	}
+});
+
+
 
 function getLeaderFromParty(partyData){
 	for (var p = 0; p < partyData.party.length; p++){

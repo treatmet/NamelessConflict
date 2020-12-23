@@ -34,6 +34,13 @@ global.getCurrentPlayersFromUsers = function(users){
 	return players;
 }
 
+global.removeDuplicates = function(array){
+	array = array.filter((item, index) => {
+		return array.indexOf(item) === index;
+	});
+	return array;
+}
+
 global.removeIndexesFromArray = function(array, indexes){
 	for (var i = indexes.length-1; i >= 0; i--){
 		array.splice(indexes[i],1);
@@ -110,6 +117,13 @@ global.parseINIString = function(data){
 global.numberWithCommas = function(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
+global.toCamelCase = function(str) {
+  return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
+    return index === 0 ? word.toLowerCase() : word.toUpperCase();
+  }).replace(/\s+/g, '');
+}
+
 
 global.getProgressBarPercentage = function(value, floor, ceiling){
 	value -= floor;
@@ -210,6 +224,19 @@ global.isNumBetween = function(numBetween, num1, num2){
 	return false
 }
 
+global.getCountInArray = function(string, array){
+    var count = 0;
+    if (!array || !array.length)
+        return count;
+    
+    for (var i = 0; i < array.length; i++){
+        if (array[i] == string)
+            count++;
+    }
+
+	return count;
+}
+
 global.Object.size = function(obj) {
     var size = 0, key;
     for (key in obj) {
@@ -231,6 +258,9 @@ global.replaceValues = function(userData, content){
 }
 
 global.getRankFromRating = function(rating){
+	if (!rating)
+		return {rank:"bronze1", floor:0, nextRank:"bronze2", ceiling:100};
+		
 	const rankings = [
 		{rank:"bronze1",rating:0},
 		{rank:"bronze2",rating:100},

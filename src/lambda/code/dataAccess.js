@@ -1,5 +1,4 @@
 const mongojs = require('mongojs');
-const ObjectId = require('mongodb').ObjectID;
 var db = mongojs(mongoDbLocation, ['RW_USER','RW_USER_PROG','RW_SERV','RW_FRIEND', 'RW_REQUEST']);
 
 var dbUpdateAwait = function(table, action, searchObj, updateObj, cb){

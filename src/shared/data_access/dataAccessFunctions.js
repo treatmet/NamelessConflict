@@ -1,6 +1,12 @@
 var dataAccess = require('./dataAccess.js');
 const ObjectId = require('mongodb').ObjectID;
 
+var defaultCustomizations = require("./defaultCustomizations.json");
+var defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
+
+var fullShopList = require("./shopList.json");
+
+
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
 var getUserFromDB = function(cognitoSub,cb){
 	//log("searching for user: " + cognitoSub);
@@ -233,6 +239,371 @@ var updateServerUrlForUser = function(cognitoSub){
 }
 
 
+var getUserCustomizations = function(cognitoSub,cb){
+	//log("searching for user: " + cognitoSub);
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+		if (res && res[0]){
+			var customizations = res[0].customizations;
+			if (typeof customizations === 'undefined' || typeof res[0].customizations.red === 'undefined'){
+				logg("ERROR - COULD NOT GET CUSTOMIZATIONS FOR " + cognitoSub);
+				customizations = defaultCustomizations;
+				setUserCustomizations(cognitoSub, customizations);
+			}
+			for (var t in customizations){
+				if (customizations[t].icon == "rank"){
+					customizations[t].icon = getRankFromRating(res[0].rating).rank;
+				}
+			}
+			console.log("RETURNING CUSTOMIZATIONS FOR " + cognitoSub);
+			console.log(customizations);
+			cb({msg: "Successfully got customizations", result:customizations});
+		}
+		else {
+			console.log("ERROR - COULD NOT FIND USER WHEN GETTING CUSTOMIZATIONS FOR " + cognitoSub);
+			cb({msg: "Failed to get customizations for [" + cognitoSub + "] from DB", result:defaultCustomizations});
+		}
+	});
+}
+
+var setUserCustomization = function(cognitoSub, team, key, value) {
+	getUserCustomizations(cognitoSub, function(customizations){
+		customizations.result[team][key] = value;
+		if (customizations.result){
+			dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: customizations.result}, async function(err, obj){
+			});		
+		}
+	});
+}
+
+var setUserCustomizations = function(cognitoSub, obj) {
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: obj}, async function(err, obj){
+	});		
+}
+
+var getUserCustomizationOptions = function(cognitoSub,cb){
+	//log("searching for user: " + cognitoSub);
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+		if (res && res[0]){
+			var customizationOptions = res[0].customizationOptions;
+			if (typeof customizationOptions === 'undefined'){
+				console.log("ERROR - COULD NOT GET CUSTOMIZATION OPTIONS FOR " + cognitoSub);
+				customizationOptions = defaultCustomizationOptions;
+				updateUserCustomizationOptions(cognitoSub, customizationOptions);
+			}
+
+			customizationOptions = transformToClientCustomizationOptions(customizationOptions);
+			console.log("RETURNING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
+			console.log(customizationOptions);
+			cb({msg: "Successfully got customization options", result:customizationOptions});
+		}
+		else {
+			console.log("ERROR - COULD NOT FIND USER WHEN GETTING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
+			cb({msg: "Failed to get customization options for [" + cognitoSub + "] from DB", result:defaultCustomizationOptions});
+		}
+	});
+}
+
+function transformToClientCustomizationOptions(customizationOptions){ //customizationOptions = list of strings (id of shopList)
+	var clientOptions = getEmptyClientCustomizationOptions();
+	clientOptions.fullList = customizationOptions.filter(option => option != "unlock");
+
+
+  	customizationOptions = removeDuplicates(customizationOptions);
+
+	for (var o = 0; o < customizationOptions.length; o++){
+		var shopItem = getShopItem(customizationOptions[o]); 
+
+		if (!shopItem)
+			continue;
+
+		if (shopItem.category == "other")
+			continue;
+
+		if (shopItem.team == 0 || shopItem.team == 1){
+			clientOptions["red"][shopItem.category][shopItem.subCategory].push(shopItem);
+		}
+		if (shopItem.team == 0 || shopItem.team == 2){
+			clientOptions["blue"][shopItem.category][shopItem.subCategory].push(shopItem);
+		}
+	}
+	return clientOptions;
+}
+
+function getEmptyClientCustomizationOptions(){
+	return {
+        red: {
+            hat: {
+                type:[]
+			},
+            hair: {
+                type:[],
+				color:[]
+            },
+            skin: {
+				color:[]
+            },
+            shirt: {
+				type:[],
+				color:[],
+				pattern:[]
+            },
+            pants: {
+				color:[]
+            },
+            shoes: {
+				color:[]
+            },
+            boost: {
+				type:[]
+            },
+            name: {
+				color:[]
+            },
+            icon: {
+				type:[]
+            }
+        },
+        blue: {
+            hat: {
+                type:[]
+			},
+            hair: {
+                type:[],
+				color:[]
+            },
+            skin: {
+				color:[]
+            },
+            shirt: {
+				type:[],
+				color:[],
+				pattern:[]
+            },
+            pants: {
+				color:[]
+            },
+            shoes: {
+				color:[]
+            },
+            boost: {
+				type:[]
+            },
+            name: {
+				color:[]
+            },
+            icon: {
+				type:[]
+            }        
+        }
+    };
+}
+
+
+var updateUserCustomizationOptions = function(cognitoSub, obj) {
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizationOptions: obj}, async function(err, obj){
+	});		
+}
+
+
+var getUserShopList = function(cognitoSub,cb){
+	//log("searching for user: " + cognitoSub);
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+		if (res && res[0]){
+			var shopList = res[0].shopList;
+			var shopSlotsUnlocked = defaultShopSlotsUnlocked + getCountInArray("unlock", res[0].customizationOptions);
+			
+			var lastMidnight = new Date();
+			lastMidnight.setUTCHours(0,0,0,0);
+			var nextMidnight = new Date();
+			nextMidnight.setUTCHours(0,0,0,0);
+			nextMidnight.setUTCDate(nextMidnight.getUTCDate() + 1); 
+
+
+			var updateUserObj = {};
+			if (typeof shopSlotsUnlocked === 'undefined'){
+				shopSlotsUnlocked = defaultShopSlotsUnlocked;
+				updateUserObj.shopSlotsUnlocked = defaultShopSlotsUnlocked;
+			}
+			
+			//delete res[0].shopList; //Testing
+			//lastMidnight = nextMidnight; //Testing
+			if (typeof res[0].shopRefreshTimestamp === 'undefined' || typeof res[0].shopList === 'undefined' || res[0].shopRefreshTimestamp < lastMidnight){				
+				console.log("REFRESHING STORE BECAUSE LAST REFRESH [" + res[0].shopRefreshTimestamp + "] IS LESS THAN LASTMIDNIGHT[" + lastMidnight.toUTCString() + "]. CURRENT TIME IS " + new Date() + ". ADDING...");
+				updateUserObj.shopRefreshTimestamp = new Date();
+				
+				shopList = getNewUserShopList(shopSlotsUnlocked);
+				updateUserObj.shopList = shopList;
+			}
+			else if (shopList.filter(item => item != "unlock").length < shopSlotsUnlocked){
+				shopList.splice(shopList.length - 1, 0, getNewShopItem(shopList));
+				updateUserObj.shopList = shopList;
+			}
+			if (shopList.filter(item => item != "unlock").length >= maxShopSlotsUnlocked && shopList.filter(item => item == "unlock").length > 0){
+				shopList = shopList.filter(item => item != "unlock");
+				updateUserObj.shopList = shopList;
+			}
+			shopList.splice(maxShopSlotsUnlocked, 10); //Just makes sure list is shorter than the max allowed shop list
+
+			if (Object.keys(updateUserObj).length > 0){
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, updateUserObj, async function(err, obj){
+				});
+			}
+
+			shopList[0] = "bitcoinIcon";
+			shopList[1] = "alertIcon";
+			shopList[2] = "birdIcon";
+			shopList[3] = "bulbIcon";
+			shopList[4] = "cloverIcon";
+
+			var clientShopList = transformToClientShop(shopList, nextMidnight);
+
+			console.log("RETURNING SHOP LIST FOR " + cognitoSub);
+			console.log(clientShopList);
+			cb({msg:"Successfully authenticated user, and got shop list", result:clientShopList});
+		}
+		else {
+			console.log("ERROR - COULD NOT FIND USER WHEN GETTING SHOP LIST FOR " + cognitoSub);
+			cb({msg: "Failed to get shopList for [" + cognitoSub + "] from DB", result:transformToClientShop([], new Date())});
+		}
+	});
+}
+
+function getNewUserShopList(shopSlotsUnlocked){
+	var newShopList = [];
+
+	for (var s = 0; s < shopSlotsUnlocked; s++){
+		newShopList.push(getNewShopItem(newShopList)); //Random element from shop, starting with index 2 (to skip unlock and refresh)
+	}
+	if (shopSlotsUnlocked < maxShopSlotsUnlocked){
+		newShopList.push(fullShopList[1].id); //unlock slot
+	}
+	return newShopList;
+}
+
+function getNewShopItem(currentShopList){
+	var shopIndex = 0;
+	var loopCount = 0;
+	while (loopCount < 1000){
+		shopIndex = randomInt(2, fullShopList.length - 1); //Random element from shop, starting with index 2 (to skip unlock and refresh)
+		//New shop rules
+		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
+			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item already added to new shop?
+				break;				
+			}
+		}
+		loopCount++;
+	}
+	return fullShopList[shopIndex].id;
+}
+
+function transformToClientShop(shopList, nextRefreshTime){ //shopList is list of id's
+	var clientShop = getEmptyClientShop();
+	clientShop.timer.time = Math.floor((nextRefreshTime - new Date()) / 1000); //Seconds until next refresh
+	clientShop.timer.resetPrice = fullShopList.find(item => item.id == "refresh").price;
+
+	//transform from list of id's to full shop object
+	var clientShopList = [];
+	for (var i = 0; i < shopList.length; i++){
+		var shopItem = fullShopList.find(item => item.id == shopList[i]);
+		if (shopItem){
+			clientShopList.push(shopItem);
+		}
+	}
+	clientShop.shop = clientShopList;
+
+	return clientShop;
+}
+
+function getEmptyClientShop(){
+	return {
+		timer: {
+			time:0,
+			resetPrice: fullShopList.find(item => item.id == "refresh").price
+		},
+		shop: []
+	};
+}
+
+var updateUserShopList = function(cognitoSub, obj) {
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {shopList: obj}, async function(err, obj){
+	});		
+}
+
+var getShopItem = function(itemId){
+	var shopItem = fullShopList.find(item => item.id == itemId); //LINQ
+	if (!shopItem){
+		shopItem = false;
+	}
+	return shopItem;
+}
+
+var buyItem = function(data, cb){
+	var cognitoSub = data.cognitoSub;
+	var itemId = data.itemId;
+	var price = getShopItem(itemId).price;
+	var msg = "";
+
+	//price = 100000000000;
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+		if (res && res[0]){
+			if (res[0].cash >= price){
+				if (itemId == "unlock" && res[0].customizationOptions && res[0].customizationOptions.filter(item => item == "unlock").length + defaultShopSlotsUnlocked >= maxShopSlotsUnlocked){
+					msg = "Tried to buy too many unlock slots";
+					logg(msg);
+					cb({msg:msg, result:false});					
+				}
+				else {
+					//purchase item
+					dataAccess.dbUpdateAwait("RW_USER", "inc", {cognitoSub: cognitoSub}, {cash: -price}, async function(err, obj){
+						if (!err){
+							var updateObject = {};
+							if (itemId != "refresh"){
+								var updatedCustomizationOptions = res[0].customizationOptions
+								updatedCustomizationOptions.push(itemId);
+								updateObject = {customizationOptions: updatedCustomizationOptions};	 		
+							}
+							else {
+								var shopSlotsUnlocked = defaultShopSlotsUnlocked + getCountInArray("unlock", res[0].customizationOptions);
+								updateObject = {shopList:getNewUserShopList(shopSlotsUnlocked)};
+							}
+							dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, updateObject, async function(err2, obj){
+								if (!err2){
+									msg = "Successful purchase";
+									logg(msg);
+									cb({msg:msg, result:true});
+								}
+								else {
+									msg = "Database error during purchase. Please try again.";
+									logg(msg);
+									cb({msg:msg, result:false});						
+								}
+							});
+
+						}
+						else {
+							msg = "Database error during purchase. Please try again. You should not have been charged any money.";
+							logg(msg);
+							cb({msg:msg, result:false});						
+						}
+					});	
+				}	
+			}
+			else {
+				msg = "ERROR - User[" + cognitoSub +  "] does not have enough cash[" + res[0].cash + "] to purchase [" + itemId + "] for [" + price + "]";
+				logg(msg);
+				cb({msg:msg, result:false});				
+			}
+		}
+		else{
+			msg = "ERROR - COULD NOT FIND USER : " + cognitoSub + "!!!";
+			logg(msg);
+			cb({msg:msg, result:false});
+		}
+	});
+}
+
+
+
 ///////////////////////////////REQUEST FUNCTIONS////////////////////////////////
 var removeRequest = function(data){
 	/*const data = {
@@ -242,7 +613,7 @@ var removeRequest = function(data){
 	};*/
 	try {
 		logg("Removing request:");
-		console.log(data);
+		logObj(data);
 		dataAccess.dbUpdateAwait("RW_REQUEST", "rem", data, {}, async function(err, res){
 		});
 	}
@@ -696,6 +1067,14 @@ module.exports.searchUserFromDB = searchUserFromDB;
 module.exports.dbUserUpdate = dbUserUpdate;
 module.exports.updateOnlineTimestampForUsers = updateOnlineTimestampForUsers;
 module.exports.updateOnlineTimestampForUser = updateOnlineTimestampForUser;
+module.exports.setUserCustomization = setUserCustomization;
+module.exports.setUserCustomizations = setUserCustomizations;
+module.exports.getUserCustomizations = getUserCustomizations;
+module.exports.getUserCustomizationOptions = getUserCustomizationOptions;
+module.exports.defaultCustomizations = defaultCustomizations;
+module.exports.getShopItem = getShopItem;
+module.exports.getUserShopList = getUserShopList;
+module.exports.buyItem = buyItem;
 module.exports.setPartyIdIfEmpty = setPartyIdIfEmpty;
 module.exports.updateServerUrlForUser = updateServerUrlForUser;
 module.exports.removeRequest = removeRequest;

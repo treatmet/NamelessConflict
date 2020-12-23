@@ -4,7 +4,7 @@ global.serv = require('http').Server(app);
 
 
 global.fs = require('fs');
-global.util = require('util')
+global.util = require('util');
 
 global.config = require("../settings.json");
 

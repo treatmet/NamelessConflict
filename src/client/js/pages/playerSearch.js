@@ -15,7 +15,7 @@ function loginFail(){
 	showDefaultLoginButtons();
 }
 
-function loginFinally(){
+function loginAlways(){
 	showUnset("mainContent");
 }
 

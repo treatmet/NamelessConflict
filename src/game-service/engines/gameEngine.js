@@ -1111,7 +1111,7 @@ var sendFullGameStatus = function(socketId){
 	var miscPack = {};
 
 	var playerList = player.getPlayerList();
-	for (var a in playerList){
+	for (var a in playerList){		
 		var playa = {
 			id:playerList[a].id,
 			name:playerList[a].name,
@@ -1135,6 +1135,8 @@ var sendFullGameStatus = function(socketId){
 			MGAmmo:playerList[a].MGAmmo,	
 			SGAmmo:playerList[a].SGAmmo,	
 			reloading:playerList[a].reloading,
+			images:{ red:{}, blue:{} },
+			customizations:playerList[a].customizations,			
 			
 			cash:playerList[a].cash,
 			cashEarnedThisGame:playerList[a].cashEarnedThisGame,
@@ -1189,6 +1191,7 @@ var sendFullGameStatus = function(socketId){
 	else {
 		miscPack.variant.timeLimit = false;
 	}
+	log("ABOUT TO SEND FULL GAME STATUS. FULL PLAYER PACK:");
 	SOCKET_LIST[socketId].emit('sendFullGameStatus', playerPack, thugPack, pickupPack, blockPack, miscPack); //Goes to a single player
 }
 

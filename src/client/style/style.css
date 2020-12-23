@@ -58,6 +58,26 @@ div#titleText a {
     font-size: 16;
 }
 
+#cashHeaderDisplay{
+    size: 12px;
+    font-size: 16;
+    display: inline-block;
+}
+
+#cashHeaderText{
+    display: inline-block;
+    color:#11e448;
+}
+
+#cashHeaderValue{
+    display: inline-block;
+    color:#11e448;
+}
+
+#cashHeaderDivider{
+    display: inline-block;
+}
+
 #userWelcomeText a {
     color: white;
     text-decoration: none;
@@ -287,7 +307,7 @@ div#progressColumn {
 .sectionTitle {
     display: inline-block;
     float: left;
-    width: 33%;
+    width: 33.2%;
     text-align: center;
     padding-top: 5px;
     line-height: 70px;
@@ -296,7 +316,7 @@ div#progressColumn {
 .sectionTitle2 {
     display: inline-block;
     float: left;
-    width: 33%;
+    width: 33.2%;
     text-align: center;
     padding-top: 5px;
     font-size: 30px;
@@ -305,7 +325,7 @@ div#progressColumn {
 .sectionTitle3 {
     display: none;
     float: left;
-    width: 33%;
+    width: 33.2%;
     text-align: center;
     padding-top: 5px;
     font-size: 30px;
@@ -478,6 +498,7 @@ button#feedbackH {
 
 div#playerRankIcon {
     text-align: center;
+    margin-top: 5px;
 }
 
 #playerRankIcon img {
@@ -593,7 +614,7 @@ div#progressColumnContent{
 /*--------COLUMN SECTIONS----------*/
 
 #learnToPlay {
-	width: 33%;
+	width: 33.2%;
     height: 100%;
     display: inline-block;
     float: left;
@@ -606,15 +627,18 @@ div#progressColumnContent{
 }
 
 .columnSection {
-	width: 33%;
-    height: 100%;
+	width: 33.2%;
+    height: calc(100% - 155px);
     display: inline-block;
     float: left;
     font-family: electrolize;
     color: white;
     border-left: 1px solid #404040;
-    overflow-y: auto;
 	text-align:center;
+}
+
+div#playerProfile {
+    overflow-y: auto;
 }
 
 div#serversHiddenMsg {
@@ -839,6 +863,58 @@ table.statsTable {
 	font-size: 15px;
 }
 
+div#shopCustomizeToggle {
+    width: 100%;
+    display: inline-block;
+    margin-bottom: 5px;
+    display: none;
+}
+
+.toggleIcons {
+    display: inline-block;
+    float: left;
+    width: 50%;
+    /* border: 1px white solid; */
+    box-sizing: border-box;    
+    height: 30px;
+    font-size: 22px;
+    cursor: pointer;
+
+}
+
+.toggleIcons:hover {
+    border: 2px solid rgb(207, 207, 207);
+    box-sizing: border-box;  
+    font-size: 21px;
+}
+
+.toggleIcons.active {
+    border-top: 2px white solid;
+    border-left: 2px white solid;
+    border-right: 2px white solid;
+    border-bottom: 2px white solid;
+    box-sizing: border-box;  
+    font-size: 21px;
+    cursor:default;
+}
+
+#shopToggleIcon {
+    background-color: #064536;
+}
+
+#customizeToggleIcon {
+    background-color: #3b3b3b;
+}
+
+.toggleIcons span {
+    vertical-align: top;
+    line-height: 28px;
+}
+
+.toggleIcons img{
+    height: 100%;
+ }
+
 #canvasDiv {
 	margin: 8px auto auto;
     width: 1100px;
@@ -850,7 +926,247 @@ table.statsTable {
 #ctx {
     border: 2px solid rgb(0, 0, 0);
     background-color: rgb(19, 19, 19);
-    margin: -2px;
     position: relative;
 }
 
+#shopOptions {
+    padding-left: 12px;
+    /*border-left: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;*/
+    height: calc(100% - 250px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-top: 1px solid white;
+    border-bottom: 1px solid white;
+    background-color: #263320;
+    background-image: url("/client/img/shopIcons/background-small.png");
+    /* background-position: center center; */
+    /* background-attachment: fixed; */
+    user-select: none;
+}
+
+div#refreshTimer {
+    float: right;
+    display: inline-block;
+    margin-top: 5px;
+    padding: 5px;
+    /* background-color: #aa0808; */
+    border: 1px white solid;
+    width: 140px;
+    font-weight: bold;
+}
+
+#refreshTimerText {
+    display: inline-block;
+    float: left;
+}
+
+#refreshTimerTimer {
+    display: inline-block;
+    float: left;
+    margin-left: 5px;
+    font-family: 'Roboto Mono';
+    font-size: 16px;
+}
+
+
+.refreshItem {
+    margin: auto;
+    float: left;
+    margin-top: 5px;
+    margin-left: 15px;
+    position: relative; 
+    left: 0; 
+    top: 0;
+    width: 250px;
+    padding:1px;
+}
+
+.refreshItem:hover {
+    background-image: url("/client/img/white-trans.png"); 
+    background-size: cover;
+    cursor: pointer;
+}
+
+div#appearance {
+    /* margin-bottom: 10px; */
+}
+
+.teamTabs {
+    width: 150px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+#tabRed {
+}
+
+#tabBlue {
+    float: right;
+}
+
+#tabBlue:hover {
+    background-color: #546dc7;
+}
+
+#tabBlueActive {
+    background-color: #2344bd;
+    float: right;
+}
+
+#tabRed:hover {
+    background-color: #d15252;
+}
+
+#tabRedActive {
+    background-color: #bf1f1f;
+}
+
+.teamTabs button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 12px;
+    color: white;
+}
+
+/* Customization Tabs */
+div#appearanceOptions {
+    width: 100%;
+    display: none;
+}
+
+.tab {
+    overflow: hidden;
+    border-bottom: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    /*border: 1px solid #ccc;*/
+    /*background-color: #f1f1f1;*/
+}
+
+.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 12px;
+    color: white;
+}
+  
+.tab button:hover {
+    background-color: #aaa;
+}
+
+.tab button.active {
+    background-color: #FFF;
+    color: black;
+}
+
+.tablinks {
+    user-select: none;
+}
+
+.tabcontent {
+    display: none;
+    padding-left: 12px;
+    /*border-left: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;*/
+    height: calc(100% - 340px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+.shopCategory {
+    float: left;
+    font-weight: bold;
+    font-size: 24px;
+    margin-top: 20px;
+    width: 100%;
+    text-align: left;
+}
+
+.shopItem {
+    margin: auto;
+    float: left;
+    width: 90%;
+    margin-top: 5px;
+    margin-left: 15px;
+    position: relative; 
+    left: 0; 
+    top: 0;
+    padding:1px;    
+    border: 1px solid transparent;
+}
+
+.shopItem:hover {
+    /* background-image: url("/client/img/white-trans.png");  */
+    background-image: url("/client/img/black-trans.png"); 
+    border: 1px solid white;
+    background-size: cover;
+    cursor: pointer;
+}
+
+
+.shopTitle {
+    float: left;
+    margin-right: 10px;
+    font-weight: bold;    
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+
+.shopText {
+    float: left;
+    font-size: 14px;
+    max-width: 200px;
+    text-align: left;
+    margin-right: 5px;
+}
+
+.shopIcon {
+    width: 74px;
+    height: 74px;
+    float: left;
+    margin-right: 10px;
+    border: 2px solid #262626;
+    box-sizing: border-box;
+    cursor: pointer;
+    position: relative; 
+    left: 0; 
+    top: 0;
+}
+
+.shopIconOverlay {
+    position: absolute; 
+    left: -1; 
+    top: -1;
+}
+
+.shopIcon.active {
+    border: 2px solid white;
+    box-sizing: border-box;
+}
+
+/* .shopIcon:hover {
+    width: 74px;
+    height: 74px;
+    float: left;
+    margin-right: 10px;
+    border: 2px solid rgb(207, 207, 207);
+    box-sizing: border-box;
+} */
+
+
+.shopIcon img {
+    width: 100%;
+    height: 100%;
+}

@@ -4,7 +4,6 @@ page = "home";
 initializePage();
 function initializePage(){
     showLocalElements();
-	populateLeaderboard();
 	getTokenFromUrlParameterAndLogin(); 
     getServerList();
 }
@@ -19,11 +18,13 @@ function loginFail(){
 	showDefaultLoginButtons();
 }
 
-function loginFinally(){
+function loginAlways(){
+	populateLeaderboard();
 	showUnset("mainContent");
 }
 
 function populateLeaderboard(){
+	console.log("POPULATING LEADERBOARD: " + serverHomePage);
 	if (document.getElementById('tablePrint')){
 		$.post('/getLeaderboard', {}, function(res,status){
 			var leaderboardHTML= "<table class='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";

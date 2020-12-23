@@ -11,15 +11,6 @@ function getSocketParams(){
 		return {};
 	}
 }
-// TODO:set values based on game.html query string params
-/*
-var socket = io({
-	query: {
-		"server": "1",
-		"process": "1"
-	}
-});
-*/
 
 
 const cognitoClientId = '70ru3b3jgosqa5fpre6khrislj';
@@ -28,10 +19,19 @@ var page = "";
 var cognitoSub = "";
 var username = "";
 var partyId = "";
+var userCash = 0;
 var federatedUser = false;
 var pcMode = 1;
 var serverHomePage = "https://rw.treatmetcalf.com/";
 var isLocal = false;
+var defaultCustomizations = {red:{}, blue:{}};
+
+var iconSize = 15;
+
+const teams = [
+	"red",
+	"blue"
+];
 
 function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
@@ -52,6 +52,8 @@ function getTokenFromUrlParameterAndLogin(){
 		
         if (data && data.username){
             cognitoSub = data.cognitoSub;
+			userCash = data.cash;
+			updateCashHeaderDisplay(data.cash);
 			
 			
 			log('emmiting updateSocketInfo cognitoSub=' + cognitoSub);
@@ -60,7 +62,12 @@ function getTokenFromUrlParameterAndLogin(){
             username = data.username;					
 			federatedUser = data.federatedUser;
 			isLocal = data.isLocal;
-	
+			if (isLocal){
+				serverHomePage = "/";
+			}
+			console.log("SET SERVER HOMEPAGE: " + serverHomePage);
+			defaultCustomizations = data.defaultCustomizations;
+
 			setLocalStorage();
 			getOnlineFriendsAndParty();	
 			//loginSuccess(); wait for response from updateSocketInfo before triggering loginSuccess() -- socket.on('socketInfoUpdated')
@@ -69,9 +76,16 @@ function getTokenFromUrlParameterAndLogin(){
 			loginFail();
 		}
 		setPcModeAndIsLocalElements({isLocal:data.isLocal, pcMode:data.pcMode});
-		loginFinally();
+		loginAlways();
 		removeUrlParams();
     });
+}
+
+function updateCashHeaderDisplay(cash){
+	if (document.getElementById("cashHeaderValue")){
+		document.getElementById("cashHeaderValue").innerHTML = "$" + numberWithCommas(cash);
+		show("cashHeaderDisplay");
+	}
 }
 
 function updateProfileLink(){
@@ -471,7 +485,7 @@ function logOutClick(){
 function showLocalElements(){
   $(document).ready(function() {
     if (window.location.href.indexOf("localhost") > -1) {
-      document.getElementById("localPlayNow").style.display = "";
+      showUnset("localPlayNow");
     }
   });
 }
@@ -507,16 +521,6 @@ function showAuthorizedLoginButtons(){
         document.getElementById('userWelcomeText').style.display = "inline-block";
 		document.getElementById('userWelcomeText').innerHTML = "<a href='/user/" + cognitoSub + "'>Logged in as " + printedUsername + "</a>";	
 	}
-    if (document.getElementById('updateUserForm')){
-		if (getUrl().includes(cognitoSub)){
-			document.getElementById('updateUserForm').style.display = '';
-			document.getElementById('editUserButton').style.display = '';
-			showSecondaySectionTitles();
-		}
-		else {
-			showUnset("invitePlayerButtons");			
-		}
-    }
 }
 
 function showSecondaySectionTitles(){
@@ -594,6 +598,7 @@ function localPlayNowClick(){
 }
 
 function show(element){
+	//log("Showing element: " + element);
 	if (document.getElementById(element)) {
 		document.getElementById(element).style.display = "inline-block";
 	}
@@ -634,4 +639,213 @@ setInterval(
 	},
 	1000/1 //Ticks per second
 );
+
+//Shared Functions handy handy
+function getCountInArray(string, array){
+    var count = 0;
+    if (!array || !array.length)
+        return count;
+    
+    for (var i = 0; i < array.length; i++){
+        if (array[i] == string)
+            count++;
+    }
+
+	return count;
+}
+
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function removeIndexesFromArray(array, indexes){
+	for (var i = 0; i < indexes.length; i++){
+		array.splice(indexes[i], 1);
+	}
+	return array;
+}
+
+function capitalizeFirstLetter(str){
+	if (!str){
+		logg("ERROR CAPITALIZING FIRST LETTER OF STRING!");
+		return "";
+	}
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+Element.prototype.getElementById = function(req) {
+    var elem = this, children = elem.childNodes, i, len, id;
+ 
+    for (i = 0, len = children.length; i < len; i++) {
+        elem = children[i];
+        
+        //we only want real elements
+        if (elem.nodeType !== 1 )
+            continue;
+
+        id = elem.id || elem.getAttribute('id');
+        
+        if (id === req) {
+            return elem;
+        }
+        //recursion ftw
+        //find the correct element (or nothing) within the child node
+        id = elem.getElementById(req);
+
+        if (id)
+            return id;
+    }
+    //no match found, return null
+    return null;
+}
+
+//Function to convert rgb color to hex format
+function rgb2hex(rgb) {
+ rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+ return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+}
+
+function hex(x) {
+  return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
+}
+var hexDigits = new Array
+        ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); 
+
+
+function drawName(drawingCanvas, playerUsername, color, x, y, icon = false){
+	drawingCanvas.save();
+        drawingCanvas.textAlign="center";
+        drawingCanvas.font = 'bold 12px Electrolize';        
+		drawingCanvas.fillStyle = color;
+		drawingCanvas.shadowColor = "white";
+		drawingCanvas.shadowOffsetX = 0; 
+		drawingCanvas.shadowOffsetY = 0;
+		drawingCanvas.shadowBlur = 3;
+
+		var txtWidth = drawingCanvas.measureText(playerUsername).width;
+		if (icon){
+			icon.width = iconSize;
+			icon.height = iconSize;
+			x += icon.width/2;
+			drawIcon(drawingCanvas, icon, x - (icon.width) - txtWidth/2 - 1, y - (icon.height/2) - 4, icon.width, icon.height);
+		}
+		drawingCanvas.fillText(playerUsername, x, y); 
+	drawingCanvas.restore();
+}
+
+function drawIcon(drawingCanvas, icon, x, y, width = false, height = false){
+	if (!icon)
+		return;
+	if (!width || !height){
+		width = iconSize;
+		height = iconSize;
+	}
+	drawingCanvas.drawImage(icon, x, y, width, height);
+}
+
+function getUserIconImg(iconCanvasValue, team, cb){
+    if (iconCanvasValue == "none"){
+        cb(false, team);
+		return;
+    }
+    var iconImg = new Image();
+    iconImg.src = "/client/img/dynamic/icon/" + iconCanvasValue + ".png";
+	loadImages([iconImg.src], function(invalidSrcPaths){
+    	cb(iconImg, team);
+	});
+}
+
+//imgArr is a list of strings containing the paths to images (src property)
+function loadImages(imgArr,callback) {
+	//Keep track of the images that are loaded
+	var imagesLoaded = 0;
+	var invalidSrcPaths = [];
+	if (!imgArr || imgArr.length == 0){callback([]); return;}
+	function _loadAllImages(callback){
+		//Create an temp image and load the url
+		var img = new Image();
+		$(img).attr('src',imgArr[imagesLoaded]); //Second parameter must be the src of the image
+
+		//log("loading " + imagesLoaded + "/" + imgArr.length + " " + img.src);
+		if (img.complete || img.readyState === 4) {
+			//log("CACHED " + (imagesLoaded + 1) + "/" + imgArr.length + " " + img.src);
+			// image is cached
+			imagesLoaded++;
+			//Check if all images are loaded
+			if(imagesLoaded == imgArr.length) {
+				//If all images loaded do the callback
+				callback(invalidSrcPaths);
+			} else {
+				//If not all images are loaded call own function again
+				_loadAllImages(callback);
+			}
+		} else {
+			$(img).load(function(){
+				//log("DONE " + imagesLoaded + "/" + imgArr.length + " " + img.src);
+				//Increment the images loaded variable
+				imagesLoaded++;
+				//Check if all images are loaded
+				if(imagesLoaded == imgArr.length) {
+					//If all images loaded do the callback
+					callback(invalidSrcPaths);
+				} else {
+					//If not all images are loaded call own function again
+					_loadAllImages(callback);
+				}
+			});
+			$(img).error(function(){
+				log("ERROR LOADING IMAGE AT PATH : " + img.src);
+				invalidSrcPaths.push(img.src);
+				imagesLoaded++;
+				if(imagesLoaded == imgArr.length) {
+					callback(invalidSrcPaths);
+				} else {
+					_loadAllImages(callback);
+				}
+			});
+
+
+		}
+	};		
+	_loadAllImages(callback);
+}
+
+function getRankFromRating(rating){
+	if (!rating)
+		return {rank:"bronze1", floor:0, nextRank:"bronze2", ceiling:100};
+		
+	const rankings = [
+		{rank:"bronze1",rating:0},
+		{rank:"bronze2",rating:100},
+		{rank:"bronze3",rating:200},
+		{rank:"silver1",rating:300},
+		{rank:"silver2",rating:500},
+		{rank:"silver3",rating:700},
+		{rank:"gold1",rating:1000},
+		{rank:"gold2",rating:1300},
+		{rank:"gold3",rating:1600},
+		{rank:"diamond",rating:2000},
+		{rank:"diamond2",rating:9999}
+	];
+
+	for (var r in rankings){
+		var rPlus = parseInt(r)+1; //ToInt32
+		var rMinus = parseInt(r)-1;
+		if (rating < rankings[rPlus].rating){
+			log(rankings[r].rank + " is his rank");
+			var response = {rank:rankings[r].rank, floor:rankings[r].rating, previousRank:"bronze1", nextRank:"diamond2", ceiling:9999};
+			if (rankings[rPlus]){
+				response.nextRank = rankings[rPlus].rank;
+				response.ceiling = rankings[rPlus].rating;
+			}
+			if (rankings[rMinus]){
+				response.previousRank = rankings[rMinus].rank;
+			}
+			return response;
+		}		
+	}
+	return {rank:"bronze1", floor:0, nextRank:"bronze2", ceiling:100};
+}
+
+
 console.log("cognito.js loaded");

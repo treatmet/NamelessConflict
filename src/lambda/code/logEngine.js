@@ -37,20 +37,34 @@ global.logObj = function(obj){
 }
 
 global.logg = function(msg) {
-	msg = msg.toString();
-	var d = new Date();
-	var hours = d.getUTCHours();
-	if (hours <= 9){hours = "0" + hours;}
-	var minutes = d.getUTCMinutes();
-	if (minutes <= 9){minutes = "0" + minutes;}
-	var seconds = d.getUTCSeconds();
-	if (seconds <= 9){seconds = "0" + seconds;}
-	
-	var logMsgText = hours + ':' + minutes + '.' + seconds + '> ' + msg;
-	console.log(logMsgText);	
-	if (s3stream){
-		s3stream.write(logMsgText+'\r\n');
+
+	//Check if next UTC day for updating log file folder (reinitialize stream)
+	if (currentStreamingDay != new Date().getUTCDate()){
+		reinitStream();
+		currentStreamingDay = new Date().getUTCDate();
+	}	
+
+	try {
+
+		msg = msg.toString();
+		var d = new Date();
+		var hours = d.getUTCHours();
+		if (hours <= 9){hours = "0" + hours;}
+		var minutes = d.getUTCMinutes();
+		if (minutes <= 9){minutes = "0" + minutes;}
+		var seconds = d.getUTCSeconds();
+		if (seconds <= 9){seconds = "0" + seconds;}
+		
+		var logMsgText = hours + ':' + minutes + '.' + seconds + '> ' + msg;
+		console.log(logMsgText);	
+		if (s3stream){
+			s3stream.write(logMsgText+'\r\n');
+		}
 	}
+	catch(e){
+		console.log("!!! ERROR LOGGING !!! May be a problem accessing S3");
+	}
+
 }
 
 reinitStream();

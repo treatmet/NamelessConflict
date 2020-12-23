@@ -1,39 +1,50 @@
 page = "profile";
+var viewedProfileCognitoSub = "";
+var viewedProfileName = "";
+var viewedProfileRank = "bronze1";
+var currentCustomizations = {};
+var displayAnimation = "";
+var displayTeam = "red";
+var customizationOptions = {};
+var shopOptions = {};
+var shopRefreshTimer = 10000000;
+var playerCenterOffset = 4;
+
 initializePage();
 function initializePage(){
+    viewedProfileCognitoSub = getViewedProfileCognitoSub();
     showLocalElements();
-	populateProfilePage();
-	getTokenFromUrlParameterAndLogin(); 	
+	getTokenFromUrlParameterAndLogin();
 }
 
 function loginSuccess(){
 	checkViewedProfileIsFriendOrParty();
 	showAuthorizedLoginButtons();            
-	getRequests();
+	getRequests();    
 }
 
 function loginFail(){
 	showDefaultLoginButtons();
 }
 
-function loginFinally(){
+function loginAlways(){
+	populateProfilePage();
 	showUnset("mainContent");
 }
 
 function checkViewedProfileIsFriendOrParty(){	
-	console.log("passed profile page check, making call with:");
-
+    if (viewedProfileCognitoSub == cognitoSub)
+        return;
+        
 	const params = {
 		callerCognitoSub:cognitoSub,
-		targetCognitoSub:getViewedProfileCognitoSub()
+		targetCognitoSub:viewedProfileCognitoSub
 	};
 
 	$.post('/getPlayerRelationship', params, function(data,status){
-		console.log("getPlayerRelationship response:");
-		console.log(data);
 		if (data.friends == true){
 			hide("addFriendButton");
-			show("removeFriendButton");								
+			show("removeFriendButton");		
 		}
 		else {
 			hide("removeFriendButton");											
@@ -43,7 +54,6 @@ function checkViewedProfileIsFriendOrParty(){
 }
 
 function updateKickInviteToPartyButtons(data){
-	var viewedProfileCognitoSub = getViewedProfileCognitoSub();
 	var isInParty = false;
 	for (var p = 0; p < data.party.length; p++){
 		if (viewedProfileCognitoSub == data.party[p].cognitoSub){
@@ -74,30 +84,145 @@ function getViewedProfileCognitoSub(){
 
 function populateProfilePage(){
 	const params = {
-		cognitoSub:getViewedProfileCognitoSub()
+		cognitoSub:viewedProfileCognitoSub
 	}
-
 	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){	
 		$.post('/getProfile', params, function(data,status){
+            console.log("getProfilePage response from server:");
+            console.log(data);		
 			if (!data.success){
-				document.getElementById("mainContent").innerHTML = '<div id="fullScreenError" class="sectionTitle">Invalid User</div>';
+                ///!!! Invalid user page constantly refreshes
+				document.getElementById("mainContent").innerHTML = '<div id="fullScreenError" class="sectionTitle">Invalid User Page</div>';
 			}
-			else {
-
-				console.log("getProfilePage response from server:");
-				console.log(data);		
-
+			else { //Viewing valid player profile
+                viewedProfileName = data.USERNAME;
+                viewedProfileRank = data.rank;
 				var mainContentHTML = document.getElementById("mainContent").innerHTML;
 				for (var element in data){
 					var regex = new RegExp("{{" + element + "}}","g");
 					mainContentHTML = mainContentHTML.replace(regex, data[element]);
 				}
-
+                $.get('/getUserCustomizations', params, function(data,status){
+                    logg("GET USER CUSTOMIZATIONS RESPONSE:");
+                    console.log(data);
+                    if (!data.result){
+                        alert("Error retrieving user customiaztions.");
+                    }
+                    else { //Got customizations
+                        currentCustomizations = data.result;
+                        showSelfProfileOptions();
+                        cycleAppearance();
+                    }
+                });
 				document.getElementById("mainContent").innerHTML = mainContentHTML;
 			}
 		});
 	}	
 }
+
+function showSelfProfileOptions(){
+    if (viewedProfileCognitoSub == cognitoSub && cognitoSub != "") {
+        show("appearanceOptions");			
+        show("shopCustomizeToggle");			
+        show('updateUserForm');
+        show('editUserButton');
+        showSecondaySectionTitles();
+        show("appearanceOptions");
+        $.get( '/getUserCustomizationOptions', {cognitoSub:viewedProfileCognitoSub}, function(data) {
+            logg("GET CUSTOMIZATION OPTIONS RESPONSE:");
+            console.log(data);
+            if (data.result)
+                customizationOptions = data.result;
+            populateCustomizationOptions();
+            $.get( '/getUserShopList', {cognitoSub:viewedProfileCognitoSub}, function(data) {
+                logg("GET SHOP LIST RESPONSE:");
+                console.log(data);
+                if (data.result){
+                    shopOptions = data.result;
+                    shopRefreshTimer = shopOptions.timer.time;
+                }
+
+                // logg("GOT SHOP OPTIONS:");
+                // logg(shopOptions);
+                populateShopOptions();
+            });
+        });        
+    }
+    else {
+        showUnset("invitePlayerButtons");			
+    }
+}
+
+function drawProfileCustomizations(){
+    drawCustomizations(currentCustomizations, 0, function(frames, id){
+        displayAppearanceFrame(frames[displayTeam][displayAnimation], 1, frames[displayTeam]["legs"]);
+    });
+}
+
+
+function displayAppearanceFrame(image, zoom = 1, secondImage = false){
+    var ctx = document.getElementById("ctx").getContext("2d", { alpha: false });
+    var canvas = document.getElementById("ctx");
+
+    var backgroundImg = new Image();
+    backgroundImg.src = "/client/img/factory-floor.png";
+
+    loadImages([backgroundImg.src], function(){
+        drawOnCanvas(ctx, backgroundImg, 0, 0, false, false, 1, true);
+        if (secondImage){drawOnCanvas(ctx, secondImage, (canvas.width/2 - ((secondImage.width * zoom) / 2)), (canvas.height/2 - (((secondImage.height - playerCenterOffset)*zoom)/2)), false, false, zoom, false);}
+        drawOnCanvas(ctx, image, (canvas.width/2 - ((image.width * zoom) / 2)), (canvas.height/2 - ((image.height*zoom)/2)), false, false, zoom, false);
+        if (currentCustomizations[displayTeam].icon == "rank"){
+            currentCustomizations[displayTeam].icon = viewedProfileRank;
+        }
+        getUserIconImg(currentCustomizations[displayTeam].icon, false, function(iconImg, team){
+            drawName(ctx, viewedProfileName, currentCustomizations[displayTeam].nameColor, canvas.width/2, 20, iconImg);
+        });                
+	});
+}
+
+function drawShopIcon(shopItem, iconId){
+    // console.log("GETTING CANVAS FOR: " + iconId);
+    var zoom = 1; //Zoom config of all shop icons
+    var canvas = document.getElementById(iconId);
+    if (!canvas){
+        //logg("ERROR: CAN NOT FIND SHOP ICON:" + iconId); 
+        return;
+    }
+    canvas.width = 70;
+    canvas.height = 70;
+    var ctx = canvas.getContext("2d", { alpha: false });
+
+    ctx.fillStyle="#37665a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var drawY = 25;
+    if (shopItem.category == "name"){
+        drawName(ctx, username, shopItem.canvasValue, canvas.width/2, drawY);
+    }
+    else if (shopItem.category == "icon"){
+        if (shopItem.canvasValue == "rank"){
+            shopItem.canvasValue = viewedProfileRank;
+        }
+        getUserIconImg(shopItem.canvasValue, false, function(iconImg, team){
+            drawIcon(ctx, iconImg, canvas.width/2 - 10, drawY, 20, 20);   
+        });                             
+    }
+    else {
+        getMannequinFrame(shopItem, function(image){
+            var shiftDistForIconX = -11;
+            var shiftDistForIconY = -11;
+            if (shopItem.category == "boost"){
+                shiftDistForIconX = -1;
+                shiftDistForIconY = -3;
+            }
+            drawOnCanvas(ctx, image, shiftDistForIconX, shiftDistForIconY, false, false, zoom, false);
+        });
+    }
+}
+
+
+
+
 
 /////////////////////////// EDIT PROFILE /////////////////////
 function resetEditUserElements(){
@@ -398,7 +523,6 @@ function inviteToPartyButtonClick() {
 		};		
 		upsertRequest(data);
 	}
-
 }
 
 function upsertRequest(data){
@@ -417,7 +541,7 @@ function upsertRequest(data){
 }
 
 function kickFromPartyButtonClick() {
-	document.getElementById("kickFromPartyButton").style.backgrounColor = "gray";
+	document.getElementById("kickFromPartyButton").style.backgroundColor = "gray";
 	
 	const data = {
 		cognitoSub: cognitoSub,
@@ -433,8 +557,621 @@ function kickFromPartyButtonClick() {
 	});
 }
 
+//////////////////////////////// APPEARANCE ////////////////////////
+
+function toggleAppearanceMode(event) {
+    removeConfirmationMessage();
+    var tablinks = document.getElementsByClassName("toggleIcons");
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    event.currentTarget.className += " active";
+
+    var appearanceOptions = document.getElementById("appearanceOptions");
+    var shopOptionsDiv = document.getElementById("shopOptions");
+
+    if (appearanceOptions && shopOptionsDiv){
+        switch (event.currentTarget.id){
+            case "customizeToggleIcon":
+                appearanceOptions.style.display = "block";
+                shopOptionsDiv.style.display = "none";
+                break;
+            case "shopToggleIcon":
+                appearanceOptions.style.display = "none";
+                shopOptionsDiv.style.display = "block";            
+                break;
+            default:
+                log("Unknown appearance mode clicked...");
+                break;
+        }
+    }
+    else {
+        log("DETECTED NONEXISTANT DIV");
+    }    
+}
+
+function toggleShopSelected(event) {
+    var tablinks = document.getElementsByClassName("toggleIcons");
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    event.currentTarget.className += " active";
+
+    var appearanceOptions = document.getElementById("appearanceOptions");
+    var shopOptionsDiv = document.getElementById("shopOptions");
+
+    if (appearanceOptions && shopOptionsDiv){
+        switch (event.currentTarget.id){
+            case "customizeToggleIcon":
+                appearanceOptions.style.display = "block";
+                shopOptionsDiv.style.display = "none";
+                break;
+            case "shopToggleIcon":
+                appearanceOptions.style.display = "none";
+                shopOptionsDiv.style.display = "block";            
+                break;
+            default:
+                log("Unknown appearance mode clicked...");
+                break;
+        }
+    }
+    else {
+        log("DETECTED NONEXISTANT DIV");
+    }    
+}
+
+
+function showContent(event) {
+    var tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (var i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(event.currentTarget.id + "Div").style.display = "block";
+    event.currentTarget.className += " active";
+}
+
+function selectTeam(event) {
+    var tablinks;
+    tablinks = document.getElementsByClassName("teamTablinks");
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].id = tablinks[i].id.replace("Active", "");
+    }
+    event.currentTarget.id += "Active";
+    displayTeam = event.currentTarget.innerHTML.toLowerCase();
+    drawProfileCustomizations();
+    populateCustomizationOptions();
+}
+
+
 function onBlur(element){
     if (element.value == ""){
         resetElement(element);
     }    
 }
+
+function cycleAppearance(){
+    if (displayAnimation == "pistol"){
+        displayAnimation = "DP";
+    }
+    else if (displayAnimation == "DP"){
+        displayAnimation = "MG";
+    }
+    else if (displayAnimation == "MG"){
+        displayAnimation = "SG";
+    }
+    else if (displayAnimation == "SG"){
+        displayAnimation = "pistol";
+    }
+    else {
+        displayAnimation = "pistol";
+    }
+    
+    drawProfileCustomizations();
+}
+
+function populateCustomizationOptions(){
+    var options = customizationOptions;
+
+    for (const category in options[displayTeam]){
+        var HTML = "";
+        var div = document.getElementById(category + "Div");
+        if (typeof div === 'undefined')
+            continue;
+
+        for (const subCategory in options[displayTeam][category]){
+            var displaySubCategory = capitalizeFirstLetter(subCategory);
+
+            if (subCategory == "type")
+                displaySubCategory = "";
+
+            HTML += "<div class='shopCategory'>" + displaySubCategory + "</div>"
+
+            for (const item in options[displayTeam][category][subCategory]){
+                var shopIconClass = "shopIcon";
+                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasValue ||
+                (options[displayTeam][category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank)){
+                    shopIconClass += " active";
+                }
+               
+                options[displayTeam][category][subCategory][item].customizationCategory = category + displaySubCategory;
+                options[displayTeam][category][subCategory][item].subCategory = subCategory;
+                HTML += getShopItemHTML(options[displayTeam][category][subCategory][item], shopIconClass, false);
+            }
+        }
+        div.innerHTML = HTML;
+    }
+    //draw on icon canvases
+    for (const team in options){
+        if (team == "fullList"){continue;}
+        for (const category in options[team]){
+            for (const subCategory in options[team][category]){
+                for (const item in options[team][category][subCategory]){
+                    //Logic for not drawing if already drawn
+                    //if (document.getElementById(options[team][category][subCategory][item].id + "CustomizeCtx"))
+                        drawShopIcon(options[team][category][subCategory][item], options[team][category][subCategory][item].id + "CustomizeCtx");
+                }
+            }
+        }
+    }        
+}
+
+function populateShopOptions(){
+    console.log("shopOptions OPTIONS:");
+    console.log(shopOptions);
+
+    var options = shopOptions;
+    var div = document.getElementById("shopOptions");
+    var HTML = "<div class='shopCategory'></div>";
+	HTML += "<div class='shopItem' id='refresh' style='width: 250px;' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
+	HTML += "<div class='shopIcon' id='default'><img src='/client/img/shopIcons/refresh.png'></div>";
+	HTML += "<div id='shopTitle' style='color:#FFFFFF;' class='shopTitle'>Refresh Store Now</div><br><div class='shopText'>$" + numberWithCommas(options.timer.resetPrice) + "</div>";
+    HTML += "<div id='rarityText' class='shopTitle' style='float:right;'></div>";
+    HTML +=	"</div>";
+    HTML += "<div id='refreshTimer'>" + getRefreshTimerTextHTML() + "</div>";
+    HTML += "<div class='shopCategory'>Store</div>";
+
+    for (const item in options.shop){
+        HTML += getShopItemHTML(options.shop[item], "shopIcon", true);
+    }
+
+    HTML += "</div>"; 
+    div.innerHTML = HTML;
+
+    //draw on icon canvases
+    for (const item in options.shop){
+        if (options.shop[item].category == "other"){continue;}
+        drawShopIcon(options.shop[item], options.shop[item].id + "ShopCtx");
+    }
+}
+
+function getShopItemHTML(item, shopIconClass, isInShop){
+    var ownedHTML = "";
+    var ownedCount = getItemOwnedCount(item.id);
+    if (ownedCount > 0){
+        if (isInShop){
+            ownedHTML += " | ";
+        }
+        ownedHTML += "[" + ownedCount + " owned]";
+        if (!isInShop && item.text){ //No need for break if no description subtext
+            ownedHTML = "<br>" + ownedHTML;
+        }
+        if (!isInShop && ownedCount < 2){
+            ownedHTML = "";
+        }
+    }
+
+    var displayCategory = "";
+    if (item.category){
+        if (item.category != "other"){
+            displayCategory += capitalizeFirstLetter(item.category);
+            if (item.subCategory != "type"){
+                displayCategory += (" " + capitalizeFirstLetter(item.subCategory));
+            }
+        }
+    }
+
+    var onClickHTML = "";
+    if (isInShop){
+        onClickHTML = "onclick='shopClick(\"" + item.id + "\"," + item.price + ")'";
+    }
+    else {
+        onClickHTML = "onclick='customizationSelect(\"" + item.canvasValue + "\", \"" + displayTeam + "\",\"" + item.customizationCategory + "\")'";
+    }
+    var HTML = "<div id='" + item.id + "' class='shopItem' " + onClickHTML + ">";
+
+    var iconCtxId = isInShop ? item.id + "ShopCtx" : item.id + "CustomizeCtx";
+    if (item.category == "other"){
+        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><img src='/client/img/shopIcons/" + item.canvasValue + "'></div>";
+    }
+    else {
+        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><canvas id='" + iconCtxId + "'></canvas></div>";
+    }
+    
+
+
+
+    var rarityImg;
+    var rarityText;
+    var rarityColor;
+    switch(item.rarity){
+        case 0:
+            rarityImg = false;
+            rarityText = "";
+            rarityColor = "#ffffff";
+            break;
+        case 1:
+            rarityImg = "rarities/rare.png";
+            rarityText = "Rare";
+            rarityColor = "#0074e0";
+            break;
+        case 2:
+            rarityImg = "rarities/epic.png";
+            rarityText = "Epic";
+            rarityColor = "#b700d8";                
+            break;
+        case 3:
+            rarityImg = "rarities/legendary.png";
+            rarityText = "Legendary";
+            rarityColor = "#ffd200";
+            break;
+        default:            
+            break;
+    }
+
+
+
+    if (rarityImg)
+        HTML += "<div class='shopIconOverlay' id ='" + item.id + "''><img src='/client/img/shopIcons/" + rarityImg + "'></div>";
+    if (item.title)
+        HTML += "<div id='shopTitle' class='shopTitle' style='color:" + rarityColor + "'>" + item.title + "</div>";
+    HTML += "<div id='rarityText' class='shopTitle' style='float:right; color:" + rarityColor + "'>" + rarityText + "</div>";
+    if (item.price && isInShop)
+        HTML += "<br><div id='shopTextPrice' class='shopText'>$" + numberWithCommas(item.price) + ownedHTML + "</div>";
+    HTML += "<br>";
+    if (item.text && !isInShop){
+        HTML += "<div class='shopText'>" + item.text + ownedHTML + "</div>";
+    }
+
+
+    if (displayCategory.length > 0 && isInShop)
+        HTML += "<div id='shopTextCategory' class='shopText'>" + displayCategory + "</div>";
+
+    if (item.team && isInShop){
+        switch(item.team){
+            case 1:
+                HTML += "<div class='shopText' style='color: #bf1f1f;'>| Red team item</div>";
+                break;
+            case 2:
+                HTML += "<div class='shopText' style='color: #476aeb;'>| Blue team item</div>";
+                break;
+            default:
+                break;
+        }       
+    }
+    HTML += "</div>"; 
+
+    return HTML;
+}
+
+
+
+function customizationSelect(canvasValue, team, key){
+    if (key == "icon" && canvasValue == viewedProfileRank){
+        canvasValue = "rank";
+    }
+
+    currentCustomizations[team][key] = canvasValue;
+    drawProfileCustomizations();
+    populateCustomizationOptions();
+
+    var params = {
+        team:team,
+        key:key,
+        value:canvasValue,
+        cognitoSub:viewedProfileCognitoSub
+    };
+	$.post('/setUserCustomizations', params, function(data,status){
+        log("/setUserCustomizations response:");
+		log(data.msg);
+	});
+}
+
+function shopClick(itemId, price){
+    var item = document.getElementById(itemId);
+    var rarityText = item.getElementById("rarityText");
+    var confirmationMessage = "Confirm?";
+
+    if (userCash >= price){
+        if (rarityText.innerHTML != confirmationMessage){
+            removeConfirmationMessage();
+            rarityText.innerHTML = confirmationMessage;
+            rarityText.style.color = "#FFF";
+            item.style.backgroundColor = "#BBB";
+        }
+        else {
+            $.post('/buyItem', {viewedProfileCognitoSub:viewedProfileCognitoSub, itemId:itemId}, function(data,status){
+                log("/buyItem response:");
+                console.log(data);
+                if (data.result){
+                    window.location.reload();
+                }
+                else {
+                    alert(data.msg);
+                }
+            });        
+        }
+    }
+    else {
+        rarityText.innerHTML = "Too Poor!";
+        rarityText.style.color = "red";
+    }
+}
+
+function removeConfirmationMessage(){
+    var shopItems = document.getElementsByClassName("shopItem");
+    for (var i = 0; i < shopItems.length; i++) {
+        if (!shopItems[i].getElementById("shopTitle")){
+            //alert("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
+            logg("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
+            continue;
+        }
+        shopItems[i].getElementById("rarityText").style.color = shopItems[i].getElementById("shopTitle").style.color;
+        shopItems[i].style.backgroundColor = "transparent";
+
+        if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#0074e0"){
+            shopItems[i].getElementById("rarityText").innerHTML = "Rare";
+        }
+        else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#b700d8"){
+            shopItems[i].getElementById("rarityText").innerHTML = "Epic";
+        }
+        else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#ffd200"){
+            shopItems[i].getElementById("rarityText").innerHTML = "Legendary";
+        }
+        else {
+            shopItems[i].getElementById("rarityText").innerHTML = "";
+        }
+    }    
+}
+
+function secondsToTimer(seconds){
+    var colon = seconds % 2 == 0 ? ":" : " ";
+
+    var hours = Math.floor(seconds / (60 * 60));
+    seconds -= hours * (60 * 60);
+    if (hours < 10){
+        hours = "0" + hours;
+    }
+
+    var minutes = Math.floor(seconds / (60));
+    seconds -= minutes * (60);
+    if (minutes < 10){
+        minutes = "0" + minutes;
+    }
+        
+    if (seconds < 10){
+        seconds = "0" + seconds;
+    }
+
+    var formattedTime = hours + colon + minutes + " " + seconds + "s";
+
+    return formattedTime;
+}
+
+function getRefreshTimerTextHTML(){
+    return '<div id="refreshTimerText">⟳ in </div><div id="refreshTimerTimer">' + secondsToTimer(shopRefreshTimer) + '</div>';
+}
+
+function getItemOwnedCount(itemId){
+    var count = 0;
+    if (!customizationOptions.fullList)
+        return count;
+    
+    for (var i = 0; i < customizationOptions.fullList.length; i++){
+        if (customizationOptions.fullList[i] == itemId)
+            count++;
+    }
+
+	return count;
+}
+
+
+
+setInterval( 
+	function(){	
+		//Tick tick tock clock
+        if (viewedProfileCognitoSub == cognitoSub && shopRefreshTimer > -1){
+            shopRefreshTimer--;
+            if (shopRefreshTimer < 1 && document.getElementById("shopOptions") && document.getElementById("shopOptions").style.display != "none"){
+                alert("Shop refresh available! Refresh page to get new shop items!");
+                shopRefreshTimer = 86393;
+            }
+            document.getElementById('refreshTimer').innerHTML = getRefreshTimerTextHTML();
+        }
+	},
+	1000/1 // 1000/Ticks per second
+);
+
+//shopOptions example
+/*
+    var options = {
+        timer: {
+            time: 10000,
+            resetPrice: 10000
+        },
+        shop: [
+            {
+                id:"skiMaskHat",
+                title: "Ski Mask",
+                price: 5000,
+                category: "hat",
+                subCategory: "type",
+                canvasValue: "skiMaskHat",
+                team:0,
+                rarity: 0
+            },
+            {
+                id:"slimShadyHairColor",
+                title: "Slim Shady",
+                price: 5000,
+                category: "hair",
+                subCategory: "color",
+                canvasValue: "#fff3b3",
+                team:1,
+                rarity: 1
+            },
+            {
+                id:"unlock",
+                title: "Unlock New Store Slot",
+                category: "other",
+                subCategory: "",
+                price: 10000,
+                color: "",
+                canvasValue: "",                
+                team:0,
+                rarity: 3
+            }
+        ]
+    };
+    */
+
+//Customization Options example
+/*
+   options = {
+        red: {
+            hat: {
+                type:[
+                    {
+                        id: "noneHat",
+                        canvasValue:"noneHat",
+                        title:"None",
+                        text:"",
+                        rarity:1
+                    },
+                    {
+                        id:"haloHat",
+                        canvasValue:"haloHat",
+                        title:"Halo",
+                        text:"Conflict Progressed",
+                        rarity:1
+                    },
+                    {
+                        id:"skiMaskHat",
+                        canvasValue:"skiMaskHat",
+                        title:"Ski Mask",
+                        text:"Thug life",
+                        rarity:1
+                    },
+                    {
+                        id:"sunglassesHat",
+                        canvasValue:"sunglassesHat",
+                        title:"Shades",
+                        text:"Cool as a cucumber",
+                        rarity:1
+                    },
+                    {
+                        id:"googlyHat",
+                        canvasValue:"googlyHat",
+                        title:"Googly Eyes",
+                        text:"These eyes be poppin",
+                        rarity:1
+                    }
+                ]
+            },
+            hair: {
+                type:[
+                    {
+                        id:"bald",
+                        canvasValue:"bald",
+                        title:"Bald",
+                        text:"",
+                        rarity:1
+                    },
+                    {
+                        id:"crewHair",
+                        canvasValue:"crewHair",
+                        title:"Crew Cut",
+                        text:"Military standard",
+                        rarity:1
+                    },
+                    {
+                        id:"afroHair",
+                        canvasValue:"afroHair",
+                        title:"Afro",
+                        text:"It's an afro",
+                        rarity:1
+                    },
+                    {
+                        id:"bigAfro",
+                        canvasValue:"bigAfro",
+                        title:"Big Afro",
+                        text:"Let's bring back the 80s!",
+                        rarity:1
+                    },
+                    {
+                        id:"cornrowsHair",
+                        canvasValue:"cornrowsHair",
+                        title:"Cornrows",
+                        text:"Hey now, don't be culturally appropriating the Greeks",
+                        rarity:1
+                    }                    
+                ],
+                color:[
+                    {
+                        id:"#603913",
+                        canvasValue:"#603913",
+                        title:"Brown",
+                        text:"It's brown",
+                        rarity:1
+                    },
+                    {
+                        canvasValue:"#130900",
+                        title:"Black",
+                        text:"Jet black",
+                        rarity:1
+                    },
+                    {
+                        canvasValue:"#fff3b3",
+                        title:"Slim Shady",
+                        text:"I'm back!",
+                        rarity:1
+                    },
+                    {
+                        canvasValue:"#c6c6c6",
+                        title:"Grey",
+                        text:"Wise beyond your years",
+                        rarity:1
+                    }
+                ]                
+            }
+        },
+        blue: {
+            hat: {
+                type:[
+                    {
+                        canvasValue:"googly",
+                        title:"Googly Eyes",
+                        text:"These eyes be poppin",
+                        rarity:1
+                    }
+                ],
+                color:[
+                    {
+                        canvasValue:"#0000FF",
+                        title:"Blue",
+                        text:"Rrrrrroyal blue",
+                        rarity:1
+                    }
+                ]
+            }
+        },
+        fullList:[
+            "slimShadyHair"
+            "bigAfroHair"
+        ]
+    }
+*/

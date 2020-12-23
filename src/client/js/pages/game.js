@@ -16,7 +16,7 @@ function loginFail(){
 	window.location.href = serverHomePage;
 }
 
-function loginFinally(){
+function loginAlways(){
 	updateProfileLink();
 }
 
@@ -75,6 +75,8 @@ var screenShakeScale = 0.5;
 var drawDistance = 10; 
 var bodyLimit = 16;
 var legSwingSpeed = 1;
+var maxLegHeight = 116;
+var playerCenterOffset = 4;
 
 //Offset is how many pixels away from the center the camera will go when aiming, greater value means player closer to edge of screen
 var camOffSet = 350;//doestn do anything
@@ -87,6 +89,7 @@ var zoom = 0.75;
 
 const maxCloakStrength = 0.99;
 const maxAlliedCloakOpacity = .2; 
+var dualBoostXOffset = 15;
 const BODY_AGE = 1500;
 
 var shopEnabled = false;
@@ -242,6 +245,8 @@ var bagBlue = {
 	captured:false,
 };
 
+var strapOffset = 18;
+
 socket.on('pingResponse', function (socketId){
 	if (Player.list[socketId]){
 		ping = stopStopwatch();
@@ -251,7 +256,7 @@ socket.on('pingResponse', function (socketId){
 
 var blinkOn = false;
 socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
-	if (myPlayer.name == "" || !Player.list[myPlayer.id])
+	if (typeof myPlayer == 'undefined' || myPlayer.name == "" || !Player.list[myPlayer.id])
 		return;
 		
 	minutesLeft = minutesLeftData;
@@ -289,7 +294,6 @@ socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
 });
 
 function determineBorderStyle(){
-	canvas.style.margin = "-2px";
 	canvas.style.border = "2px solid #000000";
 	if (myPlayer.health >= 175){
 		canvas.style.margin = "-5px";
@@ -335,6 +339,9 @@ var healthFlashTimer = 100;
 
 //----------------Loading Images----------------
 var Img = {};
+Img.small = new Image();
+Img.small.src = "/client/img/small.png";
+
 Img.block = new Image();
 Img.block.src = "/client/img/block.png";
 Img.redBlock = new Image();
@@ -430,8 +437,6 @@ Img.blackPlayerMGReloading4 = new Image();
 Img.blackPlayerMGReloading4.src = "/client/img/blackPlayerMGReloading4.png";
 Img.blackPlayerMGReloading5 = new Image();
 Img.blackPlayerMGReloading5.src = "/client/img/blackPlayerMGReloading5.png";
-Img.bloodyBorder = new Image();
-Img.bloodyBorder.src = "/client/img/bloody-border.png";
 
 Img.whitePlayerPistol = new Image();
 Img.whitePlayerPistol.src = "/client/img/whitePlayerPistolNaked.png";
@@ -504,9 +509,8 @@ Img.ammoDP = new Image();
 Img.ammoDP.src = "/client/img/ammo-double-9mm-30.png";
 Img.ammoSG = new Image();
 Img.ammoSG.src = "/client/img/ammo-SG-24.png";
-var ammoWidth = 0;
 Img.infinity = new Image();
-Img.infinity.src = "/client/img/infinity.png";
+Img.infinity.src = "/client/img/infinity2.png";
 Img.weapon1Key = new Image();
 Img.weapon1Key.src = "/client/img/1p.png";
 Img.weapon2Key = new Image();
@@ -651,6 +655,10 @@ Img.diamond.src = "/client/img/ranks/full-size/diamond.png";
 Img.diamond2 = new Image();
 Img.diamond2.src = "/client/img/ranks/full-size/diamond2.png";
 
+
+//----------------------------- Final image to load--------------------------------
+Img.bloodyBorder = new Image();
+Img.bloodyBorder.src = "/client/img/bloody-border.png";
 //-----------------------------Loading Sounds-------------------------------
 var mute = true;
 
@@ -702,9 +710,12 @@ var sfxWhoosh = new Howl({src: ['/client/sfx/whoosh.mp3']});
 sfxWhoosh.volume(.25);
 var sfxPunch = new Howl({src: ['/client/sfx/punch.mp3']});
 var sfxCharge = new Howl({src: ['/client/sfx/recharge-plus-halo.mp3']});
-sfxCharge.volume(.7);
-var sfxDecharge = new Howl({src: ['/client/sfx/decharge-loud.mp3']});
-sfxDecharge.volume(.6);
+sfxCharge.volume(.3);
+sfxCharge.on('fade', function(){
+	sfxCharge.stop();
+});
+var sfxDecharge = new Howl({src: ['/client/sfx/decharge3.mp3']});
+//sfxDecharge.volume(.6);
 var sfxBoost = new Howl({src: ['/client/sfx/boost5.mp3']});
 var sfxBoostEmpty = new Howl({src: ['/client/sfx/boostEmpty.mp3']});
 sfxBoostEmpty.volume(1);
@@ -761,6 +772,8 @@ var Player = function(id){
 		width:94,
 		reloading:0,
 		triggerTapLimitTimer:0,
+		customizations: defaultCustomizations,
+		images:{ red:{}, blue:{} }
 	}
 	Player.list[id] = self;
 }
@@ -916,7 +929,7 @@ socket.on('signInResponse', function(data){
 		whiteScore = data.whiteScore;
 		blackScore = data.blackScore;	
 		logg("ID: " + myPlayer.id);
-		mute = false;
+		//mute = false;
 	}
 	else {
 		alert(data.message);
@@ -986,7 +999,7 @@ for (var i=0; i<chatText.childNodes[i].length; i++){
 }
 chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to R-Wars!</div>';
 
-socket.on('addToChat', function(data, playerId){
+socket.on('addToChat', function(data, playerId){ //Player chat
 var color = "#FFFFFF";
 	if (Player.list[playerId]){
 		if (Player.list[playerId].team == "white"){
@@ -999,12 +1012,11 @@ var color = "#FFFFFF";
 	addToChat(data, color);
 });
 
-socket.on('addMessageToChat', function(text){
+socket.on('addMessageToChat', function(text){ //Server message
 	addToChat(text, "#FFFFFF");
 });
 
 var maxChatMessages = 9;
-
 function addToChat(data, color){
 	var nodes = chatText.childNodes.length;
 	for (var i=0; i<nodes - (maxChatMessages - 1); i++){
@@ -1080,25 +1092,41 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 			}
 		}
 								
-		//Update player list. This has to be located here because of adjacent code comparisons between Pack and player.list[i] values
-		if (Player.list[playerDataPack[i].id]){
-			Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
-		}
-		else {
-			var player = Player(playerDataPack[i].id);
-			Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
-		}
-		
-
-		//!!!Remove this when we totally remove the myPlayer
-		//Update myPlayer AND create Player in local client Player list if they don't exist yet on this Client
+		//Update myPlayer and add blue border for armor
 		if (playerDataPack[i].id == myPlayer.id){
 			myPlayer[playerDataPack[i].property] = playerDataPack[i].value;
 			if (playerDataPack[i].property == "health" && ((myPlayer.team == "black" && bagBlue.captured == false) || (myPlayer.team == "white" && bagRed.captured == false))){
 				determineBorderStyle();
 			}
 		}
+
+		//Update player list. This has to be last because of previous code comparisons between Pack and player.list[i] values
+		if (Player.list[playerDataPack[i].id]){
+			Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
+		}
+		else {
+			Player(playerDataPack[i].id);
+			Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
+		}
 		
+		//Draw customizations
+		if (playerDataPack[i].property == "customizations"){	
+			drawCustomizations(Player.list[playerDataPack[i].id].customizations, playerDataPack[i].id, function(playerAnimations, id){
+				if (Player.list[id]){
+					console.log("playerAnimations update " + Player.list[id].name);
+					console.log(playerAnimations);
+					Player.list[id].images = playerAnimations;
+					for (var t in teams){
+						getUserIconImg(Player.list[id].customizations[teams[t]].icon, teams[t], function(iconImg, team){
+							Player.list[id].images[team].icon = iconImg;
+							console.log("SINGLE UPDATE PLAYER");
+							console.log(Player.list[id]);
+						});
+					}
+				}
+			});
+
+		}
 ////////////Put future client updates after this line /////////////////
 	
 		//Play punch sfx if boosting gets halted (contact)
@@ -1362,14 +1390,26 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 		if (playerPack[i].id == myPlayer.id){
 			myPlayer = playerPack[i];
 		}
-		if (Player.list[playerPack[i].id]){
-			//Keeps certain values from being overwritten by server
+		if (Player.list[playerPack[i].id]){ //It's fine that this overwrites client-side values like legSwing since this only happens on respawn or gamestart where those values should be reset anyway
 			Player.list[playerPack[i].id] = playerPack[i];
 		}
 		else {
-			var player = Player(playerPack[i].id);
+			Player(playerPack[i].id);
 			Player.list[playerPack[i].id] = playerPack[i];
 		}
+
+		drawCustomizations(Player.list[playerPack[i].id].customizations, playerPack[i].id, function(playerAnimations, id = 0){
+			if (Player.list[id]){
+				Player.list[id].images = playerAnimations;
+				for (var t in teams){
+					getUserIconImg(Player.list[id].customizations[teams[t]].icon, teams[t], function(iconImg, team){
+						Player.list[id].images[team].icon = iconImg;
+						console.log("SINGLE UPDATE PLAYER");
+						console.log(Player.list[id]);
+					});
+				}
+			}
+		});
 	}
 	
 	Thug.list = [];
@@ -1969,10 +2009,11 @@ function drawMissingBags(){
 	}
 }
 
+///!!! Leg swing should be outside of drawLegs
 function drawLegs(){
 	normalShadow();
 	for (var i in Player.list) {
-		if (Player.list[i].health > 0 && Player.list[i].team != "none"){
+		if (Player.list[i].health > 0 && Player.list[i].team != "none" && Player.list[i].cloakEngaged == false){
 		
 			//Calculate LegSwing
 			if (!Player.list[i].legHeight){
@@ -1981,18 +2022,18 @@ function drawLegs(){
 			if (Player.list[i].walkingDir != 0){
 				if (Player.list[i].legSwingForward == true){
 					Player.list[i].legHeight += 7 * legSwingSpeed;
-					if (Player.list[i].legHeight > 94){
+					if (Player.list[i].legHeight > maxLegHeight){
 						Player.list[i].legSwingForward = false;
 					}
 				}
 				else {
 					Player.list[i].legHeight -= 7 * legSwingSpeed;
-					if (Player.list[i].legHeight < -94){
+					if (Player.list[i].legHeight < -maxLegHeight){
 						Player.list[i].legSwingForward = true;
 					}
 				}
 				if (Player.list[i].boosting > 0){
-					Player.list[i].legHeight = 94; 
+					Player.list[i].legHeight = maxLegHeight; 
 				}
 			}
 			else if(Player.list[i].walkingDir == 0 || isNaN(Player.list[i].walkingDir)){ //No movement input
@@ -2002,11 +2043,12 @@ function drawLegs(){
 			}
 		
 			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 - drawDistance < cameraY + canvasHeight){
-				var legs = Img.whitePlayerLegs;
-				if (Player.list[i].legHeight < 0 && Player.list[i].team == "white"){legs = Img.whitePlayerLegs2;}			
-				else if (Player.list[i].legHeight >= 0 && Player.list[i].team == "black"){legs = Img.blackPlayerLegs;}
-				else if (Player.list[i].legHeight < 0 && Player.list[i].team == "black"){legs = Img.blackPlayerLegs2;}
+				var legs = Player.list[i].images.red.legs;
+				if (Player.list[i].team == "black"){legs = Player.list[i].images.blue.legs;}
 				
+				if (typeof legs == 'undefined'){ //Load default images if animation frames not yet drawn
+					legs = Player.list[i].team == "white" ? Img.whitePlayerLegs : Img.blackPlayerLegs;
+				}
 				//This is for calculating where to put the legs according to the weapon wielded by the torso
 				var width = Img.whitePlayerPistol.width;
 				if (Player.list[i].weapon == 2){
@@ -2033,21 +2075,26 @@ function drawLegs(){
 				}
 
 				ctx.save();
-                ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
+                ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y  * zoom); //Center camera on controlled player
+
+				ctx.rotate(getRotation(Player.list[i].shootingDir));
+					ctx.translate(0, playerCenterOffset);
+				ctx.rotate(-getRotation(Player.list[i].shootingDir));
+
 				ctx.rotate(getRotation(Player.list[i].walkingDir));
+				if (Player.list[i].legHeight >= 0){
+					ctx.scale(-1, 1);
+				}
 					normalShadow();
-					//if walking dir different than shooting dir, calculate different rotation for legs than body
+					
 					var weaponYoffset = 0;
 					if (Player.list[i].weapon == 3){weaponYoffset = 5;}
-					if (Player.list[i].shootingDir != Player.list[i].walkingDir && Player.list[i].cloakEngaged == false){		
-						drawImage(legs,(-width/2 + twistOffset) * zoom, (-Player.list[i].legHeight/2 + 5) * zoom, width * zoom, Player.list[i].legHeight * zoom);
+					if (Player.list[i].shootingDir != Player.list[i].walkingDir){ //if walking dir different than shooting dir, calculate different rotation for legs than body
+						drawImage(legs,(-width/2 + twistOffset) * zoom, (-Player.list[i].legHeight/2) * zoom, width * zoom, Player.list[i].legHeight * zoom);
 					}
-					else if (Player.list[i].cloakEngaged == false) { 
-						//Only draw legs in this context (shooting direction rotation context) if walking and shooting dirs match (5 lower)
-						drawImage(legs,(-width/2 + twistOffset) * zoom, (-Player.list[i].legHeight/2 + weaponYoffset) * zoom, width * zoom, Player.list[i].legHeight * zoom);
+					else { 
+						drawImage(legs,(-width/2 + twistOffset) * zoom, (-Player.list[i].legHeight/2) * zoom, width * zoom, Player.list[i].legHeight * zoom);
 					}
-				//ctx.rotate(-(getRotation(Player.list[i].walkingDir)));
-				//ctx.translate(-(centerX - myPlayer.x * zoom + Player.list[i].x * zoom), -(centerY - myPlayer.y * zoom + Player.list[i].y * zoom)); //Center camera on controlled player				
                 ctx.restore();
 			}
 		}		
@@ -2237,30 +2284,30 @@ function drawTorsos(){
 		if (Player.list[i].health > 0 && Player.list[i].team != "none"){
 			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){
 				normalShadow();
-				var img = Img.whitePlayerPistol;
+				var img = Player.list[i].images.red.pistol;
 				if (Player.list[i].team == "white"){
 					if (Player.list[i].weapon == 2){
-						img = Img.whitePlayerDP;
+						img = Player.list[i].images.red.DP;
 					}
 					else if (Player.list[i].weapon == 3){
-						img = Img.whitePlayerMG;
+						img = Player.list[i].images.red.MG;
 					}
 					else if (Player.list[i].weapon == 4){
-						img = Img.whitePlayerSG;
+						img = Player.list[i].images.red.SG;
 					}
 				}
 				else if (Player.list[i].team == "black"){
 					if (Player.list[i].weapon == 3){
-						img = Img.blackPlayerMG;
+						img = Player.list[i].images.blue.MG;
 					}
 					else if (Player.list[i].weapon == 2){
-						img = Img.blackPlayerDP;
+						img = Player.list[i].images.blue.DP;
 					}
 					else if (Player.list[i].weapon == 4){
-						img = Img.blackPlayerSG;
+						img = Player.list[i].images.blue.SG;
 					}
 					else {
-						img = Img.blackPlayerPistol;
+						img = Player.list[i].images.blue.pistol;
 					}
 				}
 				
@@ -2296,160 +2343,160 @@ function drawTorsos(){
 						if (Player.list[i].weapon == 1){
 							if (Player.list[i].reloading < 12){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerPistolReloading3;
+									img = Player.list[i].images.blue.pistolReloading3;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerPistolReloading3;
+									img = Player.list[i].images.red.pistolReloading3;
 								}
 							}
 							else if (Player.list[i].reloading < 24){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerPistolReloading4;
+									img = Player.list[i].images.blue.pistolReloading4;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerPistolReloading4;
+									img = Player.list[i].images.red.pistolReloading4;
 								}
 							}
 							else if (Player.list[i].reloading < 36){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerPistolReloading3;
+									img = Player.list[i].images.blue.pistolReloading3;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerPistolReloading3;
+									img = Player.list[i].images.red.pistolReloading3;
 								}
 							}
 							else if (Player.list[i].reloading < 48){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerPistolReloading2;
+									img = Player.list[i].images.blue.pistolReloading2;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerPistolReloading2;
+									img = Player.list[i].images.red.pistolReloading2;
 								}
 							}
 							else if (Player.list[i].reloading <= 60){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerPistolReloading1;
+									img = Player.list[i].images.blue.pistolReloading1;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerPistolReloading1;
+									img = Player.list[i].images.red.pistolReloading1;
 								}
 							}
 						}
 						if (Player.list[i].weapon == 2){
 							if (Player.list[i].reloading < 20){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerDPReloading3;
+									img = Player.list[i].images.blue.DPReloading3;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerDPReloading3;
+									img = Player.list[i].images.red.DPReloading3;
 								}
 							}
 							else if (Player.list[i].reloading < 60){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerDPReloading2;
+									img = Player.list[i].images.blue.DPReloading2;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerDPReloading2;
+									img = Player.list[i].images.red.DPReloading2;
 								}
 							}
 							else if (Player.list[i].reloading <= 80){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerDPReloading1;
+									img = Player.list[i].images.blue.DPReloading1;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerDPReloading1;
+									img = Player.list[i].images.red.DPReloading1;
 								}
 							}
 						}
 						else if (Player.list[i].weapon == 3){
 							if (Player.list[i].reloading < 22){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading4;
+									img = Player.list[i].images.blue.MGReloading4;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading4;
+									img = Player.list[i].images.red.MGReloading4;
 								}
 							}
 							else if (Player.list[i].reloading < 30){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading5;
+									img = Player.list[i].images.blue.MGReloading5;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading5;
+									img = Player.list[i].images.red.MGReloading5;
 								}
 							}
 							else if (Player.list[i].reloading < 48){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading4;
+									img = Player.list[i].images.blue.MGReloading4;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading4;
+									img = Player.list[i].images.red.MGReloading4;
 								}
 							}
 							else if (Player.list[i].reloading < 60){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading1;
+									img = Player.list[i].images.blue.MGReloading1;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading1;
+									img = Player.list[i].images.red.MGReloading1;
 								}
 							}
 							else if (Player.list[i].reloading <= 72){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading2;
+									img = Player.list[i].images.blue.MGReloading2;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading2;
+									img = Player.list[i].images.red.MGReloading2;
 								}
 							}
 							else if (Player.list[i].reloading < 90){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading3;
+									img = Player.list[i].images.blue.MGReloading3;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading3;
+									img = Player.list[i].images.red.MGReloading3;
 								}
 							}
 							else if (Player.list[i].reloading < 102){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading2;
+									img = Player.list[i].images.blue.MGReloading2;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading2;
+									img = Player.list[i].images.red.MGReloading2;
 								}
 							}
 							else if (Player.list[i].reloading <= 114){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerMGReloading1;
+									img = Player.list[i].images.blue.MGReloading1;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerMGReloading1;
+									img = Player.list[i].images.red.MGReloading1;
 								}
 							}						
 						}
 						if (Player.list[i].weapon == 4){
 							if (Player.list[i].reloading < 10){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSGReloading3;
+									img = Player.list[i].images.blue.SGReloading3;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSGReloading3;
+									img = Player.list[i].images.red.SGReloading3;
 								}
 							}
 							else if (Player.list[i].reloading < 20){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSGReloading2;
+									img = Player.list[i].images.blue.SGReloading2;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSGReloading2;
+									img = Player.list[i].images.red.SGReloading2;
 								}
 							}
 							else if (Player.list[i].reloading <= 30){
 								if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSGReloading1;
+									img = Player.list[i].images.blue.SGReloading1;
 								}
 								else if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSGReloading1;
+									img = Player.list[i].images.red.SGReloading1;
 								}
 							}
 							if (Player.list[i].reloading == 20 && !mute){								
@@ -2478,31 +2525,30 @@ function drawTorsos(){
 							}
 							if (Player.list[i].triggerTapLimitTimer > 30){
 								if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSG;
+									img = Player.list[i].images.red.SG;
 								}
 								else if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSG;
+									img = Player.list[i].images.blue.SG;
 								}
 							}
 							else if (Player.list[i].triggerTapLimitTimer > 10){
 								if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSGCock;
+									img = Player.list[i].images.red.SGCock;
 								}
 								else if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSGCock;
+									img = Player.list[i].images.blue.SGCock;
 								}
 							}
 							else {
 								if (Player.list[i].team == "white"){
-									img = Img.whitePlayerSG;
+									img = Player.list[i].images.red.SG;
 								}
 								else if (Player.list[i].team == "black"){
-									img = Img.blackPlayerSG;
+									img = Player.list[i].images.blue.SGCock;
 								}							
 							}
 						}
 					}
-
 					
 					//Player damage flashing under
 					if (!(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
@@ -2518,7 +2564,7 @@ function drawTorsos(){
 								ctx.shadowColor = "white";
 								ctx.shadowOffsetX = 0; 
 								ctx.shadowOffsetY = 0;
-								ctx.shadowBlur = 0;		
+								ctx.shadowBlur = 0;
 							}
 							if (healthFlashTimer <= 0 || healthFlashTimer > Player.list[i].health){
 								//healthFlashTimer = Player.list[i].health * .75; 						
@@ -2526,43 +2572,25 @@ function drawTorsos(){
 						}
 					}
 
-					/*
-					var dArr = [-1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1], // offset array
-					sd = 2,  // thickness scale
-					xd = -35.25,  // final position
-					yd = -31.5;
-						var xy = 0;
-						var yy = 0;
+					//img = Player.list[i].images.red.pistol;
 
-					for(var itera = 0; itera < dArr.length; itera += 2){
-						
-						xy = xd + dArr[itera]*sd;
-						yy = yd + dArr[itera+1]*sd;
-						
-						//console.log("drawing x:" + xy + " y:" + yy);
-						
-						drawImage(img, xd + dArr[itera]*sd, yd + dArr[itera+1]*sd, img.width * zoom, img.height * zoom);
-						
+
+					if (typeof img == 'undefined'){ //Load default images if animation frames not yet drawn
+						img = Player.list[i].team == "white" ? Img.whitePlayerPistol : Img.blackPlayerPistol;
 					}
-					
-					xy = -img.width/2 * zoom;
-					yy = (-img.height/2+5) * zoom;
-					
-					ctx.globalCompositeOperation = "source-in";
-					ctx.fillStyle = "blue";
-					ctx.fillRect(-50,-50,100,100);
-					
-					// draw original image in normal mode
-					ctx.globalCompositeOperation = "source-over";	
-					*/
-					
-					//Actually draw the torso
-					//if (Player.list[i].cloak > 0.98){noShadow();}
+
+					//actually draw the torso Actually
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
-						
-					drawImage(img,-img.width/2 * zoom, (-img.height/2+5) * zoom, img.width * zoom, img.height * zoom);	//Draw torso	
+					drawImage(img, -img.width/2 * zoom, (-img.height/2 + playerCenterOffset) * zoom, img.width * zoom, img.height * zoom); //Draw torso	
+
+
+
+
+
+					//-------------------------------------------------------------------------------------	
+					
 					ctx.globalAlpha = 1;
 					
 					//Player damage flashing over
@@ -2584,11 +2612,9 @@ function drawTorsos(){
 						
 					//Strap
 					if (Player.list[i].holdingBag == true){
-						if (Player.list[i].weapon == 1 || Player.list[i].weapon == 2){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2+5) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
+						if (Player.list[i].weapon == 1 || Player.list[i].weapon == 2){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2 + strapOffset) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
 						else if (Player.list[i].weapon == 3){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2+10) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
 					}				
-				//ctx.rotate(-(getRotation(Player.list[i].shootingDir)));
-				//ctx.translate(-(centerX - myPlayer.x * zoom + Player.list[i].x * zoom), -(centerY - myPlayer.y * zoom + Player.list[i].y * zoom)); //Center camera on controlled player		
                 ctx.restore();	
 			}
 		}//End health > 0 check
@@ -2736,32 +2762,53 @@ function drawBoosts(){
 	for (var i in Player.list) {
 		if (BoostBlast.list[Player.list[i].id]){
             var blast = BoostBlast.list[Player.list[i].id];
-            var blastDir = Player.list[i].walkingDir - 4;
-            if (blastDir < 1) 
-                    blastDir += 8;
-            var imgblast = Img.boostBlast;
+            var blastDir = Player.list[i].walkingDir;
+
+			var imgblast = Player.list[i].images.red.boost;
+			var playerTeam = Player.list[i].team == "white" ? "red" : "blue" //!!!Get rid of this on team rename
+			if (Player.list[i].team == "black"){imgblast = Player.list[i].images.blue.boost;}			
+			if (typeof imgblast == 'undefined'){ //Load default images if animation frames not yet drawn
+				imgblast = Img.boostBlast;
+			}
             
             ctx.save();
             noShadow();
             ctx.globalAlpha = blast.alpha;
             blast.alpha -= .2;
+            blast.width = blast.width + 20 * 1;
+            blast.height = blast.height + 20 * 1;
             
-            var distanceOffset = blast.width;
             
             if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 - drawDistance < cameraY + canvasHeight){
                 ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
                 ctx.rotate(getRotation(blastDir));
-                    drawImage(imgblast, (-blast.width/2 - 15) * zoom, (-blast.height - 10) * zoom, blast.width * zoom, blast.height * zoom);
-                    drawImage(imgblast, (-blast.width/2 + 15) * zoom, (-blast.height - 10) * zoom, blast.width * zoom, blast.height * zoom);
+					if (Player.list[i].customizations[playerTeam].boost == "blast"){
+						drawImage(imgblast, (-blast.width/2 - dualBoostXOffset * 2) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);
+						drawImage(imgblast, (-blast.width/2 + dualBoostXOffset * 2) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);						
+						drawImage(imgblast, (-blast.width/2) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
+					}
+					else if (Player.list[i].customizations[playerTeam].boost.indexOf('streaks') > -1){
+						drawImage(imgblast, (-blast.width/2 - dualBoostXOffset) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);
+						drawImage(imgblast, (-blast.width/2 + dualBoostXOffset) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);						
+						drawImage(imgblast, (-blast.width/2) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
+					}
+					else if (Player.list[i].customizations[playerTeam].boost == "rainbow"){
+						blast.width = 60;
+						drawImage(imgblast, (-blast.width/2) * zoom, 20 * zoom, blast.width * zoom, blast.height * zoom);
+					}
+					else if (Player.list[i].customizations[playerTeam].boost == "hearts2"){
+						drawImage(imgblast, (-blast.width/2) * zoom, 20 * zoom, blast.width * zoom, blast.height * zoom);
+					}
+					else {
+						drawImage(imgblast, (-blast.width/2 - dualBoostXOffset) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
+						drawImage(imgblast, (-blast.width/2 + dualBoostXOffset) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
+					}
                 //ctx.rotate(-(getRotation(blastDir)));
                 //ctx.translate(-(centerX - myPlayer.x * zoom + Player.list[i].x * zoom), -(centerY - myPlayer.y * zoom + Player.list[i].y * zoom)); //Center camera on controlled player
             }
-            blast.width = blast.width + 20 * 1;
-            blast.height = blast.height + 20 * 1;
             if (blast.alpha <= 0){
                 delete BoostBlast.list[blast.id];
             }	
-            //ctx.globalAlpha = 1;
             ctx.restore();	
 		}
 	}
@@ -2864,9 +2911,8 @@ function drawNotifications(){
 	ctx.globalAlpha = 1;
 }
 
-//draw usernames
+//draw usernames drawNames
 function drawPlayerTags(){
-	ctx.fillStyle = "#000000";
 	ctx.textAlign="center";
 	ctx.font = 'bold 12px Electrolize';
 	for (var i in Player.list){
@@ -2878,11 +2924,8 @@ function drawPlayerTags(){
 			ctx.save();
             ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
 				if (Player.list[i].health > 0 && Player.list[i].team != "none" && !(Player.list[i].cloakEngaged == true && Player.list[i].team != Player.list[myPlayer.id].team)){
-					ctx.shadowColor = "white";
-					ctx.shadowOffsetX = 0; 
-					ctx.shadowOffsetY = 0;
-					ctx.shadowBlur = 3;
-					ctx.fillText(playerUsername,0, -Img.whitePlayerPistol.height/2 * zoom); //Draw myPlayer name above head, draw username, draw names			
+					var team = Player.list[i].team == "white" ? "red" : "blue";
+					drawName(ctx, playerUsername, Player.list[i].customizations[team].nameColor, 0, -Img.whitePlayerPistol.height/2 * zoom, Player.list[i].images[team].icon);
 				}			
 				if (Player.list[i].team != "none" && Player.list[i].chat && Player.list[i].chatDecay > 0 && !(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
 					if (Player.list[i].chat.length > 0){
@@ -2900,6 +2943,7 @@ function drawPlayerTags(){
 }
 
 function drawShop(){
+	calculateShopMechanics();
 	if (shop.active){
 		if (Player.list[myPlayer.id].team == "white"){
 			Player.list[myPlayer.id].shootingDir = 7;
@@ -3149,6 +3193,10 @@ function drawInformation(){
 		if (showStatOverlay == true){
 			fillText("Health:" + Player.list[myPlayer.id].health, 5, 35); //debug
 			fillText(version + "  |  ping:" + ping, 5, 15);
+			// fillText("PressingW: " + myPlayer.pressingW, 5, 55); //debug
+			// fillText("PressingA: " + myPlayer.pressingA, 5, 75); //debug
+			// fillText("PressingS: " + myPlayer.pressingS, 5, 95); //debug
+			// fillText("PressingD: " + myPlayer.pressingD, 5, 115); //debug
 
 		}
 		//fillText("walkingDir:" + Player.list[myPlayer.id].walkingDir, 5, 35); //debug
@@ -3160,18 +3208,23 @@ function drawInformation(){
 //Bloody border
 function drawBloodyBorder(){
 	noShadow();
-	if (Player.list[myPlayer.id].health < 100){
-		var alph2 = 1 - (Player.list[myPlayer.id].health / 100);
+	var bloodyScale = Player.list[myPlayer.id].health;
+	if (bloodyScale < 100){
+
+		if (bloodyScale > 0)
+			bloodyScale += ((100 - bloodyScale) / 3); // increase this last number to increase the amount of blood on damage levels less than dead. Remove this line entirely to have the bloodyBorder scale smoothly all the way up until death
+
+		var alph2 = 1 - (bloodyScale / 100);
 		alph2 += .1; 
 		if (alph2 < 0){
 			alph2 = 0;
 		}	
-		if (Player.list[myPlayer.id].health < 0){
-			Player.list[myPlayer.id].health = 0;
+		if (bloodyScale < 0){
+			bloodyScale = 0;
 		}
 		ctx.globalAlpha = Math.round(alph2 * 100) / 100;
 		var bloodyBorderScale = 3; //increase to push blood more to edges upon low damage
-		drawImage(Img.bloodyBorder, -(Player.list[myPlayer.id].health * bloodyBorderScale)/2, -(Player.list[myPlayer.id].health * bloodyBorderScale)/2, canvasWidth + Player.list[myPlayer.id].health*bloodyBorderScale, canvasHeight + Player.list[myPlayer.id].health*bloodyBorderScale);
+		drawImage(Img.bloodyBorder, -(bloodyScale * bloodyBorderScale)/2, -(bloodyScale * bloodyBorderScale)/2, canvasWidth + bloodyScale*bloodyBorderScale, canvasHeight + bloodyScale*bloodyBorderScale);
 		ctx.globalAlpha = 1;
 	}
 }
@@ -3220,6 +3273,7 @@ function drawHUD(){
 		}	
 		if (myPlayer.drawnEnergy == 100 || myPlayer.drawnEnergy >= 200){
 			drawImage(Img.white, canvasWidth - (canvasWidth * (myPlayer.drawnEnergy / 200)), canvasHeight - 4 - liftBottomHUD, canvasWidth * (myPlayer.drawnEnergy / 200), 6);
+
 		}
 		else if (myPlayer.drawnEnergy <= 25 && myPlayer.drawnEnergy > 0){
 			drawImage(Img.red, canvasWidth - (canvasWidth * (myPlayer.drawnEnergy / 200)), canvasHeight - 4 - liftBottomHUD, canvasWidth * (myPlayer.drawnEnergy / 200), 6);
@@ -3241,26 +3295,26 @@ function drawHUD(){
 		var ammoCount = "0";
 		if (Player.list[myPlayer.id].weapon == 1){
 			clipCount = Player.list[myPlayer.id].PClip;
-			ammoWidth = 136 - ((15 - Player.list[myPlayer.id].PClip) * 9);
+			const ammoWidth = 136 - ((15 - Player.list[myPlayer.id].PClip) * 9);
 			ctx.drawImage(Img.ammo9mm, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		else if (Player.list[myPlayer.id].weapon == 2){
 			clipCount = Player.list[myPlayer.id].DPClip;
 			ammoCount = Player.list[myPlayer.id].DPAmmo;		
-			ammoWidth = 180 - ((20 - Player.list[myPlayer.id].DPClip) * 9) + 1;
+			const ammoWidth = 180 - ((20 - Player.list[myPlayer.id].DPClip) * 9) + 1;
 			ctx.drawImage(Img.ammoDP, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		else if (Player.list[myPlayer.id].weapon == 3){
 			clipCount = Player.list[myPlayer.id].MGClip;
 			ammoCount = Player.list[myPlayer.id].MGAmmo;		
-			ammoWidth = 152 - ((30 - Player.list[myPlayer.id].MGClip) * 5);
+			const ammoWidth = 182 - ((30 - Player.list[myPlayer.id].MGClip) * 6);
 			ctx.drawImage(Img.ammoMG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		else if (Player.list[myPlayer.id].weapon == 4){
 			clipCount = Player.list[myPlayer.id].SGClip;
 			ammoCount = Player.list[myPlayer.id].SGAmmo;		
-			ammoWidth = 135 - ((12 - Player.list[myPlayer.id].SGClip) * 11);
-			ctx.drawImage(Img.ammoSG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+			const ammoWidth = 190 - ((12 - Player.list[myPlayer.id].SGClip) * 16); //Was 135, 11
+	 		ctx.drawImage(Img.ammoSG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		}
 		
 		//Draw separating line
@@ -3280,7 +3334,7 @@ function drawHUD(){
 		ctx.font = '63px Electrolize';
 		fillText("/", canvasWidth - 65, canvasHeight - 15 - liftBottomHUD);
 		if (Player.list[myPlayer.id].weapon == 1){
-			drawImage(Img.infinity, canvasWidth - 77, canvasHeight - 44 - liftBottomHUD);		
+			drawImage(Img.infinity, canvasWidth - 77, canvasHeight - 42 - liftBottomHUD);		
 		}
 		else {
 			ctx.font = '44px Electrolize';
@@ -4126,7 +4180,7 @@ function animate() {
         // Get ready for next frame by setting then=now, but...
         // Also, adjust for fpsInterval not being multiple of 16.67
         then = now - (elapsed % fpsInterval);
-        drawEverything();
+		drawEverything();
     }
 }
 
@@ -4172,10 +4226,16 @@ function drawEverything(){
 	drawPlayerTags();
 	drawNotifications();
 
-	calculateShopMechanics();
+	
 	drawShop();	
 	drawUILayer();
 }
+
+
+
+//drawExperiments
+
+
 
 //--------------------------------END TIMER 1--------------------------------	
 	
@@ -4241,7 +4301,7 @@ function compare(a,b) {
 	
 //Socket On
 socket.on('sendLog', function(log){
-	console.log(log);
+	log("SERVER: " + log);
 });
 
 socket.on('endGameProgressResults', function(endGameProgressResults){
@@ -4343,10 +4403,10 @@ var BoostBlast = function(id){
 	var self = {
 		id:id,
 		alpha:1.5,
-		//width:100, full size
-		//height:100, full size
-		width:Math.floor((Math.random() * 36) + 16),
-		height:Math.floor((Math.random() * 55) + 75),		
+		
+		
+		width:Math.floor(10), //width:100, full size
+		height:Math.floor(10), //height:100, full size
 	}	
 	BoostBlast.list[self.id] = self;		
 }
@@ -4473,28 +4533,28 @@ Body.list = {};
 //Key Presses
 document.onkeydown = function(event){
 	if(event.keyCode === 87 && chatInput.style.display == "none"){ //W
-		myPlayer.pressingW = true;
-		if (!shop.active){
+		if (!myPlayer.pressingW && !shop.active){
 			socket.emit('keyPress',{inputId:87,state:true});
 		}
+		myPlayer.pressingW = true;
 	}
 	else if(event.keyCode === 68 && chatInput.style.display == "none"){ //D
-		myPlayer.pressingD = true;
-		if (!shop.active){
+		if (!myPlayer.pressingD && !shop.active){
 			socket.emit('keyPress',{inputId:68,state:true});
 		}
+		myPlayer.pressingD = true;
 	}
 	else if(event.keyCode === 83 && chatInput.style.display == "none"){ //S
-		myPlayer.pressingS = true;
-		if (!shop.active){
+		if (!myPlayer.pressingS && !shop.active){
 			socket.emit('keyPress',{inputId:83,state:true});
 		}
+		myPlayer.pressingS = true;
 	}
 	else if(event.keyCode === 65 && chatInput.style.display == "none"){ //A
-		myPlayer.pressingA = true;
-		if (!shop.active){
+		if (!myPlayer.pressingA && !shop.active){
 			socket.emit('keyPress',{inputId:65,state:true});
 		}
+		myPlayer.pressingA = true;
 	}		
 	else if((event.keyCode === 38 || event.keyCode === 80) && chatInput.style.display == "none"){ //Up
 		//if (event.keyCode === 38)
@@ -4621,7 +4681,7 @@ document.onkeydown = function(event){
 		canvasDiv.style.backgroundColor="black";
 		if (chatInput.style.display == "inline"){
 			if (chatInput.value != "") {
-				if(chatInput.value[0] === '/' && chatInput.value[1] === '.'){
+				if(chatInput.value[0] === '/' && chatInput.value[1] === '.'){ //Server command cmd
 					if (chatInput.value == '//shadow' || chatInput.value == '//shadows'){
 						if (noShadows){
 							noShadows = false;
@@ -4630,13 +4690,15 @@ document.onkeydown = function(event){
 							noShadows = true;
 						}
 					}
-					else if (chatInput.value == '/zoom'){
+					else if (chatInput.value == '/.zoom' || chatInput.value == '/.zoom1'){
 						if (zoom == 1){
 							zoom = 0.75;
 						}
 						else {
 							zoom = 1;
 						}
+						drawMapElementsOnMapCanvas();
+						drawBlocksOnBlockCanvas();
 					}
 					socket.emit('evalServer',chatInput.value.substring(2));
 				}
@@ -4814,16 +4876,115 @@ function getNewTip(){
 
 
 //Handy handy functions
-function numberWithCommas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+function hexToDarkness(H) {
+	// Convert hex to RGB first
+	let r = 0, g = 0, b = 0;
+	if (H.length == 4) {
+		r = "0x" + H[1] + H[1];
+		g = "0x" + H[2] + H[2];
+		b = "0x" + H[3] + H[3];
+	} else if (H.length == 7) {
+		r = "0x" + H[1] + H[2];
+		g = "0x" + H[3] + H[4];
+		b = "0x" + H[5] + H[6];
+	}
+
+	const darkness = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 100; 
+
+	return darkness;
 }
 
-function removeIndexesFromArray(array, indexes){
-	for (var i = 0; i < indexes.length; i++){
-		array.splice(indexes[i], 1);
+function hexToHSL(H) {
+	// Convert hex to RGB first
+	let r = 0, g = 0, b = 0;
+	if (H.length == 4) {
+		r = "0x" + H[1] + H[1];
+		g = "0x" + H[2] + H[2];
+		b = "0x" + H[3] + H[3];
+	} else if (H.length == 7) {
+		r = "0x" + H[1] + H[2];
+		g = "0x" + H[3] + H[4];
+		b = "0x" + H[5] + H[6];
 	}
-	return array;
+	// Then to HSL
+	r /= 255;
+	g /= 255;
+	b /= 255;
+	let cmin = Math.min(r,g,b),
+		cmax = Math.max(r,g,b),
+		delta = cmax - cmin,
+		h = 0,
+		s = 0,
+		l = 0;
+
+	if (delta == 0)
+		h = 0;
+	else if (cmax == r)
+		h = ((g - b) / delta) % 6;
+	else if (cmax == g)
+		h = (b - r) / delta + 2;
+	else
+		h = (r - g) / delta + 4;
+
+	h = Math.round(h * 60);
+
+	if (h < 0)
+		h += 360;
+
+	l = (cmax + cmin) / 2;
+	s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+	s = +(s * 100).toFixed(1);
+	l = +(l * 100).toFixed(1);
+
+	return "hsl(" + h + "," + s + "%," + l + "%)";
 }
+
+function hexToHSL(H) {
+	// Convert hex to RGB first
+	let r = 0, g = 0, b = 0;
+	if (H.length == 4) {
+	  r = "0x" + H[1] + H[1];
+	  g = "0x" + H[2] + H[2];
+	  b = "0x" + H[3] + H[3];
+	} else if (H.length == 7) {
+	  r = "0x" + H[1] + H[2];
+	  g = "0x" + H[3] + H[4];
+	  b = "0x" + H[5] + H[6];
+	}
+	// Then to HSL
+	r /= 255;
+	g /= 255;
+	b /= 255;
+	let cmin = Math.min(r,g,b),
+		cmax = Math.max(r,g,b),
+		delta = cmax - cmin,
+		h = 0,
+		s = 0,
+		l = 0;
+  
+	if (delta == 0)
+	  h = 0;
+	else if (cmax == r)
+	  h = ((g - b) / delta) % 6;
+	else if (cmax == g)
+	  h = (b - r) / delta + 2;
+	else
+	  h = (r - g) / delta + 4;
+  
+	h = Math.round(h * 60);
+  
+	if (h < 0)
+	  h += 360;
+  
+	l = (cmax + cmin) / 2;
+	s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+	s = +(s * 100).toFixed(1);
+	l = +(l * 100).toFixed(1);
+  
+	return "hsl(" + h + "," + s + "%," + l + "%)";
+}
+  
+
 
 Object.size = function(obj) {
     var size = 0, key;
@@ -4857,6 +5018,7 @@ function disconnect(){
 	socket.disconnect();
 }
 
+/*
 window.onbeforeunload = function(){
 	//alert("onbeforeunload");
 	if ((myPlayer.team == "white" || myPlayer.team == "black") && (!gameOver && !pregame)){
@@ -4881,6 +5043,7 @@ window.addEventListener("beforeunload", function (e) {
 		disconnect();
 	}
 });
+*/
 
 function randomInt(min,max)
 {

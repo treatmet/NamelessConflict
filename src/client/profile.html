@@ -9,7 +9,7 @@
 	<div id="sectionTitles">
 		<div id="sectionTitle1" class="sectionTitle">{{username}}</div>
 		<div id="sectionTitle2" class="sectionTitle3">Progress</div>
-		<div id="sectionTitle3" class="sectionTitle3">Customize</div>
+		<div id="sectionTitle3" class="sectionTitle3">Appearance</div>
 	</div>
 
 
@@ -146,7 +146,115 @@
 		</div>
 	</div>
 	<div id="customizationColumn" class="columnSection">
-		Aesthetic player customizations coming soon.
+		
+		<div id="shopCustomizeToggle">
+				<div class="toggleIcons active" id="customizeToggleIcon" onclick="toggleAppearanceMode(event)">
+						<span>Equip</span>
+						<img src="/client/img/customizeToggle.png">
+				</div>
+				<div class="toggleIcons" id="shopToggleIcon" onclick="toggleAppearanceMode(event)">
+						<img src="/client/img/shopToggle.png">
+						<span>Buy</span>
+				</div>							
+		</div>
+		
+		<!--CANVAS-->
+		<div id="appearance">	
+			<canvas id="ctx" width="150" height="150" onclick="cycleAppearance()"></canvas>
+		</div> <!--End Canvas -->
+		<div class="teamTabs" style="width:150px">
+			<button class="teamTablinks" id="tabRedActive" onclick="selectTeam(event)">Red</button>
+			<button class="teamTablinks" id="tabBlue" onclick="selectTeam(event)">Blue</button>
+		</div>
+		<div id="shopOptions" style="display: none;">
+			<div class="shopCategory"></div>
+			<div class="refreshItem">
+				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/none.png"></div>
+				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/rarities/rare.png"></div>
+				<div class="shopTitle">Refresh Store Now</div><br>
+				<div class="shopText">$10,000</div><br>
+				<div class="shopText">Hat</div>
+				<div class="shopText" style="color: #bf1f1f;">| Red team item</div>
+			</div>
+			<div id="refreshTimer"><div id="refreshTimerText">⟳: </div><div id="refreshTimerTimer">18:04 59s</div></div>
+			<div class="shopCategory">Store</div>
+			<div class="shopItem">
+				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/none.png"></div>
+				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/rarities/rare.png"></div>
+				<div class="shopTitle">Refresh Store Now</div><br>
+				<div class="shopText">$10,000</div><br>
+				<div class="shopText">Hat</div>
+				<div class="shopText" style="color: #bf1f1f;">| Red team item</div>
+			</div>
+			<div class="shopItem">
+				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/none.png"></div>
+				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/rarities/rare.png"></div>
+				<div class="shopTitle">Refresh Store Now</div><br>
+				<div class="shopText">$10,000</div><br>
+				<div class="shopText">Hat</div>
+				<div class="shopText" style="color: #bf1f1f;">| Red team item</div>
+			</div>
+			<div class="shopItem">
+				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/none.png"></div>
+				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/rarities/rare.png"></div>
+				<div class="shopTitle">Refresh Store Now</div><br>
+				<div class="shopText">$10,000</div><br>
+				<div class="shopText">Hat</div>
+				<div class="shopText" style="color: #bf1f1f;">| Red team item</div>
+			</div>
+			<div class="shopItem">
+				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/none.png"></div>
+				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/rarities/rare.png"></div>
+				<div class="shopTitle">Refresh Store Now</div><br>
+				<div class="shopText">$10,000</div><br>
+				<div class="shopText">Hat</div>
+				<div class="shopText" style="color: #bf1f1f;">| Red team item</div>
+			</div>
+		</div>
+
+
+
+		<div id="appearanceOptions" style="display: none">
+			<div class="tab">
+				<button class="tablinks" id="hat" onclick="showContent(event)">Hats</button>
+				<button class="tablinks" id="hair" onclick="showContent(event)">Hair</button>
+				<button class="tablinks" id="skin" onclick="showContent(event)">Skin</button>
+				<button class="tablinks" id="shirt" onclick="showContent(event)">Shirt</button>
+				<button class="tablinks" id="pants" onclick="showContent(event)">Pants</button>
+				<button class="tablinks" id="shoes" onclick="showContent(event)">Shoes</button>
+				<button class="tablinks" id="boost" onclick="showContent(event)">Boost</button>
+				<button class="tablinks" id="name" onclick="showContent(event)">Name</button>
+				<button class="tablinks" id="icon" onclick="showContent(event)">Icon</button>
+			</div>
+
+			<div id="hatDiv" class="tabcontent active">
+				<p>Loading customization options...</p>
+			</div>		  
+			<div id="hairDiv" class="tabcontent">
+				<p>Loading customization options...</p>
+			</div>		  
+			<div id="skinDiv" class="tabcontent">
+				<p>Loading customization options...</p>
+			</div>
+			<div id="shirtDiv" class="tabcontent active">
+				<p>Loading customization options...</p>
+			</div>		  
+			<div id="pantsDiv" class="tabcontent">
+				<p>Loading customization options...</p>
+			</div>		  
+			<div id="shoesDiv" class="tabcontent">
+				<p>Loading customization options...</p>
+			</div>		  
+			<div id="boostDiv" class="tabcontent">
+				<p>Loading customization options...</p>
+			</div>
+			<div id="nameDiv" class="tabcontent active">
+				<p>Loading customization options...</p>
+			</div>		  
+			<div id="iconDiv" class="tabcontent">
+				<p>Loading customization options...</p>
+			</div>
+		</div>	  
 	</div>
 </div>
 
@@ -155,7 +263,10 @@
 <div id="code" style="margin: auto; width: 200px;">
 	<script src="/client/js/util.js"></script>
 	<script src="/client/js/cognito.js"></script>
-	<script src="/client/js/pages/profile.js"></script>	
+	<script src="/client/js/drawCustomizations.js"></script>
+	<script src="/client/js/pages/profile.js"></script>		
 </div>
+
+
 
 </body></html>
