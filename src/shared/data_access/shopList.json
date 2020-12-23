@@ -22,6 +22,83 @@
 		"canvasValue":"unlock.png"
 	},
 	{
+		"id":"cowboyHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Cowboy Hat",
+		"text":"Yee Haw!",
+		"price": 5000,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"cowboyHat"
+	},	
+	{
+		"id":"magaCapHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"MAGMA Hat",
+		"text":"Magma ain't good, magma awful!",
+		"price": 5000,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"magaCapHat"
+	},	
+	{
+		"id":"nessCapHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Psychic Boy Hat",
+		"text":"Thank you for reading this description. This description loves you.",
+		"price": 5000,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"nessCapHat"
+	},	
+	{
+		"id":"wreathHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Greek Wreath",
+		"text":"The only true wisdom is in knowing you know nothing",
+		"price": 5000,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"wreathHat"
+	},	
+	{
+		"id":"goldWreathHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Golden Wreath",
+		"text":"The only true wisdom is in knowing you're rich",
+		"price": 5000,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"goldWreathHat"
+	},	
+	{
+		"id":"santaHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Santa Hat",
+		"text":"Tis the season",
+		"price": 5000,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"santaHat"
+	},	
+	{
+		"id":"headbandHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Headband",
+		"text":"Infinite ammo [not really]",
+		"price": 5000,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"headbandHat"
+	},	
+	{
 		"id":"haloHat",
         "category":"hat",
 		"subCategory":"type",
@@ -109,6 +186,28 @@
 		"canvasValue":"baldHair"
 	},
 	{
+		"id":"malePatternHair",
+        "category":"hair",
+		"subCategory":"type",
+		"title":"Male Pattern",
+		"text":"Don't make fun",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"malePatternHair"
+	},
+	{
+		"id":"ponyTailHair",
+        "category":"hair",
+		"subCategory":"type",
+		"title":"Pony Tail",
+		"text":"Anyone got a hair tie?",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"ponyTailHair"
+	},
+	{
 		"id":"crewHair",
         "category":"hair",
 		"subCategory":"type",
@@ -167,12 +266,56 @@
 		"id":"brownHairColor",
         "category":"hair",
 		"subCategory":"color",
-		"title":"Brown",
+		"title":"Light Brown",
 		"text":"",
 		"price": 5000,
 		"team":0,
 		"rarity":1,
-		"canvasValue":"#603913"
+		"canvasValue":"#7f5227"
+	},
+	{
+		"id":"darkBrownHairColor",
+        "category":"hair",
+		"subCategory":"color",
+		"title":"Dark Brown",
+		"text":"",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"#381f07"
+	},
+	{
+		"id":"redHairColor",
+        "category":"hair",
+		"subCategory":"color",
+		"title":"Ginger",
+		"text":"",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"#be5329"
+	},	
+	{
+		"id":"ramonaHairColor",
+        "category":"hair",
+		"subCategory":"color",
+		"title":"Ramona",
+		"text":"",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"#b8133c"
+	},
+	{
+		"id":"greenHairColor",
+        "category":"hair",
+		"subCategory":"color",
+		"title":"Green",
+		"text":"",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"#259a1f"
 	},
 	{
 		"id":"blackHairColor",
@@ -227,7 +370,7 @@
 		"price": 5000,
 		"team":1,
 		"rarity":1,
-		"canvasValue":"#ddaa71"
+		"canvasValue":"#d2aa7d"
 	},
 	{
 		"id":"whiteSkinColor3",
@@ -498,11 +641,11 @@
         "category":"shirt",
 		"subCategory":"color",
 		"title":"Red",
-		"text":"#c80a0a",
+		"text":"#9e0b0f",
 		"price": 5000,
 		"team":1,
 		"rarity":3,
-		"canvasValue":"#c80a0a"
+		"canvasValue":"#9e0b0f"
 	},	
 	{
 		"id":"whiteShirtColor7",
@@ -582,17 +725,6 @@
 		"canvasValue":"longSleevesShirtType"
 	},	
 	{
-		"id":"zebraShirtPattern",
-        "category":"shirt",
-		"subCategory":"pattern",
-		"title":"Zebra",
-		"text":"Confuse your predators!",
-		"price": 50000,
-		"team":0,
-		"rarity":3,
-		"canvasValue":1
-	},	
-	{
 		"id":"defaultShirtPattern",
         "category":"shirt",
 		"subCategory":"pattern",
@@ -604,6 +736,50 @@
 		"canvasValue":"default"
 	},	
 	{
+		"id":"zebraShirtPattern",
+        "category":"shirt",
+		"subCategory":"pattern",
+		"title":"Zebra",
+		"text":"Confuse your predators!",
+		"price": 50000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"zebra"
+	},	
+	{
+		"id":"plaidShirtPattern",
+        "category":"shirt",
+		"subCategory":"pattern",
+		"title":"Tartan",
+		"text":"Often mistakenly called 'plaid'",
+		"price": 50000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"plaid"
+	},	
+	{
+		"id":"chainLinkShirtPattern",
+        "category":"shirt",
+		"subCategory":"pattern",
+		"title":"Scales",
+		"text":"Unleash the reptile brain",
+		"price": 50000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"chainLink"
+	},	
+	{
+		"id":"cellsShirtPattern",
+        "category":"shirt",
+		"subCategory":"pattern",
+		"title":"Honeycomb",
+		"text":"ME WANT HONEYCOMB ME WANT HONEYCOMB",
+		"price": 50000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"cells"
+	},	
+	{
 		"id":"pyramidShirtPattern",
         "category":"shirt",
 		"subCategory":"pattern",
@@ -612,7 +788,7 @@
 		"price": 50000,
 		"team":0,
 		"rarity":3,
-		"canvasValue":2
+		"canvasValue":"pyramids"
 	},	
 	{
 		"id":"brownShoesColor",
@@ -637,6 +813,50 @@
 		"canvasValue":"#000000"
 	},	
 	{
+		"id":"whiteShoesColor",
+        "category":"shoes",
+		"subCategory":"color",
+		"title":"White Shoes",
+		"text":"Lookin' fly",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#f4f4f4"
+	},	
+	{
+		"id":"goldShoesColor",
+        "category":"shoes",
+		"subCategory":"color",
+		"title":"Gold Shoes",
+		"text":"Pretty heavy, but looks over practicality: always",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#ffde00"
+	},	
+	{
+		"id":"greenShoesColor",
+        "category":"shoes",
+		"subCategory":"color",
+		"title":"Green Shoes",
+		"text":"Kinda ugly if you ask me",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#4b9608"
+	},	
+	{
+		"id":"pinkShoesColor",
+        "category":"shoes",
+		"subCategory":"color",
+		"title":"Hot Pink Shoes",
+		"text":"Can you pull them off?",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#ec008c"
+	},	
+	{
 		"id":"bluePantsColor",
         "category":"pants",
 		"subCategory":"color",
@@ -645,7 +865,73 @@
 		"price": 5000,
 		"team":0,
 		"rarity":3,
-		"canvasValue":"#282b92"
+		"canvasValue":"#0b276e"
+	},	
+	{
+		"id":"greenPantsColor",
+        "category":"pants",
+		"subCategory":"color",
+		"title":"Tactical Green",
+		"text":"Get tactical, marines!",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#2d5807"
+	},	
+	{
+		"id":"brownPantsColor",
+        "category":"pants",
+		"subCategory":"color",
+		"title":"Brown Pants",
+		"text":"Enjoy free shipping and easy returns every day",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#624004"
+	},	
+	{
+		"id":"tealPantsColor",
+        "category":"pants",
+		"subCategory":"color",
+		"title":"Teal Pants",
+		"text":"For any occasion, except funerals",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#028c87"
+	},	
+	{
+		"id":"pinkPantsColor",
+        "category":"pants",
+		"subCategory":"color",
+		"title":"Pink Pants",
+		"text":"Make a statement",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#f552ff"
+	},	
+	{
+		"id":"yellowPantsColor",
+        "category":"pants",
+		"subCategory":"color",
+		"title":"Neon Pants",
+		"text":"Need some attention?",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#f6ff00"
+	},	
+	{
+		"id":"nonePantsColor",
+        "category":"pants",
+		"subCategory":"color",
+		"title":"No Pants",
+		"text":"Do you want to end up on a list??",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#FFFFFF"
 	},	
 	{
 		"id":"slatePantsColor",
@@ -681,6 +967,50 @@
 		"canvasValue":"default"
 	},	
 	{
+		"id":"standardBlueBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Standard Blue",
+		"text":"Bluethane based propulsion",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"defaultBlue"
+	},	
+	{
+		"id":"standardGreenBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Standard Green",
+		"text":"Kryptonite based propulsion",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"defaultGreen"
+	},	
+	{
+		"id":"heartsBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Hearts",
+		"text":"The power of love",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"hearts2"
+	},	
+	{
+		"id":"rainbowBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Rainbow",
+		"text":"Created from attacking robotic unicorns",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"rainbow"
+	},	
+	{
 		"id":"greenStreaksBoost",
         "category":"boost",
 		"subCategory":"type",
@@ -690,6 +1020,17 @@
 		"team":0,
 		"rarity":3,
 		"canvasValue":"streaks"
+	},	
+	{
+		"id":"redStreaksBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Red Ion Thrusters",
+		"text":"Creates thrust by accelerating red ions using electricity",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"streaksRed"
 	},	
 	{
 		"id":"blastBoost",
@@ -718,11 +1059,33 @@
         "category":"name",
 		"subCategory":"color",
 		"title":"Blue Name",
-		"text":"#0000FF",
+		"text":"#00259d",
 		"price": 5000,
 		"team":2,
 		"rarity":2,
-		"canvasValue":"#0000FF"
+		"canvasValue":"#00259d"
+	},	
+	{
+		"id":"redName",
+        "category":"name",
+		"subCategory":"color",
+		"title":"Red Name",
+		"text":"#9d0000",
+		"price": 5000,
+		"team":1,
+		"rarity":2,
+		"canvasValue":"#9d0000"
+	},	
+	{
+		"id":"greenName",
+        "category":"name",
+		"subCategory":"color",
+		"title":"Green Name",
+		"text":"#005d02",
+		"price": 5000,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"#005d02"
 	},	
 	{
 		"id":"blackName",
@@ -734,6 +1097,39 @@
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#000000"
+	},		
+	{
+		"id":"yellowName",
+        "category":"name",
+		"subCategory":"color",
+		"title":"Yellow Name",
+		"text":"#fffc00",
+		"price": 5000,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"#fffc00"
+	},		
+	{
+		"id":"cyanName",
+        "category":"name",
+		"subCategory":"color",
+		"title":"Cyan Name",
+		"text":"#00fcff",
+		"price": 5000,
+		"team":2,
+		"rarity":2,
+		"canvasValue":"#00fcff"
+	},		
+	{
+		"id":"pinkName",
+        "category":"name",
+		"subCategory":"color",
+		"title":"Pink Name",
+		"text":"#ff00f0",
+		"price": 5000,
+		"team":1,
+		"rarity":2,
+		"canvasValue":"#ff00f0"
 	},		
 	{
 		"id":"rankIcon",
@@ -767,6 +1163,259 @@
 		"team":0,
 		"rarity":1,
 		"canvasValue":"smile"
+	},	
+	{
+		"id":"alertIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"ALERT",
+		"text":"War has changed",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"alert"
+	},	
+	{
+		"id":"atIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"@",
+		"text":"Twitter handle",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"at"
+	},	
+	{
+		"id":"badgeIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Sheriff Badge",
+		"text":"I'm the sheriff round these parts",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"badge"
+	},	
+	{
+		"id":"beakerIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Science Beaker",
+		"text":"For participating in the public Beta",
+		"price": 9999999,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"beaker"
+	},	
+	{
+		"id":"birdIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Birdy",
+		"text":"A symbol of freedom",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"bird"
+	},	
+	{
+		"id":"bulbIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Light Bulb",
+		"text":"Eureka!",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"bulb"
+	},	
+	{
+		"id":"cloverIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"4 Leaf Clover",
+		"text":"Lucky",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"clover"
+	},	
+	{
+		"id":"copyrightIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Copyright",
+		"text":"All rights reserved",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"copyright"
+	},	
+	{
+		"id":"crosshairsIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Crosshairs",
+		"text":"Target sighted",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"crosshairs"
+	},	
+	{
+		"id":"cursorIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Cursor",
+		"text":"Clickity click click",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"cursor"
+	},	
+	{
+		"id":"fistIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Fist",
+		"text":"Pound it, bro",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"fist"
+	},	
+	{
+		"id":"hashtagIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Hashtag",
+		"text":"Let's get it trending",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"hashtag"
+	},	
+	{
+		"id":"middleFingerIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Middle Finger",
+		"text":"Fuck you",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"middleFinger"
+	},	
+	{
+		"id":"noIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"NO",
+		"text":"Consent not given",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"no"
+	},	
+	{
+		"id":"notesIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Notes",
+		"text":"Music is life itself",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"notes"
+	},	
+	{
+		"id":"pawPrintIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Paw Print",
+		"text":"I <3 Animals",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"pawPrint"
+	},	
+	{
+		"id":"radiationIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Radiation",
+		"text":"Danger: radioactive materials",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"radiation"
+	},	
+	{
+		"id":"recycleIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Recycle",
+		"text":"Don't be trashy",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"recycle"
+	},	
+	{
+		"id":"snowflakeIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Snowflake",
+		"text":"Let it snow",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"snowflake"
+	},	
+	{
+		"id":"starIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Gold Star",
+		"text":"Awarded for exemplary performance",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"star"
+	},	
+	{
+		"id":"thumbsUpIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Thumbs Up",
+		"text":"Used to express assent, approval, or encouragement",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"thumbsUp"
+	},	
+	{
+		"id":"trophyIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Trophy",
+		"text":"MVP",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"trophy"
+	},	
+	{
+		"id":"bitcoinIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Bitcoin",
+		"text":"Cryptocurrency is the future",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"bitcoin"
 	},	
 	{
 		"id":"noneHat",

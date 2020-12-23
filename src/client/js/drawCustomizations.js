@@ -88,7 +88,7 @@ function getMannequinCustomizations(shopItem){
 		sgColor: "#FFFFFF",
 		boost: "default",
 		boostColor: "",
-		pantsColor: "#FFFFFF",
+		pantsColor: "#FFFFFD",
 		shoesColor: "#FFFFFF",
 		icon: "default"		
 	}
@@ -171,7 +171,7 @@ function drawCustomizations(customizations, id, cb){		//!!! We don't need id pas
 				if (!layer){continue;}
 
 				imgSources.push(layer.img.src);
-				if (layer.pattern){imgSources.push(layer.pattern.src);}
+				if (layer.pattern && layer.pattern.src){imgSources.push(layer.pattern.src);}
 				layers[teams[t]][animations[a]].push(layer);
 			} // layers loop
 		} //animations loop
@@ -238,15 +238,17 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 			if (teamCustomizations.hair == "baldHair" || teamCustomizations.hat == "skiMaskHat")
 				return false;
 			layer.color = teamCustomizations.hairColor;
-			if (teamCustomizations.hair != "cornrowsHair") {layer.pattern = getPattern(3);}
+			if (teamCustomizations.hair != "cornrowsHair") {layer.pattern = getPattern("hair");}
 			type = teamCustomizations.hair;
 			break;
 		case "hat":
 			if (teamCustomizations.hat == "default" || teamCustomizations.hat == "noneHat")
 				return false;
-			if ((teamCustomizations.hat.indexOf('CapHat') > -1  || teamCustomizations.hat == "haloHat") && teamCustomizations.hair == "bigAfroHair")
+			if (teamCustomizations.hat == "headbandHat" && (teamCustomizations.hair == "bigAfroHair" || teamCustomizations.hair == "afroHair"))
+				return false;
+			if (teamCustomizations.hair == "bigAfroHair" && (teamCustomizations.hat != "skiMaskHat" && teamCustomizations.hat != "sunglassesHat" && teamCustomizations.hat != "googlyHat"))
 				layer.y += 7;
-			if (teamCustomizations.hat.indexOf('CapHat') > -1 && teamCustomizations.hair == "afroHair")
+			if (teamCustomizations.hair == "afroHair" && (teamCustomizations.hat != "skiMaskHat" && teamCustomizations.hat != "sunglassesHat" && teamCustomizations.hat != "googlyHat"))
 				layer.y += 3;	
 			type = teamCustomizations.hat;
 			break;
@@ -257,13 +259,21 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 			else if (layerData.animationVariant.indexOf('MG') > -1) {layer.color = teamCustomizations.mgColor;}
 			else {layer.color = "#707070";}							
 			break;
-		case "legs":
-			layer.color = teamCustomizations.pantsColor;
+		case "legs":			
+			if (teamCustomizations.pantsColor == "#FFFFFF"){
+				layer.color = teamCustomizations.skinColor;
+			}
+			else {
+				layer.color = teamCustomizations.pantsColor;
+			}
 			break;
 		case "boost":
 			type = teamCustomizations.boost;
 			break;
 		case "shoes":
+			if (teamCustomizations.shoesColor == "#ffde00"){
+				layer.pattern = getPattern("chainLink");
+			}
 			layer.color = teamCustomizations.shoesColor;
 			break;
 		default:
@@ -282,15 +292,7 @@ function getPattern(custPattern){
 		var pattern = new Image();
 		pattern.src = "/client/img/small.png";
 		if (custPattern != "default"){
-			if (custPattern == 3){
-				pattern.src = "/client/img/dynamic/patterns/hair.png";
-			}
-			else if (custPattern == 1){
-				pattern.src = "/client/img/dynamic/patterns/zebra.png";
-			}
-			else if (custPattern == 2){
-				pattern.src = "/client/img/dynamic/patterns/pyramids.png";
-			}
+			pattern.src = "/client/img/dynamic/patterns/" + custPattern + ".png";
 		}
 		return pattern;
 	}
@@ -525,7 +527,7 @@ function drawOnCanvas(destCanvasCtx, img, x, y, color = false, pattern = false, 
 	//draw the image	
 	tCtx.drawImage(img, 0, 0, img.width * zoom, img.height * zoom);
 
-	if (pattern){
+	if (pattern && pattern.src){
 		tCtx.globalCompositeOperation = "multiply";
 		tCtx.drawImage(pattern, 0, 0);
 	}

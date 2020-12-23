@@ -2787,10 +2787,17 @@ function drawBoosts(){
 						drawImage(imgblast, (-blast.width/2 + dualBoostXOffset * 2) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);						
 						drawImage(imgblast, (-blast.width/2) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
 					}
-					else if (Player.list[i].customizations[playerTeam].boost == "streaks"){
+					else if (Player.list[i].customizations[playerTeam].boost.indexOf('streaks') > -1){
 						drawImage(imgblast, (-blast.width/2 - dualBoostXOffset) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);
 						drawImage(imgblast, (-blast.width/2 + dualBoostXOffset) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);						
 						drawImage(imgblast, (-blast.width/2) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
+					}
+					else if (Player.list[i].customizations[playerTeam].boost == "rainbow"){
+						blast.width = 60;
+						drawImage(imgblast, (-blast.width/2) * zoom, 20 * zoom, blast.width * zoom, blast.height * zoom);
+					}
+					else if (Player.list[i].customizations[playerTeam].boost == "hearts2"){
+						drawImage(imgblast, (-blast.width/2) * zoom, 20 * zoom, blast.width * zoom, blast.height * zoom);
 					}
 					else {
 						drawImage(imgblast, (-blast.width/2 - dualBoostXOffset) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);

@@ -449,11 +449,11 @@ var getUserShopList = function(cognitoSub,cb){
 				});
 			}
 
-			shopList[0] = "rankIcon";
-			shopList[1] = "smileyIcon";
-			shopList[2] = "noneIcon";
-			shopList[3] = "brownShoesColor";
-			shopList[4] = "charcoalPantsColor";
+			shopList[0] = "bitcoinIcon";
+			shopList[1] = "alertIcon";
+			shopList[2] = "birdIcon";
+			shopList[3] = "bulbIcon";
+			shopList[4] = "cloverIcon";
 
 			var clientShopList = transformToClientShop(shopList, nextMidnight);
 

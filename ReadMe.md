@@ -20,24 +20,18 @@
 
 The `infrastructure/` folder defines all the AWS resources in the form of TypeScript using CDK (see the [API reference](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html)).
 
-### How to deploy
+## How to Deploy using Beanstalk
+1. Install [EB CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install-windows.html)
+1. `cd src`
+1. Run `eb deploy`
 
+### How to deploy (OBSOLETE)
 1. `npm install -g cdk`   if you haven't installed CDK
 1. `cd infrastructure`    if you're not in the directory
 1. `npm run build`
 1. `cdk diff`             see what's going to change before doing it
 1. `cdk deploy`
 
-### How to Setup Lerna
-1. Delete all `package-lock.json` files
-1. Run `lerna bootstrap` at the root
-1. Run `npm install` in one of the service projects (to test the setup)
-
-## How to Deploy using Beanstalk
-
-1. Install [EB CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install-windows.html)
-1. `cd server/game`
-1. Run `eb deploy`
 
 ## Configuring an EC2 instance from Scratch
 

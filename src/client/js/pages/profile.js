@@ -20,8 +20,7 @@ function initializePage(){
 function loginSuccess(){
 	checkViewedProfileIsFriendOrParty();
 	showAuthorizedLoginButtons();            
-	getRequests();
-    showSelfProfileOptions();
+	getRequests();    
 }
 
 function loginFail(){
@@ -111,6 +110,7 @@ function populateProfilePage(){
                     }
                     else { //Got customizations
                         currentCustomizations = data.result;
+                        showSelfProfileOptions();
                         cycleAppearance();
                     }
                 });
@@ -693,8 +693,6 @@ function populateCustomizationOptions(){
 
             for (const item in options[displayTeam][category][subCategory]){
                 var shopIconClass = "shopIcon";
-                console.log("BEFORE ERROR: displayTeam " + displayTeam);
-                console.log(currentCustomizations);
                 if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasValue ||
                 (options[displayTeam][category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank)){
                     shopIconClass += " active";
