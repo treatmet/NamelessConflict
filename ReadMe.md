@@ -23,7 +23,7 @@ The `infrastructure/` folder defines all the AWS resources in the form of TypeSc
 ## How to Deploy using Beanstalk
 1. Install [EB CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install-windows.html)
 1. `cd src`
-1. Run `eb deploy`
+1. Run `eb deploy <EB Environment name>`
 
 ### How to deploy (OBSOLETE)
 1. `npm install -g cdk`   if you haven't installed CDK

@@ -660,7 +660,7 @@ Img.diamond2.src = "/client/img/ranks/full-size/diamond2.png";
 Img.bloodyBorder = new Image();
 Img.bloodyBorder.src = "/client/img/bloody-border.png";
 //-----------------------------Loading Sounds-------------------------------
-var mute = true;
+var mute = false;
 
 var sfxPistol = new Howl({src: ['/client/sfx/pistol.mp3']});
 var sfxMG = new Howl({src: ['/client/sfx/mgShot.mp3']});
