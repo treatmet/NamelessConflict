@@ -1,10 +1,10 @@
 var dataAccess = require('./dataAccess.js');
 const ObjectId = require('mongodb').ObjectID;
 
-var defaultCustomizations = require("./defaultCustomizations.json");
-var defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
+const defaultCustomizations = require("./defaultCustomizations.json");
+const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
 
-var fullShopList = require("./shopList.json");
+const fullShopList = require("./shopList.json");
 
 
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
@@ -246,16 +246,14 @@ var getUserCustomizations = function(cognitoSub,cb){
 			var customizations = res[0].customizations;
 			if (typeof customizations === 'undefined' || typeof res[0].customizations.red === 'undefined'){
 				logg("ERROR - COULD NOT GET CUSTOMIZATIONS FOR " + cognitoSub);
-				customizations = defaultCustomizations;
-				setUserCustomizations(cognitoSub, customizations);
+				customizations = JSON.parse(JSON.stringify(defaultCustomizations)); //clone
+				setUserCustomizations(cognitoSub, defaultCustomizations);
 			}
 			for (var t in customizations){
 				if (customizations[t].icon == "rank"){
 					customizations[t].icon = getRankFromRating(res[0].rating).rank;
 				}
 			}
-			console.log("RETURNING CUSTOMIZATIONS FOR " + cognitoSub);
-			console.log(customizations);
 			cb({msg: "Successfully got customizations", result:customizations});
 		}
 		else {
@@ -269,15 +267,44 @@ var setUserCustomization = function(cognitoSub, team, key, value) {
 	getUserCustomizations(cognitoSub, function(customizations){
 		customizations.result[team][key] = value;
 		if (customizations.result){
-			dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: customizations.result}, async function(err, obj){
-			});		
+			setUserCustomizations(cognitoSub, customizations.result);
 		}
 	});
 }
 
 var setUserCustomizations = function(cognitoSub, obj) {
+	for (var t in obj){
+		if (isRank(obj[t].icon)){
+			obj[t].icon = "rank";
+		}
+	}
+
+	console.log("UPDATING USER CUSTOMIZATIONS setUserCustomizations()");
+	console.log(obj);
+
 	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: obj}, async function(err, obj){
 	});		
+}
+
+function isRank(value){
+    const rankings = [
+		"bronze1",
+		"bronze2",
+		"bronze3",
+		"silver1",
+		"silver2",
+		"silver3",
+		"gold1",
+		"gold2",
+		"gold3",
+		"diamond",
+		"diamond2"
+    ];
+    
+    if (rankings.indexOf(value) > -1){
+        return true;
+    }
+    return false;
 }
 
 var getUserCustomizationOptions = function(cognitoSub,cb){
@@ -288,6 +315,8 @@ var getUserCustomizationOptions = function(cognitoSub,cb){
 			if (typeof customizationOptions === 'undefined'){
 				console.log("ERROR - COULD NOT GET CUSTOMIZATION OPTIONS FOR " + cognitoSub);
 				customizationOptions = defaultCustomizationOptions;
+				console.log("SETTING FIRST TIME CUSTOMIZATION OPTIONS");
+				console.log(customizationOptions);
 				updateUserCustomizationOptions(cognitoSub, customizationOptions);
 			}
 

@@ -5,7 +5,7 @@
 		"hair": "crewHair",
 		"hairColor": "#7f5227",
 		"shirt": "default",
-		"shirtColor": "#bf421c",
+		"shirtColor": "#9e0b0f",
 		"shirtPattern": "default",
 		"skinColor": "#d2aa7d",
 		"gloves": "default",
@@ -16,7 +16,7 @@
 		"sgColor": "#3d3d3d",
 		"boost": "default",
 		"boostColor": "",
-		"pantsColor": "#000247",
+		"pantsColor": "#0b276e",
 		"shoesColor": "#603913",
 		"icon": "rank"
 	},
@@ -26,7 +26,7 @@
 		"hair": "crewHair",
 		"hairColor": "#381f07",
 		"shirt": "default",
-		"shirtColor": "#0b3790",
+		"shirtColor": "#0942c2",
 		"shirtPattern": "default",
 		"skinColor": "#6a4118",
 		"gloves": "default",
@@ -37,7 +37,7 @@
 		"sgColor": "#3d3d3d",
 		"boost": "default",
 		"boostColor": "",
-		"pantsColor": "#000247",
+		"pantsColor": "#0b276e",
 		"shoesColor": "#603913",
 		"icon": "rank"
 	}

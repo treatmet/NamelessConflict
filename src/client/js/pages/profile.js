@@ -861,7 +861,7 @@ function getShopItemHTML(item, shopIconClass, isInShop){
 
 
 function customizationSelect(canvasValue, team, key){
-    if (key == "icon" && canvasValue == viewedProfileRank){
+    if (key == "icon" && isRank(canvasValue)){
         canvasValue = "rank";
     }
 
@@ -879,6 +879,27 @@ function customizationSelect(canvasValue, team, key){
         log("/setUserCustomizations response:");
 		log(data.msg);
 	});
+}
+
+function isRank(value){
+    const rankings = [
+		"bronze1",
+		"bronze2",
+		"bronze3",
+		"silver1",
+		"silver2",
+		"silver3",
+		"gold1",
+		"gold2",
+		"gold3",
+		"diamond",
+		"diamond2"
+    ];
+    
+    if (rankings.indexOf(value) > -1){
+        return true;
+    }
+    return false;
 }
 
 function shopClick(itemId, price){
