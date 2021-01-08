@@ -70,16 +70,11 @@ var debugText = true;
 //-----------------Config----------------------
 var version = "v 0.4.5"; //Post cognito
 
-
 var screenShakeScale = 0.5;
 var drawDistance = 10; 
-var bodyLimit = 16;
-var legSwingSpeed = 1;
-var maxLegHeight = 116;
 var playerCenterOffset = 4;
 
-//Offset is how many pixels away from the center the camera will go when aiming, greater value means player closer to edge of screen
-var camOffSet = 350;//doestn do anything
+var camOffSet = 350;//Offset is how many pixels away from the center the camera will go when aiming, greater value means player closer to edge of screen
 var diagCamOffSet = 200;
 var camMaxSpeed = 300;
 var camAccelerationMultiplier = 2;
@@ -90,12 +85,19 @@ var zoom = 0.75;
 const maxCloakStrength = 0.99;
 const maxAlliedCloakOpacity = .2; 
 var dualBoostXOffset = 15;
-const BODY_AGE = 1500;
 
 var shopEnabled = false;
 
 //Player Config
 var SGTriggerTapLimitTimer = 50;
+
+var legSwingSpeed = 1;
+var maxLegHeight = 116;
+
+const BODY_AGE = 1500;
+const bodyScale = 0.9; //To account for bodies being on the ground, farther down on Z axis
+var bodyLimit = 16;
+
 
 //Chat Config
 var hideChatTimer = 800;
@@ -717,6 +719,9 @@ sfxCharge.on('fade', function(){
 var sfxDecharge = new Howl({src: ['/client/sfx/decharge3.mp3']});
 //sfxDecharge.volume(.6);
 var sfxBoost = new Howl({src: ['/client/sfx/boost5.mp3']});
+var sfxBoostRainbow = new Howl({src: ['/client/sfx/boostRainbow.mp3']});
+var sfxBoostBlast = new Howl({src: ['/client/sfx/boostBlast.mp3']});
+var sfxBoostIon = new Howl({src: ['/client/sfx/boostIon.mp3']});
 var sfxBoostEmpty = new Howl({src: ['/client/sfx/boostEmpty.mp3']});
 sfxBoostEmpty.volume(1);
 var sfxCloak = new Howl({src: ['/client/sfx/cloak2.mp3']});
@@ -1048,16 +1053,7 @@ socket.on('sendPlayerNameToClient',function(data){
 });
 
 function getRotation(direction){
-		var rotateData;			
-		if (direction == 1){rotateData = 0;}
-		if (direction == 3){rotateData = 90*Math.PI/180;}
-		if (direction == 5){rotateData = 180*Math.PI/180;}
-		if (direction == 7){rotateData = 270*Math.PI/180;}
-		if (direction == 2){rotateData = 45*Math.PI/180;}
-		if (direction == 4){rotateData = 135*Math.PI/180;}
-		if (direction == 6){rotateData = 225*Math.PI/180;}
-		if (direction == 8){rotateData = 315*Math.PI/180;}
-		return rotateData;
+	return (direction-1) * (45*Math.PI/180);
 }
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -1307,12 +1303,24 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 					vol = 0.01;
 				if (vol < -.1 || mute)
 					vol = 0;
-				sfxBoost.volume(vol);
-				sfxBoost.play();
+
+				var playerBoostSfx = sfxBoost;
+				var team = Player.list[updateEffectPack[i].playerId].team == "white" ? "red" : "blue";
+				if (Player.list[updateEffectPack[i].playerId].customizations[team].boost == "hearts2" || Player.list[updateEffectPack[i].playerId].customizations[team].boost == "rainbow"){
+					playerBoostSfx = sfxBoostRainbow;
+				}
+				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost == "streaksRed" || Player.list[updateEffectPack[i].playerId].customizations[team].boost == "streaks"){
+					playerBoostSfx = sfxBoostIon;
+				}
+				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost == "blast"){
+					playerBoostSfx = sfxBoostBlast;
+				}
+				playerBoostSfx.volume(vol);
+				playerBoostSfx.play();
 			}
 		} 				
 		else if (updateEffectPack[i].type == 5){//body
-			createBody(updateEffectPack[i].targetX, updateEffectPack[i].targetY, updateEffectPack[i].pushSpeed, updateEffectPack[i].shootingDir, updateEffectPack[i].bodyType);
+			createBody(updateEffectPack[i].targetX, updateEffectPack[i].targetY, updateEffectPack[i].pushSpeed, updateEffectPack[i].shootingDir, updateEffectPack[i].playerId);
 		}
 		else if (updateEffectPack[i].type == 7){ //chat
 			Player.list[updateEffectPack[i].playerId].chat = updateEffectPack[i].text;
@@ -1841,13 +1849,10 @@ function drawBodies(){
 		
 		var rotate = getRotation(body.direction);
 		var img = Img.bodyWhite;
-		if (body.bodyType == "whiteRed"){
-			img = Img.bodyWhite;
-		}
-		else if (body.bodyType == "blackBlue"){
-			img = Img.bodyBlack;
-		}
-
+		const team = Player.list[body.playerId].team == "white" ? "red" : "blue";
+		if (Player.list[body.playerId].images[team].body1)
+			img = Player.list[body.playerId].images[team].body1;
+		
 		//Movement (sliding)
 		if (body.speed > 0){
 			var subtractPushSpeed = Math.floor(body.speed / 15); 
@@ -1911,6 +1916,7 @@ function drawBodies(){
 			ctx.translate(centerX + body.x * zoom - myPlayer.x * zoom, centerY + body.y * zoom - myPlayer.y * zoom); //Center camera on controlled player
 			ctx.rotate(rotate);
 			ctx.globalAlpha = 0.8;			
+				//Draw blood
                 drawImage(Img.bloodPool, (-body.poolHeight/2.8 + 5) * zoom, -body.poolHeight/1.9 * zoom, body.poolHeight/1.7 * zoom, (body.poolHeight - bodyOnWallLegsYOffset) * zoom);
                 ctx.globalAlpha = 1;
                 if (body.poolHeight < body.poolHeightMax - 1.5){
@@ -1920,10 +1926,8 @@ function drawBodies(){
                 }
                 else {
                     body.poolHeight = body.poolHeightMax;
-                }
-                drawImage(img, -img.width/2 * zoom, -img.height/2 * zoom, img.width * zoom, (img.height - bodyOnWallLegsYOffset) * zoom);
-			//ctx.rotate(-rotate);	
-			//ctx.translate(-(centerX + body.x * zoom - myPlayer.x * zoom), -(centerY + body.y * zoom - myPlayer.y * zoom)); //Center camera on controlled player
+				}
+                drawImage(img, -(img.width * bodyScale)/2 * zoom, -(img.height * bodyScale)/2 * zoom, img.width * zoom * bodyScale, (img.height - bodyOnWallLegsYOffset) * zoom * bodyScale);
 			ctx.restore();
 		}		
 	}
@@ -1937,14 +1941,6 @@ function drawWallBodies(){
 			
 			var rotate = 1;	
 			var img = Img.bodyWhiteWall1;
-			
-			if (body.bodyType == "whiteRed"){
-				img = Img.bodyWhiteWall1;
-			}
-			else if (body.bodyType == "blackBlue"){
-				img = Img.bodyBlackWall1;
-			}
-
 			
 			var bodyBlockOffset = 14;
 			for (var i in Block.list){
@@ -2794,7 +2790,7 @@ function drawBoosts(){
 					}
 					else if (Player.list[i].customizations[playerTeam].boost == "rainbow"){
 						blast.width = 60;
-						drawImage(imgblast, (-blast.width/2) * zoom, 20 * zoom, blast.width * zoom, blast.height * zoom);
+						drawImage(imgblast, (-blast.width/2) * zoom, 10 * zoom, blast.width * zoom, blast.height * zoom);
 					}
 					else if (Player.list[i].customizations[playerTeam].boost == "hearts2"){
 						drawImage(imgblast, (-blast.width/2) * zoom, 20 * zoom, blast.width * zoom, blast.height * zoom);
@@ -4218,8 +4214,8 @@ function drawEverything(){
 	drawPickups();
 	drawBags();
 	drawThugs();
-	drawTorsos();
 	drawBoosts();
+	drawTorsos();
 	drawShots();
 	drawBlood();
 	drawSmashes();
@@ -4485,9 +4481,9 @@ Shot.list = {};
 
 
 // ---------------------------------- CREATE BODY -----------------------------
-function createBody(targetX, targetY, pushSpeed, shootingDir, bodyType){
+function createBody(targetX, targetY, pushSpeed, shootingDir, playerId){
 	if (Object.size(Body.list) < bodyLimit){
-		var body = Body(targetX, targetY, shootingDir, bodyType, pushSpeed);	
+		var body = Body(targetX, targetY, shootingDir, playerId, pushSpeed);	
 	}	
 	if (!mute){
 		var dx1 = myPlayer.x - targetX;
@@ -4506,7 +4502,7 @@ function createBody(targetX, targetY, pushSpeed, shootingDir, bodyType){
 	}	
 }
 
-var Body = function(x, y, direction, bodyType, speed){
+var Body = function(x, y, direction, playerId, speed){
 	var self = {
 		id:Math.random(),
 		x:x,
@@ -4515,7 +4511,7 @@ var Body = function(x, y, direction, bodyType, speed){
 		//width:84, full size
 		//height:97, full size
 		direction:direction,
-		bodyType:bodyType,
+		playerId:playerId,
 		bodyRand: Math.floor((Math.random() * 4) + 1),
 		age:0,
 		poolHeight: Math.floor((Math.random() * 50) + 1),
@@ -5045,9 +5041,6 @@ window.addEventListener("beforeunload", function (e) {
 });
 */
 
-function randomInt(min,max)
-{
-    return Math.floor(Math.random()*(max-min+1)+min);
-}
+
 
 console.log("game.js loaded");

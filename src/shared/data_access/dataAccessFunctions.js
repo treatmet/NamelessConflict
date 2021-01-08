@@ -1,11 +1,10 @@
 var dataAccess = require('./dataAccess.js');
 const ObjectId = require('mongodb').ObjectID;
 
-const defaultCustomizations = require("./defaultCustomizations.json");
-const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
-
 const fullShopList = require("./shopList.json");
-
+const defaultCustomizations = require("./defaultCustomizations.json");
+// const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
+const defaultCustomizationOptions = fullShopList.map(item => item.id);
 
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
 var getUserFromDB = function(cognitoSub,cb){
@@ -41,8 +40,6 @@ var getAllUsersOnServer = function(cb){
 		}
 	});
 }
-
-
 
 var getPartyForUser = function(cognitoSub, cb){
 	var partyData = {
@@ -478,11 +475,11 @@ var getUserShopList = function(cognitoSub,cb){
 				});
 			}
 
-			shopList[0] = "bitcoinIcon";
-			shopList[1] = "alertIcon";
-			shopList[2] = "birdIcon";
-			shopList[3] = "bulbIcon";
-			shopList[4] = "cloverIcon";
+			// shopList[0] = "bitcoinIcon";
+			// shopList[1] = "alertIcon";
+			// shopList[2] = "birdIcon";
+			// shopList[3] = "bulbIcon";
+			// shopList[4] = "cloverIcon";
 
 			var clientShopList = transformToClientShop(shopList, nextMidnight);
 
@@ -515,11 +512,11 @@ function getNewShopItem(currentShopList){
 	while (loopCount < 1000){
 		shopIndex = randomInt(2, fullShopList.length - 1); //Random element from shop, starting with index 2 (to skip unlock and refresh)
 		//New shop rules
-		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
+		// if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
 			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item already added to new shop?
 				break;				
 			}
-		}
+		// }
 		loopCount++;
 	}
 	return fullShopList[shopIndex].id;
@@ -533,8 +530,25 @@ function transformToClientShop(shopList, nextRefreshTime){ //shopList is list of
 	//transform from list of id's to full shop object
 	var clientShopList = [];
 	for (var i = 0; i < shopList.length; i++){
-		var shopItem = fullShopList.find(item => item.id == shopList[i]);
+		var shopItem = fullShopList.find(item => item.id == shopList[i]);		
 		if (shopItem){
+			const fixedPrices = true;
+			if (fixedPrices){
+				switch(shopItem.rarity){
+					default:
+						shopItem.price = 2000;
+						break;
+					case 1:
+						shopItem.price = 5000;
+						break;
+					case 2:
+						shopItem.price = 20000;
+						break;
+					case 3:
+						shopItem.price = 50000;
+						break;
+				}
+			}
 			clientShopList.push(shopItem);
 		}
 	}

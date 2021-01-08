@@ -3,12 +3,15 @@ var viewedProfileCognitoSub = "";
 var viewedProfileName = "";
 var viewedProfileRank = "bronze1";
 var currentCustomizations = {};
-var displayAnimation = "";
-var displayTeam = "red";
 var customizationOptions = {};
 var shopOptions = {};
+
+const playerCenterOffset = 4;
+var displayAnimation = "";
+var displayTeam = "red";
 var shopRefreshTimer = 10000000;
-var playerCenterOffset = 4;
+
+var rouletteOn = false;
 
 initializePage();
 function initializePage(){
@@ -77,7 +80,7 @@ function updateKickInviteToPartyButtons(data){
 
 function getViewedProfileCognitoSub(){
 	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
-		return getUrl().split('/user/')[1];
+		return getUrl().split('/user/')[1].substring(0,36);
 	}	
 	return "";
 }
@@ -85,7 +88,7 @@ function getViewedProfileCognitoSub(){
 function populateProfilePage(){
 	const params = {
 		cognitoSub:viewedProfileCognitoSub
-	}
+    }
 	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){	
 		$.post('/getProfile', params, function(data,status){
             console.log("getProfilePage response from server:");
@@ -133,6 +136,7 @@ function showSelfProfileOptions(){
             console.log(data);
             if (data.result)
                 customizationOptions = data.result;
+
             populateCustomizationOptions();
             $.get( '/getUserShopList', {cognitoSub:viewedProfileCognitoSub}, function(data) {
                 logg("GET SHOP LIST RESPONSE:");
@@ -140,10 +144,12 @@ function showSelfProfileOptions(){
                 if (data.result){
                     shopOptions = data.result;
                     shopRefreshTimer = shopOptions.timer.time;
-                }
 
-                // logg("GOT SHOP OPTIONS:");
-                // logg(shopOptions);
+                    if (getUrlParam("view") == "shop"){
+                        toggleAppearanceMode('shopToggleIcon');
+                    }        
+                    showContent("hat");
+                }
                 populateShopOptions();
             });
         });        
@@ -168,9 +174,24 @@ function displayAppearanceFrame(image, zoom = 1, secondImage = false){
     backgroundImg.src = "/client/img/factory-floor.png";
 
     loadImages([backgroundImg.src], function(){
-        drawOnCanvas(ctx, backgroundImg, 0, 0, false, false, 1, true);
-        if (secondImage){drawOnCanvas(ctx, secondImage, (canvas.width/2 - ((secondImage.width * zoom) / 2)), (canvas.height/2 - (((secondImage.height - playerCenterOffset)*zoom)/2)), false, false, zoom, false);}
-        drawOnCanvas(ctx, image, (canvas.width/2 - ((image.width * zoom) / 2)), (canvas.height/2 - ((image.height*zoom)/2)), false, false, zoom, false);
+        var backgroundLayer = {
+            img:backgroundImg
+        };  
+        drawOnCanvas(ctx, backgroundLayer);
+        if (secondImage){
+            var legsLayer = {
+                img:secondImage,
+                x:(canvas.width/2 - ((secondImage.width * zoom) / 2)),
+                y:(canvas.height/2 - (((secondImage.height - playerCenterOffset)*zoom)/2)),
+            };    
+            drawOnCanvas(ctx, legsLayer, zoom, false);
+        }
+        var layer = {
+            img:image,
+            x:(canvas.width/2 - ((image.width * zoom) / 2)),
+            y:(canvas.height/2 - ((image.height*zoom)/2)),
+        };  
+        drawOnCanvas(ctx, layer, zoom, false);
         if (currentCustomizations[displayTeam].icon == "rank"){
             currentCustomizations[displayTeam].icon = viewedProfileRank;
         }
@@ -215,7 +236,12 @@ function drawShopIcon(shopItem, iconId){
                 shiftDistForIconX = -1;
                 shiftDistForIconY = -3;
             }
-            drawOnCanvas(ctx, image, shiftDistForIconX, shiftDistForIconY, false, false, zoom, false);
+            var mannequinLayer = {
+                img:image,
+                x: shiftDistForIconX,
+                y: shiftDistForIconY                
+            };
+            drawOnCanvas(ctx, mannequinLayer, zoom, false);
         });
     }
 }
@@ -559,19 +585,20 @@ function kickFromPartyButtonClick() {
 
 //////////////////////////////// APPEARANCE ////////////////////////
 
-function toggleAppearanceMode(event) {
+function toggleAppearanceMode(divId) {
+    var div = document.getElementById(divId);
     removeConfirmationMessage();
     var tablinks = document.getElementsByClassName("toggleIcons");
     for (var i = 0; i < tablinks.length; i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
-    event.currentTarget.className += " active";
+    div.className += " active";
 
     var appearanceOptions = document.getElementById("appearanceOptions");
     var shopOptionsDiv = document.getElementById("shopOptions");
 
     if (appearanceOptions && shopOptionsDiv){
-        switch (event.currentTarget.id){
+        switch (divId){
             case "customizeToggleIcon":
                 appearanceOptions.style.display = "block";
                 shopOptionsDiv.style.display = "none";
@@ -621,7 +648,8 @@ function toggleShopSelected(event) {
 }
 
 
-function showContent(event) {
+function showContent(divId) {
+    var div = document.getElementById(divId);
     var tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabcontent");
     for (var i = 0; i < tabcontent.length; i++) {
@@ -631,8 +659,8 @@ function showContent(event) {
     for (var i = 0; i < tablinks.length; i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
-    document.getElementById(event.currentTarget.id + "Div").style.display = "block";
-    event.currentTarget.className += " active";
+    document.getElementById(divId + "Div").style.display = "block";
+    div.className += " active";
 }
 
 function selectTeam(event) {
@@ -677,6 +705,8 @@ function cycleAppearance(){
 function populateCustomizationOptions(){
     var options = customizationOptions;
 
+
+
     for (const category in options[displayTeam]){
         var HTML = "";
         var div = document.getElementById(category + "Div");
@@ -692,15 +722,22 @@ function populateCustomizationOptions(){
             HTML += "<div class='shopCategory'>" + displaySubCategory + "</div>"
 
             for (const item in options[displayTeam][category][subCategory]){
-                var shopIconClass = "shopIcon";
+
+                options[displayTeam][category][subCategory] = options[displayTeam][category][subCategory].sort(
+                    function (item1, item2){
+                        return item1.rarity - item2.rarity;
+                    }
+                );
+
+                var active = false;
                 if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasValue ||
                 (options[displayTeam][category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank)){
-                    shopIconClass += " active";
+                    active = true;
                 }
                
                 options[displayTeam][category][subCategory][item].customizationCategory = category + displaySubCategory;
                 options[displayTeam][category][subCategory][item].subCategory = subCategory;
-                HTML += getShopItemHTML(options[displayTeam][category][subCategory][item], shopIconClass, false);
+                HTML += getShopItemHTML(options[displayTeam][category][subCategory][item], active, false);
             }
         }
         div.innerHTML = HTML;
@@ -726,19 +763,23 @@ function populateShopOptions(){
 
     var options = shopOptions;
     var div = document.getElementById("shopOptions");
-    var HTML = "<div class='shopCategory'></div>";
-	HTML += "<div class='shopItem' id='refresh' style='width: 250px;' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
-	HTML += "<div class='shopIcon' id='default'><img src='/client/img/shopIcons/refresh.png'></div>";
-	HTML += "<div id='shopTitle' style='color:#FFFFFF;' class='shopTitle'>Refresh Store Now</div><br><div class='shopText'>$" + numberWithCommas(options.timer.resetPrice) + "</div>";
-    HTML += "<div id='rarityText' class='shopTitle' style='float:right;'></div>";
-    HTML +=	"</div>";
-    HTML += "<div id='refreshTimer'>" + getRefreshTimerTextHTML() + "</div>";
-    HTML += "<div class='shopCategory'>Store</div>";
+    var HTML = "";
+    HTML += "<div id='shopTopBar'>";
+        HTML += "<div class='shopItem' id='refresh' style='width: 260px;' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
+        HTML += "<div class='shopIcon' id='default'><img src='/client/img/shopIcons/refresh.png'></div>";
+        HTML += "<div id='shopTitle' style='color:#FFFFFF;' class='shopTitle'>Refresh Store Now</div><br><div class='shopText'>$" + numberWithCommas(options.timer.resetPrice) + "</div>";
+        HTML += "<div id='rarityText' class='shopTitle' style='float:right;'></div>";
+        HTML +=	"</div>";
+        HTML += "<div id='refreshTimer'>" + getRefreshTimerTextHTML() + "</div>";
+    HTML += "</div>";
 
+    HTML += "<div id='shopMainContent'>";
+    HTML += "<div class='shopCategory' style='margin-top: 10px;'>Store</div>";
     for (const item in options.shop){
-        HTML += getShopItemHTML(options.shop[item], "shopIcon", true);
+        HTML += getShopItemHTML(options.shop[item], false, true);
     }
 
+    HTML += "</div>"; 
     HTML += "</div>"; 
     div.innerHTML = HTML;
 
@@ -749,7 +790,14 @@ function populateShopOptions(){
     }
 }
 
-function getShopItemHTML(item, shopIconClass, isInShop){
+function getShopItemHTML(item, active, isInShop){
+    var shopItemClass = "shopItem";
+    var shopIconClass = "shopIcon";
+    if (active){
+        shopItemClass += " active";
+        shopIconClass += " active";
+    }
+
     var ownedHTML = "";
     var ownedCount = getItemOwnedCount(item.id);
     if (ownedCount > 0){
@@ -782,19 +830,27 @@ function getShopItemHTML(item, shopIconClass, isInShop){
     else {
         onClickHTML = "onclick='customizationSelect(\"" + item.canvasValue + "\", \"" + displayTeam + "\",\"" + item.customizationCategory + "\")'";
     }
-    var HTML = "<div id='" + item.id + "' class='shopItem' " + onClickHTML + ">";
+    const shopItemDivId = isInShop ? item.id : "customizeItem";
+    var HTML = "<div id='" + shopItemDivId + "' class='" + shopItemClass + "' " + onClickHTML + ">";
 
     var iconCtxId = isInShop ? item.id + "ShopCtx" : item.id + "CustomizeCtx";
     if (item.category == "other"){
         HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><img src='/client/img/shopIcons/" + item.canvasValue + "'></div>";
     }
     else {
-        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><canvas id='" + iconCtxId + "'></canvas></div>";
+        var iconClassPrefix = isInShop ? "shop" : "equip";
+        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'>";
+        HTML += "<img class='" + iconClassPrefix + "IconRoulette' style='display:none' src='/client/img/shopIcons/roulette/questionO.png'>";
+        HTML += "<canvas class='" + iconClassPrefix + "IconCanvas' id='" + iconCtxId + "'></canvas>";
+        HTML += "</div>";
     }
     
 
+    //Rarity appearance configuration
+    const showRarityImg = isInShop ? true : false;
+    const showRarityTitleColor = isInShop ? true : false;
 
-
+    
     var rarityImg;
     var rarityText;
     var rarityColor;
@@ -825,10 +881,14 @@ function getShopItemHTML(item, shopIconClass, isInShop){
 
 
 
-    if (rarityImg)
+    if (rarityImg && showRarityImg)
         HTML += "<div class='shopIconOverlay' id ='" + item.id + "''><img src='/client/img/shopIcons/" + rarityImg + "'></div>";
-    if (item.title)
-        HTML += "<div id='shopTitle' class='shopTitle' style='color:" + rarityColor + "'>" + item.title + "</div>";
+    if (item.title){
+        HTML += "<div id='shopTitle' class='shopTitle' ";
+        if (showRarityTitleColor)  
+            HTML += "style='color:" + rarityColor + "'";
+        HTML += ">" + item.title + "</div>";
+    }
     HTML += "<div id='rarityText' class='shopTitle' style='float:right; color:" + rarityColor + "'>" + rarityText + "</div>";
     if (item.price && isInShop)
         HTML += "<br><div id='shopTextPrice' class='shopText'>$" + numberWithCommas(item.price) + ownedHTML + "</div>";
@@ -913,13 +973,20 @@ function shopClick(itemId, price){
             rarityText.innerHTML = confirmationMessage;
             rarityText.style.color = "#FFF";
             item.style.backgroundColor = "#BBB";
+            if (itemId == "refresh"){
+                rouletteOn = true;
+            }
         }
         else {
+            document.getElementById("shopOptions").style.pointerEvents = 'none'; // prevent double purchases
             $.post('/buyItem', {viewedProfileCognitoSub:viewedProfileCognitoSub, itemId:itemId}, function(data,status){
                 log("/buyItem response:");
                 console.log(data);
                 if (data.result){
-                    window.location.reload();
+                    // window.location.reload();
+                    console.log('RELOAD');
+                    console.log(window.location.pathname + '?view=shop');
+                    window.location.href = window.location.pathname + '?view=shop';                    
                 }
                 else {
                     alert(data.msg);
@@ -933,9 +1000,19 @@ function shopClick(itemId, price){
     }
 }
 
-function removeConfirmationMessage(){
+function showQuestionMarksOverIcons(){
     var shopItems = document.getElementsByClassName("shopItem");
     for (var i = 0; i < shopItems.length; i++) {
+        shopItems[i].getElementById("ShopCtx");
+    }
+}
+
+function removeConfirmationMessage(){
+    rouletteOn = false;
+    var shopItems = document.getElementsByClassName("shopItem");
+    for (var i = 0; i < shopItems.length; i++) {     
+        if (shopItems[i].id == "customizeItem")   
+            continue;
         if (!shopItems[i].getElementById("shopTitle")){
             //alert("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
             logg("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
@@ -1014,8 +1091,70 @@ setInterval(
             document.getElementById('refreshTimer').innerHTML = getRefreshTimerTextHTML();
         }
 	},
-	1000/1 // 1000/Ticks per second
+	1000 //Millisecond tick length
 );
+
+setInterval( 
+	function(){	
+        if (viewedProfileCognitoSub == cognitoSub){
+            var shopIconRoulettes = document.getElementsByClassName("shopIconRoulette");
+            var shopIconCanvases = document.getElementsByClassName("shopIconCanvas");
+
+            if (rouletteOn){
+                for (var c in shopIconCanvases){
+                    if (shopIconCanvases[c].style)
+                        shopIconCanvases[c].style.display = 'none';
+                }
+                for (var r in shopIconRoulettes){
+                    if (shopIconCanvases[r].style){
+                        shopIconRoulettes[r].style.display = 'inline-block';
+                        const randy = randomInt(1,6);
+                        switch(randy){
+                            case 1:
+                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionB.png';
+                                break;
+                            case 2:
+                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionG.png';
+                                break;
+                            case 3:
+                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionY.png';
+                                break;
+                            case 4:
+                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionO.png';
+                                break;
+                            case 5:
+                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionR.png';
+                                break;
+                            case 6:
+                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionP.png';
+                                break;
+                            default:
+                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionB.png';
+                                break;
+                        }
+                    }
+                }
+            } 
+            else {
+                for (var c in shopIconCanvases){
+                    if (shopIconCanvases[c].style)
+                        shopIconCanvases[c].style.display = 'inline-block';
+                }
+                for (var r in shopIconRoulettes){
+                    if (shopIconCanvases[r].style)
+                        shopIconRoulettes[r].style.display = 'none';
+                }
+            }       
+        }
+	},
+	75 //Millisecond tick length
+);
+
+document.onkeydown = function(event){
+    if(event.keyCode === 27){ //Esc
+        removeConfirmationMessage();
+	}
+}
 
 //shopOptions example
 /*

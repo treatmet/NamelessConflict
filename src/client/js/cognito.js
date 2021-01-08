@@ -1,7 +1,7 @@
 console.log("cognito.js loading");
 
-var serverP = getUrlParam("server", "");
-var processP = getUrlParam("process", "");
+var serverP = getUrlParam("server");
+var processP = getUrlParam("process");
 var socket = io(getSocketParams());
 function getSocketParams(){
 	if (serverP != "" && processP != ""){
@@ -35,9 +35,9 @@ const teams = [
 
 function getTokenFromUrlParameterAndLogin(){
 	console.log("Getting tokens from url params and logging in...");
-	var code = getUrlParam("code", "").substring(0,36);
-	var cog_a = getUrlParam("cog_a", "");
-	var cog_r = getUrlParam("cog_r", "");
+	var code = getUrlParam("code").substring(0,36);
+	var cog_a = getUrlParam("cog_a");
+	var cog_r = getUrlParam("cog_r");
 	
     const validateTokenEndpoint = '/validateToken';
     const data = {
@@ -77,7 +77,9 @@ function getTokenFromUrlParameterAndLogin(){
 		}
 		setPcModeAndIsLocalElements({isLocal:data.isLocal, pcMode:data.pcMode});
 		loginAlways();
-		removeUrlParams();
+		if (page != "profile"){
+			removeUrlParams();
+		}
     });
 }
 
@@ -519,8 +521,14 @@ function showAuthorizedLoginButtons(){
             printedUsername += " - (click here to update username)"
         }
         document.getElementById('userWelcomeText').style.display = "inline-block";
-		document.getElementById('userWelcomeText').innerHTML = "<a href='/user/" + cognitoSub + "'>Logged in as " + printedUsername + "</a>";	
+		document.getElementById('userWelcomeText').innerHTML = getUserWelcomeHTML(printedUsername);	
 	}
+}
+
+function getUserWelcomeHTML(printedUsername){
+	var HTML = "";
+	HTML += "<span>Logged in as </span>" + "<a href='/user/" + cognitoSub + "'>" + printedUsername + "</a>";
+	return HTML;
 }
 
 function showSecondaySectionTitles(){
@@ -528,7 +536,7 @@ function showSecondaySectionTitles(){
 	document.getElementById('sectionTitle3').style.display = 'inline-block';	
 }
 
-function getUrlParam(parameter, defaultvalue){
+function getUrlParam(parameter, defaultvalue = ""){
     var urlparameter = defaultvalue;
     if(window.location.href.indexOf(parameter) > -1){
         urlparameter = getUrlVars()[parameter];
@@ -701,6 +709,8 @@ Element.prototype.getElementById = function(req) {
 
 //Function to convert rgb color to hex format
 function rgb2hex(rgb) {
+	if (!rgb)
+		return "#FFFFFF";
  rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
  return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
 }
@@ -847,5 +857,9 @@ function getRankFromRating(rating){
 	return {rank:"bronze1", floor:0, nextRank:"bronze2", ceiling:100};
 }
 
+function randomInt(min,max)
+{
+    return Math.floor(Math.random()*(max-min+1)+min);
+}
 
 console.log("cognito.js loaded");

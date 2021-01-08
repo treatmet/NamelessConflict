@@ -965,12 +965,7 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 		//Create Body
 		if (self.pushSpeed > pushMaxSpeed){ self.pushSpeed = pushMaxSpeed; }
 		
-		if (self.team == "white"){
-			updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, bodyType:"whiteRed"});
-		}
-		else if (self.team == "black"){
-			updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, bodyType:"blackBlue"});
-		}
+		updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, playerId:self.id});
 		
 		//Drop Ammo/Pickups drop pickups
 		var drops = 0;

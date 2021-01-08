@@ -148,11 +148,11 @@
 	<div id="customizationColumn" class="columnSection">
 		
 		<div id="shopCustomizeToggle">
-				<div class="toggleIcons active" id="customizeToggleIcon" onclick="toggleAppearanceMode(event)">
+				<div class="toggleIcons active" id="customizeToggleIcon" onclick="toggleAppearanceMode('customizeToggleIcon')">
 						<span>Equip</span>
 						<img src="/client/img/customizeToggle.png">
 				</div>
-				<div class="toggleIcons" id="shopToggleIcon" onclick="toggleAppearanceMode(event)">
+				<div class="toggleIcons" id="shopToggleIcon" onclick="toggleAppearanceMode('shopToggleIcon')">
 						<img src="/client/img/shopToggle.png">
 						<span>Buy</span>
 				</div>							
@@ -216,15 +216,15 @@
 
 		<div id="appearanceOptions" style="display: none">
 			<div class="tab">
-				<button class="tablinks" id="hat" onclick="showContent(event)">Hats</button>
-				<button class="tablinks" id="hair" onclick="showContent(event)">Hair</button>
-				<button class="tablinks" id="skin" onclick="showContent(event)">Skin</button>
-				<button class="tablinks" id="shirt" onclick="showContent(event)">Shirt</button>
-				<button class="tablinks" id="pants" onclick="showContent(event)">Pants</button>
-				<button class="tablinks" id="shoes" onclick="showContent(event)">Shoes</button>
-				<button class="tablinks" id="boost" onclick="showContent(event)">Boost</button>
-				<button class="tablinks" id="name" onclick="showContent(event)">Name</button>
-				<button class="tablinks" id="icon" onclick="showContent(event)">Icon</button>
+				<button class="tablinks" id="hat" onclick="showContent('hat')">Hats</button>
+				<button class="tablinks" id="hair" onclick="showContent('hair')">Hair</button>
+				<button class="tablinks" id="skin" onclick="showContent('skin')">Skin</button>
+				<button class="tablinks" id="shirt" onclick="showContent('shirt')">Shirt</button>
+				<button class="tablinks" id="pants" onclick="showContent('pants')">Pants</button>
+				<button class="tablinks" id="shoes" onclick="showContent('shoes')">Shoes</button>
+				<button class="tablinks" id="boost" onclick="showContent('boost')">Boost</button>
+				<button class="tablinks" id="name" onclick="showContent('name')">Name</button>
+				<button class="tablinks" id="icon" onclick="showContent('icon')">Icon</button>
 			</div>
 
 			<div id="hatDiv" class="tabcontent active">
@@ -236,7 +236,7 @@
 			<div id="skinDiv" class="tabcontent">
 				<p>Loading customization options...</p>
 			</div>
-			<div id="shirtDiv" class="tabcontent active">
+			<div id="shirtDiv" class="tabcontent">
 				<p>Loading customization options...</p>
 			</div>		  
 			<div id="pantsDiv" class="tabcontent">
@@ -248,7 +248,7 @@
 			<div id="boostDiv" class="tabcontent">
 				<p>Loading customization options...</p>
 			</div>
-			<div id="nameDiv" class="tabcontent active">
+			<div id="nameDiv" class="tabcontent">
 				<p>Loading customization options...</p>
 			</div>		  
 			<div id="iconDiv" class="tabcontent">
