@@ -213,6 +213,7 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 	layer.pattern = false;
 	layer.x = layerData.x;
 	layer.y = layerData.y;
+	layer.rotation = layerData.rotation;
 	var type = "default";				
 	var animationVariant = layerData.animationVariant ? "/" + layerData.animationVariant : "";
 
@@ -496,13 +497,15 @@ function getLayerOrder(animationFrame){
 			layerOrder = [{layer: "boost", x:0, y:0}];
 			break;
 		case "bodyWall":
+			const wallBodyOffset = -5;
 			layerOrder = [
-				{layer:"head", x:0, y:0, rotation:25*Math.PI/180},
-				{layer:"hair", x:0, y:0, rotation:25*Math.PI/180},
-				{layer: "arms", animationVariant:animationFrame, x:0, y:0},
-				{layer: "torso", animationVariant:animationFrame, x:0, y:0},
-				{layer:"hands", animationVariant:animationFrame, x:0, y:0},
-				{layer:"bloodFront", animationVariant:animationFrame, x:0, y:0}];
+				{layer: "arms", animationVariant:animationFrame, x:0, y:wallBodyOffset},
+				{layer: "torso", animationVariant:animationFrame, x:0, y:wallBodyOffset},
+				{layer:"hands", animationVariant:animationFrame, x:0, y:wallBodyOffset},
+				{layer:"bloodFront", animationVariant:animationFrame, x:wallBodyOffset, y:wallBodyOffset},
+				{layer:"head", x:30, y:-5 + wallBodyOffset, rotation:25*Math.PI/180},
+				{layer:"hair", x:30, y:-5 + wallBodyOffset, rotation:25*Math.PI/180}
+				];
 			break;
 		case "body1":
 			layerOrder = [
@@ -545,15 +548,20 @@ function drawOnCanvas(destCanvasCtx, layer, zoom = 1, clearFrame = true){
 	tCan.width = layer.img.width * zoom;
 	tCan.height = layer.img.height * zoom;
 
+
+	if (!layer.x){layer.x = 0;}
+	if (!layer.y){layer.y = 0;}
+
 	if (clearFrame){
 		tCtx.clearRect(0,0,tCan.width,tCan.height); //Clears previous frame!!!	
 	}
 	
 	tCtx.save();
 
+
 		//rotate the image
 		if (layer.rotation){
-			ctx.rotate(layer.rotation);
+			tCtx.rotate(layer.rotation);
 		}
 
 		//draw the image	

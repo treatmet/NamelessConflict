@@ -1290,8 +1290,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 	
 	for (var i = 0; i < updateEffectPack.length; i++) {
 		if (updateEffectPack[i].type == 3){//boost
-			BoostBlast(updateEffectPack[i].playerId);
-			
+			BoostBlast(updateEffectPack[i].playerId);			
 			if (!mute){
 				var dx1 = myPlayer.x - Player.list[updateEffectPack[i].playerId].x;
 				var dy1 = myPlayer.y - Player.list[updateEffectPack[i].playerId].y;
@@ -1319,7 +1318,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 				playerBoostSfx.play();
 			}
 		} 				
-		else if (updateEffectPack[i].type == 5){//body
+		else if (updateEffectPack[i].type == 5){ //body
 			createBody(updateEffectPack[i].targetX, updateEffectPack[i].targetY, updateEffectPack[i].pushSpeed, updateEffectPack[i].shootingDir, updateEffectPack[i].playerId);
 		}
 		else if (updateEffectPack[i].type == 7){ //chat
@@ -1849,9 +1848,20 @@ function drawBodies(){
 		
 		var rotate = getRotation(body.direction);
 		var img = Img.bodyWhite;
-		const team = Player.list[body.playerId].team == "white" ? "red" : "blue";
-		if (Player.list[body.playerId].images[team].body1)
-			img = Player.list[body.playerId].images[team].body1;
+
+		var team = "red";
+
+		if (Player.list[body.playerId]){
+			team = Player.list[body.playerId].team == "white" ? "red" : "blue";
+			if (Player.list[body.playerId].images[team].body1)
+				img = Player.list[body.playerId].images[team].body1;
+		}
+		else if (Thug.list[body.playerId]){
+			team = Thug.list[body.playerId].team == "white" ? "red" : "blue";
+			if (team == "blue")
+				img = Img.bodyBlack;
+		}
+
 		
 		//Movement (sliding)
 		if (body.speed > 0){
@@ -1905,7 +1915,7 @@ function drawBodies(){
 			if (body.x + bodyBlockOffset >= Block.list[i].x && body.x - bodyBlockOffset <= Block.list[i].x + Block.list[i].width && body.y + bodyBlockOffset >= Block.list[i].y && body.y - bodyBlockOffset <= Block.list[i].y + Block.list[i].height){												
 				if (Block.list[i].type == "normal" || Block.list[i].type == "red" || Block.list[i].type == "blue"){
 					body.onWall = true;
-					bodyOnWallLegsYOffset = 20;
+					bodyOnWallLegsYOffset = 12;
 					continue;
 				}
 			}
@@ -1941,6 +1951,10 @@ function drawWallBodies(){
 			
 			var rotate = 1;	
 			var img = Img.bodyWhiteWall1;
+
+			var team = Player.list[body.playerId].team == "white" ? "red" : "blue";
+			if (Player.list[body.playerId].images[team].bodyWall)
+				img = Player.list[body.playerId].images[team].bodyWall;
 			
 			var bodyBlockOffset = 14;
 			for (var i in Block.list){
