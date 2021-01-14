@@ -184,7 +184,7 @@ function getPublicServersFromDB(cb){
 function getCurrentNumPlayers(currentUsers){
     var players = 0;
     for (var u = 0; u < currentUsers.length; u++){
-        if (currentUsers[u].team == "none" || currentUsers[u].team == "white" || currentUsers[u].team == "black")
+        if (currentUsers[u].team == 0 || currentUsers[u].team == 1 || currentUsers[u].team == 2)
             players++;
     }
     return players;

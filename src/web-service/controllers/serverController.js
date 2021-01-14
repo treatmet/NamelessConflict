@@ -114,7 +114,7 @@ var getJoinableServer = function(options, cb){
 					}
 					
 					//Determine if spectatingTeam
-					var team = "none";
+					var team = 0;
 					var incomingUsers = serv[i].incomingUsers || [];
 					var currentUsers = serv[i].currentUsers || [];
 					
@@ -128,8 +128,8 @@ var getJoinableServer = function(options, cb){
 
 					var moreWhitePlayers = 0; 
 					for (var u in currentUsers){
-						if (currentUsers[u].team == "white"){moreWhitePlayers++;}
-						else if (currentUsers[u].team == "black"){moreWhitePlayers--;}
+						if (currentUsers[u].team == 1){moreWhitePlayers++;}
+						else if (currentUsers[u].team == 2){moreWhitePlayers--;}
 					}
 					for (var s in incomingUsers){
 						var continueLoop = false;
@@ -138,15 +138,15 @@ var getJoinableServer = function(options, cb){
 						}
 						if (continueLoop)
 							continue;						
-						if (incomingUsers[s].team == "white"){moreWhitePlayers++;}
-						else if (incomingUsers[s].team == "black"){moreWhitePlayers--;}
+						if (incomingUsers[s].team == 1){moreWhitePlayers++;}
+						else if (incomingUsers[s].team == 2){moreWhitePlayers--;}
 					}
 					
 					if (moreWhitePlayers <= 0){
-						team = "white";
+						team = 1;
 					}
 					else {
-						team = "black";
+						team = 2;
 					}
 					
 					var matchRemaining = (serv[i].currentTimeLeft / serv[i].matchTime);
@@ -156,7 +156,7 @@ var getJoinableServer = function(options, cb){
 					console.log("(POSSIBLE TEAM DIFF) IS " + possibleTeamDifference + " GREATER THAN OR EQUAL TO " + Math.abs(moreWhitePlayers));
 					
 					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 2){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
-						team = "none";
+						team = 0;
 					}
 					
 					//Set DB incoming Users

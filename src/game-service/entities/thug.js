@@ -319,12 +319,7 @@ var Thug = function(id, team, x, y){
 		//Create Body
 		if (self.pushSpeed > pushMaxSpeed){ self.pushSpeed = pushMaxSpeed; }
 		
-		if (self.team == "white"){
-			updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, bodyType:"whiteRed"});
-		}
-		else if (self.team == "black"){
-			updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, bodyType:"blackBlue"});
-		}		
+		updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, playerId:self.id});
 	}
 
 }//End Thug		

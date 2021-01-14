@@ -27,7 +27,7 @@ function populateLeaderboard(){
 	console.log("POPULATING LEADERBOARD: " + serverHomePage);
 	if (document.getElementById('tablePrint')){
 		$.post('/getLeaderboard', {}, function(res,status){
-			var leaderboardHTML= "<table class='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";
+			var leaderboardHTML= "<table class='statsTable' id='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";
 			for (let i = 0; i < res.length; i++) {
 				leaderboardHTML+="<tr><td style='background-color: #728498; text-align: center; font-weight: bold;'>" + (i + 1) + "</td><td><a href='{{serverHomePage}}user/"+res[i].cognitoSub+"'>" + res[i].username + "</td><td>" + res[i].rating + "</td><td>" + res[i].kills + "</td><td>" + res[i].captures + "</td><td>" + res[i].gamesWon + "</td><td>" + res[i].experience + "</td></tr>";			
 			}		

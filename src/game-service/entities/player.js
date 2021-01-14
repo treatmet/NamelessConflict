@@ -57,11 +57,11 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 	
 		//Invincibility in Shop
 		if (invincibleInShop){
-			if (self.team == "white" && self.x == 0 && self.y < 200 && self.health < 100){
+			if (self.team == 1 && self.x == 0 && self.y < 200 && self.health < 100){
 				self.health = 100;
 				updatePlayerList.push({id:self.id,property:"health",value:self.health});
 			}
-			else if (self.team == "black" && self.x == mapWidth && self.y > mapHeight - 200 && self.health < 100){
+			else if (self.team == 2 && self.x == mapWidth && self.y > mapHeight - 200 && self.health < 100){
 				self.health = 100;
 				updatePlayerList.push({id:self.id,property:"health",value:self.health});
 			}		
@@ -69,11 +69,11 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 	/////////////////////////// DEATH /////////////////////		
 		//Drop bag
 		if (self.health <= 0 && self.holdingBag == true){
-			if (self.team == "white"){
+			if (self.team == 1){
 				bagBlue.captured = false;
 				updateMisc.bagBlue = bagBlue;
 			}
-			else if (self.team == "black"){
+			else if (self.team == 2){
 				bagRed.captured = false;
 				updateMisc.bagRed = bagRed;
 			}
@@ -695,7 +695,7 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 		
 		//Check Player collision with bag - STEAL
 		if (gametype == "ctf"){
-			if (self.team == "white" && bagBlue.captured == false && self.health > 0 && bagBlue.playerThrowing != self.id){
+			if (self.team == 1 && bagBlue.captured == false && self.health > 0 && bagBlue.playerThrowing != self.id){
 				if (self.x > bagBlue.x - 67 && self.x < bagBlue.x + 67 && self.y > bagBlue.y - 50 && self.y < bagBlue.y + 50){												
 					bagBlue.captured = true;
 					bagBlue.speed = 0;
@@ -715,7 +715,7 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 					}
 				}
 			}
-			else if (self.team == "black" && bagRed.captured == false && self.health > 0 && bagRed.playerThrowing != self.id){
+			else if (self.team == 2 && bagRed.captured == false && self.health > 0 && bagRed.playerThrowing != self.id){
 				if (self.x > bagRed.x - 67 && self.x < bagRed.x + 67 && self.y > bagRed.y - 50 && self.y < bagRed.y + 50){												
 					bagRed.captured = true;
 					bagRed.speed = 0;
@@ -737,7 +737,7 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 			}
 
 			//Check Player collision with bag - RETURN
-			if (self.team == "white" && bagRed.captured == false && self.health > 0 && (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY)){
+			if (self.team == 1 && bagRed.captured == false && self.health > 0 && (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY)){
 				if (self.x > bagRed.x - 67 && self.x < bagRed.x + 67 && self.y > bagRed.y - 50 && self.y < bagRed.y + 50){			
 					playerEvent(self.id, "return");
 					bagRed.x = bagRed.homeX;
@@ -746,7 +746,7 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 					updateMisc.bagRed = bagRed;		
 				}
 			}
-			if (self.team == "black" && bagBlue.captured == false && self.health > 0 && (bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY)){
+			if (self.team == 2 && bagBlue.captured == false && self.health > 0 && (bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY)){
 				if (self.x > bagBlue.x - 67 && self.x < bagBlue.x + 67 && self.y > bagBlue.y - 50 && self.y < bagBlue.y + 50){												
 					playerEvent(self.id, "return");
 					bagBlue.x = bagBlue.homeX;
@@ -758,33 +758,33 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 
 			//Check Player collision with bag - CAPTURE
 			if (gameOver == false){
-				if (self.team == "white" && self.holdingBag == true && bagRed.captured == false && self.health > 0 && (bagRed.x == bagRed.homeX && bagRed.y == bagRed.homeY)){
+				if (self.team == 1 && self.holdingBag == true && bagRed.captured == false && self.health > 0 && (bagRed.x == bagRed.homeX && bagRed.y == bagRed.homeY)){
 					if (self.x > bagRed.homeX - 67 && self.x < bagRed.homeX + 67 && self.y > bagRed.homeY - 50 && self.y < bagRed.homeY + 50){												
 						//Bag Score
 						playerEvent(self.id, "capture");
-						gameEngine.capture("white");
+						gameEngine.capture(1);
 					}
 				}
-				if (self.team == "black" && self.holdingBag == true && bagBlue.captured == false && self.health > 0 && (bagBlue.x == bagBlue.homeX && bagBlue.y == bagBlue.homeY)){
+				if (self.team == 2 && self.holdingBag == true && bagBlue.captured == false && self.health > 0 && (bagBlue.x == bagBlue.homeX && bagBlue.y == bagBlue.homeY)){
 					if (self.x > bagBlue.homeX - 67 && self.x < bagBlue.homeX + 67 && self.y > bagBlue.homeY - 50 && self.y < bagBlue.homeY + 50){												
 						//Bag Score
 						playerEvent(self.id, "capture");
-						gameEngine.capture("black");
+						gameEngine.capture(2);
 					}
 				}
 			}
 			
 			//Move bag with player
 			if (self.holdingBag == true && self.health > 0){
-				if (self.team == "black"){
-					bagRed.x = self.x;
-					bagRed.y = self.y;				
-					updateMisc.bagRed = bagRed;
-				}
-				else if (self.team == "white"){
+				if (self.team == 1){
 					bagBlue.x = self.x;
 					bagBlue.y = self.y;				
 					updateMisc.bagBlue = bagBlue;
+				}
+				else if (self.team == 2){
+					bagRed.x = self.x;
+					bagRed.y = self.y;				
+					updateMisc.bagRed = bagRed;
 				}
 			}
 		}//End check if gametype is ctf
@@ -842,7 +842,7 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 		if (typeof self.afk === 'undefined'){
 		 self.afk = AfkFramesAllowed;
 		}
-		else if (self.afk >= 0 && self.team != "none"){
+		else if (self.afk >= 0 && self.team != 0){
 			self.afk--;
 		}
 		else { //Boot em
@@ -965,12 +965,7 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 		//Create Body
 		if (self.pushSpeed > pushMaxSpeed){ self.pushSpeed = pushMaxSpeed; }
 		
-		if (self.team == "white"){
-			updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, bodyType:"whiteRed"});
-		}
-		else if (self.team == "black"){
-			updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, bodyType:"blackBlue"});
-		}
+		updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, playerId:self.id});
 		
 		//Drop Ammo/Pickups drop pickups
 		var drops = 0;
@@ -1086,17 +1081,17 @@ var Player = function(id, cognitoSub, name, team, customizations, partyId){
 
 	var teamName = self.team;
 	if (pcMode == 2){
-		if (self.team == "white"){
+		if (self.team == 1){
 			teamName = "red";
 		}
-		else if (self.team == "black"){
+		else if (self.team == 2){
 			teamName = "blue";
 		}
 	}
-	if (teamName != "none")
+	if (teamName != 0)
 		sendChatToAll(self.name + " has joined the " + teamName + " team!");
 		
-	socket.emit('sendPlayerNameToClient',self.name);
+	socket.emit('sendPlayerNameToClient', self.name);
 	
 	self.respawn();
 	
@@ -1324,7 +1319,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 
 		socket.on('keyPress', function(data){
 			Player.list[socket.id].afk = AfkFramesAllowed;
-			if (player.health > 0 && player.team != "none"){
+			if (player.health > 0 && player.team != 0){
 				var discharge = false;
 				if(data.inputId === 87){player.pressingW = data.state;} //W
 				else if(data.inputId === 68){player.pressingD = data.state;}
@@ -1409,14 +1404,14 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});
 						}
 						updatePlayerList.push({id:player.id,property:"holdingBag",value:player.holdingBag});	
-						if (player.team == "white"){
+						if (player.team == 1){
 							bagBlue.captured = false;
 							updateMisc.bagBlue = bagBlue;
 							bagBlue.playerThrowing = player.id;
 							bagBlue.speed = 25;
 							bagBlue.direction = player.walkingDir;
 						}
-						else if (player.team == "black"){
+						else if (player.team == 2){
 							bagRed.captured = false;
 							updateMisc.bagRed = bagRed;
 							bagRed.playerThrowing = player.id;
@@ -1953,14 +1948,14 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			}
 			else if (data == "sThugWhite"){		
 				logg("Server command: Spawn Thug (White)");
-				var coords = gameEngine.getSafeCoordinates("white");
-				thug.createThug(Math.random(), "white", coords.x, coords.y);
+				var coords = gameEngine.getSafeCoordinates(1);
+				thug.createThug(Math.random(), 1, coords.x, coords.y);
 				socket.emit('addToChat', 'White thug spawned.');	
 			}
 			else if (data == "sThugBlack"){
 				logg("Server command: Spawn Thug (Black)");
-				var coords = gameEngine.getSafeCoordinates("black");
-				thug.createThug(Math.random(), "black", coords.x, coords.y);
+				var coords = gameEngine.getSafeCoordinates(2);
+				thug.createThug(Math.random(), 2, coords.x, coords.y);
 				socket.emit('addToChat', 'Black thug spawned.');	
 			}
 			else if (data == "5sec"){
@@ -1987,11 +1982,11 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 				gameEngine.changeTeams(socket.id);
 			}
 			else if (data == "capturet" || data == "scoret"){
-				if (getPlayerById(socket.id).team == "white"){
-					gameEngine.capture("white");
+				if (getPlayerById(socket.id).team == 1){
+					gameEngine.capture(1);
 				}
-				else if (getPlayerById(socket.id).team == "black"){
-					gameEngine.capture("black");
+				else if (getPlayerById(socket.id).team == 2){
+					gameEngine.capture(2);
 				}
 			}
 			else if (data == "kill" || data == "die"){
@@ -2020,17 +2015,17 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 				}
 				gameEngine.restartGame();
 
-				if (getPlayerById(socket.id) && getPlayerById(socket.id).team == "white"){
+				if (getPlayerById(socket.id) && getPlayerById(socket.id).team == 1){
 					if (gametype == "ctf"){
-						gameEngine.capture("white");
+						gameEngine.capture(1);
 					}
 					else if (gametype == "slayer"){
 						whiteScore += 100;
 					}
 				}
-				else if (getPlayerById(socket.id) && getPlayerById(socket.id).team == "black"){
+				else if (getPlayerById(socket.id) && getPlayerById(socket.id).team == 2){
 					if (gametype == "ctf"){
-						gameEngine.capture("black");
+						gameEngine.capture(2);
 					}
 					else if (gametype == "slayer"){
 						blackScore += 100;
@@ -2051,13 +2046,13 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 				}
 				gameEngine.restartGame();
 
-				if (getPlayerById(socket.id) && getPlayerById(socket.id).team == "white"){
+				if (getPlayerById(socket.id) && getPlayerById(socket.id).team == 1){
 					if (gametype == "ctf")
-						gameEngine.capture("black");
+						gameEngine.capture(2);
 				}
-				else if (getPlayerById(socket.id) && getPlayerById(socket.id).team == "black"){
+				else if (getPlayerById(socket.id) && getPlayerById(socket.id).team == 2){
 					if (gametype == "ctf")
-						gameEngine.capture("white");
+						gameEngine.capture(1);
 				}
 				minutesLeft = 0;
 				secondsLeft = 0;
@@ -2219,11 +2214,11 @@ Player.onDisconnect = function(id){
 	if (Player.list[id]){
 		logg(Player.list[id].name + " disconnected.");
 		if (Player.list[id].holdingBag == true){
-			if (Player.list[id].team == "white"){
+			if (Player.list[id].team == 1){
 				bagBlue.captured = false;
 				updateMisc.bagBlue = bagBlue;
 			}
-			else if (Player.list[id].team == "black"){
+			else if (Player.list[id].team == 2){
 				bagRed.captured = false;
 				updateMisc.bagRed = bagRed;
 			}
@@ -2395,7 +2390,7 @@ function sendChatToAll(text){
 }
 function runPlayerEngines(){
 	for (var i in Player.list){
-		if (Player.list[i].team != "none")
+		if (Player.list[i].team != 0)
 		Player.list[i].engine();
 	}		
 	

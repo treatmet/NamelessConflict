@@ -21,7 +21,9 @@ const animations = [
 	"SGReloading2",
 	"SGReloading3",
 	"legs",
-	"boost"
+	"boost",
+	"body1",
+	"bodyWall"
 ];
 
 var smallImg = new Image();
@@ -211,6 +213,7 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 	layer.pattern = false;
 	layer.x = layerData.x;
 	layer.y = layerData.y;
+	layer.rotation = layerData.rotation;
 	var type = "default";				
 	var animationVariant = layerData.animationVariant ? "/" + layerData.animationVariant : "";
 
@@ -275,6 +278,8 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 				layer.pattern = getPattern("chainLink");
 			}
 			layer.color = teamCustomizations.shoesColor;
+			break;
+		case "bloodFront":
 			break;
 		default:
 			log("RENDERING ERROR - invalid layer: [" + String(layerData.layer) + "]");
@@ -491,7 +496,27 @@ function getLayerOrder(animationFrame){
 		case "boost":
 			layerOrder = [{layer: "boost", x:0, y:0}];
 			break;
-		case "BodyWall":
+		case "bodyWall":
+			const wallBodyOffset = -5;
+			layerOrder = [
+				{layer: "arms", animationVariant:animationFrame, x:0, y:wallBodyOffset},
+				{layer: "torso", animationVariant:animationFrame, x:0, y:wallBodyOffset},
+				{layer:"hands", animationVariant:animationFrame, x:0, y:wallBodyOffset},
+				{layer:"bloodFront", animationVariant:animationFrame, x:wallBodyOffset, y:wallBodyOffset},
+				{layer:"head", x:30, y:-5 + wallBodyOffset, rotation:25*Math.PI/180},
+				{layer:"hair", x:30, y:-5 + wallBodyOffset, rotation:25*Math.PI/180}
+				];
+			break;
+		case "body1":
+			layerOrder = [
+				{layer:"hair", x:-1, y:-38},
+				{layer: "arms", animationVariant:animationFrame, x:0, y:0},
+				{layer: "torso", animationVariant:animationFrame, x:0, y:0},
+				{layer:"head", x:-1, y:-38},
+				{layer:"hands", animationVariant:animationFrame, x:0, y:0},
+				{layer: "legs", animationVariant:animationFrame, x:0, y:0},
+				{layer: "shoes", animationVariant:animationFrame, x:0, y:0},
+				{layer:"bloodFront", x:0, y:0}];
 			break;
 		default:
 			log("ERROR: Layer missing: " + animationFrame);
@@ -500,63 +525,71 @@ function getLayerOrder(animationFrame){
 	return layerOrder;
 }
 
-function drawLayeredImage(imagesArray, clearFrame = true){
+function drawLayeredImage(layerArray, clearFrame = true){
 	var p_canvas = document.createElement('canvas');
 	var pCtx = p_canvas.getContext("2d");
-	p_canvas.width = imagesArray[0].img.width;
-	p_canvas.height = imagesArray[0].img.height;
+	if (layerArray[0]){
+		p_canvas.width = layerArray[0].img.width;
+		p_canvas.height = layerArray[0].img.height;
 
-	for (var i = 0; i < imagesArray.length; i++){
-		drawOnCanvas(pCtx, imagesArray[i].img, imagesArray[i].x, imagesArray[i].y, imagesArray[i].color, imagesArray[i].pattern, 1, clearFrame);
+		for (var i = 0; i < layerArray.length; i++){
+			drawOnCanvas(pCtx, layerArray[i], 1, clearFrame);
+		}
 	}
 	
 	return p_canvas;
 }
 
-function drawOnCanvas(destCanvasCtx, img, x, y, color = false, pattern = false, zoom = 1, clearFrame = true){
+//function drawOnCanvas(destCanvasCtx, img, x, y, color = false, pattern = false, zoom = 1,  rotation = 0, clearFrame = true){
+
+function drawOnCanvas(destCanvasCtx, layer, zoom = 1, clearFrame = true){
 	var tCan = document.createElement('canvas');
 	var tCtx = tCan.getContext("2d");
-	tCan.width = img.width * zoom;
-	tCan.height = img.height * zoom;
+	tCan.width = layer.img.width * zoom;
+	tCan.height = layer.img.height * zoom;
+
+
+	if (!layer.x){layer.x = 0;}
+	if (!layer.y){layer.y = 0;}
 
 	if (clearFrame){
 		tCtx.clearRect(0,0,tCan.width,tCan.height); //Clears previous frame!!!	
 	}
 	
+	tCtx.save();
 
-	//draw the image	
-	tCtx.drawImage(img, 0, 0, img.width * zoom, img.height * zoom);
 
-	if (pattern && pattern.src){
-		tCtx.globalCompositeOperation = "multiply";
-		tCtx.drawImage(pattern, 0, 0);
-	}
-	
-	if (color){
-		tCtx.fillStyle = color;
+		//rotate the image
+		if (layer.rotation){
+			tCtx.rotate(layer.rotation);
+		}
 
-		//Brightness
-		tCtx.globalCompositeOperation = "multiply";
-		tCtx.fillRect(0, 0, tCan.width, tCan.height);
+		//draw the image	
+		tCtx.drawImage(layer.img, 0, 0, layer.img.width * zoom, layer.img.height * zoom);
 
-		//Color transformation
-		tCtx.globalCompositeOperation = "color";
-		tCtx.fillRect(0, 0, tCan.width, tCan.height);
+		if (layer.pattern && layer.pattern.src){
+			tCtx.globalCompositeOperation = "multiply";
+			tCtx.drawImage(layer.pattern, 0, 0);
+		}
+		
+		if (layer.color){
+			tCtx.fillStyle = layer.color;
 
-		//Clip the color shader outside image  
-		tCtx.globalCompositeOperation = "destination-in";
-		tCtx.drawImage(img, 0, 0);
-	}
+			//Brightness
+			tCtx.globalCompositeOperation = "multiply";
+			tCtx.fillRect(0, 0, tCan.width, tCan.height);
 
-	destCanvasCtx.drawImage(tCan, x, y);
+			//Color transformation
+			tCtx.globalCompositeOperation = "color";
+			tCtx.fillRect(0, 0, tCan.width, tCan.height);
+
+			//Clip the color shader outside image  
+			tCtx.globalCompositeOperation = "destination-in";
+			tCtx.drawImage(layer.img, 0, 0);
+		}
+
+		destCanvasCtx.drawImage(tCan, layer.x, layer.y);
+	tCtx.restore();
+
 }
 
-
-
-function drawSimpleImage(destCanvasCtx, img, clearFrame = false){
-	if (clearFrame)
-		destCanvasCtx.clearRect(0,0,destCanvasCtx.width,destCanvasCtx.height); //Clears previous frame!!!	
-	
-	//draw the image
-	destCanvasCtx.drawImage(img, 0, 0);	
-}

@@ -1,5 +1,5 @@
 {
-	"red": {
+	"1": {
 		"nameColor": "#000000",
 		"hat": "noneHat",
 		"hair": "crewHair",
@@ -16,11 +16,11 @@
 		"sgColor": "#3d3d3d",
 		"boost": "default",
 		"boostColor": "",
-		"pantsColor": "#0b276e",
-		"shoesColor": "#603913",
+		"pantsColor": "#624004",
+		"shoesColor": "#000000",
 		"icon": "rank"
 	},
-	"blue": {
+	"2": {
 		"nameColor": "#000000",
 		"hat": "noneHat",
 		"hair": "crewHair",

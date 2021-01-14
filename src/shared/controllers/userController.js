@@ -520,7 +520,7 @@ router.get('/getUserShopList', async function(req, res) {
 	}
 	else {
 		res.status(200);
-		var msg = "Did not get userShopList because User's cognitoSub[" + authorizedUser.cognitoSub + "] did not match viewed profile cognitoSub[" + req.query.cognitoSub + "]";
+		var msg = "Did not get userShopList because requester's cognitoSub[" + authorizedUser.cognitoSub + "] did not match viewed profile cognitoSub[" + req.query.cognitoSub + "]";
 		res.send({msg:msg, result:false});
 	}
 });
@@ -543,6 +543,24 @@ router.post('/buyItem', async function (req, res) {
 		response = {msg:"Failed to Purchase item. Either the user was not authorized, or insuficient data was provided."};
 		res.status(200);
 		res.send(response);
+	}
+});
+
+router.get('/getUserSettings', async function(req, res) {
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	console.log("/getUserShopList ENDPOINT");
+	logg("GETTING USER SHOP LIST FOR PAGE:" + req.query.cognitoSub + ". REQUEST FROM USER:" + authorizedUser.cognitoSub);
+	if (authorizedUser.cognitoSub == req.query.cognitoSub){
+		dataAccessFunctions.getUserSettings(authorizedUser.cognitoSub, function(msg, settings){
+			res.status(200);
+			res.send({msg:msg, result:settings});
+		});
+
+	}
+	else {
+		res.status(200);
+		var msg = "Did not get settings because requester's cognitoSub[" + authorizedUser.cognitoSub + "] did not match viewed profile cognitoSub[" + req.query.cognitoSub + "]";
+		res.send({msg:msg, result:false});
 	}
 });
 

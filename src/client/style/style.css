@@ -21,11 +21,21 @@ body{
 	color:white;	
 }
 
+#header a {
+    color: white;
+	/* text-decoration:none; */
+}
+
+#header a:hover {
+    color: #b0b0b0;
+	/* text-decoration:none; */
+}
+
 #topBar {
 	margin: auto;
 	border-bottom: black solid 2px;
 	padding-top: 5px;
-	padding-bottom: 5px;
+	/* padding-bottom: 5px; */
 	padding-left: 10px;
 	padding-right: 10px;
 	width: 100%;
@@ -41,7 +51,6 @@ div#titleText a {
 #topBar span {
 	text-align: left;
     line-height: 30px;
-    margin-left: 5px;
 }
 
 
@@ -57,6 +66,12 @@ div#titleText a {
     size: 12px;
     font-size: 16;
 }
+
+#userWelcomeText a {
+    color: white;
+    /* text-decoration: none; */
+}
+
 
 #cashHeaderDisplay{
     size: 12px;
@@ -78,20 +93,6 @@ div#titleText a {
     display: inline-block;
 }
 
-#userWelcomeText a {
-    color: white;
-    text-decoration: none;
-}
-
-#header a {
-    color: white;
-	text-decoration:none;
-}
-
-#header a:hover {
-    color: #b0b0b0;
-	text-decoration:none;
-}
 
 /* friends bar*/
 
@@ -344,10 +345,13 @@ div#progressColumn {
 
 /* User Update Form on Profile Page*/
 
-div#updateUserForm {
+.settingsSection {
     text-align: center;
-    margin: 10px;
-    margin-top: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    /* margin-top: 30px; */
+    border-bottom: 1px white solid;
+    width:100%;
 }
 
 button#editUserButton {
@@ -355,9 +359,9 @@ button#editUserButton {
 	margin: 5px;
 }
 
-div#updateUserTextBoxes {
-    margin-bottom: 30px;
-}
+/* div#updateUserTextBoxes {
+    
+} */
 
 div#updateFields {
     margin-top: 10px;
@@ -380,6 +384,15 @@ button#editUserConfirmButton {
 button#editUserCancelButton {
     background-color: #e41e41;
 	margin: 5px;
+}
+
+button#keybindingsCancelButton {
+    background-color: #e41e41;
+	margin: 5px;
+}
+
+.endFormButtons {
+
 }
 
 div#passys {
@@ -627,14 +640,15 @@ div#progressColumnContent{
 }
 
 .columnSection {
-	width: 33.2%;
+	width: 33.33%;
     height: calc(100% - 155px);
     display: inline-block;
     float: left;
     font-family: electrolize;
     color: white;
     border-left: 1px solid #404040;
-	text-align:center;
+    box-sizing: border-box;
+    text-align:center;
 }
 
 div#playerProfile {
@@ -770,26 +784,26 @@ div#tablePrint {
 	margin: 15px;
 }
 
-table {
+table.statsTable {
     font-family: electrolize;
     border-collapse: collapse;
     margin-left: auto;
     margin-right: auto;
 }
 
-td {
+table.statsTable td {
     border: 1px solid #444;
     text-align: left;
     padding: 4px;
 	color: black;
 }
 
-td a {
+table.statsTable td a {
     color: black;
     text-decoration: none;
 }
 
-th {
+table.statsTable th {
 	border: 1px solid #bbb;
     text-align: left;
     padding: 4px;
@@ -797,28 +811,65 @@ th {
 	background-color: #272727;
 }
 
-tr:nth-child(even) {
+table.statsTable tr:nth-child(even) {
     background-color: #999;
 }
 
 
-tr:nth-child(odd) {
+table.statsTable tr:nth-child(odd) {
     background-color: #BBB;
 }
 
-tr:hover {
+table.statsTable tr:hover {
 	border: 1px solid white;
 	background-color: #DDD;
 }
 
-.statsTable th {
+/* Profile page stats */
+table.profileStats th {
     width: 50%;
 }
 
-table.statsTable {
+table.profileStats {
     width: 66%;
     font-size: 14px;
 }
+
+
+
+/* Keybinding Config Table */
+table.keybindingConfigTable {
+    width: 100%;
+}
+
+table.keybindingConfigTable th {
+    text-align: center;
+    padding: 4px;
+    color: white;
+    border-bottom: 1px solid #404040;
+}
+
+table.keybindingConfigTable td {
+    text-align: center;
+    padding: 4px;
+    color: white;
+    width:25%;
+    user-select: none;
+}
+
+table.keybindingConfigTable td.clickableCell:hover {
+    text-align: center;
+    padding: 4px;
+    color: white;
+    background-color: #3b3b3b;
+    border: 1px rgb(255, 255, 255) solid;
+    cursor: pointer;
+}
+
+.keybindingDefault {
+    background-color: grey;
+}
+
 
 /*Game view stuff*/
 .elecText {
@@ -863,55 +914,54 @@ table.statsTable {
 	font-size: 15px;
 }
 
-div#shopCustomizeToggle {
+.columnTabContainer {
     width: 100%;
     display: inline-block;
     margin-bottom: 5px;
     display: none;
+    background-color: #3b3b3b;
 }
 
-.toggleIcons {
+.columnTab {
     display: inline-block;
     float: left;
     width: 50%;
-    /* border: 1px white solid; */
+    border: 2px transparent solid;
     box-sizing: border-box;    
     height: 30px;
-    font-size: 22px;
+    font-size: 21px;
     cursor: pointer;
 
 }
 
-.toggleIcons:hover {
-    border: 2px solid rgb(207, 207, 207);
+.columnTab:hover {
+    border: 2px solid rgb(255, 255, 255);
     box-sizing: border-box;  
     font-size: 21px;
 }
 
-.toggleIcons.active {
-    border-top: 2px white solid;
-    border-left: 2px white solid;
-    border-right: 2px white solid;
-    border-bottom: 2px white solid;
+.columnTab.active {
+    border: 2px white solid;
     box-sizing: border-box;  
     font-size: 21px;
     cursor:default;
 }
 
-#shopToggleIcon {
-    background-color: #064536;
+#buyTab {
+    /* background-color: #064536; */
+    background-color: #005158;
 }
 
-#customizeToggleIcon {
+#customizeTab {
     background-color: #3b3b3b;
 }
 
-.toggleIcons span {
+.columnTab span {
     vertical-align: top;
     line-height: 28px;
 }
 
-.toggleIcons img{
+.columnTab img{
     height: 100%;
  }
 
@@ -930,30 +980,51 @@ div#shopCustomizeToggle {
 }
 
 #shopOptions {
-    padding-left: 12px;
     /*border-left: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;*/
-    height: calc(100% - 250px);
-    overflow-y: auto;
-    overflow-x: hidden;
+    border-bottom: 1px solid #ccc;*/   
     border-top: 1px solid white;
     border-bottom: 1px solid white;
-    background-color: #263320;
-    background-image: url("/client/img/shopIcons/background-small.png");
+    /* background-color: #263320; */
     /* background-position: center center; */
     /* background-attachment: fixed; */
     user-select: none;
 }
 
-div#refreshTimer {
-    float: right;
+div#shopTopBar {
+    /* background-image: url("/client/img/shopIcons/background-small - Copy.png"); */
+    background-color: #00292c;
     display: inline-block;
+    padding-bottom: 5px;
+    border-bottom: solid 1px white;
+    width: 100%;
+    padding-top:5px;
+    padding-bottom:10px;
+}
+
+div#shopMainContent {
+    padding-left: 12px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-image: url("/client/img/shopIcons/background-small.png");
+    height: calc(100% - 330px);
+
+}
+
+
+div#refreshTimer {
+    position: absolute;
+    right: 0px;
     margin-top: 5px;
-    padding: 5px;
+    padding-top: 5px;
+    padding-left: 5px;
+    padding-bottom: 5px;
     /* background-color: #aa0808; */
-    border: 1px white solid;
+    border-left: 1px white solid;
+    border-top: 1px white solid;
+    border-bottom: 1px white solid;
     width: 140px;
     font-weight: bold;
+    background-image: url("/client/img/black-trans.png"); 
 }
 
 #refreshTimerText {
@@ -978,7 +1049,7 @@ div#refreshTimer {
     position: relative; 
     left: 0; 
     top: 0;
-    width: 250px;
+    width: 260px;
     padding:1px;
 }
 
@@ -1009,31 +1080,40 @@ div#appearance {
 
 #tabBlue:hover {
     background-color: #546dc7;
+    border: 1px white solid;
+    box-sizing: border-box;
 }
 
 #tabBlueActive {
     background-color: #2344bd;
     float: right;
+    border: 1px white solid;
+    /* box-sizing: border-box; */
 }
 
 #tabRed:hover {
     background-color: #d15252;
+    border: 1px white solid;
+    box-sizing: border-box;
 }
 
 #tabRedActive {
     background-color: #bf1f1f;
+    border: 1px white solid;
+    box-sizing: border-box;
 }
 
 .teamTabs button {
-    background-color: inherit;
+    background-color: #ffffff12;
     float: left;
     border: none;
     outline: none;
     cursor: pointer;
-    padding: 14px 16px;
+    padding: 10px 16px;
     transition: 0.3s;
     font-size: 12px;
     color: white;
+    border: 1px solid transparent;
 }
 
 /* Customization Tabs */
@@ -1056,7 +1136,7 @@ div#appearanceOptions {
     border: none;
     outline: none;
     cursor: pointer;
-    padding: 14px 16px;
+    padding: 10px 16px;
     transition: 0.3s;
     font-size: 12px;
     color: white;
@@ -1080,7 +1160,7 @@ div#appearanceOptions {
     padding-left: 12px;
     /*border-left: 1px solid #ccc;
     border-bottom: 1px solid #ccc;*/
-    height: calc(100% - 340px);
+    height: calc(100% - 298px);
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -1108,8 +1188,15 @@ div#appearanceOptions {
     border: 1px solid transparent;
 }
 
+.shopItem.active {
+    background-image: url("/client/img/white-trans.png");
+}
+
+.shopItem.active:hover {
+    background-image: url("/client/img/white-trans.png");
+}
+
 .shopItem:hover {
-    /* background-image: url("/client/img/white-trans.png");  */
     background-image: url("/client/img/black-trans.png"); 
     border: 1px solid white;
     background-size: cover;

@@ -1,10 +1,13 @@
 var dataAccess = require('./dataAccess.js');
 const ObjectId = require('mongodb').ObjectID;
 
-const defaultCustomizations = require("./defaultCustomizations.json");
-const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
-
 const fullShopList = require("./shopList.json");
+const defaultCustomizations = require("./defaultCustomizations.json");
+
+// const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
+const defaultCustomizationOptions = fullShopList.map(item => item.id);
+
+const defaultSettings = require("./defaultSettings.json");
 
 
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
@@ -41,8 +44,6 @@ var getAllUsersOnServer = function(cb){
 		}
 	});
 }
-
-
 
 var getPartyForUser = function(cognitoSub, cb){
 	var partyData = {
@@ -244,7 +245,7 @@ var getUserCustomizations = function(cognitoSub,cb){
 	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			var customizations = res[0].customizations;
-			if (typeof customizations === 'undefined' || typeof res[0].customizations.red === 'undefined'){
+			if (typeof customizations === 'undefined' || typeof res[0].customizations[1] === 'undefined'){
 				logg("ERROR - COULD NOT GET CUSTOMIZATIONS FOR " + cognitoSub);
 				customizations = JSON.parse(JSON.stringify(defaultCustomizations)); //clone
 				setUserCustomizations(cognitoSub, defaultCustomizations);
@@ -349,10 +350,10 @@ function transformToClientCustomizationOptions(customizationOptions){ //customiz
 			continue;
 
 		if (shopItem.team == 0 || shopItem.team == 1){
-			clientOptions["red"][shopItem.category][shopItem.subCategory].push(shopItem);
+			clientOptions[1][shopItem.category][shopItem.subCategory].push(shopItem);
 		}
 		if (shopItem.team == 0 || shopItem.team == 2){
-			clientOptions["blue"][shopItem.category][shopItem.subCategory].push(shopItem);
+			clientOptions[2][shopItem.category][shopItem.subCategory].push(shopItem);
 		}
 	}
 	return clientOptions;
@@ -360,7 +361,7 @@ function transformToClientCustomizationOptions(customizationOptions){ //customiz
 
 function getEmptyClientCustomizationOptions(){
 	return {
-        red: {
+        "1": {
             hat: {
                 type:[]
 			},
@@ -392,7 +393,7 @@ function getEmptyClientCustomizationOptions(){
 				type:[]
             }
         },
-        blue: {
+        "2": {
             hat: {
                 type:[]
 			},
@@ -478,11 +479,53 @@ var getUserShopList = function(cognitoSub,cb){
 				});
 			}
 
-			shopList[0] = "bitcoinIcon";
-			shopList[1] = "alertIcon";
-			shopList[2] = "birdIcon";
-			shopList[3] = "bulbIcon";
-			shopList[4] = "cloverIcon";
+			// shopList[0] = "bitcoinIcon";
+			// shopList[1] = "alertIcon";
+			// shopList[2] = "birdIcon";
+			// shopList[3] = "bulbIcon";
+			// shopList[4] = "cloverIcon";
+
+			var clientShopList = transformToClientShop(shopList, nextMidnight);
+
+			console.log("RETURNING SHOP LIST FOR " + cognitoSub);
+			console.log(clientShopList);
+			cb({msg:"Successfully authenticated user, and got shop list", result:clientShopList});
+		}
+		else {
+			console.log("ERROR - COULD NOT FIND USER WHEN GETTING SHOP LIST FOR " + cognitoSub);
+			cb({msg: "Failed to get shopList for [" + cognitoSub + "] from DB", result:transformToClientShop([], new Date())});
+		}
+	});
+}
+
+var getUserSettings = function(cognitoSub,cb){
+	//log("searching for user: " + cognitoSub);
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+		if (res && res[0]){
+			var settings = res[0].settings;
+
+			if (typeof settings === 'undefined'){				
+				//set default settings
+			}
+			else {
+
+			}
+			if (shopList.filter(item => item != "unlock").length >= maxShopSlotsUnlocked && shopList.filter(item => item == "unlock").length > 0){
+				shopList = shopList.filter(item => item != "unlock");
+				updateUserObj.shopList = shopList;
+			}
+			shopList.splice(maxShopSlotsUnlocked, 10); //Just makes sure list is shorter than the max allowed shop list
+
+			if (Object.keys(updateUserObj).length > 0){
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, updateUserObj, async function(err, obj){
+				});
+			}
+
+			// shopList[0] = "bitcoinIcon";
+			// shopList[1] = "alertIcon";
+			// shopList[2] = "birdIcon";
+			// shopList[3] = "bulbIcon";
+			// shopList[4] = "cloverIcon";
 
 			var clientShopList = transformToClientShop(shopList, nextMidnight);
 
@@ -515,11 +558,11 @@ function getNewShopItem(currentShopList){
 	while (loopCount < 1000){
 		shopIndex = randomInt(2, fullShopList.length - 1); //Random element from shop, starting with index 2 (to skip unlock and refresh)
 		//New shop rules
-		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
+		// if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
 			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item already added to new shop?
 				break;				
 			}
-		}
+		// }
 		loopCount++;
 	}
 	return fullShopList[shopIndex].id;
@@ -533,8 +576,25 @@ function transformToClientShop(shopList, nextRefreshTime){ //shopList is list of
 	//transform from list of id's to full shop object
 	var clientShopList = [];
 	for (var i = 0; i < shopList.length; i++){
-		var shopItem = fullShopList.find(item => item.id == shopList[i]);
+		var shopItem = fullShopList.find(item => item.id == shopList[i]);		
 		if (shopItem){
+			const fixedPrices = true;
+			if (fixedPrices){
+				switch(shopItem.rarity){
+					default:
+						shopItem.price = 2000;
+						break;
+					case 1:
+						shopItem.price = 5000;
+						break;
+					case 2:
+						shopItem.price = 20000;
+						break;
+					case 3:
+						shopItem.price = 50000;
+						break;
+				}
+			}
 			clientShopList.push(shopItem);
 		}
 	}
@@ -931,6 +991,7 @@ var dbGameServerRemoveAndAdd = function(){
 	});
 }
 
+//!!!This function references variables in the gameServer scope (whiteScore, etc)
 var dbGameServerUpdate = function() {
 	if ((!myUrl || myUrl == "") || (!isLocal && myQueryString.length <= 0)){
 		logg("ERROR - NO SERVER URL - NOT READY TO SYNC WITH DB");
