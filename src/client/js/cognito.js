@@ -29,8 +29,8 @@ var defaultCustomizations = {red:{}, blue:{}};
 var iconSize = 15;
 
 const teams = [
-	"red",
-	"blue"
+	1,
+	2
 ];
 
 function getTokenFromUrlParameterAndLogin(){
@@ -115,10 +115,10 @@ function setPcModeAndIsLocalElements(data){
 		}
 		
 		if (pcMode == 2){
-			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
+			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>RaceWar 2066</a>";
 		}
 		else {
-			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>R-Wars</a>";
+			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>RaceWar 2066</a>";
 		}
 	}
 }
@@ -727,7 +727,7 @@ function drawName(drawingCanvas, playerUsername, color, x, y, icon = false){
         drawingCanvas.textAlign="center";
         drawingCanvas.font = 'bold 12px Electrolize';        
 		drawingCanvas.fillStyle = color;
-		drawingCanvas.shadowColor = "white";
+		drawingCanvas.shadowColor = "#FFFFFF";
 		drawingCanvas.shadowOffsetX = 0; 
 		drawingCanvas.shadowOffsetY = 0;
 		drawingCanvas.shadowBlur = 3;

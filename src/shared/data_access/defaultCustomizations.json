@@ -1,5 +1,5 @@
 {
-	"red": {
+	"1": {
 		"nameColor": "#000000",
 		"hat": "noneHat",
 		"hair": "crewHair",
@@ -20,7 +20,7 @@
 		"shoesColor": "#000000",
 		"icon": "rank"
 	},
-	"blue": {
+	"2": {
 		"nameColor": "#000000",
 		"hat": "noneHat",
 		"hair": "crewHair",

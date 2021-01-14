@@ -8,7 +8,7 @@ var shopOptions = {};
 
 const playerCenterOffset = 4;
 var displayAnimation = "";
-var displayTeam = "red";
+var displayTeam = 1;
 var shopRefreshTimer = 10000000;
 
 var rouletteOn = false;
@@ -127,8 +127,7 @@ function showSelfProfileOptions(){
     if (viewedProfileCognitoSub == cognitoSub && cognitoSub != "") {
         show("appearanceOptions");			
         show("shopCustomizeToggle");			
-        show('updateUserForm');
-        show('editUserButton');
+        show("statsOptionsToggle");			
         showSecondaySectionTitles();
         show("appearanceOptions");
         $.get( '/getUserCustomizationOptions', {cognitoSub:viewedProfileCognitoSub}, function(data) {
@@ -152,7 +151,14 @@ function showSelfProfileOptions(){
                 }
                 populateShopOptions();
             });
-        });        
+        });    
+        $.get( '/getUserSettings', {cognitoSub:viewedProfileCognitoSub}, function(data) {
+            logg("GET SETTINGS RESPONSE:");
+            console.log(data);
+            if (data.result){
+
+            }
+        });    
     }
     else {
         showUnset("invitePlayerButtons");			
@@ -354,7 +360,7 @@ function ChangePassword(password, newPassword) {
     });
 }
 
-function editUserButtonClick(){
+function showEditUserForm(){
     if (getUrl().includes(cognitoSub)){
 		document.getElementById('editUserFieldText').innerHTML = 'Select attribute you would like to change:';
         if (federatedUser){
@@ -436,6 +442,27 @@ function editUsernameButtonClick(){
     else {
         alert("Enter your current password first.");
     }
+}
+
+function showKeybindingConfig(){
+    document.getElementById('keybindingsConfig').style.display = '';
+    document.getElementById('editKeybindingsButton').style.display = 'none';
+}
+
+function keybindingsConfirmButtonClick(){
+
+}
+
+function keybindingsResetButtonClick(){
+
+}
+
+function listenForBinding(action, inputSlot){
+}
+
+function keybindingsCancelButtonClick(){
+    document.getElementById('keybindingsConfig').style.display = 'none';
+    document.getElementById('editKeybindingsButton').style.display = '';
 }
 
 function editPasswordButtonClick(){
@@ -585,10 +612,44 @@ function kickFromPartyButtonClick() {
 
 //////////////////////////////// APPEARANCE ////////////////////////
 
-function toggleAppearanceMode(divId) {
+function toggleStatsSettings(divId) {
     var div = document.getElementById(divId);
     removeConfirmationMessage();
-    var tablinks = document.getElementsByClassName("toggleIcons");
+
+    var tablinks = [ document.getElementById("statsTab"), document.getElementById("settingsTab") ]; 
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    div.className += " active";
+
+    var statsContent = document.getElementById("statsContent");
+    var settingsContent = document.getElementById("settingsContent");
+
+    if (statsContent && settingsContent){
+        switch (divId){
+            case "statsTab":
+                statsContent.style.display = "block";
+                settingsContent.style.display = "none";
+                break;
+            case "settingsTab":
+                statsContent.style.display = "none";
+                settingsContent.style.display = "block";            
+                break;
+            default:
+                log("Unknown appearance mode clicked...");
+                break;
+        }
+    }
+    else {
+        log("DETECTED NONEXISTANT DIV");
+    }     
+}
+
+function toggleEquipBuy(divId) {
+    var div = document.getElementById(divId);
+    removeConfirmationMessage();
+
+    var tablinks = [ document.getElementById("customizeTab"), document.getElementById("buyTab") ]; 
     for (var i = 0; i < tablinks.length; i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
@@ -599,11 +660,11 @@ function toggleAppearanceMode(divId) {
 
     if (appearanceOptions && shopOptionsDiv){
         switch (divId){
-            case "customizeToggleIcon":
+            case "customizeTab":
                 appearanceOptions.style.display = "block";
                 shopOptionsDiv.style.display = "none";
                 break;
-            case "shopToggleIcon":
+            case "buyTab":
                 appearanceOptions.style.display = "none";
                 shopOptionsDiv.style.display = "block";            
                 break;
@@ -616,6 +677,8 @@ function toggleAppearanceMode(divId) {
         log("DETECTED NONEXISTANT DIV");
     }    
 }
+
+
 
 function toggleShopSelected(event) {
     var tablinks = document.getElementsByClassName("toggleIcons");
@@ -663,14 +726,14 @@ function showContent(divId) {
     div.className += " active";
 }
 
-function selectTeam(event) {
+function selectTeam(event, team) {
     var tablinks;
     tablinks = document.getElementsByClassName("teamTablinks");
     for (var i = 0; i < tablinks.length; i++) {
         tablinks[i].id = tablinks[i].id.replace("Active", "");
     }
     event.currentTarget.id += "Active";
-    displayTeam = event.currentTarget.innerHTML.toLowerCase();
+    displayTeam = team;
     drawProfileCustomizations();
     populateCustomizationOptions();
 }
@@ -996,7 +1059,7 @@ function shopClick(itemId, price){
     }
     else {
         rarityText.innerHTML = "Too Poor!";
-        rarityText.style.color = "red";
+        rarityText.style.color = "#FF0000";
     }
 }
 
@@ -1156,6 +1219,28 @@ document.onkeydown = function(event){
 	}
 }
 
+//userSettings example
+/*
+[
+    keybindings:[
+        {
+            action:"moveUp",
+            primary:57,
+            secondary:-1
+        },
+        {
+            action:"moveDown",
+            primary:57,
+            secondary:-1
+        }
+    ],
+    misc:[
+        standardEnemyNameColors: false
+    ]
+]
+*/
+
+
 //shopOptions example
 /*
     var options = {
@@ -1202,7 +1287,7 @@ document.onkeydown = function(event){
 //Customization Options example
 /*
    options = {
-        red: {
+        "1": {
             hat: {
                 type:[
                     {
@@ -1309,7 +1394,7 @@ document.onkeydown = function(event){
                 ]                
             }
         },
-        blue: {
+        "2": {
             hat: {
                 type:[
                     {
@@ -1322,7 +1407,7 @@ document.onkeydown = function(event){
                 color:[
                     {
                         canvasValue:"#0000FF",
-                        title:"Blue",
+                        title:"Velvet",
                         text:"Rrrrrroyal blue",
                         rarity:1
                     }

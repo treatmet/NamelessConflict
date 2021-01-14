@@ -14,24 +14,24 @@ var changeTeams = function(playerId){
 	if (playerList[playerId]){
 		if (playerList[playerId].holdingBag){
 		
-			if (playerList[playerId].team == "white"){
+			if (playerList[playerId].team == 1){
 				bagBlue.captured = false;
 				updateMisc.bagBlue = bagBlue;
 			}
-			else if (playerList[playerId].team == "black"){
+			else if (playerList[playerId].team == 2){
 				bagRed.captured = false;
 				updateMisc.bagRed = bagRed;
 			}
 			playerList[playerId].holdingBag = false;
 			updatePlayerList.push({id:playerList[playerId].id,property:"holdingBag",value:playerList[playerId].holdingBag});				
 		}
-		if (playerList[playerId].team == "white"){
-			playerList[playerId].team = "black";
+		if (playerList[playerId].team == 1){
+			playerList[playerId].team = 2;
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
 		}
-		else if (playerList[playerId].team == "black"){
-			playerList[playerId].team = "white";
+		else if (playerList[playerId].team == 2){
+			playerList[playerId].team = 1;
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
 		}
@@ -66,20 +66,20 @@ function calculateTeamAvgRating(team){
 	var enemyTeamAvgRating = 0;
 	var playerList = player.getPlayerList();
 	for (var i in playerList){
-		if (playerList[i].team == "white"){
+		if (playerList[i].team == 1){
 			whitePlayers++;
 			whiteTotalScore += playerList[i].rating;
 		}
-		else if (playerList[i].team == "black"){
+		else if (playerList[i].team == 2){
 			blackPlayers++;
 			blackTotalScore += playerList[i].rating;
 		}
 	}
 	
-	if (team == "white"){
+	if (team == 1){
 		enemyTeamAvgRating = whiteTotalScore / whitePlayers;
 	}
-	else if (team == "black"){
+	else if (team == 2){
 		enemyTeamAvgRating = blackTotalScore / blackPlayers;		
 	}
 	if (enemyTeamAvgRating == undefined || enemyTeamAvgRating == null || isNaN(enemyTeamAvgRating)){enemyTeamAvgRating = -1;}
@@ -91,8 +91,8 @@ function calculateEndgameStats(){
 		if (mongoRes){
 			//Get CURRENT player rating and experience from mongo (before any stats from this game are added)
 			updatePlayersRatingAndExpWithMongoRes(mongoRes);		
-			var whiteAverageRating = calculateTeamAvgRating("white");
-			var blackAverageRating = calculateTeamAvgRating("black");
+			var whiteAverageRating = calculateTeamAvgRating(1);
+			var blackAverageRating = calculateTeamAvgRating(2);
 			
 			if (whiteAverageRating == -1 && blackAverageRating != -1)
 				whiteAverageRating = blackAverageRating;
@@ -104,7 +104,7 @@ function calculateEndgameStats(){
 			//Calculate progress made, and send to client (and then update user's DB stats)
 			var playerList = player.getPlayerList();
 			for (var p in playerList){
-				if (playerList[p].team == "none")
+				if (playerList[p].team == 0)
 					continue;
 				
 				var gamesLostInc = 0;
@@ -113,8 +113,8 @@ function calculateEndgameStats(){
 				
 				SOCKET_LIST[p].emit('sendLog', "Player in endgame loop...");
 
-				var enemyAverageRating = playerList[p].team == "white" ? blackAverageRating : whiteAverageRating;
-				if ((playerList[p].team == "white" && whiteScore > blackScore) || (playerList[p].team == "black" && whiteScore < blackScore)){
+				var enemyAverageRating = playerList[p].team == 1 ? blackAverageRating : whiteAverageRating;
+				if ((playerList[p].team == 1 && whiteScore > blackScore) || (playerList[p].team == 2 && whiteScore < blackScore)){
 					//win
 					gamesWonInc++;
 					ptsGained = Math.round(matchWinLossRatingBonus + (enemyAverageRating - playerList[p].rating)/enemySkillDifferenceDivider);
@@ -202,7 +202,7 @@ function getNumTeamPlayersInGame(){ //getCurrentPlayers in game actual players
 	var playerList = player.getPlayerList();
 
 	for (var p in playerList){
-		if (playerList[p].team == "white" || playerList[p].team == "black")
+		if (playerList[p].team != 0)
 		totalPlayers++;
 	}
 	
@@ -234,11 +234,11 @@ function getSafeCoordinates(team){
 	var potentialX = 10;
 	var potentialY = 10;
 	for (var w = 0; w < 50; w++){
-		if (team == "white") {			
+		if (team == 1) {			
 			potentialX = randomInt(spawnXminWhite,spawnXmaxWhite);			
 			potentialY = randomInt(spawnYminWhite,spawnYmaxWhite);
 		}
-		else if (team == "black") {			
+		else if (team == 2) {			
 			potentialX = randomInt(spawnXminBlack,spawnXmaxBlack);			
 			potentialY = randomInt(spawnYminBlack,spawnYmaxBlack);
 		}
@@ -535,14 +535,14 @@ function moveBags(){
 }
 
 var capture = function(team) {
-	if (team == "white"){
+	if (team == 1){
 		whiteScore++;
 		bagBlue.captured = false;
 		bagBlue.x = bagBlue.homeX;
 		bagBlue.y = bagBlue.homeY;
 		updateMisc.bagBlue = bagBlue;
 	}
-	else if (team == "black"){
+	else if (team == 2){
 		blackScore++;
 		bagRed.captured = false;
 		bagRed.x = bagRed.homeX;
@@ -560,10 +560,10 @@ var sendCapturesToClient = function(socket){
 }
 
 var killScore = function(team){
-	if (team == "white"){
+	if (team == 1){
 		whiteScore++;
 	}
-	else if (team == "black"){
+	else if (team == 2){
 		blackScore++;
 	}
 	for (var i in SOCKET_LIST){
@@ -576,8 +576,8 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 	//First, get the current team sizes
 	var moreWhitePlayers = 0; 
 	for (var p in playerList){
-		if (playerList[p].team == "white"){moreWhitePlayers++;}
-		else if (playerList[p].team == "black"){moreWhitePlayers--;}
+		if (playerList[p].team == 1){moreWhitePlayers++;}
+		else if (playerList[p].team == 2){moreWhitePlayers--;}
 	}
 	
 	//Then get the parties, ordered by party size
@@ -599,7 +599,7 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 	*/	
 	var playerList = player.getPlayerList();
 	for (var l in playerList){
-		if (playerList[l].team != "none"){ //only process spectators
+		if (playerList[l].team != 0){ //only process spectators
 			continue;
 		}
 		var addedToParty = false;
@@ -631,7 +631,7 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 			for (var r = 0; r < parties[q].playerIds.length; r++){
 				if (typeof playerList[parties[q].playerIds[r]] === 'undefined')
 					continue;
-				playerList[parties[q].playerIds[r]].team = "white";
+				playerList[parties[q].playerIds[r]].team = 1;
 				moreWhitePlayers++;
 				playerList[parties[q].playerIds[r]].respawn();
 			}
@@ -640,7 +640,7 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 			for (var r = 0; r < parties[q].playerIds.length; r++){
 				if (typeof playerList[parties[q].playerIds[r]] === 'undefined')
 					continue;
-				playerList[parties[q].playerIds[r]].team = "black";
+				playerList[parties[q].playerIds[r]].team = 2;
 				moreWhitePlayers--;
 				playerList[parties[q].playerIds[r]].respawn();
 			}
@@ -683,8 +683,8 @@ function restartGame(){
 	var playerList = player.getPlayerList();
 	var moreWhitePlayers = 0; 
 	for (var p in playerList){
-		if (playerList[p].team == "white"){moreWhitePlayers++;}
-		else if (playerList[p].team == "black"){moreWhitePlayers--;}
+		if (playerList[p].team == 1){moreWhitePlayers++;}
+		else if (playerList[p].team == 2){moreWhitePlayers--;}
 	}
 
 	logg("REBALANCING TEAMS1: Teams are off by " + Math.abs(moreWhitePlayers));
@@ -714,10 +714,10 @@ function restartGame(){
 		inGameParties.sort(comparePartySize);		
 		
 		for (var gp = 0; gp < inGameParties.length; gp++){
-			if (playerList[inGameParties[gp].playerIds[0]].team == "white"){
+			if (playerList[inGameParties[gp].playerIds[0]].team == 1){
 				whiteParties.push(inGameParties[gp]);
 			}
-			else if (playerList[inGameParties[gp].playerIds[0]].team == "black"){
+			else if (playerList[inGameParties[gp].playerIds[0]].team == 2){
 				blackParties.push(inGameParties[gp]);
 			}
 		}	
@@ -762,7 +762,7 @@ function restartGame(){
 					
 						if (typeof playerList[biggerTeamsParties[q].playerIds[r]] === 'undefined')
 							continue;
-						playerList[biggerTeamsParties[q].playerIds[r]].team = "white";
+						playerList[biggerTeamsParties[q].playerIds[r]].team = 1;
 						moreWhitePlayers -= 2;
 					}
 				}
@@ -771,7 +771,7 @@ function restartGame(){
 						logg("REBALANCING TEAMS3: ADDING THIS GUY: " + biggerTeamsParties[q].playerIds[r] + " FROM THIS PARTY " + biggerTeamsParties[q].partyId + " [" + q + "," + r);
 						if (typeof playerList[biggerTeamsParties[q].playerIds[r]] === 'undefined')
 							continue;
-						playerList[biggerTeamsParties[q].playerIds[r]].team = "black";
+						playerList[biggerTeamsParties[q].playerIds[r]].team = 2;
 						moreWhitePlayers -=2;
 					}
 				}				
@@ -875,18 +875,18 @@ function ensureCorrectThugCount(){
 	var thugList = thug.getThugList();
 	
 	for (var p in playerList){
-		if (playerList[p].team == "white"){
+		if (playerList[p].team == 1){
 			expectedBlackThugs++;
 		}
-		else if (playerList[p].team == "black"){
+		else if (playerList[p].team == 2){
 			expectedWhiteThugs++;
 		}
 	}	
 	for (var t in thugList){
-		if (thugList[t].team == "white"){
+		if (thugList[t].team == 1){
 			whiteThugs++;
 		}
-		else if (thugList[t].team == "black"){
+		else if (thugList[t].team == 2){
 			blackThugs++;
 		}
 	}
@@ -905,7 +905,7 @@ function ensureCorrectThugCount(){
 	
 	while (whiteThugs > expectedWhiteThugs){
 		for (var t in thugList){
-			if (thugList[t].team == "white"){
+			if (thugList[t].team == 1){
 			for(var i in SOCKET_LIST){
 				SOCKET_LIST[i].emit('removeThug', thugList[t].id);
 			}			
@@ -917,7 +917,7 @@ function ensureCorrectThugCount(){
 	}
 	while (blackThugs > expectedBlackThugs){
 		for (var t in thugList){
-			if (thugList[t].team == "black"){
+			if (thugList[t].team == 2){
 			for(var i in SOCKET_LIST){
 				SOCKET_LIST[i].emit('removeThug', thugList[t].id);
 			}			
@@ -929,13 +929,13 @@ function ensureCorrectThugCount(){
 	}
 
 	while (whiteThugs < expectedWhiteThugs){
-		var coords = getSafeCoordinates("white");
-		thug.createThug(Math.random(), "white", coords.x, coords.y);	
+		var coords = getSafeCoordinates(1);
+		thug.createThug(Math.random(), 1, coords.x, coords.y);	
 		whiteThugs++;
 	}
 	while (blackThugs < expectedBlackThugs){
-		var coords = getSafeCoordinates("black");
-		thug.createThug(Math.random(), "black", coords.x, coords.y);			
+		var coords = getSafeCoordinates(2);
+		thug.createThug(Math.random(), 2, coords.x, coords.y);			
 		blackThugs++;
 	}
 }
@@ -1135,7 +1135,7 @@ var sendFullGameStatus = function(socketId){
 			MGAmmo:playerList[a].MGAmmo,	
 			SGAmmo:playerList[a].SGAmmo,	
 			reloading:playerList[a].reloading,
-			images:{ red:{}, blue:{} },
+			images:{ 1:{}, 2:{} },
 			customizations:playerList[a].customizations,			
 			
 			cash:playerList[a].cash,

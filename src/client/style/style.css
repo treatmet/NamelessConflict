@@ -345,10 +345,13 @@ div#progressColumn {
 
 /* User Update Form on Profile Page*/
 
-div#updateUserForm {
+.settingsSection {
     text-align: center;
-    margin: 10px;
-    margin-top: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    /* margin-top: 30px; */
+    border-bottom: 1px white solid;
+    width:100%;
 }
 
 button#editUserButton {
@@ -356,9 +359,9 @@ button#editUserButton {
 	margin: 5px;
 }
 
-div#updateUserTextBoxes {
-    margin-bottom: 30px;
-}
+/* div#updateUserTextBoxes {
+    
+} */
 
 div#updateFields {
     margin-top: 10px;
@@ -381,6 +384,15 @@ button#editUserConfirmButton {
 button#editUserCancelButton {
     background-color: #e41e41;
 	margin: 5px;
+}
+
+button#keybindingsCancelButton {
+    background-color: #e41e41;
+	margin: 5px;
+}
+
+.endFormButtons {
+
 }
 
 div#passys {
@@ -772,26 +784,26 @@ div#tablePrint {
 	margin: 15px;
 }
 
-table {
+table.statsTable {
     font-family: electrolize;
     border-collapse: collapse;
     margin-left: auto;
     margin-right: auto;
 }
 
-td {
+table.statsTable td {
     border: 1px solid #444;
     text-align: left;
     padding: 4px;
 	color: black;
 }
 
-td a {
+table.statsTable td a {
     color: black;
     text-decoration: none;
 }
 
-th {
+table.statsTable th {
 	border: 1px solid #bbb;
     text-align: left;
     padding: 4px;
@@ -799,28 +811,65 @@ th {
 	background-color: #272727;
 }
 
-tr:nth-child(even) {
+table.statsTable tr:nth-child(even) {
     background-color: #999;
 }
 
 
-tr:nth-child(odd) {
+table.statsTable tr:nth-child(odd) {
     background-color: #BBB;
 }
 
-tr:hover {
+table.statsTable tr:hover {
 	border: 1px solid white;
 	background-color: #DDD;
 }
 
-.statsTable th {
+/* Profile page stats */
+table.profileStats th {
     width: 50%;
 }
 
-table.statsTable {
+table.profileStats {
     width: 66%;
     font-size: 14px;
 }
+
+
+
+/* Keybinding Config Table */
+table.keybindingConfigTable {
+    width: 100%;
+}
+
+table.keybindingConfigTable th {
+    text-align: center;
+    padding: 4px;
+    color: white;
+    border-bottom: 1px solid #404040;
+}
+
+table.keybindingConfigTable td {
+    text-align: center;
+    padding: 4px;
+    color: white;
+    width:25%;
+    user-select: none;
+}
+
+table.keybindingConfigTable td.clickableCell:hover {
+    text-align: center;
+    padding: 4px;
+    color: white;
+    background-color: #3b3b3b;
+    border: 1px rgb(255, 255, 255) solid;
+    cursor: pointer;
+}
+
+.keybindingDefault {
+    background-color: grey;
+}
+
 
 /*Game view stuff*/
 .elecText {
@@ -865,14 +914,15 @@ table.statsTable {
 	font-size: 15px;
 }
 
-div#shopCustomizeToggle {
+.columnTabContainer {
     width: 100%;
     display: inline-block;
     margin-bottom: 5px;
     display: none;
+    background-color: #3b3b3b;
 }
 
-.toggleIcons {
+.columnTab {
     display: inline-block;
     float: left;
     width: 50%;
@@ -884,34 +934,34 @@ div#shopCustomizeToggle {
 
 }
 
-.toggleIcons:hover {
+.columnTab:hover {
     border: 2px solid rgb(255, 255, 255);
     box-sizing: border-box;  
     font-size: 21px;
 }
 
-.toggleIcons.active {
+.columnTab.active {
     border: 2px white solid;
     box-sizing: border-box;  
     font-size: 21px;
     cursor:default;
 }
 
-#shopToggleIcon {
+#buyTab {
     /* background-color: #064536; */
     background-color: #005158;
 }
 
-#customizeToggleIcon {
+#customizeTab {
     background-color: #3b3b3b;
 }
 
-.toggleIcons span {
+.columnTab span {
     vertical-align: top;
     line-height: 28px;
 }
 
-.toggleIcons img{
+.columnTab img{
     height: 100%;
  }
 

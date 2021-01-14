@@ -15,110 +15,182 @@
 
 	<!--PAGE COLUMNS-->
 	<div id="playerProfile" class="columnSection">
-		<div id="invitePlayerButtons" style="display:none;">
-			<button id="addFriendButton" class="RWButton" style="display:none;" onclick="addFriendButtonClick()">Add as Friend</button>
-			<button id="removeFriendButton" class="RWButton" style="display:none;" onclick="removeFriendButtonClick()">✓ Friends</button>
-			<button id="inviteToPartyButton" class="RWButton" style="display:none;" onclick="inviteToPartyButtonClick()">Invite to Party</button>
-			<button id="kickFromPartyButton" class="RWButton" style="display:none;" onclick="kickFromPartyButtonClick()">Kick from Party</button>
+		<div class="columnTabContainer" id="statsOptionsToggle">
+			<div class="columnTab active" id="statsTab" onclick="toggleStatsSettings('statsTab')">
+					<span>Stats</span>
+					<img src="/client/img/lensToggle.png">
+			</div>
+			<div class="columnTab" id="settingsTab" onclick="toggleStatsSettings('settingsTab')">
+					<img src="/client/img/gearToggle.png">
+					<span>Settings</span>
+			</div>							
 		</div>
-		<div id="playerRankIcon">
-			<img src="/client/img/ranks/full-size/{{rank}}.png">
-		</div>
-		<div id="playerRating">
-			{{rankFullName}}
-		</div>
-		<div id="playerLevel">
-			Level {{playerLevel}} 
-		</div>
-		<br>
 
-		<div id="updateUserForm" style="display:none">
-			<button id="editUserButton" class="RWButton" style="display:none" onclick="editUserButtonClick()">Edit User Profile</button>
-			<div id="updateUserTextBoxes" style="display:none">
-				<div id="editUserPasswordText" style="display: block;padding-top: 5px;">First, enter password: </div>
-				<div>
-					<input id="oldPasswordText" onblur="onBlur(this)" type="text" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)">
-				</div>
-				<div id="updateFields">
-					<div id="editUserFieldText" style="display: block;padding-top: 5px;">
-						Select field you would like to change:
-					</div>
-					<button id="editUsernameButton" class="RWButton" onclick="editUsernameButtonClick()">Username</button>
-					<input id="newUsernameText" onblur="onBlur(this)" maxlength="20" autocomplete="off" type="text" value="Username" class="textBox" onclick="newUserNameClick()" onfocus="newUserNameClick()" style="display: none;">
-					<br>
-					<button id="editPasswordButton" class="RWButton" onclick="editPasswordButtonClick()">Password</button>
-					<div id="passys" style="display: inline-block;">
-						<input id="newPasswordText" onblur="onBlur(this)" autocomplete="off" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;">
-						<input id="newPasswordText2" onblur="onBlur(this)" autocomplete="off" value="Password Confirm" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;"> 
-					</div>
-					<br>
-					<input id="newEmailText" onblur="onBlur(this)" type="text" value="Email" class="textBox" onclick="newEmailClick()" onfocus="newEmailClick()">
-					<label id="updateInfo"></label>
-				</div>
-				<button id="editUserConfirmButton" class="RWButton" onclick="editUserConfirmButtonClick()">Confirm</button>
-				<button id="editUserCancelButton" class="RWButton" onclick="editUserCancelButtonClick()">Cancel</button>
+		<div id="statsContent" style="display: block;">			
+			<div id="invitePlayerButtons" style="display:none;">
+				<button id="addFriendButton" class="RWButton" style="display:none;" onclick="addFriendButtonClick()">Add as Friend</button>
+				<button id="removeFriendButton" class="RWButton" style="display:none;" onclick="removeFriendButtonClick()">✓ Friends</button>
+				<button id="inviteToPartyButton" class="RWButton" style="display:none;" onclick="inviteToPartyButtonClick()">Invite to Party</button>
+				<button id="kickFromPartyButton" class="RWButton" style="display:none;" onclick="kickFromPartyButtonClick()">Kick from Party</button>
+			</div>
+			<div id="playerRankIcon">
+				<img src="/client/img/ranks/full-size/{{rank}}.png">
+			</div>
+			<div id="playerRating">
+				{{rankFullName}}
+			</div>
+			<div id="playerLevel">
+				Level {{playerLevel}} 
+			</div>
+			<br>
+			<div id="statsTables">
+				<table class="statsTable profileStats">
+					<tr>
+						<th>Rating</th>
+						<td>{{rating}}</td>
+					</tr>
+					<tr>
+						<th>Experience</th>
+						<td>{{experience}}</td>
+					</tr>
+				</table>
+				<br>
+				<table class="statsTable profileStats">
+					<tr>
+						<th>Kills</th>
+						<td>{{kills}}</td>
+					</tr>
+					<tr>
+						<th>Captures</th>
+						<td>{{captures}}</td>
+					</tr>
+					<tr>
+						<th>Deaths</th>
+						<td>{{deaths}}</td>
+					</tr>
+					<tr>
+						<th>Betrayals</th>
+						<td>{{benedicts}}</td>
+					</tr>
+					<tr>
+						<th>Steals</th>
+						<td>{{steals}}</td>
+					</tr>
+					<tr>
+						<th>Returns</th>
+						<td>{{returns}}</td>
+					</tr>
+					<tr>
+						<th>Games Played</th>
+						<td>{{gamesPlayed}}</td>
+					</tr>
+					<tr>
+						<th>Games Won</th>
+						<td>{{gamesWon}}</td>
+					</tr>
+					<tr>
+						<th>Games Lost</th>
+						<td>{{gamesLost}}</td>
+					</tr>
+				</table>
+				<br>
+				<table class="statsTable profileStats">
+					<tr>
+						<th>Date Joined</th>
+						<td>{{dateJoined}}</td>
+					</tr>
+				</table>
 			</div>
 		</div>
-		
-		<div id="statsTables">
-			<table class="statsTable">
-				<tr>
-					<th>Rating</th>
-					<td>{{rating}}</td>
-				</tr>
-				<tr>
-					<th>Experience</th>
-					<td>{{experience}}</td>
-				</tr>
-			</table>
-			<br>
-			<table class="statsTable">
-				<tr>
-					<th>Kills</th>
-					<td>{{kills}}</td>
-				</tr>
-				<tr>
-					<th>Captures</th>
-					<td>{{captures}}</td>
-				</tr>
-				<tr>
-					<th>Deaths</th>
-					<td>{{deaths}}</td>
-				</tr>
-				<tr>
-					<th>Betrayals</th>
-					<td>{{benedicts}}</td>
-				</tr>
-				<tr>
-					<th>Steals</th>
-					<td>{{steals}}</td>
-				</tr>
-				<tr>
-					<th>Returns</th>
-					<td>{{returns}}</td>
-				</tr>
-				<tr>
-					<th>Games Played</th>
-					<td>{{gamesPlayed}}</td>
-				</tr>
-				<tr>
-					<th>Games Won</th>
-					<td>{{gamesWon}}</td>
-				</tr>
-				<tr>
-					<th>Games Lost</th>
-					<td>{{gamesLost}}</td>
-				</tr>
-			</table>
-			<br>
-			<table class="statsTable">
-				<tr>
-					<th>Date Joined</th>
-					<td>{{dateJoined}}</td>
-				</tr>
-			</table>
+
+		<div id="settingsContent" style="display: none;">
+			<div class="settingsSection" id="updateUserForm">
+				<button id="editUserButton" class="RWButton" onclick="showEditUserForm()">▤ Update Username/Password</button>
+				<div id="updateUserTextBoxes" style="display:none">
+					<div id="editUserPasswordText" style="display: block;padding-top: 5px;">First, enter password: </div>
+					<div>
+						<input id="oldPasswordText" onblur="onBlur(this)" type="text" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)">
+					</div>
+					<div id="updateFields">
+						<div id="editUserFieldText" style="display: block;padding-top: 5px;">
+							Select field you would like to change:
+						</div>
+						<button id="editUsernameButton" class="RWButton" onclick="editUsernameButtonClick()">Username</button>
+						<input id="newUsernameText" onblur="onBlur(this)" maxlength="20" autocomplete="off" type="text" value="Username" class="textBox" onclick="newUserNameClick()" onfocus="newUserNameClick()" style="display: none;">
+						<br>
+						<button id="editPasswordButton" class="RWButton" onclick="editPasswordButtonClick()">Password</button>
+						<div id="passys" style="display: inline-block;">
+							<input id="newPasswordText" onblur="onBlur(this)" autocomplete="off" value="Password" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;">
+							<input id="newPasswordText2" onblur="onBlur(this)" autocomplete="off" value="Password Confirm" class="textBox" onclick="passwordClick(this)" onfocus="passwordClick(this)" style="display: none;"> 
+						</div>
+						<br>
+						<input id="newEmailText" onblur="onBlur(this)" type="text" value="Email" class="textBox" onclick="newEmailClick()" onfocus="newEmailClick()">
+						<label id="updateInfo"></label>
+					</div>
+					<button id="editUserConfirmButton" class="RWButton" onclick="editUserConfirmButtonClick()">Confirm</button>
+					<button id="editUserCancelButton" class="RWButton" onclick="editUserCancelButtonClick()">Cancel</button>
+				</div>
+			</div>
+			<div class="settingsSection" id="updateKeybindingsSection">
+				<button id="editKeybindingsButton" class="RWButton" onclick="showKeybindingConfig()">⌨ Edit Keybindings</button>
+				<div id="keybindingsConfig" style="display:none">
+					<table class="keybindingConfigTable">
+						<tr>
+							<th>Action Name</th>
+							<th>Primary Key</th>
+							<th>Secondary Key</th>
+							<th></th>
+						</tr>
+						<tr>
+							<td id="moveUpActionName">Move Up</td>
+							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">W</td>
+							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
+							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
+						</tr>
+						<tr>
+							<td id="moveUpActionName">Move Right</td>
+							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">D</td>
+							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
+							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
+						</tr>
+						<tr>
+							<td id="moveUpActionName">Move Down</td>
+							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">S</td>
+							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
+							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
+						</tr>
+						<tr>
+							<td id="moveUpActionName">Move Left</td>
+							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">A</td>
+							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
+							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
+						</tr>
+						<tr>
+							<td id="moveUpActionName">Shoot Up</td>
+							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">Up Arrow</td>
+							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
+							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
+						</tr>
+						<tr>
+							<td id="moveUpActionName">Shoot Right</td>
+							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">Right Arrow</td>
+							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
+							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
+						</tr>
+					</table>
+
+					<div class='endFormButtons'>
+						<!-- <button id="keybindingsResetButton" class="RWButton keybindingDefault" onclick="keybindingsResetButtonClick()">Reset ALL to Default</button> -->
+						<button id="keybindingsConfirmButton" class="RWButton" onclick="keybindingsConfirmButtonClick()">Confirm</button>
+						<button id="keybindingsCancelButton" class="RWButton" onclick="keybindingsCancelButtonClick()">Cancel</button>
+					</div>
+				</div>
+			</div>
+
 		</div>
+
 	</div>
+
 
 	<div id="progressColumn" class="columnSection">
 		<div id="progressColumnContent">
@@ -147,12 +219,12 @@
 	</div>
 	<div id="customizationColumn" class="columnSection">
 		
-		<div id="shopCustomizeToggle">
-				<div class="toggleIcons active" id="customizeToggleIcon" onclick="toggleAppearanceMode('customizeToggleIcon')">
+		<div class="columnTabContainer" id="shopCustomizeToggle">
+				<div class="columnTab active" id="customizeTab" onclick="toggleEquipBuy('customizeTab')">
 						<span>Equip</span>
 						<img src="/client/img/customizeToggle.png">
 				</div>
-				<div class="toggleIcons" id="shopToggleIcon" onclick="toggleAppearanceMode('shopToggleIcon')">
+				<div class="columnTab" id="buyTab" onclick="toggleEquipBuy('buyTab')">
 						<img src="/client/img/shopToggle.png">
 						<span>Buy</span>
 				</div>							
@@ -163,8 +235,8 @@
 			<canvas id="ctx" width="150" height="150" onclick="cycleAppearance()"></canvas>
 		</div> <!--End Canvas -->
 		<div class="teamTabs" style="width:150px">
-			<button class="teamTablinks" id="tabRedActive" onclick="selectTeam(event)">Red</button>
-			<button class="teamTablinks" id="tabBlue" onclick="selectTeam(event)">Blue</button>
+			<button class="teamTablinks" id="tabRedActive" onclick="selectTeam(event, 1)">Red</button>
+			<button class="teamTablinks" id="tabBlue" onclick="selectTeam(event, 2)">Blue</button>
 		</div>
 		<div id="shopOptions" style="display: none;">
 			<div class="shopCategory"></div>

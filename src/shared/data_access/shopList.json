@@ -1044,6 +1044,39 @@
 		"canvasValue":"blast"
 	},	
 	{
+		"id":"lightningBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Lightning",
+		"text":"The primordial force of nature",
+		"price": 100000,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"lightning"
+	},	
+	{
+		"id":"slimeBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Green Slime",
+		"text":"Eww, gross",
+		"price": 100000,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"slime"
+	},	
+	{
+		"id":"slimePurpleBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Purple Slime",
+		"text":"What is this stuff?",
+		"price": 100000,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"slimePurple"
+	},	
+	{
 		"id":"whiteName",
         "category":"name",
 		"subCategory":"color",

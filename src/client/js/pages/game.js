@@ -148,7 +148,7 @@ function normalShadow() {
 		noShadow();
 		return;
 	}
-	ctx.shadowColor = "black";
+	ctx.shadowColor = "#000000";
 	ctx.shadowOffsetX = 2; 
 	ctx.shadowOffsetY = 2;
 	if (lowGraphicsMode){
@@ -159,7 +159,7 @@ function normalShadow() {
 	}
 }
 function noShadow() {
-	ctx.shadowColor = "black";
+	ctx.shadowColor = "#000000";
 	ctx.shadowOffsetX = 0; 
 	ctx.shadowOffsetY = 0;
 	ctx.shadowBlur = 0;
@@ -170,7 +170,7 @@ function heavyCenterShadow() {
 	
 	//Heavy center shadows disabled under all circumstances
 	/*
-	ctx.shadowColor = "black";
+	ctx.shadowColor = "#000000";
 	ctx.shadowOffsetX = 0; 
 	ctx.shadowOffsetY = 0;
 	if (lowGraphicsMode){
@@ -278,12 +278,12 @@ socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
 	}
 	
 	//Border (blink on flag stolen)
-	if (myPlayer.team == "white" && bagRed.captured == true && blinkOn == false){
+	if (myPlayer.team == 1 && bagRed.captured == true && blinkOn == false){
 		canvas.style.margin = "-5px";
 		canvas.style.border = "5px solid #FF0000";
 		blinkOn = true;
 	}
-	else if (myPlayer.team == "black" && bagBlue.captured == true && blinkOn == false){
+	else if (myPlayer.team == 2 && bagBlue.captured == true && blinkOn == false){
 		canvas.style.margin = "-5px";
 		canvas.style.border = "5px solid #FF0000";
 		blinkOn = true;
@@ -409,6 +409,8 @@ Img.smashGreen.src = "/client/img/smash-green.png";
 
 Img.boostBlast = new Image();
 Img.boostBlast.src = "/client/img/shot-flash.png";
+Img.boostLightning2 = new Image();
+Img.boostLightning2.src = "/client/img/dynamic/boost/lightning2.png";
 
 
 Img.blackPlayerPistol = new Image();
@@ -721,7 +723,9 @@ var sfxDecharge = new Howl({src: ['/client/sfx/decharge3.mp3']});
 var sfxBoost = new Howl({src: ['/client/sfx/boost5.mp3']});
 var sfxBoostRainbow = new Howl({src: ['/client/sfx/boostRainbow.mp3']});
 var sfxBoostBlast = new Howl({src: ['/client/sfx/boostBlast.mp3']});
+var sfxBoostLightning = new Howl({src: ['/client/sfx/boostLightning.mp3']});
 var sfxBoostIon = new Howl({src: ['/client/sfx/boostIon.mp3']});
+var sfxBoostSlime = new Howl({src: ['/client/sfx/boostSlime.mp3']});
 var sfxBoostEmpty = new Howl({src: ['/client/sfx/boostEmpty.mp3']});
 sfxBoostEmpty.volume(1);
 var sfxCloak = new Howl({src: ['/client/sfx/cloak2.mp3']});
@@ -737,9 +741,9 @@ var sfxVictoryMusic = new Howl({src: ['/client/sfx/music/theme-victory-short.mp3
 sfxDefeatMusic.volume(.3);
 sfxVictoryMusic.volume(.3);
 var sfxProgressBar = new Howl({src: ['/client/sfx/progressBar.mp3']});
-sfxProgressBar.volume(.25);
+sfxProgressBar.volume(.18);
 var sfxProgressBarReverse = new Howl({src: ['/client/sfx/progressBarReverse.mp3']});
-sfxProgressBarReverse.volume(.25);
+sfxProgressBarReverse.volume(.18);
 
 
 //-----------------------------PLAYER INITIALIZATION-------------------------------
@@ -778,7 +782,7 @@ var Player = function(id){
 		reloading:0,
 		triggerTapLimitTimer:0,
 		customizations: defaultCustomizations,
-		images:{ red:{}, blue:{} }
+		images:{ 1:{}, 2:{} }
 	}
 	Player.list[id] = self;
 }
@@ -789,10 +793,10 @@ function updateOrderedPlayerList(){
 	var blackPlayers = [];
 	var whitePlayers = [];		
 	for (var a in Player.list){
-		if (Player.list[a].team == "white"){
+		if (Player.list[a].team == 1){
 			whitePlayers.push(Player.list[a]);
 		}
-		else if (Player.list[a].team == "black"){
+		else if (Player.list[a].team == 2){
 			blackPlayers.push(Player.list[a]);
 		}
 	}
@@ -949,10 +953,10 @@ socket.on('killScore', function(team, dataWhiteScore, dataBlackScore){
 socket.on('capture', function(team, dataWhiteCaptures, dataBlackCaptures){
 	whiteScore = dataWhiteCaptures;
 	blackScore = dataBlackCaptures;
-	if (team == "white"){
+	if (team == 1){
 		whiteScoreHeight = 266;
 	}
-	else if (team == "black"){
+	else if (team == 2){
 		blackScoreHeight = 266;
 	}
 	else {
@@ -1007,10 +1011,10 @@ chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome t
 socket.on('addToChat', function(data, playerId){ //Player chat
 var color = "#FFFFFF";
 	if (Player.list[playerId]){
-		if (Player.list[playerId].team == "white"){
+		if (Player.list[playerId].team == 1){
 			color = "#e09f9f";
 		}
-		else if (Player.list[playerId].team == "black"){
+		else if (Player.list[playerId].team == 2){
 			color = "#93b3d8";
 		}
 	}
@@ -1091,7 +1095,7 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		//Update myPlayer and add blue border for armor
 		if (playerDataPack[i].id == myPlayer.id){
 			myPlayer[playerDataPack[i].property] = playerDataPack[i].value;
-			if (playerDataPack[i].property == "health" && ((myPlayer.team == "black" && bagBlue.captured == false) || (myPlayer.team == "white" && bagRed.captured == false))){
+			if (playerDataPack[i].property == "health" && ((myPlayer.team == 2 && bagBlue.captured == false) || (myPlayer.team == 1 && bagRed.captured == false))){
 				determineBorderStyle();
 			}
 		}
@@ -1304,15 +1308,21 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 					vol = 0;
 
 				var playerBoostSfx = sfxBoost;
-				var team = Player.list[updateEffectPack[i].playerId].team == "white" ? "red" : "blue";
+				var team = Player.list[updateEffectPack[i].playerId].team;
 				if (Player.list[updateEffectPack[i].playerId].customizations[team].boost == "hearts2" || Player.list[updateEffectPack[i].playerId].customizations[team].boost == "rainbow"){
 					playerBoostSfx = sfxBoostRainbow;
 				}
-				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost == "streaksRed" || Player.list[updateEffectPack[i].playerId].customizations[team].boost == "streaks"){
+				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost.indexOf("streaks") > -1){
 					playerBoostSfx = sfxBoostIon;
 				}
 				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost == "blast"){
 					playerBoostSfx = sfxBoostBlast;
+				}
+				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost == "lightning"){
+					playerBoostSfx = sfxBoostLightning;
+				}
+				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost.indexOf("slime") > -1){
+					playerBoostSfx = sfxBoostSlime;
 				}
 				playerBoostSfx.volume(vol);
 				playerBoostSfx.play();
@@ -1501,12 +1511,12 @@ function endGame(){
 	if (!mute){
 		sfxStealGood.play();		
 		//Conditional win sfx
-		if ((myPlayer.team == "white" && whiteScore > blackScore) || (myPlayer.team == "black" && blackScore > whiteScore)){
+		if ((myPlayer.team == 1 && whiteScore > blackScore) || (myPlayer.team == 2 && blackScore > whiteScore)){
 			if (!mute){
 				sfxVictoryMusic.play();
 			}
 		}
-		else if(myPlayer.team != "none"){
+		else if(myPlayer.team != 0){
 			if (!mute){
 				sfxDefeatMusic.play();
 			}
@@ -1516,7 +1526,7 @@ function endGame(){
 
 function calculateShopMechanics(){
 	if (shopEnabled){
-		if (myPlayer.team == "white" && myPlayer.pressingA && myPlayer.x <= 0 && myPlayer.y <= 235 && shop.active == false && !gameOver){
+		if (myPlayer.team == 1 && myPlayer.pressingA && myPlayer.x <= 0 && myPlayer.y <= 235 && shop.active == false && !gameOver){
 			if (!myPlayer.pressingS && !myPlayer.pressingD && !myPlayer.pressingW && !myPlayer.pressingUp && !myPlayer.pressingRight && !myPlayer.pressingDown && !myPlayer.pressingLeft){
 				socket.emit('keyPress',{inputId:65,state:false});
 				socket.emit('keyPress',{inputId:83,state:false});
@@ -1527,7 +1537,7 @@ function calculateShopMechanics(){
 				shop.uniqueTextTimer = 60;
 			}
 		}
-		if (myPlayer.team == "black" && myPlayer.pressingD && myPlayer.x >= mapWidth && myPlayer.y >= mapHeight - 235 && shop.active == false && !gameOver){
+		if (myPlayer.team == 2 && myPlayer.pressingD && myPlayer.x >= mapWidth && myPlayer.y >= mapHeight - 235 && shop.active == false && !gameOver){
 			if (!myPlayer.pressingS && !myPlayer.pressingA && !myPlayer.pressingW && !myPlayer.pressingUp && !myPlayer.pressingRight && !myPlayer.pressingDown && !myPlayer.pressingLeft){
 				socket.emit('keyPress',{inputId:68,state:false});
 				socket.emit('keyPress',{inputId:83,state:false});
@@ -1539,10 +1549,10 @@ function calculateShopMechanics(){
 			}
 		}
 		//Failsafe in case wrongly stuck in shop
-		if (shop.active == true && myPlayer.team == "white" && (myPlayer.x > 0 || myPlayer.y > 235)){
+		if (shop.active == true && myPlayer.team == 1 && (myPlayer.x > 0 || myPlayer.y > 235)){
 			shop.active = false;
 		}
-		if (shop.active == true && myPlayer.team == "black" && (myPlayer.x < mapWidth || myPlayer.y < mapHeight - 235)){
+		if (shop.active == true && myPlayer.team == 2 && (myPlayer.x < mapWidth || myPlayer.y < mapHeight - 235)){
 			shop.active = false;
 		}
 	}
@@ -1629,7 +1639,7 @@ function updateCamera(){
 	if(myPlayer.shootingDir == 8){targetCenterX = canvasWidth/2 + (diagCamOffSet + 50); targetCenterY = canvasHeight/2 + diagCamOffSet;}
 	if(myPlayer.health <= 0){targetCenterX = canvasWidth/2; targetCenterY = canvasHeight/2} //If ded
 	
-	if ((!myPlayer.pressingShift && !shop.active) || myPlayer.team == "none"){
+	if ((!myPlayer.pressingShift && !shop.active) || myPlayer.team == 0){
 		targetCenterX = canvasWidth/2;
 		targetCenterY = canvasHeight/2;
 	}
@@ -1821,12 +1831,12 @@ function drawMapCanvas(){
 
 function drawBlackMarkets(){
 	if (shopEnabled){
-		if (Player.list[myPlayer.id].team == "white"){
+		if (Player.list[myPlayer.id].team == 1){
 			if (centerX - myPlayer.x * zoom - 44 * zoom > -Img.bmDoorWhite.width * zoom - drawDistance && centerX - myPlayer.x * zoom - 44 * zoom < canvasWidth + drawDistance && centerY - myPlayer.y * zoom > -Img.bmDoorWhite.height * zoom - drawDistance && centerY - myPlayer.y * zoom < canvasHeight + drawDistance){
 				drawImage(Img.bmDoorWhite, centerX - myPlayer.x * zoom - 44 * zoom, centerY - myPlayer.y * zoom, Img.bmDoorWhite.width * zoom, Img.bmDoorWhite.height * zoom);
 			}
 		}
-		else if (Player.list[myPlayer.id].team == "black"){
+		else if (Player.list[myPlayer.id].team == 2){
 		var bmx = centerX + mapWidth * zoom - myPlayer.x * zoom - Img.bmDoorBlack.width * zoom + 44 * zoom;
 		var bmy = centerY + mapHeight * zoom - myPlayer.y * zoom - Img.bmDoorBlack.height * zoom;
 			if (bmx + Img.bmDoorBlack.width * zoom + drawDistance > 0 && bmx - drawDistance < canvasWidth && bmy + Img.bmDoorBlack.height * zoom + drawDistance > 0 && bmy - drawDistance < canvasHeight){
@@ -1849,16 +1859,15 @@ function drawBodies(){
 		var rotate = getRotation(body.direction);
 		var img = Img.bodyWhite;
 
-		var team = "red";
-
+		var team = 1;
 		if (Player.list[body.playerId]){
-			team = Player.list[body.playerId].team == "white" ? "red" : "blue";
+			team = Player.list[body.playerId].team;
 			if (Player.list[body.playerId].images[team].body1)
 				img = Player.list[body.playerId].images[team].body1;
 		}
 		else if (Thug.list[body.playerId]){
-			team = Thug.list[body.playerId].team == "white" ? "red" : "blue";
-			if (team == "blue")
+			team = Thug.list[body.playerId].team;
+			if (team == 2)
 				img = Img.bodyBlack;
 		}
 
@@ -1952,9 +1961,17 @@ function drawWallBodies(){
 			var rotate = 1;	
 			var img = Img.bodyWhiteWall1;
 
-			var team = Player.list[body.playerId].team == "white" ? "red" : "blue";
-			if (Player.list[body.playerId].images[team].bodyWall)
-				img = Player.list[body.playerId].images[team].bodyWall;
+			var team = 1;
+			if (Player.list[body.playerId]){
+				team = Player.list[body.playerId].team;
+				if (Player.list[body.playerId].images[team].body1)
+					img = Player.list[body.playerId].images[team].bodyWall;
+			}
+			else if (Thug.list[body.playerId]){
+				team = Thug.list[body.playerId].team;
+				if (team == 2)
+					img = Img.bodyBlackWall1;
+			}
 			
 			var bodyBlockOffset = 14;
 			for (var i in Block.list){
@@ -2023,7 +2040,7 @@ function drawMissingBags(){
 function drawLegs(){
 	normalShadow();
 	for (var i in Player.list) {
-		if (Player.list[i].health > 0 && Player.list[i].team != "none" && Player.list[i].cloakEngaged == false){
+		if (Player.list[i].health > 0 && Player.list[i].team != 0 && Player.list[i].cloakEngaged == false){
 		
 			//Calculate LegSwing
 			if (!Player.list[i].legHeight){
@@ -2053,11 +2070,11 @@ function drawLegs(){
 			}
 		
 			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 - drawDistance < cameraY + canvasHeight){
-				var legs = Player.list[i].images.red.legs;
-				if (Player.list[i].team == "black"){legs = Player.list[i].images.blue.legs;}
+				var legs = Player.list[i].images[1].legs;
+				if (Player.list[i].team == 2){legs = Player.list[i].images[2].legs;}
 				
 				if (typeof legs == 'undefined'){ //Load default images if animation frames not yet drawn
-					legs = Player.list[i].team == "white" ? Img.whitePlayerLegs : Img.blackPlayerLegs;
+					legs = Img.blackPlayerLegs;
 				}
 				//This is for calculating where to put the legs according to the weapon wielded by the torso
 				var width = Img.whitePlayerPistol.width;
@@ -2245,17 +2262,17 @@ function drawPickups(){
 				ctx.shadowColor = "black";
 				ctx.lineWidth=3;
 				if (Pickup.list[i].type == 1){
-					ctx.fillStyle="white";
+					ctx.fillStyle="#FFFFFF";
 					ctx.strokeStyle="#981b1e";
 					ctx.shadowColor = "#981b1e";
 				}
 				else if (Pickup.list[i].type >= 2 && Pickup.list[i].type <= 4){
-					ctx.fillStyle="white";
+					ctx.fillStyle="#FFFFFF";
 					ctx.strokeStyle="#247747";
 					ctx.shadowColor = "#247747";
 				}
 				else if (Pickup.list[i].type == 5){
-					ctx.fillStyle="white";
+					ctx.fillStyle="#FFFFFF";
 					ctx.strokeStyle="#005b98";
 					ctx.shadowColor = "#005b98";
 				}
@@ -2291,238 +2308,93 @@ function drawBags(){
 function drawTorsos(){
 		
 	for (var i in Player.list) {		
-		if (Player.list[i].health > 0 && Player.list[i].team != "none"){
+		const team = Player.list[i].team;
+		if (Player.list[i].health > 0 && team != 0){
 			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){
 				normalShadow();
-				var img = Player.list[i].images.red.pistol;
-				if (Player.list[i].team == "white"){
-					if (Player.list[i].weapon == 2){
-						img = Player.list[i].images.red.DP;
-					}
-					else if (Player.list[i].weapon == 3){
-						img = Player.list[i].images.red.MG;
-					}
-					else if (Player.list[i].weapon == 4){
-						img = Player.list[i].images.red.SG;
-					}
+				var img = Player.list[i].images[team].pistol;
+				if (Player.list[i].weapon == 2){
+					img = Player.list[i].images[team].DP;
 				}
-				else if (Player.list[i].team == "black"){
-					if (Player.list[i].weapon == 3){
-						img = Player.list[i].images.blue.MG;
-					}
-					else if (Player.list[i].weapon == 2){
-						img = Player.list[i].images.blue.DP;
-					}
-					else if (Player.list[i].weapon == 4){
-						img = Player.list[i].images.blue.SG;
-					}
-					else {
-						img = Player.list[i].images.blue.pistol;
-					}
+				else if (Player.list[i].weapon == 3){
+					img = Player.list[i].images[team].MG;
 				}
-				
+				else if (Player.list[i].weapon == 4){
+					img = Player.list[i].images[team].SG;
+				}
                 ctx.save();
 				ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player			
 				ctx.rotate(getRotation(Player.list[i].shootingDir));
 									
 					//draw bag on players back
-					if (Player.list[i].holdingBag == true && Player.list[i].team == "white"){
+					if (Player.list[i].holdingBag == true){
+						var bagImage = team == 1 ? Img.bagRed : Img.bagBlue;
 						ctx.save();
                         ctx.translate(5 * zoom,5 * zoom);
 						ctx.rotate(315*Math.PI/180);
-							drawImage(Img.bagBlue, -Img.bagBlue.width/2 * zoom, -Img.bagBlue.height/2 * zoom, Img.bagBlue.width * zoom, Img.bagBlue.height * zoom); 
-						//ctx.rotate(-315*Math.PI/180);
-						//ctx.translate(-5 * zoom,-5 * zoom);
+							drawImage(bagImage, -Img.bagBlue.width/2 * zoom, -Img.bagBlue.height/2 * zoom, Img.bagBlue.width * zoom, Img.bagBlue.height * zoom); 
                         ctx.restore();
-
 					}
-					else if (Player.list[i].holdingBag == true && Player.list[i].team == "black"){
-						ctx.save();
-                        ctx.translate(5 * zoom,5 * zoom);
-						ctx.rotate(315*Math.PI/180);
-							drawImage(Img.bagRed, -Img.bagRed.width/2 * zoom, -Img.bagRed.height/2 * zoom, Img.bagRed.width * zoom, Img.bagRed.height * zoom); 
-						//ctx.rotate(-315*Math.PI/180);
-						//ctx.translate(-5 * zoom,-5 * zoom);
-                        ctx.restore();
-					}			
 					
 					////RELOADING////
 					if (Player.list[i].reloading > 0){
 						Player.list[i].reloading--;
 						////!!! Move erything below to different function
 						if (Player.list[i].weapon == 1){
-							if (Player.list[i].reloading < 12){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.pistolReloading3;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.pistolReloading3;
-								}
-							}
-							else if (Player.list[i].reloading < 24){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.pistolReloading4;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.pistolReloading4;
-								}
-							}
-							else if (Player.list[i].reloading < 36){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.pistolReloading3;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.pistolReloading3;
-								}
-							}
-							else if (Player.list[i].reloading < 48){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.pistolReloading2;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.pistolReloading2;
-								}
-							}
-							else if (Player.list[i].reloading <= 60){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.pistolReloading1;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.pistolReloading1;
-								}
-							}
+							if (Player.list[i].reloading < 12)
+								img = Player.list[i].images[team].pistolReloading3;
+							else if (Player.list[i].reloading < 24)
+								img = Player.list[i].images[team].pistolReloading4;
+							else if (Player.list[i].reloading < 36)
+								img = Player.list[i].images[team].pistolReloading3;
+							else if (Player.list[i].reloading < 48)
+								img = Player.list[i].images[team].pistolReloading2;
+							else if (Player.list[i].reloading <= 60)
+								img = Player.list[i].images[team].pistolReloading1;
 						}
 						if (Player.list[i].weapon == 2){
-							if (Player.list[i].reloading < 20){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.DPReloading3;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.DPReloading3;
-								}
-							}
-							else if (Player.list[i].reloading < 60){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.DPReloading2;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.DPReloading2;
-								}
-							}
-							else if (Player.list[i].reloading <= 80){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.DPReloading1;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.DPReloading1;
-								}
-							}
+							if (Player.list[i].reloading < 20)
+								img = Player.list[i].images[team].DPReloading3;
+							else if (Player.list[i].reloading < 60)
+								img = Player.list[i].images[team].DPReloading2;
+							else if (Player.list[i].reloading <= 80)
+								img = Player.list[i].images[team].DPReloading1;
 						}
 						else if (Player.list[i].weapon == 3){
-							if (Player.list[i].reloading < 22){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.MGReloading4;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.MGReloading4;
-								}
-							}
-							else if (Player.list[i].reloading < 30){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.MGReloading5;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.MGReloading5;
-								}
-							}
-							else if (Player.list[i].reloading < 48){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.MGReloading4;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.MGReloading4;
-								}
-							}
-							else if (Player.list[i].reloading < 60){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.MGReloading1;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.MGReloading1;
-								}
-							}
-							else if (Player.list[i].reloading <= 72){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.MGReloading2;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.MGReloading2;
-								}
-							}
-							else if (Player.list[i].reloading < 90){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.MGReloading3;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.MGReloading3;
-								}
-							}
-							else if (Player.list[i].reloading < 102){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.MGReloading2;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.MGReloading2;
-								}
-							}
-							else if (Player.list[i].reloading <= 114){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.MGReloading1;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.MGReloading1;
-								}
-							}						
+							if (Player.list[i].reloading < 22)
+								img = Player.list[i].images[team].MGReloading4;
+							else if (Player.list[i].reloading < 30)
+								img = Player.list[i].images[team].MGReloading5;
+							else if (Player.list[i].reloading < 48)
+								img = Player.list[i].images[team].MGReloading4;
+							else if (Player.list[i].reloading < 60)
+								img = Player.list[i].images[team].MGReloading1;
+							else if (Player.list[i].reloading <= 72)
+								img = Player.list[i].images[team].MGReloading2;
+							else if (Player.list[i].reloading < 90)
+								img = Player.list[i].images[team].MGReloading3;
+							else if (Player.list[i].reloading < 102)
+								img = Player.list[i].images[team].MGReloading2;
+							else if (Player.list[i].reloading <= 114)
+								img = Player.list[i].images[team].MGReloading1;
 						}
 						if (Player.list[i].weapon == 4){
-							if (Player.list[i].reloading < 10){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.SGReloading3;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.SGReloading3;
-								}
-							}
-							else if (Player.list[i].reloading < 20){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.SGReloading2;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.SGReloading2;
-								}
-							}
-							else if (Player.list[i].reloading <= 30){
-								if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.SGReloading1;
-								}
-								else if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.SGReloading1;
-								}
-							}
+							if (Player.list[i].reloading < 10)
+								img = Player.list[i].images[team].SGReloading3;
+							else if (Player.list[i].reloading < 20)
+								img = Player.list[i].images[team].SGReloading2;
+							else if (Player.list[i].reloading <= 30)
+								img = Player.list[i].images[team].SGReloading1;
 							if (Player.list[i].reloading == 20 && !mute){								
 								var randy = randomInt(0,2);
-								if (randy == 0){
+								if (randy == 0)
 									sfxSGReload1.play();
-								}
-								else if (randy == 1){
+								else if (randy == 1)
 									sfxSGReload2.play();
-								}
-								else if (randy == 2){
+								else if (randy == 2)
 									sfxSGReload3.play();
-								}
-								else {
+								else
 									sfxSGReload1.play();
-								}									
 							}
 						}
 					}
@@ -2533,45 +2405,27 @@ function drawTorsos(){
 							if (Player.list[i].triggerTapLimitTimer == 30){
 								sfxSGEquip.play();
 							}
-							if (Player.list[i].triggerTapLimitTimer > 30){
-								if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.SG;
-								}
-								else if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.SG;
-								}
-							}
-							else if (Player.list[i].triggerTapLimitTimer > 10){
-								if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.SGCock;
-								}
-								else if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.SGCock;
-								}
-							}
-							else {
-								if (Player.list[i].team == "white"){
-									img = Player.list[i].images.red.SG;
-								}
-								else if (Player.list[i].team == "black"){
-									img = Player.list[i].images.blue.SGCock;
-								}							
-							}
+							if (Player.list[i].triggerTapLimitTimer > 30)
+								img = Player.list[i].images[team].SG;
+							else if (Player.list[i].triggerTapLimitTimer > 10)
+								img = Player.list[i].images[team].SGCock;
+							else
+								img = Player.list[i].images[team].SG;
 						}
 					}
 					
 					//Player damage flashing under
-					if (!(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
+					if (!(Player.list[i].cloakEngaged && team != Player.list[myPlayer.id].team)){
 						if (Player.list[i].health < 100){
 							healthFlashTimer--;
 							if (healthFlashTimer <= 4){
-								ctx.shadowColor = "red";
+								ctx.shadowColor = "#FF0000";
 								ctx.shadowOffsetX = 0; 
 								ctx.shadowOffsetY = 0;
 								ctx.shadowBlur = 0;		
 							}
 							if (Player.list[i].health < 30 && healthFlashTimer > 3 && healthFlashTimer <= 6){
-								ctx.shadowColor = "white";
+								ctx.shadowColor = "#FFFFFF";
 								ctx.shadowOffsetX = 0; 
 								ctx.shadowOffsetY = 0;
 								ctx.shadowBlur = 0;
@@ -2582,11 +2436,8 @@ function drawTorsos(){
 						}
 					}
 
-					//img = Player.list[i].images.red.pistol;
-
-
 					if (typeof img == 'undefined'){ //Load default images if animation frames not yet drawn
-						img = Player.list[i].team == "white" ? Img.whitePlayerPistol : Img.blackPlayerPistol;
+						img = Player.list[i].team == 1 ? Img.whitePlayerPistol : Img.blackPlayerPistol;
 					}
 
 					//actually draw the torso Actually
@@ -2641,12 +2492,12 @@ function drawThugs(){ //TODO!!! Rouge image of thug appears after attacking (Wha
 					
 					var thugImg = Img.blackThugTorso;
 					
-					if (Thug.list[i].team == "black"){
+					if (Thug.list[i].team == 2){
 						legs = Img.blackThugLegs;
 						if (Thug.list[i].legHeight < 0){legs = Img.blackThugLegs2;}
 						thugImg = Img.blackThugTorso;
 					}
-					else if (Thug.list[i].team == "white"){
+					else if (Thug.list[i].team == 1){
 						legs = Img.whiteThugLegs;
 						if (Thug.list[i].legHeight < 0){legs = Img.whiteThugLegs2;}
 						thugImg = Img.whiteThugTorso;
@@ -2774,9 +2625,8 @@ function drawBoosts(){
             var blast = BoostBlast.list[Player.list[i].id];
             var blastDir = Player.list[i].walkingDir;
 
-			var imgblast = Player.list[i].images.red.boost;
-			var playerTeam = Player.list[i].team == "white" ? "red" : "blue" //!!!Get rid of this on team rename
-			if (Player.list[i].team == "black"){imgblast = Player.list[i].images.blue.boost;}			
+			var imgblast = Player.list[i].images[1].boost;
+			if (Player.list[i].team == 2){imgblast = Player.list[i].images[2].boost;}			
 			if (typeof imgblast == 'undefined'){ //Load default images if animation frames not yet drawn
 				imgblast = Img.boostBlast;
 			}
@@ -2792,21 +2642,30 @@ function drawBoosts(){
             if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 - drawDistance < cameraY + canvasHeight){
                 ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
                 ctx.rotate(getRotation(blastDir));
-					if (Player.list[i].customizations[playerTeam].boost == "blast"){
+					if (Player.list[i].customizations[Player.list[i].team].boost == "blast"){
 						drawImage(imgblast, (-blast.width/2 - dualBoostXOffset * 2) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);
 						drawImage(imgblast, (-blast.width/2 + dualBoostXOffset * 2) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);						
 						drawImage(imgblast, (-blast.width/2) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
 					}
-					else if (Player.list[i].customizations[playerTeam].boost.indexOf('streaks') > -1){
+					else if (Player.list[i].customizations[Player.list[i].team].boost.indexOf('streaks') > -1){
 						drawImage(imgblast, (-blast.width/2 - dualBoostXOffset) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);
 						drawImage(imgblast, (-blast.width/2 + dualBoostXOffset) * zoom, 25 * zoom, blast.width * zoom, blast.height * zoom);						
 						drawImage(imgblast, (-blast.width/2) * zoom, 15 * zoom, blast.width * zoom, blast.height * zoom);
 					}
-					else if (Player.list[i].customizations[playerTeam].boost == "rainbow"){
+					else if (Player.list[i].customizations[Player.list[i].team].boost == "rainbow"){
 						blast.width = 60;
 						drawImage(imgblast, (-blast.width/2) * zoom, 10 * zoom, blast.width * zoom, blast.height * zoom);
 					}
-					else if (Player.list[i].customizations[playerTeam].boost == "hearts2"){
+					else if (Player.list[i].customizations[Player.list[i].team].boost == "lightning"){
+						blast.width = 150;
+						blast.height = 150;
+						ctx.globalAlpha = 1;
+						if (randomInt(0,1) >= .5)
+						 	imgblast = Img.boostLightning2;
+						if (blast.alpha >= .8)
+							drawImage(imgblast, (-blast.width/2) * zoom, 10 * zoom, blast.width * zoom, blast.height * zoom);
+					}
+					else if (Player.list[i].customizations[Player.list[i].team].boost == "hearts2"){
 						drawImage(imgblast, (-blast.width/2) * zoom, 20 * zoom, blast.width * zoom, blast.height * zoom);
 					}
 					else {
@@ -2933,11 +2792,10 @@ function drawPlayerTags(){
 			var playerUsername = Player.list[i].name.substring(0, 15);
 			ctx.save();
             ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
-				if (Player.list[i].health > 0 && Player.list[i].team != "none" && !(Player.list[i].cloakEngaged == true && Player.list[i].team != Player.list[myPlayer.id].team)){
-					var team = Player.list[i].team == "white" ? "red" : "blue";
-					drawName(ctx, playerUsername, Player.list[i].customizations[team].nameColor, 0, -Img.whitePlayerPistol.height/2 * zoom, Player.list[i].images[team].icon);
+				if (Player.list[i].health > 0 && Player.list[i].team != 0 && !(Player.list[i].cloakEngaged == true && Player.list[i].team != Player.list[myPlayer.id].team)){
+					drawName(ctx, playerUsername, Player.list[i].customizations[Player.list[i].team].nameColor, 0, -Img.whitePlayerPistol.height/2 * zoom, Player.list[i].images[Player.list[i].team].icon);
 				}			
-				if (Player.list[i].team != "none" && Player.list[i].chat && Player.list[i].chatDecay > 0 && !(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
+				if (Player.list[i].team != 0 && Player.list[i].chat && Player.list[i].chatDecay > 0 && !(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
 					if (Player.list[i].chat.length > 0){
 						smallCenterShadow();
 						ctx.font = '16px Electrolize';
@@ -2955,18 +2813,18 @@ function drawPlayerTags(){
 function drawShop(){
 	calculateShopMechanics();
 	if (shop.active){
-		if (Player.list[myPlayer.id].team == "white"){
+		if (Player.list[myPlayer.id].team == 1){
 			Player.list[myPlayer.id].shootingDir = 7;
 			myPlayer.shootingDir = 7;
 		}
-		else if (Player.list[myPlayer.id].team == "black"){
+		else if (Player.list[myPlayer.id].team == 2){
 			Player.list[myPlayer.id].shootingDir = 3;
 			myPlayer.shootingDir = 3;
 		}
 		
 		//Offset to determine whether to print Black Market on right or left of screen
 		var teamBlackMarketXOffset = 100;
-		if (Player.list[myPlayer.id].team ==  "black"){
+		if (Player.list[myPlayer.id].team ==  2){
 			teamBlackMarketXOffset = 400;
 		}
 			
@@ -3108,7 +2966,7 @@ function drawShop(){
 }
 
 function drawUILayer(){	
-	if (myPlayer.team != "none"){
+	if (myPlayer.team != 0){
 		drawBloodyBorder();
 		drawHUD();
 	}
@@ -3181,7 +3039,7 @@ function updateSpectatingView(){ //updates spectating camera
 		myPlayer.x = bagRed.x;
 		myPlayer.y = bagRed.y;
 	}
-	else if (typeof Player.list[spectatingPlayerId] != 'undefined' && Player.list[spectatingPlayerId].team != "none"){
+	else if (typeof Player.list[spectatingPlayerId] != 'undefined' && Player.list[spectatingPlayerId].team != 0){
 		myPlayer.x = Player.list[spectatingPlayerId].x;
 		myPlayer.y = Player.list[spectatingPlayerId].y;		
 	}
@@ -3410,14 +3268,14 @@ function drawTopScoreboard(){
 		else if (timeLimit == true){
 			ctx.font = 16 + 'px Electrolize';
 			if (gameOver == false && secondsLeft == 0 && minutesLeft == 0){
-				ctx.fillStyle="red";
+				ctx.fillStyle="#FF0000";
 				strokeAndFillText("SD", canvasWidth/2, 53);
 			}
 			else if (scoreToWin > 0){
 				strokeAndFillText("First to " + scoreToWin, canvasWidth/2, 53);
 			}
 			if (parseInt(minutesLeft)*60 + parseInt(secondsLeft) <= 60 && timeLimit){
-				ctx.fillStyle="red";
+				ctx.fillStyle="#FF0000";
 			}
 			ctx.lineWidth=5;
 			ctx.font = clockHeight + 'px Electrolize';	
@@ -3533,7 +3391,7 @@ function resetPostGameProgressVars(){
 }
 
 function drawPostGameProgress(){
-	if (gameOver == true && postGameReady == true && myPlayer.team != "none"){
+	if (gameOver == true && postGameReady == true && myPlayer.team != 0){
 		if (postGameProgressCounter != postGameProgressDelay){
 			postGameProgressCounter++;
 		}
@@ -3941,7 +3799,7 @@ function drawGameEventText(){
 			}
 
 			ctx.lineWidth=12;
-			if ((whiteScore > blackScore || whiteScore < blackScore) && gameOver == true && myPlayer.team != "none"){
+			if ((whiteScore > blackScore || whiteScore < blackScore) && gameOver == true && myPlayer.team != 0){
 				var actualVictoryPumpSize = victoryPumpSize;
 
 				victoryPumpSize -= 1;
@@ -3953,7 +3811,7 @@ function drawGameEventText(){
 					actualVictoryPumpSize = 118;
 				}
 				var endGameText = "DEFEAT...";
-				if ((myPlayer.team == "white" && whiteScore > blackScore) || (myPlayer.team == "black" && whiteScore < blackScore)){
+				if ((myPlayer.team == 1 && whiteScore > blackScore) || (myPlayer.team == 2 && whiteScore < blackScore)){
 					endGameText = "VICTORY!!!";
 				}
 				else {
@@ -3963,20 +3821,6 @@ function drawGameEventText(){
 				ctx.fillStyle="#FFFFFF";				
 				strokeAndFillText(endGameText,canvasWidth - 10,743 + (actualVictoryPumpSize/3), 575);
 			}
-			/*
-			else if (whiteScore < blackScore && gameOver == true){
-				var blackWinsText = "BLACKS WIN";
-				if (pcMode == 2){
-					blackWinsText = "BLUE WINS";
-				}
-				ctx.fillStyle="#000000";
-				ctx.strokeStyle="#FFFFFF";
-				ctx.strokeText(blackWinsText,canvasWidth - 10,778);
-				noShadow();
-				ctx.fillText(blackWinsText,canvasWidth - 10,778);	
-				ctx.strokeStyle="#000000";
-			}
-			*/
 			else if (timeLimit && whiteScore == blackScore){
 				ctx.font = '118px Electrolize';
 				ctx.fillStyle="#FFFFFF";
@@ -4040,10 +3884,10 @@ function drawStatOverlay(){
 		var blackPlayers = [];
 		var whitePlayers = [];		
 		for (var a in Player.list){
-			if (Player.list[a].team == "white"){
+			if (Player.list[a].team == 1){
 				whitePlayers.push(Player.list[a]);
 			}
-			else if (Player.list[a].team == "black"){
+			else if (Player.list[a].team == 2){
 				blackPlayers.push(Player.list[a]);
 			}
 		}
@@ -4055,9 +3899,9 @@ function drawStatOverlay(){
 		var scoreboardPlayerNameGap = 29;
 		for (var a in blackPlayers){
 			ctx.textAlign="left";			
-			if (blackPlayers[a].id == myPlayer.id || (myPlayer.team == "none" && spectatingPlayerId == blackPlayers[a].id)){
+			if (blackPlayers[a].id == myPlayer.id || (myPlayer.team == 0 && spectatingPlayerId == blackPlayers[a].id)){
 				var arrowIcon = Img.statArrow;
-				if (myPlayer.team == "none"){arrowIcon = Img.statCamera;}
+				if (myPlayer.team == 0){arrowIcon = Img.statCamera;}
 				drawImage(arrowIcon, 123, blackScoreY - 13); //scoreboard arrow
 				ctx.fillStyle="#FFFFFF";
 			}
@@ -4073,7 +3917,7 @@ function drawStatOverlay(){
 			else {
 				strokeAndFillText("$"+blackPlayers[a].cashEarnedThisGame,439,blackScoreY);
 			}
-			if (blackPlayers[a].id == myPlayer.id || (myPlayer.team == "none" && spectatingPlayerId == blackPlayers[a].id)){ctx.fillStyle="#FFFFFF";}
+			if (blackPlayers[a].id == myPlayer.id || (myPlayer.team == 0 && spectatingPlayerId == blackPlayers[a].id)){ctx.fillStyle="#FFFFFF";}
 			else {ctx.fillStyle="#AAAAAA";}
 			
 			var kdSpread = blackPlayers[a].kills - blackPlayers[a].deaths;
@@ -4093,9 +3937,9 @@ function drawStatOverlay(){
 		
 		for (var a in whitePlayers){
 			ctx.textAlign="left";
-			if (whitePlayers[a].id == myPlayer.id || (myPlayer.team == "none" && spectatingPlayerId == whitePlayers[a].id)){
+			if (whitePlayers[a].id == myPlayer.id || (myPlayer.team == 0 && spectatingPlayerId == whitePlayers[a].id)){
 				var arrowIcon = Img.statArrow;
-				if (myPlayer.team == "none"){arrowIcon = Img.statCamera;}
+				if (myPlayer.team == 0){arrowIcon = Img.statCamera;}
 				drawImage(arrowIcon, 123, whiteScoreY - 13);	
 				ctx.fillStyle="#FFFFFF";
 			}
@@ -4111,7 +3955,7 @@ function drawStatOverlay(){
 			else {
 				strokeAndFillText("$"+whitePlayers[a].cashEarnedThisGame,439,whiteScoreY);
 			}
-			if (whitePlayers[a].id == myPlayer.id || (myPlayer.team == "none" && spectatingPlayerId == whitePlayers[a].id)){ctx.fillStyle="#FFFFFF";}
+			if (whitePlayers[a].id == myPlayer.id || (myPlayer.team == 0 && spectatingPlayerId == whitePlayers[a].id)){ctx.fillStyle="#FFFFFF";}
 			else {ctx.fillStyle="#AAAAAA";}
 			
 			var kdSpread = whitePlayers[a].kills - whitePlayers[a].deaths;
@@ -4208,7 +4052,7 @@ function drawEverything(){
 	if (myPlayer.name == "" || !Player.list[myPlayer.id])
 		return;
 
-	if (myPlayer.team == "none")
+	if (myPlayer.team == 0)
 		updateSpectatingView();
 
 	updateCamera();	
@@ -4310,8 +4154,8 @@ function compare(a,b) {
 	
 	
 //Socket On
-socket.on('sendLog', function(log){
-	log("SERVER: " + log);
+socket.on('sendLog', function(msg){
+	log("SERVER: " + msg);
 });
 
 socket.on('endGameProgressResults', function(endGameProgressResults){
@@ -4569,7 +4413,7 @@ document.onkeydown = function(event){
 	else if((event.keyCode === 38 || event.keyCode === 80) && chatInput.style.display == "none"){ //Up
 		//if (event.keyCode === 38)
 			//event.preventDefault();
-		if (myPlayer.team != "none"){
+		if (myPlayer.team != 0){
 			myPlayer.pressingUp = true;
 			if (!shop.active){
 				socket.emit('keyPress',{inputId:38,state:true});
@@ -4585,7 +4429,7 @@ document.onkeydown = function(event){
 	else if((event.keyCode === 39 || event.keyCode === 222) && chatInput.style.display == "none"){ //Right
 		//if (event.keyCode === 39)
 			//event.preventDefault();
-		if (myPlayer.team != "none"){
+		if (myPlayer.team != 0){
 			myPlayer.pressingRight = true;
 			if (!shop.active){
 				socket.emit('keyPress',{inputId:39,state:true});
@@ -4608,7 +4452,7 @@ document.onkeydown = function(event){
 	else if((event.keyCode === 40 || event.keyCode === 186) && chatInput.style.display == "none"){ //Down
 		//if (event.keyCode === 40)
 			//event.preventDefault();
-		if (myPlayer.team != "none"){
+		if (myPlayer.team != 0){
 			myPlayer.pressingDown = true;
 			if (!shop.active){
 				socket.emit('keyPress',{inputId:40,state:true});
@@ -4621,7 +4465,7 @@ document.onkeydown = function(event){
 	else if((event.keyCode === 37 || event.keyCode === 76) && chatInput.style.display == "none"){ //Left
 		//if (event.keyCode === 37)
 			//event.preventDefault();
-		if (myPlayer.team != "none"){
+		if (myPlayer.team != 0){
 			myPlayer.pressingLeft = true;
 			if (!shop.active){
 				socket.emit('keyPress',{inputId:37,state:true});
@@ -5031,7 +4875,7 @@ function disconnect(){
 /*
 window.onbeforeunload = function(){
 	//alert("onbeforeunload");
-	if ((myPlayer.team == "white" || myPlayer.team == "black") && (!gameOver && !pregame)){
+	if ((myPlayer.team == 1 || myPlayer.team == 2) && (!gameOver && !pregame)){
 		return "warn";
 	}
 	else {
@@ -5046,7 +4890,7 @@ window.onunload = function(){
 
 window.addEventListener("beforeunload", function (e) {
 	//alert("addEventListener");
-	if (myPlayer.team == "white" || myPlayer.team == "black" && (!gameOver && !pregame)){
+	if (myPlayer.team == 1 || myPlayer.team == 2 && (!gameOver && !pregame)){
 		return "warn";
 	}
 	else {
