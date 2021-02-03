@@ -344,6 +344,8 @@ var Img = {};
 Img.small = new Image();
 Img.small.src = "/client/img/small.png";
 
+Img.quickChatKeys = new Image();
+Img.quickChatKeys.src = "/client/img/quickChatKeys.png";
 Img.block = new Image();
 Img.block.src = "/client/img/block.png";
 Img.redBlock = new Image();
@@ -782,6 +784,7 @@ var Player = function(id){
 		reloading:0,
 		triggerTapLimitTimer:0,
 		customizations: defaultCustomizations,
+		settings: false,
 		images:{ 1:{}, 2:{} }
 	}
 	Player.list[id] = self;
@@ -1070,12 +1073,13 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		if (debugUpdates){
 			logg(playerDataPack[i].id + " " + playerDataPack[i].property + " " + playerDataPack[i].value);
 		}
-
 		
 		//Kick out of shop upon damage
 		if (playerDataPack[i].id == myPlayer.id && playerDataPack[i].property == "health" && playerDataPack[i].value < Player.list[playerDataPack[i].id].health){
 			shop.active = false;
 		}
+
+
 		
 		//Play Charging/Decharge sounds
 		if (playerDataPack[i].id == myPlayer.id && !mute){
@@ -1093,21 +1097,22 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		}
 								
 		//Update myPlayer and add blue border for armor
-		if (playerDataPack[i].id == myPlayer.id){
-			myPlayer[playerDataPack[i].property] = playerDataPack[i].value;
-			if (playerDataPack[i].property == "health" && ((myPlayer.team == 2 && bagBlue.captured == false) || (myPlayer.team == 1 && bagRed.captured == false))){
-				determineBorderStyle();
+
+			if (playerDataPack[i].id == myPlayer.id){
+				myPlayer[playerDataPack[i].property] = playerDataPack[i].value;
+				if (playerDataPack[i].property == "health" && ((myPlayer.team == 2 && bagBlue.captured == false) || (myPlayer.team == 1 && bagRed.captured == false))){
+					determineBorderStyle();
+				}
 			}
-		}
 
 		//Update player list. This has to be last because of previous code comparisons between Pack and player.list[i] values
-		if (Player.list[playerDataPack[i].id]){
-			Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
-		}
-		else {
-			Player(playerDataPack[i].id);
-			Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
-		}
+			if (Player.list[playerDataPack[i].id]){
+				Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
+			}
+			else {
+				Player(playerDataPack[i].id);
+				Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
+			}
 		
 		//Draw customizations
 		if (playerDataPack[i].property == "customizations"){	
@@ -1405,7 +1410,13 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 	for (var i = 0; i < playerPack.length; i++) {
 		//Update myPlayer
 		if (playerPack[i].id == myPlayer.id){
+			if (playerPack[i].settings){
+				playerPack[i].settings.keybindings = hydrateKeybindingSettings(playerPack[i].settings.keybindings);
+				playerPack[i].settings.display = playerPack[i].settings.display;
+			}
 			myPlayer = playerPack[i];
+			console.log("Full game update - myPlayer");
+			console.log(myPlayer);
 		}
 		if (Player.list[playerPack[i].id]){ //It's fine that this overwrites client-side values like legSwing since this only happens on respawn or gamestart where those values should be reset anyway
 			Player.list[playerPack[i].id] = playerPack[i];
@@ -2491,7 +2502,7 @@ function drawThugs(){ //TODO!!! Rouge image of thug appears after attacking (Wha
 				ctx.rotate(Thug.list[i].rotation);
 					
 					var thugImg = Img.blackThugTorso;
-					
+					var legs = Img.whiteThugLegs;
 					if (Thug.list[i].team == 2){
 						legs = Img.blackThugLegs;
 						if (Thug.list[i].legHeight < 0){legs = Img.blackThugLegs2;}
@@ -2793,7 +2804,12 @@ function drawPlayerTags(){
 			ctx.save();
             ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
 				if (Player.list[i].health > 0 && Player.list[i].team != 0 && !(Player.list[i].cloakEngaged == true && Player.list[i].team != Player.list[myPlayer.id].team)){
-					drawName(ctx, playerUsername, Player.list[i].customizations[Player.list[i].team].nameColor, 0, -Img.whitePlayerPistol.height/2 * zoom, Player.list[i].images[Player.list[i].team].icon);
+					var nameColor = Player.list[i].customizations[Player.list[i].team].nameColor;
+					if (myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true){
+						nameColor = Player.list[i].team == 1 ? "#9e0b0f" : "#2e3192";
+					}
+					
+					drawName(ctx, playerUsername, nameColor, 0, -Img.whitePlayerPistol.height/2 * zoom, Player.list[i].images[Player.list[i].team].icon);
 				}			
 				if (Player.list[i].team != 0 && Player.list[i].chat && Player.list[i].chatDecay > 0 && !(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
 					if (Player.list[i].chat.length > 0){
@@ -3227,6 +3243,21 @@ function drawChat(){
 		ctx.fillStyle="#000"; //black
 		ctx.fillRect(0, canvasHeight - 205, 310, 205);
 		ctx.globalAlpha = 1;
+
+		//QuickChat keys
+		if (myPlayer.settings && myPlayer.team){
+			smallCenterShadow();
+			ctx.font = 'bold 15px Electrolize';
+			ctx.fillStyle="#FFFFFF";
+			ctx.textAlign="left";
+			fillText("QuickChat Keys", 315, 794);
+			ctx.font = '15px Electrolize';
+			drawImage(Img.quickChatKeys, 315, 800, Img.quickChatKeys.width * 0.5, Img.quickChatKeys.height * 0.5);
+			fillText(myPlayer.settings.quickChat[0].value, 345, 816);
+			fillText(myPlayer.settings.quickChat[3].value, 345, 840);
+			fillText(myPlayer.settings.quickChat[1].value, 345, 862);
+			fillText(myPlayer.settings.quickChat[2].value, 345, 885);
+		}
 	}
 }
 
@@ -4386,32 +4417,42 @@ Body.list = {};
 
 //Key Presses
 document.onkeydown = function(event){
-	if(event.keyCode === 87 && chatInput.style.display == "none"){ //W
+	var hitKeyCode = event.keyCode;
+	if (myPlayer.settings){
+		const keyHit = myPlayer.settings.keybindings.find(key => key.primary == event.keyCode || key.secondary == event.keyCode);
+		if (keyHit && keyHit.default){
+			hitKeyCode = keyHit.default;
+		}
+	}
+
+	log(hitKeyCode + " " + chatInput.style.display);
+	if(hitKeyCode === 87 && chatInput.style.display == "none"){ //W
 		if (!myPlayer.pressingW && !shop.active){
 			socket.emit('keyPress',{inputId:87,state:true});
 		}
 		myPlayer.pressingW = true;
 	}
-	else if(event.keyCode === 68 && chatInput.style.display == "none"){ //D
+	else if(hitKeyCode === 68 && chatInput.style.display == "none"){ //D
 		if (!myPlayer.pressingD && !shop.active){
 			socket.emit('keyPress',{inputId:68,state:true});
 		}
 		myPlayer.pressingD = true;
 	}
-	else if(event.keyCode === 83 && chatInput.style.display == "none"){ //S
+	else if(hitKeyCode === 83 && chatInput.style.display == "none"){ //S
 		if (!myPlayer.pressingS && !shop.active){
 			socket.emit('keyPress',{inputId:83,state:true});
 		}
 		myPlayer.pressingS = true;
 	}
-	else if(event.keyCode === 65 && chatInput.style.display == "none"){ //A
+	else if(hitKeyCode === 65 && chatInput.style.display == "none"){ //A
 		if (!myPlayer.pressingA && !shop.active){
 			socket.emit('keyPress',{inputId:65,state:true});
 		}
 		myPlayer.pressingA = true;
 	}		
-	else if((event.keyCode === 38 || event.keyCode === 80) && chatInput.style.display == "none"){ //Up
-		//if (event.keyCode === 38)
+	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up
+		console.log("INSIDE UP AND " + chatInput.style.display);
+		//if (hitKeyCode === 38)
 			//event.preventDefault();
 		if (myPlayer.team != 0){
 			myPlayer.pressingUp = true;
@@ -4426,8 +4467,8 @@ document.onkeydown = function(event){
 			getNextOrderedPlayer(spectatingPlayerId, true);
 		}
 	}
-	else if((event.keyCode === 39 || event.keyCode === 222) && chatInput.style.display == "none"){ //Right
-		//if (event.keyCode === 39)
+	else if(hitKeyCode === 39 && chatInput.style.display == "none"){ //Right
+		//if (hitKeyCode === 39)
 			//event.preventDefault();
 		if (myPlayer.team != 0){
 			myPlayer.pressingRight = true;
@@ -4449,8 +4490,8 @@ document.onkeydown = function(event){
 			}
 		}
 	}
-	else if((event.keyCode === 40 || event.keyCode === 186) && chatInput.style.display == "none"){ //Down
-		//if (event.keyCode === 40)
+	else if(hitKeyCode === 40 && chatInput.style.display == "none"){ //Down
+		//if (hitKeyCode === 40)
 			//event.preventDefault();
 		if (myPlayer.team != 0){
 			myPlayer.pressingDown = true;
@@ -4462,8 +4503,8 @@ document.onkeydown = function(event){
 			getNextOrderedPlayer(spectatingPlayerId, false);
 		}
 	}
-	else if((event.keyCode === 37 || event.keyCode === 76) && chatInput.style.display == "none"){ //Left
-		//if (event.keyCode === 37)
+	else if(hitKeyCode === 37 && chatInput.style.display == "none"){ //Left
+		//if (hitKeyCode === 37)
 			//event.preventDefault();
 		if (myPlayer.team != 0){
 			myPlayer.pressingLeft = true;
@@ -4484,8 +4525,41 @@ document.onkeydown = function(event){
 				spectatingPlayerId = "bagRed";
 			}
 		}	
-	}		
-	else if(event.keyCode === 32 && chatInput.style.display == "none" && !shop.active){ //Space
+	}	//Quick Chat
+	else if (event.keyCode == 38 && chatInput.style.display != "none" && chatInput.value == ""){ //Up 
+		const quickChat = myPlayer.settings.quickChat[0].value;
+		if (quickChat){
+			log(quickChat);
+			socket.emit('quickChat', quickChat);
+			hideChatBox();
+		}
+	}
+	else if (event.keyCode == 39 && chatInput.style.display != "none" && chatInput.value == ""){ //Right 
+		const quickChat = myPlayer.settings.quickChat[1].value;
+		if (quickChat){
+			log(quickChat);
+			socket.emit('quickChat', quickChat);
+			hideChatBox();
+		}
+	}
+	else if (event.keyCode == 40 && chatInput.style.display != "none" && chatInput.value == ""){ //Down
+		const quickChat = myPlayer.settings.quickChat[2].value;
+		if (quickChat){
+			log(quickChat);
+			socket.emit('quickChat', quickChat);
+			hideChatBox();
+		}
+	}
+	else if (event.keyCode == 37 && chatInput.style.display != "none" && chatInput.value == ""){ //Left
+		const quickChat = myPlayer.settings.quickChat[3].value;
+		if (quickChat){
+			log(quickChat);
+			socket.emit('quickChat', quickChat);
+			hideChatBox();
+		}
+	}
+
+	else if(hitKeyCode === 32 && chatInput.style.display == "none" && !shop.active){ //Space
 		socket.emit('keyPress',{inputId:32,state:true});
 		if ((myPlayer.pressingW || myPlayer.pressingD || myPlayer.pressingS || myPlayer.pressingA) && Player.list[myPlayer.id].boosting == 0 && !mute){
 			if (!Player.list[myPlayer.id].holdingBag && Player.list[myPlayer.id].energy >= 1){
@@ -4498,40 +4572,40 @@ document.onkeydown = function(event){
 		}
 
 	}		
-	else if(event.keyCode === 81 && chatInput.style.display == "none" && !shop.active){ //Q
+	else if(hitKeyCode === 81 && chatInput.style.display == "none" && !shop.active){ //Q
 		socket.emit('keyPress',{inputId:81,state:true});
 	}	
-	else if(event.keyCode === 69 && chatInput.style.display == "none" && !shop.active){ //E
+	else if(hitKeyCode === 69 && chatInput.style.display == "none" && !shop.active){ //E
 		socket.emit('keyPress',{inputId:69,state:true});
 	}	
-	else if(event.keyCode === 82 && chatInput.style.display == "none" && !shop.active){ //R
+	else if(hitKeyCode === 82 && chatInput.style.display == "none" && !shop.active){ //R
 		socket.emit('keyPress',{inputId:82,state:true});
 	}
-	else if(event.keyCode === 17 && chatInput.style.display == "none" && !shop.active){ //Ctrl
+	else if(hitKeyCode === 17 && chatInput.style.display == "none" && !shop.active){ //Ctrl
 		event.preventDefault();
 		socket.emit('keyPress',{inputId:82,state:true});
 	}
-	else if(event.keyCode === 16 && chatInput.style.display == "none"){ //Shift
+	else if(hitKeyCode === 16 && chatInput.style.display == "none"){ //Shift
 		myPlayer.pressingShift = true;
 			camOffSet = shiftCamOffSet;
 			diagCamOffSet = shiftDiagCamOffSet;
 			camMaxSpeed = 300;
 		socket.emit('keyPress',{inputId:16,state:true});
 	}
-	else if(event.keyCode === 49 && chatInput.style.display == "none"){ //1
+	else if(hitKeyCode === 49 && chatInput.style.display == "none"){ //1
 		socket.emit('keyPress',{inputId:49,state:true});
 	}	
-	else if(event.keyCode === 50 && chatInput.style.display == "none"){ //2
+	else if(hitKeyCode === 50 && chatInput.style.display == "none"){ //2
 		socket.emit('keyPress',{inputId:50,state:true});
 	}	
-	else if(event.keyCode === 51 && chatInput.style.display == "none"){ //3
+	else if(hitKeyCode === 51 && chatInput.style.display == "none"){ //3
 		socket.emit('keyPress',{inputId:51,state:true});
 	}	
-	else if(event.keyCode === 52 && chatInput.style.display == "none"){ //4
+	else if(hitKeyCode === 52 && chatInput.style.display == "none"){ //4
 		socket.emit('keyPress',{inputId:52,state:true});
 	}	
 	
-	else if(event.keyCode === 13){ //Enter
+	else if(hitKeyCode === 13){ //Enter
 		canvasDiv.style.backgroundColor="black";
 		if (chatInput.style.display == "inline"){
 			if (chatInput.value != "") {
@@ -4561,18 +4635,13 @@ document.onkeydown = function(event){
 					socket.emit('chat',[myPlayer.id, chatInput.value]);
 				}
 			}
-			chatInput.value = '';
-			chatInput.style.display = "none";
-			chatStale = 0;
+			hideChatBox();
 		}
 		else if (chatInput.style.display == "none" && myPlayer.name != ""){
-			chatInput.style.display = "inline";
-			chatInput.focus();
-			chatText.style.display = "inline-block"; 
-			chatStale = 0;
+			showChatBox();
 		}
 	}
-	else if(event.keyCode === 27){ //Esc
+	else if(hitKeyCode === 27){ //Esc
 		if (showStatOverlay == false){
 			chatInput.value = '';
 			chatInput.style.display = "none";
@@ -4583,7 +4652,7 @@ document.onkeydown = function(event){
 		}		
 	}
 	
-	else if(event.keyCode === 77 && chatInput.style.display == "none"){ //M //togglemute toggle mute
+	else if(hitKeyCode === 77 && chatInput.style.display == "none"){ //M //togglemute toggle mute
 		if (Player.list[myPlayer.id]){
 			if (mute){
 				mute = false;
@@ -4595,7 +4664,7 @@ document.onkeydown = function(event){
 			}
 		}
 	}
-	else if(event.keyCode === 71 && myPlayer.id && chatInput.style.display == "none"){ //"G" //G 
+	else if(hitKeyCode === 71 && myPlayer.id && chatInput.style.display == "none"){ //"G" //G 
 		if (Player.list[myPlayer.id]){
 			if (lowGraphicsMode == false){
 				lowGraphicsMode = true;
@@ -4610,7 +4679,7 @@ document.onkeydown = function(event){
 		}		
 	}
 	
-	else if(event.keyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing
+	else if(hitKeyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing
 	getNewTip();
 		console.log("TESTING BUTTON");
 		ctx.beginPath();
@@ -4626,35 +4695,46 @@ document.onkeydown = function(event){
 
 //Key Up
 document.onkeyup = function(event){
-	if(event.keyCode === 87){ //W
+	var hitKeyCode = event.keyCode;
+	if (myPlayer.settings){
+		const keyHit = myPlayer.settings.keybindings.find(key => key.primary == event.keyCode || key.secondary == event.keyCode);
+		if (keyHit && keyHit.default){
+			hitKeyCode = keyHit.default;
+		}
+		else {
+			return;
+		}
+	}
+
+	if(hitKeyCode === 87){ //W
 		myPlayer.pressingW = false;
 		socket.emit('keyPress',{inputId:87,state:false});
 	}
-	else if(event.keyCode === 68){ //D
+	else if(hitKeyCode === 68){ //D
 		myPlayer.pressingD = false;
 		socket.emit('keyPress',{inputId:68,state:false});
 	}
-	else if(event.keyCode === 83){ //S
+	else if(hitKeyCode === 83){ //S
 		myPlayer.pressingS = false;
 		socket.emit('keyPress',{inputId:83,state:false});
 	}
-	else if(event.keyCode === 65){ //A
+	else if(hitKeyCode === 65){ //A
 		myPlayer.pressingA = false;
 		socket.emit('keyPress',{inputId:65,state:false});
 	}		
-	else if((event.keyCode === 38 || event.keyCode === 80) && chatInput.style.display == "none"){ //Up
+	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up
 		myPlayer.pressingUp = false;
 		if (!shop.active){
-			socket.emit('keyPress',{inputId:38,state:false});
+			socket.emit('keyPress', {inputId:38,state:false});
 		}
 	}
-	else if((event.keyCode === 39 || event.keyCode === 222) && chatInput.style.display == "none"){ //Right
+	else if(hitKeyCode === 39 && chatInput.style.display == "none"){ //Right
 		myPlayer.pressingRight = false;
 		if (!shop.active){
 			socket.emit('keyPress',{inputId:39,state:false});
 		}
 	}
-	else if((event.keyCode === 40 || event.keyCode === 186) && chatInput.style.display == "none"){ //Down
+	else if(hitKeyCode === 40 && chatInput.style.display == "none"){ //Down
 		myPlayer.pressingDown = false;
 		if (shop.active){
 			shop.active = false;
@@ -4677,14 +4757,14 @@ document.onkeyup = function(event){
 			socket.emit('keyPress',{inputId:40,state:false});
 		}
 	}
-	else if((event.keyCode === 37 || event.keyCode === 76) && chatInput.style.display == "none"){ //Left
+	else if(hitKeyCode === 37 && chatInput.style.display == "none"){ //Left
 		myPlayer.pressingLeft = false;
 		if (!shop.active){
 			socket.emit('keyPress',{inputId:37,state:false});
 		}
 	}
 	
-	else if(event.keyCode === 16){ //Shift
+	else if(hitKeyCode === 16){ //Shift
 		myPlayer.pressingShift = false;
 			camOffSet = 300;
 			diagCamOffSet = 200;
@@ -4692,7 +4772,7 @@ document.onkeyup = function(event){
 		socket.emit('keyPress',{inputId:16,state:false});
 	}
 	
-	else if(event.keyCode === 84 && chatInput.style.display == "none" && myPlayer.name != ""){ //T
+	else if(hitKeyCode === 84 && chatInput.style.display == "none" && myPlayer.name != ""){ //T
 		chatInput.style.display = "inline";
 		chatInput.focus();
 		chatText.style.display = "inline-block";
@@ -4712,7 +4792,7 @@ var tips = [
 	"If you’re dying a lot, try sticking with your teammates and using them as meat shields.",
 	"Shooting enemies in the back does much more damage. Use cloak to get behind unsuspecting enemies.",
 	"If you are running away from a deadly situation, make an effort to stay away from the 8 angles the enemy can shoot.",
-	" Controlling powerups is key to victory. Be aware of the powerups’ spawn timers.",
+	" Controlling weapons and armor is key to victory. Be aware of the spawn timers for pickups.",
 	"Press [Enter] to use chat and taunt your foes!",
 	"Stand still and press [Space] to use cloak. Press [Space] while moving to boost.",
 	"Boosting into your opponents will cause heavy damage if you can hit them.",
@@ -4730,6 +4810,19 @@ function getNewTip(){
 
 
 //Handy handy functions
+function showChatBox() {
+	chatInput.style.display = "inline";
+	chatInput.focus();
+	chatText.style.display = "inline-block"; 
+	chatStale = 0;
+}
+function hideChatBox(){
+	chatInput.value = '';
+	chatInput.style.display = "none";
+	chatStale = 0;
+}
+
+
 function hexToDarkness(H) {
 	// Convert hex to RGB first
 	let r = 0, g = 0, b = 0;
@@ -4872,33 +4965,9 @@ function disconnect(){
 	socket.disconnect();
 }
 
-/*
 window.onbeforeunload = function(){
-	//alert("onbeforeunload");
-	if ((myPlayer.team == 1 || myPlayer.team == 2) && (!gameOver && !pregame)){
-		return "warn";
-	}
-	else {
-		disconnect();
-	}
+	return 'Are you sure you want to leave?';
 };
-
-window.onunload = function(){
-	//alert("unlaoded");
-	disconnect();
-};
-
-window.addEventListener("beforeunload", function (e) {
-	//alert("addEventListener");
-	if (myPlayer.team == 1 || myPlayer.team == 2 && (!gameOver && !pregame)){
-		return "warn";
-	}
-	else {
-		disconnect();
-	}
-});
-*/
-
 
 
 console.log("game.js loaded");

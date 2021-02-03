@@ -381,12 +381,7 @@ button#editUserConfirmButton {
 	margin: 2px;
 }
 
-button#editUserCancelButton {
-    background-color: #e41e41;
-	margin: 5px;
-}
-
-button#keybindingsCancelButton {
+button.cancelButton {
     background-color: #e41e41;
 	margin: 5px;
 }
@@ -538,6 +533,8 @@ div#playerLevel {
     font-weight: 600;
 }
 
+/*Progress Column Content*/
+
 .progressBar {
     height: 3px;
     display: inline-block;
@@ -575,15 +572,65 @@ div#ratingProgress{
     border-right: 1px solid black;
 }
 
-div#progressColumnContent{
+div#progressColumnContent {
     width: 90%;
     display: inline-block;
 }
 
-.progressBarText{
+.progressBarText { 
     font-size: 13px;
     text-align: right;
 }
+
+/*Prog List*/
+
+.progressListItem {
+    display: inline-block;
+    float: left;
+    width: 100%;
+}
+
+.progressListNumberDiv {
+    float:left;
+    width:30px;
+}
+
+#progressListNumber {
+    padding-top: 18px;
+    font-size: 35px;
+}
+
+.progressShopItem {
+    float: left;
+    width: 85%;
+    position: relative; 
+    left: 0; 
+    top: 0;
+    padding:1px;    
+    border: 1px solid transparent;
+}
+
+.progressShopItemClaimable {
+    float: left;
+    width: 85%;
+    position: relative; 
+    left: 0; 
+    top: 0;
+    padding:1px;    
+    border: 1px solid #fff700;
+}
+
+.progressShopItemLocked {
+    float: left;
+    width: 85%;
+    position: relative; 
+    left: 0; 
+    top: 0;
+    padding:1px;    
+    border: 1px solid transparent;
+    background-color: #6a6a6a;    
+}
+
 
 /*--------TEXT BOXES ----------*/
 .textBox {
@@ -851,13 +898,14 @@ table.keybindingConfigTable th {
 
 table.keybindingConfigTable td {
     text-align: center;
-    padding: 4px;
+    padding: 0px;
     color: white;
     width:25%;
     user-select: none;
+    border-bottom: 1px solid #404040;
 }
 
-table.keybindingConfigTable td.clickableCell:hover {
+table.keybindingConfigTable td.keybindingClickableCell:hover {
     text-align: center;
     padding: 4px;
     color: white;
@@ -866,8 +914,25 @@ table.keybindingConfigTable td.clickableCell:hover {
     cursor: pointer;
 }
 
+table.keybindingConfigTable td.keybindingUnclickableCell:hover {
+    text-align: center;
+    padding: 4px;
+}
+
+table.keybindingConfigTable td.keybindingUnclickableCell {
+    color:grey;
+    text-align: center;
+    padding: 4px;
+}
+
 .keybindingDefault {
     background-color: grey;
+}
+
+
+/*Display settings*/
+.settingsCheckbox{
+    margin-bottom: 10px;
 }
 
 

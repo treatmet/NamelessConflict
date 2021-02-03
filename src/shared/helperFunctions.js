@@ -295,8 +295,8 @@ global.getRankFromRating = function(rating){
 }
 
 global.getLevelFromExperience = function(experience){
-	var pointsBetweenThisLevelAndNext = 2500;
-	var additionalPointsBetweenLevels = 2500; //This never gets updated. It is whats added to pointsBetweenLevels, which increases the higher the level.
+	var pointsBetweenThisLevelAndNext = 1000;
+	var additionalPointsBetweenLevels = 1000; //This never gets updated. It is whats added to pointsBetweenLevels, which increases the higher the level.
 	var pointsForLevel = 0;
 	var experienceProgressInfo = {};
 

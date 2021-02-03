@@ -551,9 +551,9 @@ router.get('/getUserSettings', async function(req, res) {
 	console.log("/getUserShopList ENDPOINT");
 	logg("GETTING USER SHOP LIST FOR PAGE:" + req.query.cognitoSub + ". REQUEST FROM USER:" + authorizedUser.cognitoSub);
 	if (authorizedUser.cognitoSub == req.query.cognitoSub){
-		dataAccessFunctions.getUserSettings(authorizedUser.cognitoSub, function(msg, settings){
+		dataAccessFunctions.getUserSettings(authorizedUser.cognitoSub, function(result){
 			res.status(200);
-			res.send({msg:msg, result:settings});
+			res.send(result);
 		});
 
 	}
@@ -564,7 +564,27 @@ router.get('/getUserSettings', async function(req, res) {
 	}
 });
 
+router.post('/setUserSettings', async function (req, res) {
+	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	var authorizedUserCognitoSub = authorizedUser.cognitoSub;
+	var viewedProfileCognitoSub = req.body.viewedProfileCognitoSub;
 
+
+	
+	logg("/setUserSettings Endpoint for " + authorizedUserCognitoSub);
+	if (authorizedUserCognitoSub && authorizedUserCognitoSub == viewedProfileCognitoSub && typeof req.body.settings != 'undefined'){
+		const settings = JSON.parse(req.body.settings);
+		dataAccessFunctions.setUserSettings({cognitoSub:authorizedUserCognitoSub, settings:settings}, function(response){
+			res.status(200);
+			res.send(response);
+		});		
+	}
+	else {
+		response = {msg:"Failed to set settings. Either the user was not authorized, or insuficient data was provided."};
+		res.status(200);
+		res.send(response);
+	}
+});
 
 function getLeaderFromParty(partyData){
 	for (var p = 0; p < partyData.party.length; p++){
