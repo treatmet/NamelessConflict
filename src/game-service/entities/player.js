@@ -24,6 +24,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		pressingS:false,		
 		pressingA:false,
 		pressingShift:false,
+		speedX:0,
+		speedY:0,
 		shootingDir:1,
 		customizations: customizations,
 		settings: settings,
@@ -324,7 +326,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	/////MOVEMENT //////////
 		if (self.boosting <= 0){
 			if(self.pressingW && !self.pressingS && !self.pressingD && !self.pressingA){
-				self.speed = globalSpeed;
+				self.speed = playerMaxSpeed;
 				if (self.stagger > 0){self.speed = self.speed * staggerScale;}
 				if (self.cloakEngaged){self.speed = self.speed * cloakDrag;}
 				else if (self.holdingBag){self.speed = self.speed * bagDrag;}
@@ -336,7 +338,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				}
 			}
 			else if(self.pressingD && !self.pressingS && !self.pressingW && !self.pressingA){
-				self.speed = globalSpeed;
+				self.speed = playerMaxSpeed;
 				if (self.stagger > 0){self.speed = self.speed * staggerScale}
 				if (self.cloakEngaged){self.speed = self.speed * cloakDrag;}
 				else if (self.holdingBag){self.speed = self.speed * bagDrag;}
@@ -348,7 +350,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				}
 			}
 			else if(self.pressingS && !self.pressingA && !self.pressingW && !self.pressingD){
-				self.speed = globalSpeed;
+				self.speed = playerMaxSpeed;
 				if (self.stagger > 0){self.speed = self.speed * staggerScale}
 				if (self.cloakEngaged){self.speed = self.speed * cloakDrag;}
 				else if (self.holdingBag){self.speed = self.speed * bagDrag;}
@@ -360,7 +362,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				}
 			}
 			else if(self.pressingA && !self.pressingS && !self.pressingW && !self.pressingD){
-				self.speed = globalSpeed;
+				self.speed = playerMaxSpeed;
 				if (self.stagger > 0){self.speed = self.speed * staggerScale}
 				if (self.cloakEngaged){self.speed = self.speed * cloakDrag;}
 				else if (self.holdingBag){self.speed = self.speed * bagDrag;}
@@ -372,7 +374,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				}
 			}
 			else if(self.pressingW && self.pressingD){
-				self.speed = globalSpeed;
+				self.speed = playerMaxSpeed;
 				if (self.stagger > 0){self.speed = self.speed * staggerScale}
 				if (self.cloakEngaged){self.speed = self.speed * cloakDrag;}
 				else if (self.holdingBag){self.speed = self.speed * bagDrag;}
@@ -386,7 +388,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				}
 			}
 			else if(self.pressingD && self.pressingS){
-				self.speed = globalSpeed;
+				self.speed = playerMaxSpeed;
 				if (self.stagger > 0){self.speed = self.speed * staggerScale}
 				if (self.cloakEngaged){self.speed = self.speed * cloakDrag;}
 				else if (self.holdingBag){self.speed = self.speed * bagDrag;}
@@ -400,7 +402,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				}
 			}
 			else if(self.pressingA && self.pressingS){
-				self.speed = globalSpeed;
+				self.speed = playerMaxSpeed;
 				if (self.stagger > 0){self.speed = self.speed * staggerScale}
 				if (self.cloakEngaged){self.speed = self.speed * cloakDrag;}
 				else if (self.holdingBag){self.speed = self.speed * bagDrag;}
@@ -414,7 +416,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				}
 			}
 			else if(self.pressingW && self.pressingA){
-				self.speed = globalSpeed;
+				self.speed = playerMaxSpeed;
 				if (self.stagger > 0){self.speed = self.speed * staggerScale}
 				if (self.cloakEngaged){self.speed = self.speed * cloakDrag;}
 				else if (self.holdingBag){self.speed = self.speed * bagDrag;}
@@ -1727,29 +1729,19 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 					}
 				}
 				else if (data == "speed6" || data == "run6"){
-					globalSpeed = 6;
-					maxSpeed = 6;
-					speedMin = 6;
+					playerMaxSpeed = 6;
 				}
 				else if (data == "speed7" || data == "run7"){
-					globalSpeed = 7;
-					maxSpeed = 7;
-					speedMin = 7;
+					playerMaxSpeed = 7;
 				}
 				else if (data == "speed8" || data == "run8"){
-					globalSpeed = 8;
-					maxSpeed = 8;
-					speedMin = 8;
+					playerMaxSpeed = 8;
 				}
 				else if (data == "speed9" || data == "run9"){
-					globalSpeed = 9;
-					maxSpeed = 9;
-					speedMin = 9;
+					playerMaxSpeed = 9;
 				}
 				else if (data == "speed10" || data == "run10"){
-					globalSpeed = 10;
-					maxSpeed = 10;
-					speedMin = 10;
+					playerMaxSpeed = 10;
 				}
 				else if (data == "pc" || data == "pcmode"){
 					if (pcMode == 2){
