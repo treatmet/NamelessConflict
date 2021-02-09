@@ -128,67 +128,36 @@
 						<label id="updateInfo"></label>
 					</div>
 					<button id="editUserConfirmButton" class="RWButton" onclick="editUserConfirmButtonClick()">Confirm</button>
-					<button id="editUserCancelButton" class="RWButton" onclick="editUserCancelButtonClick()">Cancel</button>
+					<button id="editUserCancelButton" class="RWButton cancelButton" onclick="editUserCancelButtonClick()">Cancel</button>
 				</div>
 			</div>
 			<div class="settingsSection" id="updateKeybindingsSection">
-				<button id="editKeybindingsButton" class="RWButton" onclick="showKeybindingConfig()">⌨ Edit Keybindings</button>
+				<button id="editKeybindingsButton" class="RWButton" onclick="showKeybindingConfig()">⌨ Keybinding Settings</button>
 				<div id="keybindingsConfig" style="display:none">
-					<table class="keybindingConfigTable">
-						<tr>
-							<th>Action Name</th>
-							<th>Primary Key</th>
-							<th>Secondary Key</th>
-							<th></th>
-						</tr>
-						<tr>
-							<td id="moveUpActionName">Move Up</td>
-							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">W</td>
-							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
-							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
-						</tr>
-						<tr>
-							<td id="moveUpActionName">Move Right</td>
-							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">D</td>
-							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
-							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
-						</tr>
-						<tr>
-							<td id="moveUpActionName">Move Down</td>
-							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">S</td>
-							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
-							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
-						</tr>
-						<tr>
-							<td id="moveUpActionName">Move Left</td>
-							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">A</td>
-							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
-							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
-						</tr>
-						<tr>
-							<td id="moveUpActionName">Shoot Up</td>
-							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">Up Arrow</td>
-							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
-							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
-						</tr>
-						<tr>
-							<td id="moveUpActionName">Shoot Right</td>
-							<td class="clickableCell" id="moveUpPrimary" onclick="listenForBinding('moveUp', 1)">Right Arrow</td>
-							<td class="clickableCell" id="moveUpSecondary" onclick="listenForBinding('moveUp', 2)">[none]</td>
-							<td id="moveUpDefault"><button class="RWButton keybindingDefault" onclick="keybindingDefault('moveUp')">Default</button></td>
-						</tr>
+					<table id="keybindingConfigTable" class="keybindingConfigTable">
 					</table>
 
 					<div class='endFormButtons'>
 						<!-- <button id="keybindingsResetButton" class="RWButton keybindingDefault" onclick="keybindingsResetButtonClick()">Reset ALL to Default</button> -->
-						<button id="keybindingsConfirmButton" class="RWButton" onclick="keybindingsConfirmButtonClick()">Confirm</button>
-						<button id="keybindingsCancelButton" class="RWButton" onclick="keybindingsCancelButtonClick()">Cancel</button>
+						<button id="keybindingsConfirmButton" class="RWButton" onclick="settingsConfirmButtonClick()">Confirm</button>
+						<button id="keybindingsCancelButton" class="RWButton cancelButton" onclick="settingsCancelButtonClick()">Cancel</button>
 					</div>
 				</div>
 			</div>
+			<div class="settingsSection" id="updateDisplaySettingsSection">
+				<button id="displaySettingsButton" class="RWButton" onclick="showDisplaySettings()">☀ Display Settings</button>
+				<div id="displaySettingsContent" style="display:none">
+					<div class="settingsList" id="displaySettingsList">						
+					</div>
 
+					<div class='endFormButtons'>
+						<!-- <button id="keybindingsResetButton" class="RWButton keybindingDefault" onclick="keybindingsResetButtonClick()">Reset ALL to Default</button> -->
+						<button id="displayConfirmButton" class="RWButton" onclick="settingsConfirmButtonClick()">Confirm</button>
+						<button id="displayCancelButton" class="RWButton cancelButton" onclick="settingsCancelButtonClick()">Cancel</button>
+					</div>
+				</div>
+			</div>
 		</div>
-
 	</div>
 
 
@@ -214,7 +183,10 @@
 				</div>
 			</div>
 			<br>
-			<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+
+			<div id="progressListContent">
+				Progression unlockables coming soon!
+			</div>
 		</div>
 	</div>
 	<div id="customizationColumn" class="columnSection">

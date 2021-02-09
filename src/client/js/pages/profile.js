@@ -10,8 +10,11 @@ const playerCenterOffset = 4;
 var displayAnimation = "";
 var displayTeam = 1;
 var shopRefreshTimer = 10000000;
-
 var rouletteOn = false;
+
+var unsavedSettings = false;
+var currentSettings = {keybindings:[], display:[]};
+var originalSettings = {keybindings:[], display:[]};
 
 initializePage();
 function initializePage(){
@@ -156,14 +159,183 @@ function showSelfProfileOptions(){
             logg("GET SETTINGS RESPONSE:");
             console.log(data);
             if (data.result){
-
+                currentSettings.keybindings = hydrateKeybindingSettings(data.result.keybindings);
+                originalSettings.keybindings = JSON.parse(JSON.stringify(hydrateKeybindingSettings(data.result.keybindings))); //Extra step to avoid originalSettings being a reference to currentSettings
+                currentSettings.display = data.result.display;
+                originalSettings.display = JSON.parse(JSON.stringify(data.result.display)); //Extra step to avoid originalSettings being a reference to currentSettings
+                buildKeybindingsTable(currentSettings.keybindings);
+                buildDisplaySettings(currentSettings.display);
             }
-        });    
+        });      
+        buildProgressList();
     }
     else {
-        showUnset("invitePlayerButtons");			
+        show("invitePlayerButtons");			
     }
 }
+
+function buildProgressList(){
+
+}
+
+function buildDisplaySettings(displaySettings){
+    var settingsList = document.getElementById("displaySettingsList");
+    var HTML = "";
+
+    var forceTeamNameColors = displaySettings.find(setting => setting.key == "forceTeamNameColors");
+    if (forceTeamNameColors){
+        var settingValue = forceTeamNameColors.value == true ? 'checked' : '';
+        console.log(settingValue);
+        HTML += "<input type='checkbox' class='settingsCheckbox' id='forceTeamNameColors' name='forceTeamNameColors' value='forceTeamNameColors' onclick='forceTeamNameColorsClicked()' " + settingValue + "><label for='forceTeamNameColors'> Force Team Name Colors</label><br></br>";
+    }
+    
+    
+    settingsList.innerHTML = HTML;
+}
+
+function forceTeamNameColorsClicked(){
+    flagUnsavedSettings(true);
+    var forceTeamNameColors = currentSettings.display.find(setting => setting.key == "forceTeamNameColors");
+    if (forceTeamNameColors && document.getElementById("forceTeamNameColors")){
+        forceTeamNameColors.value = document.getElementById("forceTeamNameColors").checked;
+    }
+}
+
+function buildKeybindingsTable(data){
+    var table = document.getElementById("keybindingConfigTable");
+    var HTML = "";
+    HTML += "<tr><th>Action Name</th><th>Primary Key</th><th>Secondary Key</th><th></th></tr>"; //Header row
+    if (typeof table != 'undefined'){
+
+        for (var r = 0; r < data.length; r++){
+            var primaryClassName = "keybindingClickableCell";
+            if (data[r].action == "chat")
+                primaryClassName = "keybindingUnclickableCell";
+                
+            HTML += "<tr>";
+                HTML += "<td id='moveUpActionName'>" + data[r].actionName + "</td>";
+                HTML += "<td class='"+ primaryClassName + "' id='" + data[r].action + "Primary" + "' onclick='listenForBinding(\"" + data[r].action + "\", 1)'>" + keycodeToChar(data[r].primary) + "</td>";
+                HTML += "<td class='keybindingClickableCell' id='" + data[r].action + "Secondary" + "' onclick='listenForBinding(\"" + data[r].action + "\", 2)'>" + keycodeToChar(data[r].secondary) + "</td>";
+                HTML += "<td id='moveUpDefault'><button class='RWButton keybindingDefault' onclick='setDefault(\"" + data[r].action + "\")'>Default</button></td>";
+            HTML += "</tr>";
+        }
+        table.innerHTML = HTML;
+    }
+}
+
+function listenForBinding(action, slot){
+    if (action == "chat" && slot == 1)
+        return;
+    var currentKeyConfig = currentSettings.keybindings.find(key => key.action == action);
+    var slotName;
+    var div;
+    switch(slot){
+        case 1:
+            div = document.getElementById(action + "Primary");
+            slotName = "primary";
+            break;
+        case 2:
+            div = document.getElementById(action + "Secondary");
+            slotName = "secondary";
+            break;
+        default:
+            break;
+    }
+    if (div && currentKeyConfig){
+        setAllKeybindingCells(currentSettings);
+        listeningSlot = {action:action, slot:slotName};
+        div.style.backgroundColor = "#434377";
+        div.innerHTML = "Press key...";
+    }
+}
+
+
+var listeningSlot = false;
+document.onkeydown = function(event){
+    if(event.keyCode === 27){ //Esc
+        removeConfirmationMessage();
+        setAllKeybindingCells(currentSettings);
+	}
+    else if (listeningSlot){
+        var currentKeyConfig = currentSettings.keybindings.find(key => key.action == listeningSlot.action);
+        if (!currentKeyConfig)
+            return;
+        for(var c = 0; c < currentSettings.keybindings.length; c++){ //Remove keybinding if already mapped elsewhere
+            if (currentSettings.keybindings[c]["primary"] == event.keyCode)
+                currentSettings.keybindings[c]["primary"] = -1;
+            if (currentSettings.keybindings[c]["secondary"] == event.keyCode)
+                currentSettings.keybindings[c]["secondary"] = -1;
+        }
+        currentKeyConfig[listeningSlot.slot] = event.keyCode;
+        setAllKeybindingCells(currentSettings);
+        listeningSlot = false;
+        flagUnsavedSettings(true);
+    }
+}
+
+function flagUnsavedSettings(unsaved){
+    if (unsaved){
+        unsavedSettings = true;
+        window.onbeforeunload = function(){
+            return 'Are you sure you want to leave?';
+        };
+    }
+    else {
+        unsavedSettings = false;
+        window.onbeforeunload = null;    
+    }
+}
+
+function setAllKeybindingCells(settings){
+    var clickableCells = document.getElementsByClassName("keybindingClickableCell");
+    for (var c = 0; c < clickableCells.length; c++){
+        clickableCells[c].style.backgroundColor = 'unset';
+        var loopSlotName = "primary";
+        switch(clickableCells[c].id.indexOf("Primary")){
+            case -1:
+                loopSlotName = "Secondary";
+                var keyConfigLoop = settings.keybindings.find(key => key.action == clickableCells[c].id.substr(0, clickableCells[c].id.indexOf(loopSlotName)));
+                if (keyConfigLoop)
+                    clickableCells[c].innerHTML = keycodeToChar(keyConfigLoop[loopSlotName.toLocaleLowerCase()]);
+                break;
+            default:
+                loopSlotName = "Primary";
+                var keyConfigLoop = settings.keybindings.find(key => key.action == clickableCells[c].id.substr(0, clickableCells[c].id.indexOf(loopSlotName)));
+                if (keyConfigLoop)
+                    clickableCells[c].innerHTML = keycodeToChar(keyConfigLoop[loopSlotName.toLocaleLowerCase()]);
+                break;
+        }
+    }
+}
+
+function setOriginalSettings(){
+    currentSettings = JSON.parse(JSON.stringify(originalSettings)); //Extra step to avoid originalSettings being a reference to currentSettings  
+    buildDisplaySettings(currentSettings.display);
+    buildKeybindingsTable(currentSettings.keybindings);
+}
+
+function setDefault(action){
+    var keyConfig = currentSettings.keybindings.find(key => key.action == action);
+    if (keyConfig && keyConfig.default){
+        keyConfig.primary = keyConfig.default;
+        keyConfig.secondary = -1;
+        flagUnsavedSettings(true);
+    }
+    setAllKeybindingCells(currentSettings);
+}
+
+
+function keycodeToChar(code){    
+    var char = keycodeToCharRef[code];
+    if (!char)
+        char = "[none]";
+
+    return char;
+}
+
+function charToKeyCode(){
+}
+
 
 function drawProfileCustomizations(){
     drawCustomizations(currentCustomizations, 0, function(frames, id){
@@ -375,7 +547,8 @@ function showEditUserForm(){
 			document.getElementById('editUserFieldText').innerHTML = 'Update username:';
         }
         document.getElementById('editUserButton').style.display = 'none';
-		document.getElementById('statsTables').style.display = 'none';
+        hideSettingsSections();
+        show("updateUserForm");
         document.getElementById('updateUserTextBoxes').style.display = '';
     }
 }
@@ -445,24 +618,69 @@ function editUsernameButtonClick(){
 }
 
 function showKeybindingConfig(){
-    document.getElementById('keybindingsConfig').style.display = '';
-    document.getElementById('editKeybindingsButton').style.display = 'none';
+    hideSettingsSections();
+    show("updateKeybindingsSection");
+    showUnset('keybindingsConfig');
+    hide('editKeybindingsButton');
 }
 
-function keybindingsConfirmButtonClick(){
-
+function showDisplaySettings(){
+    hideSettingsSections();
+    show('displaySettingsContent');
+    show('updateDisplaySettingsSection');
+    hide("displaySettingsButton");
 }
+
+function hideSettingsSections(){
+    var sections = document.getElementsByClassName("settingsSection");
+    for (var s = 0; s < sections.length; s++){
+        hide(sections[s].id);
+    }
+}
+
+function showSettingsSections(){
+    var sections = document.getElementsByClassName("settingsSection");
+    for (var s = 0; s < sections.length; s++){
+        show(sections[s].id);
+    }
+}
+
+function settingsConfirmButtonClick(){
+    var unHydratedSettings = JSON.stringify(unHydrateSettings(currentSettings));
+    window.onbeforeunload = null;
+    if (unsavedSettings){
+        $.post('/setUserSettings', {viewedProfileCognitoSub:viewedProfileCognitoSub, settings:unHydratedSettings}, function(data,status){
+            log("/setUserSettings response:");
+            console.log(data);
+            if (data.result){
+                window.location.href = window.location.pathname;                    
+            }
+            else {
+                alert(data.msg);
+            }
+        });        
+    }
+    else {
+        window.location.href = window.location.pathname;
+    }
+}
+
+
+
 
 function keybindingsResetButtonClick(){
-
+    //Button removed for now
 }
 
-function listenForBinding(action, inputSlot){
-}
 
-function keybindingsCancelButtonClick(){
-    document.getElementById('keybindingsConfig').style.display = 'none';
-    document.getElementById('editKeybindingsButton').style.display = '';
+function settingsCancelButtonClick(){
+    setOriginalSettings();
+    show("editKeybindingsButton");
+    show("displaySettingsButton");
+    hide("keybindingsConfig");
+    hide("displaySettingsContent");
+    showSettingsSections();
+    flagUnsavedSettings(false);
 }
 
 function editPasswordButtonClick(){
@@ -482,14 +700,13 @@ function editUserCancelButtonClick(){
     resetEditUserElements();
     document.getElementById('editUserButton').style.display = '';
     document.getElementById('updateUserTextBoxes').style.display = 'none';
-    document.getElementById('statsTables').style.display = '';
 
     document.getElementById('newUsernameText').style.display = 'none';
     document.getElementById('editUsernameButton').style.display = '';
     document.getElementById('editPasswordButton').style.display = '';
     document.getElementById('newPasswordText').style.display = 'none';
     document.getElementById('newPasswordText2').style.display = 'none';
-
+    showSettingsSections();
 }
 
 function newUserNameClick(){	
@@ -1163,6 +1380,15 @@ setInterval(
             var shopIconRoulettes = document.getElementsByClassName("shopIconRoulette");
             var shopIconCanvases = document.getElementsByClassName("shopIconCanvas");
 
+            var unlockable = document.getElementById("lightningBoost");
+
+            // if (unlockable.style.border == "1px solid white"){
+            //     unlockable.style.border = "#fcff9e 1px solid";
+            // }
+            // else {
+            //     unlockable.style.border = "1px solid white";
+            // }
+
             if (rouletteOn){
                 for (var c in shopIconCanvases){
                     if (shopIconCanvases[c].style)
@@ -1213,15 +1439,11 @@ setInterval(
 	75 //Millisecond tick length
 );
 
-document.onkeydown = function(event){
-    if(event.keyCode === 27){ //Esc
-        removeConfirmationMessage();
-	}
-}
+
 
 //userSettings example
 /*
-[
+{
     keybindings:[
         {
             action:"moveUp",
@@ -1234,10 +1456,10 @@ document.onkeydown = function(event){
             secondary:-1
         }
     ],
-    misc:[
+    display:[
         standardEnemyNameColors: false
     ]
-]
+}
 */
 
 

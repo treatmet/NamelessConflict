@@ -1,28 +1,118 @@
-[
-	"noneHat",
-	"greenCapHat",
-	"baldHair",
-	"crewHair",
-	"brownHairColor",
-	"darkBrownHairColor",
-	"whiteSkinColor3",
-	"blackSkinColor4",
-	"blackSkinColor1",
-	"noSleevesShirtType",
-	"defaultShirtPattern",
-	"whiteShirtColor6",
-	"whiteShirtColor3",
-	"blackShirtColor6",
-	"blackShirtColor3",
-	"bluePantsColor",
-	"brownPantsColor",
-	"blackShoesColor",
-	"brownShoesColor",
-	"standardBoost",
-	"blackName",
-	"noneIcon",
-	"rankIcon",
-	"beakerIcon",
-	"smileyIcon",
-	"whiteSkinColor2"
-]
+{
+	"keybindings": [
+		{		
+			"action": "moveUp",
+			"primary": 87,
+			"secondary": -1
+		},
+		{
+			"action": "moveRight",
+			"primary": 68,
+			"secondary": -1
+		},
+		{
+			"action": "moveDown",
+			"primary": 83,
+			"secondary": -1
+		},
+		{
+			"action": "moveLeft",
+			"primary": 65,
+			"secondary": -1
+		},
+		{
+			"action": "shootUp",
+			"primary": 38,
+			"secondary": -1
+		},
+		{
+			"action": "shootRight",
+			"primary": 39,
+			"secondary": -1
+		},
+		{
+			"action": "shootDown",
+			"primary": 40,
+			"secondary": -1
+		},
+		{
+			"action": "shootLeft",
+			"primary": 37,
+			"secondary": -1
+		},
+		{
+			"action": "action",
+			"primary": 32,
+			"secondary": -1
+		},
+		{
+			"action": "reload",
+			"primary": 82,
+			"secondary": -1
+		},
+		{
+			"action": "look",
+			"primary": 16,
+			"secondary": -1
+		},
+		{
+			"action": "swapLeft",
+			"primary": 81,
+			"secondary": -1
+		},
+		{
+			"action": "swapRight",
+			"primary": 69,
+			"secondary": -1
+		},
+		{
+			"action": "weapon1",
+			"primary": 49,
+			"secondary": -1
+		},
+		{
+			"action": "weapon2",
+			"primary": 50,
+			"secondary": -1
+		},
+		{
+			"action": "weapon3",
+			"primary": 51,
+			"secondary": -1
+		},
+		{
+			"action": "weapon4",
+			"primary": 52,
+			"secondary": -1
+		},
+		{
+			"action": "chat",
+			"primary": 13,
+			"secondary": -1
+		}
+	],
+	"display": [
+		{
+			"key": "forceTeamNameColors",
+			"value": false
+		}
+	],
+	"quickChat": [
+		{
+			"key": 38,
+			"value": "Let’s attack now!"
+		},
+		{
+			"key": 39,
+			"value": "Follow me!"
+		},
+		{
+			"key": 40,
+			"value": "Enemy in our base!"
+		},
+		{
+			"key": 37,
+			"value": "I’m defending"
+		}
+	]
+}

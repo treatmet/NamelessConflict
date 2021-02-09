@@ -9,7 +9,6 @@ const defaultCustomizationOptions = fullShopList.map(item => item.id);
 
 const defaultSettings = require("./defaultSettings.json");
 
-
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
 var getUserFromDB = function(cognitoSub,cb){
 	//log("searching for user: " + cognitoSub);
@@ -247,7 +246,7 @@ var getUserCustomizations = function(cognitoSub,cb){
 			var customizations = res[0].customizations;
 			if (typeof customizations === 'undefined' || typeof res[0].customizations[1] === 'undefined'){
 				logg("ERROR - COULD NOT GET CUSTOMIZATIONS FOR " + cognitoSub);
-				customizations = JSON.parse(JSON.stringify(defaultCustomizations)); //clone
+				customizations = JSON.parse(JSON.stringify(defaultCustomizations)); //clone //copy array //clone array //copy object //clone object 
 				setUserCustomizations(cognitoSub, defaultCustomizations);
 			}
 			for (var t in customizations){
@@ -504,39 +503,28 @@ var getUserSettings = function(cognitoSub,cb){
 		if (res && res[0]){
 			var settings = res[0].settings;
 
-			if (typeof settings === 'undefined'){				
-				//set default settings
+			if (typeof settings === 'undefined'){								
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {settings:defaultSettings}, async function(err, obj){
+				});
+				cb({msg:"Set default user settings", result:defaultSettings});
 			}
 			else {
-
+				cb({msg:"Successfully retrieved user settings!", result:settings});
 			}
-			if (shopList.filter(item => item != "unlock").length >= maxShopSlotsUnlocked && shopList.filter(item => item == "unlock").length > 0){
-				shopList = shopList.filter(item => item != "unlock");
-				updateUserObj.shopList = shopList;
-			}
-			shopList.splice(maxShopSlotsUnlocked, 10); //Just makes sure list is shorter than the max allowed shop list
-
-			if (Object.keys(updateUserObj).length > 0){
-				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, updateUserObj, async function(err, obj){
-				});
-			}
-
-			// shopList[0] = "bitcoinIcon";
-			// shopList[1] = "alertIcon";
-			// shopList[2] = "birdIcon";
-			// shopList[3] = "bulbIcon";
-			// shopList[4] = "cloverIcon";
-
-			var clientShopList = transformToClientShop(shopList, nextMidnight);
-
-			console.log("RETURNING SHOP LIST FOR " + cognitoSub);
-			console.log(clientShopList);
-			cb({msg:"Successfully authenticated user, and got shop list", result:clientShopList});
 		}
 		else {
-			console.log("ERROR - COULD NOT FIND USER WHEN GETTING SHOP LIST FOR " + cognitoSub);
-			cb({msg: "Failed to get shopList for [" + cognitoSub + "] from DB", result:transformToClientShop([], new Date())});
+			console.log("ERROR - COULD NOT FIND USER WHEN GETTING SETTINGS FOR " + cognitoSub);
+			cb({msg: "Failed to get settings for [" + cognitoSub + "] from DB", result:defaultSettings});
 		}
+	});
+}
+
+var setUserSettings = function(request, cb){
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: request.cognitoSub}, {settings:request.settings}, async function(err, obj){
+		if (err)
+			cb({msg:"Error while updating settings", result:false});
+		else
+			cb({msg:"Successfully updated settings", result:true});
 	});
 }
 
@@ -1161,8 +1149,11 @@ module.exports.setUserCustomization = setUserCustomization;
 module.exports.setUserCustomizations = setUserCustomizations;
 module.exports.getUserCustomizations = getUserCustomizations;
 module.exports.getUserCustomizationOptions = getUserCustomizationOptions;
+module.exports.getUserSettings = getUserSettings;
+module.exports.setUserSettings = setUserSettings;
 module.exports.defaultCustomizations = defaultCustomizations;
 module.exports.getShopItem = getShopItem;
+module.exports.getUserShopList = getUserShopList;
 module.exports.getUserShopList = getUserShopList;
 module.exports.buyItem = buyItem;
 module.exports.setPartyIdIfEmpty = setPartyIdIfEmpty;

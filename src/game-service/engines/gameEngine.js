@@ -1043,13 +1043,21 @@ setInterval(
 		
 		for (var i in SOCKET_LIST){			
 			var socket = SOCKET_LIST[i];			
-			socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, updateEffectList, updateMisc);
+			const teamFilteredUpdateEffectList = updateEffectList.filter(function(effect){
+				if (effect.type != 7){
+					return effect;
+				}
+				else if (effect.type == 7 && (!effect.team || (player.getPlayerById(socket.id) && effect.team == player.getPlayerById(socket.id).team))){
+					return effect;
+				}
+			});
+			socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
 		}
 		updatePlayerList = [];
 		updateThugList = [];
 		updatePickupList = [];
 		updateNotificationList = [];
-		updateEffectList = []; 	//1=shot, 2=blood, 3=boost, 4=smash, 5=body, 6=notification?
+		updateEffectList = []; 	//1=shot, 2=blood, 3=boost, 4=smash, 5=body, 6=notification?, 7=chat
 		updateMisc = {};		
 		
 		checkForGameOver();
@@ -1137,6 +1145,7 @@ var sendFullGameStatus = function(socketId){
 			reloading:playerList[a].reloading,
 			images:{ 1:{}, 2:{} },
 			customizations:playerList[a].customizations,			
+			settings:playerList[a].settings,			
 			
 			cash:playerList[a].cash,
 			cashEarnedThisGame:playerList[a].cashEarnedThisGame,
