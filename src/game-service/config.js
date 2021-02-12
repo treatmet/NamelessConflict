@@ -59,9 +59,9 @@ global.shop = {
 
 //Player config
 global.startingCash = 0;
-global.boostAmount = 23;
-global.boostDecay = 1.9;
-global.playerMaxSpeed = 6;
+global.boostAmount = 18;
+global.boostDecay = 1;
+global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
 global.rechargeDelayTime = 150; //Double for breaking under zero energy
 global.healDelayTime = 300;
@@ -97,6 +97,7 @@ global.damageScale = 1;
 global.SGRange = 310;
 global.SGCloseRangeDamageScale = 4;
 global.SGPushSpeed = 12;
+global.MGPushSpeed = 2;
 
 global.DPClipSize = 20;
 global.MGClipSize = 45;
