@@ -1010,6 +1010,8 @@ for (var i=0; i<chatText.childNodes[i].length; i++){
 		chatText.childNodes[i].remove();
 }
 chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to R-Wars!</div>';
+//chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome! Teams will be auto balanced next game.</div>';
+
 
 socket.on('addToChat', function(data, playerId){ //Player chat
 var color = "#FFFFFF";
@@ -1873,7 +1875,7 @@ function drawBodies(){
 		var team = 1;
 		if (Player.list[body.playerId]){
 			team = Player.list[body.playerId].team;
-			if (Player.list[body.playerId].images[team].body1)
+			if (Player.list[body.playerId].images[team] && Player.list[body.playerId].images[team].body1)
 				img = Player.list[body.playerId].images[team].body1;
 		}
 		else if (Thug.list[body.playerId]){
@@ -1975,7 +1977,7 @@ function drawWallBodies(){
 			var team = 1;
 			if (Player.list[body.playerId]){
 				team = Player.list[body.playerId].team;
-				if (Player.list[body.playerId].images[team].body1)
+				if (team && Player.list[body.playerId].images && Player.list[body.playerId].images[team] && Player.list[body.playerId].images[team].bodyWall)
 					img = Player.list[body.playerId].images[team].bodyWall;
 			}
 			else if (Thug.list[body.playerId]){
@@ -2339,7 +2341,7 @@ function drawTorsos(){
 									
 					//draw bag on players back
 					if (Player.list[i].holdingBag == true){
-						var bagImage = team == 1 ? Img.bagRed : Img.bagBlue;
+						var bagImage = team == 1 ? Img.bagBlue : Img.bagRed;
 						ctx.save();
                         ctx.translate(5 * zoom,5 * zoom);
 						ctx.rotate(315*Math.PI/180);
@@ -2372,21 +2374,21 @@ function drawTorsos(){
 								img = Player.list[i].images[team].DPReloading1;
 						}
 						else if (Player.list[i].weapon == 3){
-							if (Player.list[i].reloading < 22)
+							if (Player.list[i].reloading < 30)
 								img = Player.list[i].images[team].MGReloading4;
-							else if (Player.list[i].reloading < 30)
+							else if (Player.list[i].reloading < 37)
 								img = Player.list[i].images[team].MGReloading5;
-							else if (Player.list[i].reloading < 48)
+							else if (Player.list[i].reloading < 54)
 								img = Player.list[i].images[team].MGReloading4;
-							else if (Player.list[i].reloading < 60)
+							else if (Player.list[i].reloading < 65)
 								img = Player.list[i].images[team].MGReloading1;
-							else if (Player.list[i].reloading <= 72)
+							else if (Player.list[i].reloading <= 76)
 								img = Player.list[i].images[team].MGReloading2;
-							else if (Player.list[i].reloading < 90)
+							else if (Player.list[i].reloading < 93)
 								img = Player.list[i].images[team].MGReloading3;
-							else if (Player.list[i].reloading < 102)
+							else if (Player.list[i].reloading < 104)
 								img = Player.list[i].images[team].MGReloading2;
-							else if (Player.list[i].reloading <= 114)
+							else if (Player.list[i].reloading <= 115)
 								img = Player.list[i].images[team].MGReloading1;
 						}
 						if (Player.list[i].weapon == 4){
@@ -2634,7 +2636,10 @@ function drawBoosts(){
 	for (var i in Player.list) {
 		if (BoostBlast.list[Player.list[i].id]){
             var blast = BoostBlast.list[Player.list[i].id];
-            var blastDir = Player.list[i].walkingDir;
+            var blastDir = blast.dir;
+			if (!blastDir){
+				blastDir = Player.list[i].walkingDir;
+			}
 
 			var imgblast = Player.list[i].images[1].boost;
 			if (Player.list[i].team == 2){imgblast = Player.list[i].images[2].boost;}			
@@ -3077,9 +3082,9 @@ function drawInformation(){
 		if (showStatOverlay == true){
 			fillText("Health:" + Player.list[myPlayer.id].health, 5, 35); //debug
 			fillText(version + "  |  ping:" + ping, 5, 15);
-			// fillText("PressingW: " + myPlayer.pressingW, 5, 55); //debug
-			// fillText("PressingA: " + myPlayer.pressingA, 5, 75); //debug
-			// fillText("PressingS: " + myPlayer.pressingS, 5, 95); //debug
+			fillText("boosting: " + Player.list[myPlayer.id].boosting, 5, 55); //debug info
+			fillText("speedX: " + Player.list[myPlayer.id].speedX, 5, 75); //debug
+			fillText("speedY: " + Player.list[myPlayer.id].speedY, 5, 95); //debug
 			// fillText("PressingD: " + myPlayer.pressingD, 5, 115); //debug
 
 		}
@@ -4288,12 +4293,16 @@ var BoostBlast = function(id){
 	var self = {
 		id:id,
 		alpha:1.5,
+		dir:0,
 		
 		
 		width:Math.floor(10), //width:100, full size
 		height:Math.floor(10), //height:100, full size
 	}	
-	BoostBlast.list[self.id] = self;		
+	if (Player.list[id] && Player.list[id].walkingDir){
+		self.dir = Player.list[id].walkingDir;
+	}
+	BoostBlast.list[id] = self;		
 }
 BoostBlast.list = [];
 
