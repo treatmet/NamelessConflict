@@ -1010,6 +1010,8 @@ for (var i=0; i<chatText.childNodes[i].length; i++){
 		chatText.childNodes[i].remove();
 }
 chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to R-Wars!</div>';
+//chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome! Teams will be auto balanced next game.</div>';
+
 
 socket.on('addToChat', function(data, playerId){ //Player chat
 var color = "#FFFFFF";
