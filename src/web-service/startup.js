@@ -126,12 +126,17 @@ function crash(){
 
 //-----------------------PROCESS REGISTRATION-----------------------------------
 
+//High-level steps
+//1. Get Self Instance Id
+//2. 
+
+
 function getInstanceIdAndAddProcessesToLoadBalancer(){
 	logg("BEGIN EB PROCESS REGISTRATION");
 	const request = require('request-promise');
 	request('http://169.254.169.254/latest/meta-data/instance-id', function (error, response, body) {
 		if (!error && response.statusCode === 200 && response.body) {
-			var instanceId = response.body;
+			instanceId = response.body;
 			addGameServerToLoadBalancer(instanceId);
 		}
 		else {
@@ -321,7 +326,7 @@ function upsertProcessToGameServerTargetGroup(gameTargetGroupArns, instanceId, p
               //Error logging handled in function
             }
             else {
-              log("Successfully Created Web Server Target Group!");
+              log("Successfully Created Game Server Target Group!");
               logObj("TargetGroupArn: " + createTargetGroupResult.TargetGroups[0].TargetGroupArn);    
               registerEC2ToTargetGroup(createTargetGroupResult.TargetGroups[0].TargetGroupArn, instanceId, function(registerResponse){
                 if (!registerResponse){

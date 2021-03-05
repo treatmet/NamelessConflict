@@ -119,10 +119,10 @@ function setPcModeAndIsLocalElements(data){
 		}
 		
 		if (pcMode == 2){
-			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>RaceWar 2066</a>";
+			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>SocketShot</a>";
 		}
 		else {
-			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>RaceWar 2066</a>";
+			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>SocketShot</a>";
 		}
 	}
 }

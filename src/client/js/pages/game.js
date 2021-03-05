@@ -715,7 +715,7 @@ sfxMenuMove.volume(.5);
 var sfxWhoosh = new Howl({src: ['/client/sfx/whoosh.mp3']});
 sfxWhoosh.volume(.25);
 var sfxPunch = new Howl({src: ['/client/sfx/punch.mp3']});
-var sfxCharge = new Howl({src: ['/client/sfx/recharge-plus-halo.mp3']});
+var sfxCharge = new Howl({src: ['/client/sfx/recharge-high-pitch.mp3']});
 sfxCharge.volume(.3);
 sfxCharge.on('fade', function(){
 	sfxCharge.stop();
@@ -985,6 +985,7 @@ socket.on('gameStart', function(){
 	drawMapElementsOnMapCanvas();
 	drawBlocksOnBlockCanvas();
 	resetPostGameProgressVars();
+	clearChat();
 
 
 	/*
@@ -1009,9 +1010,8 @@ function showCanvas() {
 for (var i=0; i<chatText.childNodes[i].length; i++){
 		chatText.childNodes[i].remove();
 }
-chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to R-Wars!</div>';
+chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to SocketShot!</div>';
 //chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome! Teams will be auto balanced next game.</div>';
-
 
 socket.on('addToChat', function(data, playerId){ //Player chat
 var color = "#FFFFFF";
@@ -1023,7 +1023,11 @@ var color = "#FFFFFF";
 			color = "#93b3d8";
 		}
 	}
-	addToChat(data, color);
+	var bold = false;
+	if (playerId == 0)
+		bold = true;
+		
+	addToChat(data, color, bold);
 });
 
 socket.on('addMessageToChat', function(text){ //Server message
@@ -1031,13 +1035,25 @@ socket.on('addMessageToChat', function(text){ //Server message
 });
 
 var maxChatMessages = 9;
-function addToChat(data, color){
+function addToChat(data, color, bold = false){
 	var nodes = chatText.childNodes.length;
 	for (var i=0; i<nodes - (maxChatMessages - 1); i++){
 		chatText.childNodes[i].remove();
 	}
-	chatText.innerHTML = chatText.innerHTML + '<div class="chatElement" style="color:' + color + ';">' + data + '</div>';
+
+	var boldStyle = "";
+	if (bold)
+		boldStyle = " font-weight:600;";
+
+	chatText.innerHTML = chatText.innerHTML + '<div class="chatElement" style="color:' + color + ';' + boldStyle + '">' + data + '</div>';
 	chatStale = 0;			
+}
+
+function clearChat(){
+	var chatLength = chatText.childNodes.length;
+	for (var i=chatLength-1; i>=0; i--){
+		chatText.childNodes[i].remove();
+	}
 }
 
 socket.on('evalAnswer', function(data){
@@ -1120,14 +1136,10 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		if (playerDataPack[i].property == "customizations"){	
 			drawCustomizations(Player.list[playerDataPack[i].id].customizations, playerDataPack[i].id, function(playerAnimations, id){
 				if (Player.list[id]){
-					console.log("playerAnimations update " + Player.list[id].name);
-					console.log(playerAnimations);
 					Player.list[id].images = playerAnimations;
 					for (var t in teams){
 						getUserIconImg(Player.list[id].customizations[teams[t]].icon, teams[t], function(iconImg, team){
 							Player.list[id].images[team].icon = iconImg;
-							console.log("SINGLE UPDATE PLAYER");
-							console.log(Player.list[id]);
 						});
 					}
 				}
@@ -1357,21 +1369,37 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		}		
 	}
 	if (miscPack.gameOver){
-		gameOver = miscPack.gameOver;
-		if (miscPack.gameOver == true){
+		gameOver = miscPack.gameOver.gameIsOver;
+		if (miscPack.gameOver.gameIsOver == true){
 			endGame();
-			document.getElementById("voteMenu").style.display = '';
+			showUnset("voteMenu");
+
+			console.log("miscPack.gameOver.voteMap");
+			console.log(miscPack.gameOver.voteMap);
+			console.log("miscPack.gameOver.voteGametype");
+			console.log(miscPack.gameOver.voteGametype);
+			if (miscPack.gameOver.voteMap)
+				showUnset("voteMapTable");
+			else
+				hide("voteMapTable");
+			if (miscPack.gameOver.voteGametype)
+				showUnset("voteGametypeTable");
+			else {
+				console.log("HIDING voteGametypeTable");
+				hide("voteGametypeTable");
+			}
+
 			document.getElementById("voteCTF").disabled = false;
 			document.getElementById("voteDeathmatch").disabled = false;	
 			document.getElementById("voteLongest").disabled = false;
 			document.getElementById("voteCrik").disabled = false;
 			document.getElementById("voteThePit").disabled = false;				
 		}
-		else if (miscPack.gameOver == false){
+		else if (miscPack.gameOver.gameIsOver == false){
 			document.getElementById("voteMenu").style.display = 'none';
 		}
 		if (debugUpdates){
-			logg("GameOver:" + miscPack.gameOver);
+			logg("GameOver:" + miscPack.gameOver.gameIsOver);
 		}
 	}
 	if (miscPack.nextGameTimer){
@@ -1417,8 +1445,6 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 				playerPack[i].settings.display = playerPack[i].settings.display;
 			}
 			myPlayer = playerPack[i];
-			console.log("Full game update - myPlayer");
-			console.log(myPlayer);
 		}
 		if (Player.list[playerPack[i].id]){ //It's fine that this overwrites client-side values like legSwing since this only happens on respawn or gamestart where those values should be reset anyway
 			Player.list[playerPack[i].id] = playerPack[i];
@@ -1434,8 +1460,6 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 				for (var t in teams){
 					getUserIconImg(Player.list[id].customizations[teams[t]].icon, teams[t], function(iconImg, team){
 						Player.list[id].images[team].icon = iconImg;
-						console.log("SINGLE UPDATE PLAYER");
-						console.log(Player.list[id]);
 					});
 				}
 			}
@@ -1496,7 +1520,7 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 		scoreToWin = miscPack.variant.scoreToWin;
 		timeLimit = miscPack.variant.timeLimit;
 	}
-	gameOver = miscPack.gameOver;
+	gameOver = miscPack.gameOver.gameIsOver;
 	pregame = miscPack.pregame;
 	if (miscPack.mapWidth){
 		mapWidth = miscPack.mapWidth;
@@ -3296,19 +3320,27 @@ function drawTopScoreboard(){
 		
 		if (clockHeight >= 30){clockHeight -= 5;}
 		if (clockHeight < 30){clockHeight = 30;}
-		
-		if (timeLimit == false && scoreToWin > 0){
+
+		if (timeLimit == false){
 			ctx.font = 16 + 'px Electrolize';	
-			strokeAndFillText("First to " + scoreToWin, canvasWidth/2, 23);
+			var smallText = getGametypeSymbol();
+			if (scoreToWin > 0){
+				smallText = "First to " + scoreToWin + getGametypeSymbol();
+			}
+			strokeAndFillText(smallText, canvasWidth/2, 23);
 		}
 		else if (timeLimit == true){
 			ctx.font = 16 + 'px Electrolize';
 			if (gameOver == false && secondsLeft == 0 && minutesLeft == 0){
 				ctx.fillStyle="#FF0000";
-				strokeAndFillText("SD", canvasWidth/2, 53);
+				strokeAndFillText("SD" + getGametypeSymbol(), canvasWidth/2, 53);
 			}
-			else if (scoreToWin > 0){
-				strokeAndFillText("First to " + scoreToWin, canvasWidth/2, 53);
+			else {
+				var smallText = getGametypeSymbol();
+				if (scoreToWin > 0){
+					smallText = "First to " + scoreToWin + getGametypeSymbol();
+				}
+				strokeAndFillText(smallText, canvasWidth/2, 53);
 			}
 			if (parseInt(minutesLeft)*60 + parseInt(secondsLeft) <= 60 && timeLimit){
 				ctx.fillStyle="#FF0000";
@@ -3346,6 +3378,14 @@ function drawTopScoreboard(){
 		blackScoreY = 445;
 	}
 	strokeAndFillText(blackScore,blackScoreX,blackScoreY);
+}
+
+function getGametypeSymbol(){
+	var symbol = "⊕";
+	if (gametype == "ctf"){
+		symbol = "🖵";
+	}
+	return ""; //No symbol for now
 }
 
 var postGameReady = false;
@@ -3798,6 +3838,14 @@ function getFullRankName(rank){
 	}
 }
 
+function getGameStartText(){
+	var text = "DEATHMATCH!";
+	if (gametype == "ctf"){
+		text = "CAPTURE THE BAG!"
+	}
+	return text;
+}
+
 //GAME STATUS UPDATES: END GAME/PREGAME/SUDDEN DEATH/TEAM WINS
 function drawGameEventText(){
 	if (pregame == true && showStatOverlay == false){
@@ -3819,7 +3867,7 @@ function drawGameEventText(){
 			ctx.lineWidth=16;
 			ctx.fillStyle="#FFFFFF";
 			ctx.globalAlpha = gameStartAlpha;
-			strokeAndFillText("MATCH START!",canvasWidth/2,canvasHeight/2);
+			strokeAndFillText(getGameStartText(),canvasWidth/2,canvasHeight/2);
 			if (gameStartAlpha > 0){gameStartAlpha-=.01;}
 			ctx.globalAlpha = 1;	
 		} else {gameStartAlpha = 0;}
@@ -4214,7 +4262,6 @@ socket.on('endGameProgressResults', function(endGameProgressResults){
 	postGameProgressInfo.expCeiling = endGameProgressResults.experienceCeiling;
 	postGameProgressInfo.expPercentageToNext = getProgressBarPercentage(endGameProgressResults.originalExp, endGameProgressResults.experienceFloor, endGameProgressResults.experienceCeiling);
 	//postGameProgressInfo.expDifPercentage = getProgressBarPercentage(Math.abs(endGameProgressResults.expDif), endGameProgressResults.experienceFloor, endGameProgressResults.experienceCeiling);
-	console.log(postGameProgressInfo);
 	postGameReady = true;
 });
 
@@ -4434,7 +4481,6 @@ document.onkeydown = function(event){
 		}
 	}
 
-	log(hitKeyCode + " " + chatInput.style.display);
 	if(hitKeyCode === 87 && chatInput.style.display == "none"){ //W
 		if (!myPlayer.pressingW && !shop.active){
 			socket.emit('keyPress',{inputId:87,state:true});
@@ -4460,7 +4506,6 @@ document.onkeydown = function(event){
 		myPlayer.pressingA = true;
 	}		
 	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up
-		console.log("INSIDE UP AND " + chatInput.style.display);
 		//if (hitKeyCode === 38)
 			//event.preventDefault();
 		if (myPlayer.team != 0){
@@ -4690,7 +4735,6 @@ document.onkeydown = function(event){
 	
 	else if(hitKeyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing
 	getNewTip();
-		console.log("TESTING BUTTON");
 		ctx.beginPath();
 		if (Player.list[myPlayer.id]){
 
@@ -4975,7 +5019,9 @@ function disconnect(){
 }
 
 window.onbeforeunload = function(){
-	return 'Are you sure you want to leave?';
+	if (!gameOver)
+		return 'Are you sure you want to leave?'; //unsaved changes
+	return;
 };
 
 

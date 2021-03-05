@@ -1036,7 +1036,7 @@ var dbGameServerUpdate = function() {
 	}
 	
 	console.log(currentUsers);
-	var obj = {serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:currentUsers, queryString:myQueryString};
+	var obj = {instanceId:instanceId, serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:currentUsers, queryString:myQueryString};
 	
 	dataAccess.dbUpdateAwait("RW_SERV", "ups", {url: myUrl}, obj, async function(err, res){
 		//logg("dbGameServerUpdate DB: Set: " + myUrl + " with: ");

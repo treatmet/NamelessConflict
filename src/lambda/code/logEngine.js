@@ -1,5 +1,6 @@
 const S3StreamLogger = require('s3-streamlogger').S3StreamLogger;
 global.util = require('util');
+var currentStreamingDay = new Date().getUTCDate();
 
 var s3stream = new S3StreamLogger({ bucket: s3LoggingBucket, name_format: "LAMBDA_ADMIN.txt"});
 

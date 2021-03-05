@@ -156,7 +156,7 @@ function calculateEndgameStats(){
 				endGameProgressResults.experienceCeiling = experienceProgressInfo.ceiling;		
 
 				SOCKET_LIST[p].emit('endGameProgressResults', endGameProgressResults);
-				SOCKET_LIST[p].emit('sendLog', "engGameResults:");
+				SOCKET_LIST[p].emit('sendLog', "endGameResults:");
 				SOCKET_LIST[p].emit('sendLog', endGameProgressResults);
 
 				//update user's DB stats
@@ -317,7 +317,11 @@ function endGame(){
 	calculateEndgameStats();
 	nextGameTimer = timeBeforeNextGame;			
 	updateMisc.nextGameTimer = nextGameTimer;
-	updateMisc.gameOver = true; //send gameover to all clients
+	updateMisc.gameOver = {
+		gameIsOver: true,
+		voteMap:voteMap,
+		voteGametype:voteGametype
+	};
 }
 
 function moveBags(){
@@ -859,6 +863,7 @@ function restartGame(){
 	for(var i in SOCKET_LIST){
 		SOCKET_LIST[i].emit('sendClock',secondsLeftPlusZero, minutesLeft);
 		SOCKET_LIST[i].emit('gameStart');
+		SOCKET_LIST[i].emit('addToChat', getObjectiveText(), 0);
 	}	
 	
 	if (!isWebServer)
@@ -1180,7 +1185,12 @@ var sendFullGameStatus = function(socketId){
 	miscPack.bagBlue = bagBlue;
 	miscPack.numPlayers = size;
 	miscPack.shop = shop;
-	miscPack.gameOver = gameOver;
+	miscPack.gameOver = {
+		gameIsOver: gameOver,
+		voteMap:voteMap,
+		voteGametype:voteGametype
+	};
+
 	miscPack.pregame = pregame;		
 	miscPack.shopEnabled = shopEnabled;
 	

@@ -1194,8 +1194,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			teamName = "blue";
 		}
 	}
-	if (teamName != 0)
-		sendChatToAll(self.name + " has joined the " + teamName + " team!");
+	// if (teamName != 0)
+	// 	sendChatToAll(self.name + " has joined the " + teamName + " team!");
 		
 	socket.emit('sendPlayerNameToClient', self.name);
 	
@@ -1433,11 +1433,15 @@ function gunSwap(player){
 	}
 }
 
+
+
 Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 	dataAccessFunctions.getUserCustomizations(cognitoSub, function(customizations){
 		dataAccessFunctions.getUserSettings(cognitoSub, function(settings){
 			var player = Player(socket.id, cognitoSub, name, team, customizations.result, settings.result, partyId);
 			gameEngine.ensureCorrectThugCount();
+			
+			socket.emit('addToChat', getObjectiveText(), 0);
 
 			socket.on('keyPress', function(data){
 				Player.list[socket.id].afk = AfkFramesAllowed;
@@ -1716,7 +1720,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 
 			socket.on('voteEndgame', function(socketId, voteType, vote){
 				console.log("GOT VOTE: " + socketId + " " + voteType + " " + vote);
-				if (voteType == "gametype"){
+				if (voteType == "gametype" && voteGametype){
 					for (var i = 0; i < voteGametypeIds.length; i++){
 						if (voteGametypeIds[i] == socketId){ //Player has already voted
 							return;
@@ -1731,7 +1735,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						voteGametypeIds.push(socketId);
 					}
 				}
-				else if (voteType == "map"){
+				else if (voteType == "map" && voteMap){
 					for (var i = 0; i < voteMapIds.length; i++){
 						if (voteMapIds[i] == socketId){ //Player has already voted
 							return;

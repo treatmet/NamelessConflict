@@ -16,3 +16,6 @@ package-lock.json
 
 # Deployment artifacts
 artifacts
+
+#Lambda excludes
+src/lambda/config.json

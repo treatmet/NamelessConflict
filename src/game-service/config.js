@@ -147,6 +147,7 @@ global.myUrl = "";
 global.port = '3001';
 global.serverHomePage = "/";
 global.myQueryString = "";
+global.instanceId = "local";
 
 //Game global variables
 global.pause = false;
@@ -164,7 +165,7 @@ global.privateServer = false;
 global.scoreToWin = 0;
 global.serverNumber = 1;
 global.serverName = "Server";
-global.voteGametype = true;
+global.voteGametype = false;
 global.voteMap = true;
 global.ctfVotes = 0;
 global.slayerVotes = 0;
@@ -173,7 +174,7 @@ global.longestVotes = 0;
 global.crikVotes = 0;
 global.voteMapIds = [];
 global.voteGametypeIds = [];
-global.timeBeforeNextGame = 60; //newGameTimer
+global.timeBeforeNextGame = 145; //newGameTimer
 
 global.bagRed = {
 	homeX:0,

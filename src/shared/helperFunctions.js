@@ -319,3 +319,10 @@ global.getLevelFromExperience = function(experience){
 		ceiling: (experience + 1000000)
 	};
 }
+
+global.getObjectiveText = function(){
+	var objectiveText = "Kill enemy players to win!";
+	if (gametype == "ctf")
+		objectiveText = "Capture the enemy's bag to win!";
+	return objectiveText;
+}
