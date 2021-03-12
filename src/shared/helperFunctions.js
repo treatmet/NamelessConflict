@@ -326,3 +326,7 @@ global.getObjectiveText = function(){
 		objectiveText = "Capture the enemy's bag to win!";
 	return objectiveText;
 }
+
+global.sleep = function(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+  }

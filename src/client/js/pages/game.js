@@ -4141,6 +4141,7 @@ function drawEverything(){
 
 	updateCamera();	
 	noShadow();
+	console.log("CLEARING");
 	ctx.clearRect(0,0,canvasWidth,canvasHeight); //Clears previous frame
 	
 	//drawMap();

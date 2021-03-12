@@ -73,7 +73,7 @@ router.post('/getJoinableServer', async function (req, res) {
 }); //End .post('/getJoinableServer
 
 
-//This will be overhauled greatly with matchmaking, don't lose too much sleep over its current state
+//This will be overhauled greatly with matchmaking, don't fret too much over its current state
 var getJoinableServer = function(options, cb){
 	var joinableServer = "";
 	var unfavorableServers = [];

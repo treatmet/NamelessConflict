@@ -5,7 +5,10 @@ global.EBName = process.env.EBName;
 global.serverHealthCheckTimestampThreshold = process.env.serverHealthCheckTimestampThreshold; 
 global.stalePartyRequestThreshold = process.env.stalePartyRequestThresholdDays; //30 (Days)
 global.staleFriendRequestThreshold = process.env.staleFriendRequestThresholdSeconds; //300 (Seconds)
-global.AWSRegion = process.env.AWSRegion; //300 (Seconds)
+global.AWSRegion = process.env.AWSRegion;
+global.minimumPlayableServers = process.env.minimumPlayableServers;
+
+global.serversPerInstance = 4;
 
 var runningLocally = false;
 var completedTasks = [];
@@ -15,6 +18,19 @@ const taskList = [
     "removeStaleTargetGroups",
     "updateInstanceCount"
 ];
+
+function checkIfTasksAreComplete(){
+    var uniqueCompletedTasks = completedTasks.filter(function(item, pos) {
+        return completedTasks.indexOf(item) == pos;
+    });
+
+    log((taskList.length - uniqueCompletedTasks.length)  + " tasks still remain.");
+    if (uniqueCompletedTasks.length >= taskList.length){
+        return true;
+    }
+    return false;
+}
+
 
 //Running locally
 if (!EBName){
@@ -29,6 +45,7 @@ if (!EBName){
         serverHealthCheckTimestampThreshold = localConfig.serverHealthCheckTimestampThreshold; 
         stalePartyRequestThreshold = localConfig.stalePartyRequestThresholdDays; //30 (Days)
         staleFriendRequestThreshold = localConfig.staleFriendRequestThresholdSeconds; //300 (Seconds)
+        minimumPlayableServers = localConfig.minimumPlayableServers;
         AWSRegion = localConfig.AWSRegion;
     }
     else {
@@ -42,11 +59,14 @@ const dataAccess = require('./code/dataAccess.js');
 var AWS = require("aws-sdk");
 var elasticbeanstalk = new AWS.ElasticBeanstalk({region:AWSRegion});
 var elbv2 = new AWS.ELBv2({region:AWSRegion});
+var autoscaling = new AWS.AutoScaling({region:AWSRegion});
+
+//{ params: {AutoScalingGroupName: "awseb-e-ixp3kmxivm-stack-AWSEBAutoScalingGroup-SQV61O28RETV"}
 
 if (runningLocally){
     executeFunction({}, {}, function(nully, text){
-        console.log("Execution finished. Terminating app.");
-        //process.exit(1);
+        log(text);
+        process.exit(1);
     });
 }
 
@@ -61,73 +81,238 @@ function executeFunction(event, context, callback){
 
     removeStaleRequests(function(){
         completedTasks.push("removeStaleRequests");
+        if (checkIfTasksAreComplete())
+            callback(null, "All tasks finished successfully!");
     });
     removeStaleServers(function(){
         completedTasks.push("removeStaleServers");
+        if (checkIfTasksAreComplete())
+            callback(null, "All tasks finished successfully!");
     });
     removeStaleTargetGroups(function(result){
         if (result){
             completedTasks.push("removeStaleTargetGroups");
-            callback(null, "fullServers: " + count.fullServers); //!!! Need to check that ALL jobs are done before terminating
+            if (checkIfTasksAreComplete())
+                callback(null, "All tasks finished successfully!");
         }
     });
 
-    getPublicServersFromDB(function(res){
-        var count = getServerCount(res);
-        retrieveEnvironmentInfo(function(info){
-            if (info){
-                logData(count, info);
-
-                var currentInstances = info.InstanceHealthList.length;
-                log("currentInstances: " + currentInstances);
-
-                //calculateTargetInstanceCount();
-
-                var targetInstanceCount = 2;
-                updateInstanceCount(targetInstanceCount, function(){
-                    log("FINISHED ALL TASKS. Terminating app.");
-                    
-                });    
-
-            }
-            else {
-                log("ERROR retrieving instance info!!!! Unable to update Beanstalk");
-            }
+    getPublicServersFromDB(function(DBres){
+       retrieveEnvironmentInfo(function(EBinfo){
+           getEBConfiguration(function(EBConfig){
+               getASGInfo(function(ASGInfo){
+                    calculateTargetInstanceCount(EBinfo, DBres, EBConfig, ASGInfo, function(targetInstanceCount){
+                        updateInstanceCount(targetInstanceCount, function(){
+                            completedTasks.push("updateInstanceCount");
+                            if (checkIfTasksAreComplete())
+                                callback(null, "All tasks finished successfully!");                        
+                        });        
+                    });
+               });
+            });
         });
     });	
 }
 
+
+function calculateTargetInstanceCount(EBinfo, DBres, EBConfig, ASGInfo, cb){
+    //return 3;
+    log("CALCULATING TARGET INSTANCE COUNT");
+
+
+
+
+
+
+
+
+    if (!EBinfo || !DBres || !EBConfig || !ASGInfo){
+        log("ERROR RETRIEVING NECESSARY DATA FOR EB SCALING. CHECK LOGS ABOVE FOR ERRORS!");
+        cb(false);
+        return;
+    }
+
+    var OkInstances = EBinfo.InstanceHealthList.filter(instance => instance.HealthStatus == 'Ok').length;
+    var instanceMin = ASGInfo.MinSize;
+
+    
+    log("OkInstances:" + OkInstances + " InstanceMin:" + instanceMin);
+    
+    var dbServerCount = getServerCount(DBres);
+
+    if (instanceMin > OkInstances){ //There are currently pending instances, wait until Beanstalk finishes increasing instance count 
+        log("There are currently pending instances, wait until Beanstalk finishes increasing instance count before scaling...");
+        cb(false);
+        return;
+    }    
+    else if (dbServerCount.playableServers < minimumPlayableServers){ //scale up
+        log("THERE ARE LESS THAN " + minimumPlayableServers + " PLAYABLE SERVERS[" + dbServerCount.playableServers + ". INCREASING INSTANCE COUNT BY 1 (from " + instanceMin + " to " + (instanceMin+1) + ")");
+        cb((instanceMin + 1));
+        return;
+    }    
+    else if (dbServerCount.emptyServers >= serversPerInstance + minimumPlayableServers){ //scale down
+        log("There are " + dbServerCount.emptyServers + " empty servers. Checking if an instance is empty to scale down.");
+        var instanceIds = [];
+        for (var s = 0; s < DBres.length; s++){
+            if (DBres[s].instanceId != "local" && DBres[s].instanceId.length > 0){
+                instanceIds = addToArrayIfNotAlreadyPresent(instanceIds, DBres[s].instanceId)
+            }
+        }
+    
+        //Check for vacant servers
+        if (instanceIds.length){
+            var cbAtEndOfLoop = true;
+            for (var i = 0; i < instanceIds.length; i++){
+                var instanceGameServers = DBres.filter(server => server.instanceId == instanceIds[i]); 
+                var instanceVacant = true;
+
+                for (var g = 0; g < instanceGameServers.length; g++){
+                    var players = getCurrentNumPlayers(instanceGameServers[g].currentUsers) + instanceGameServers[g].incomingUsers.length;                 
+                    if (players > 1){
+                        instanceVacant = false;
+                        break;
+                    }
+                }
+                if (instanceVacant){
+                    cbAtEndOfLoop = false;
+                    log("!!!!!!!!!!!!!!!!!!!!!!I want to remove instance: " + instanceIds[i] + "!!!");
+
+                    //Remove instance
+                    terminateInstanceInASG(instanceIds[i], function(result){
+                        if (result){
+                            cb((instanceMin - 1));
+                            return;
+                        }
+                        else {
+                            cb(false);
+                            return;
+                        }
+                    });
+                    break;
+                } 
+            }
+            if (cbAtEndOfLoop){
+                cb(false);
+            }
+        }
+        else {
+            cb(false);
+        }
+    }
+    else {
+        cb(false);
+    }
+}
+
+
+
+
 ///-------------------------------------------------------------------------------------
+
+function getASGInfo(cb){
+    getEBData(EBName, function(EBdata){
+        var asg = EBdata.EnvironmentResources.LoadBalancers[0];
+        if (asg){
+            var params = {
+                AutoScalingGroupNames: [asg.name]
+            };
+            autoscaling.describeAutoScalingGroups(params, function(err, data) {
+                if (err) {
+                    logg("AWS API ERROR -- Unable to describeAutoScalingGroups:");
+                    logg(util.format(err));
+                    cb(false);
+                }
+                else {
+                    //log("describeAutoScalingGroups result:");
+                    //console.log(data.AutoScalingGroups[0]);
+                    cb(data.AutoScalingGroups[0]);
+                }
+            });
+        }
+        else {
+            logg("ERROR -- No ASG associated with:" + EBName);            
+            cb(false);
+        }
+    
+    });
+}
+
+function terminateInstanceInASG(instanceId, cb){
+    logg("TERMINATING INSTANCE: " + instanceId);
+    var params = {
+        InstanceId: instanceId, 
+        ShouldDecrementDesiredCapacity: false
+    };
+    autoscaling.terminateInstanceInAutoScalingGroup(params, function(err, data) {
+        if (err) {
+            logg("AWS API ERROR -- Unable to terminateInstanceInAutoScalingGroup:");
+            logg(util.format(err));
+            cb(false);
+        }
+        else {
+            logg("Successfully removed instance from ASG: " + instanceId);
+            // log("Got EBConfiguration:");
+            // logObj(data.ConfigurationSettings[0].OptionSettings);
+            cb(true);
+        }
+    });
+}
+
+
 function removeStaleTargetGroups(cb){
 
     //Find which Target Groups have 0 registered Targets
 
     getLoadBalancerArn(EBName, function(loadBalancerArn){
-        if (!loadBalancerArn){log("ERROR - Didn't get loadBalancerArn"); cb(false); return;}        
+        if (!loadBalancerArn){log("ERROR - Didn't get loadBalancerArn"); cb(true); return;}        
         get443ListenerArn(loadBalancerArn, function(listenerArn){
-            if (!listenerArn){log("ERROR - Didn't get listenerArn"); cb(false); return;}        
+            if (!listenerArn){log("ERROR - Didn't get listenerArn"); cb(true); return;}        
             getListenerRules(listenerArn, function(listenerRules){
-                if (!listenerRules){log("ERROR - Didn't get listenerRules"); cb(false); return;}        
-                getLBTargetGroups(loadBalancerArn, function(targetGroupData){
+                if (!listenerRules){log("ERROR - Didn't get listenerRules"); cb(true); return;}        
+                getLBTargetGroups(loadBalancerArn, async function(targetGroupData){
                     log("FOUND " + targetGroupData.length + " TARGET GROUPS");
-                    if (!targetGroupData){log("ERROR - Didn't get targetGroups"); cb(false); return;}   
+                    if (!targetGroupData){log("ERROR - Didn't get targetGroups"); cb(true); return;}   
+                    var analyzedTargetGroups = 0;
                     for (var t = 0; t < targetGroupData.length; t++){
+                        log("Sleeping 2000 to avoid AWS throttling... [" + t +"]");
+                        await sleep(2000);
+                        log("Done sleeping [" + t +"]");
                         getTargetsInTargetGroup(targetGroupData[t], function(targetGroupArn, targets){
-                            if (!targets){log("ERROR - Didn't get targets in target group " + targetGroupArn); cb(false); return;}                               
+                            if (!targets){log("ERROR - Didn't get targets in target group " + targetGroupArn); cb(true); return;}                               
                             if (targets.length < 1){
-                                log("Found Target Group with zero targets: " + targetGroupArn + ". Deleting...");
+                                log("Found Target Group with zero targets: " + targetGroupArn + ". Deleting if not associated with default rule...");
 
                                 var ruleToDelete = listenerRules.find(rule => rule.Actions[0].TargetGroupArn == targetGroupArn);
                                 if (ruleToDelete){
-                                    deleteRule(ruleToDelete.RuleArn, function(result){
-                                        if (result){
-                                            deleteTargetGroup(targetGroupArn, function(result2){});
-                                        }
-                                    });
+                                    if (!ruleToDelete.IsDefault){
+                                        deleteRule(ruleToDelete.RuleArn, function(result){
+                                            if (result){
+                                                deleteTargetGroup(targetGroupArn, function(result2){
+                                                    analyzedTargetGroups++; log("analyzedTargetGroups: " + analyzedTargetGroups + "/" + targetGroupData.length);
+                                                    if (analyzedTargetGroups >= targetGroupData.length){cb(true);}                
+                                                });
+                                            }
+                                            else {
+                                                analyzedTargetGroups++; log("analyzedTargetGroups: " + analyzedTargetGroups + "/" + targetGroupData.length);
+                                                if (analyzedTargetGroups >= targetGroupData.length){cb(true);}                
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        analyzedTargetGroups++; log("analyzedTargetGroups: " + analyzedTargetGroups + "/" + targetGroupData.length);
+                                        if (analyzedTargetGroups >= targetGroupData.length){cb(true);}                
+                                    }        
                                 }
                                 else {
-                                    deleteTargetGroup(targetGroupArn, function(result2){});
-                                }        
+                                    deleteTargetGroup(targetGroupArn, function(result2){
+                                        analyzedTargetGroups++; log("analyzedTargetGroups: " + analyzedTargetGroups + "/" + targetGroupData.length);
+                                        if (analyzedTargetGroups >= targetGroupData.length){cb(true);}
+                                    });
+                                }
+                            }
+                            else { //TargetGroup in use, passover
+                                analyzedTargetGroups++; log("analyzedTargetGroups: " + analyzedTargetGroups + "/" + targetGroupData.length);
+                                if (analyzedTargetGroups >= targetGroupData.length){cb(true);}
                             }
                         });                
                     }
@@ -137,6 +322,24 @@ function removeStaleTargetGroups(cb){
     });
 }
 
+function getEBConfiguration(cb){
+    var params = {
+        EnvironmentName: EBName,
+        ApplicationName: "GameService"
+    };
+    elasticbeanstalk.describeConfigurationSettings(params, function(err, data) {
+        if (err) {
+            logg("AWS API ERROR -- Unable to Get EBConfiguration from ElasticBeanstalk environment:");
+            logg(util.format(err));
+            cb(false);
+        }
+        else {
+            // log("Got EBConfiguration:");
+            // logObj(data.ConfigurationSettings[0].OptionSettings);
+            cb(data.ConfigurationSettings[0].OptionSettings);
+        }
+    });
+}
 
 function getLoadBalancerArn(EBName, cb){
     log("Getting LoadBalancer Arn...");
@@ -159,6 +362,27 @@ function getLoadBalancerArn(EBName, cb){
     });
 }
 
+function getEBData(EBName, cb){
+    log("Getting LoadBalancer Data...");
+    var EBparams = {
+        EnvironmentName:EBName
+    };
+    elasticbeanstalk.describeEnvironmentResources(EBparams, function(err, data) { //Get Loadbalancer Arn from ElasticBeanstalk environment
+        if (err) {
+            logg("AWS API ERROR -- Unable to getEBData from ElasticBeanstalk environment:");
+            logg(util.format(err));
+            cb(false);
+        }
+        else {
+            //log("Instance Ids:");
+            //logObj(data.EnvironmentResources.Instances);
+            log("gotEBData:");
+            logObj(data);
+            cb(data);
+        }
+    });
+}
+
 function get443ListenerArn(loadBalancerArn, cb){
     var LBparams = {
         LoadBalancerArn: loadBalancerArn,
@@ -166,15 +390,15 @@ function get443ListenerArn(loadBalancerArn, cb){
     };
     elbv2.describeListeners(LBparams, function(err, data) {
         if (err) {
-        logg("AWS API ERROR -- Unable to Get Listener on Port 443 for LoadBalancer: " + loadBalancerArn);
-        logObj(err);
-        cb(false);
+            logg("AWS API ERROR -- Unable to Get Listener on Port 443 for LoadBalancer: " + loadBalancerArn);
+            logObj(err);
+            cb(false);
         }
         else {
         for (var l in data.Listeners){
             if (data.Listeners[l].Port == 443){
-            cb(data.Listeners[l].ListenerArn);
-            break;
+                cb(data.Listeners[l].ListenerArn);
+                break;
             }
         }
         }        
@@ -196,7 +420,8 @@ function getListenerRules(listenerArn, cb){
         else {
             for (var r in data.Rules){
                 logg("Rule: " + data.Rules[r].RuleArn + " conditions:");
-                logObj("Forward to:" + data.Rules[r].Actions[0].TargetGroupArn);
+                //logObj(data.Rules[r]);
+                logg("Forward to:" + data.Rules[r].Actions[0].TargetGroupArn);
             }  
             cb(data.Rules);
         }
@@ -254,11 +479,13 @@ function getLBTargetGroups(loadBalancerArn, cb){
         }
         else {
             log("Got LoadBalancer Target Groups:");
-            logObj(data.TargetGroups);
+            //logObj(data.TargetGroups);
             var targetGroupData = [];
             for (var l in data.TargetGroups){
                 log("Name=" + data.TargetGroups[l].TargetGroupName + " TargetGroupArn=" + data.TargetGroups[l].TargetGroupArn);
-                targetGroupData.push(data.TargetGroups[l].TargetGroupArn);
+                if (data.TargetGroups[l].Port != 80){ //Skip the unchanging WebServer Target Group
+                    targetGroupData.push(data.TargetGroups[l].TargetGroupArn);
+                }
             }
             cb(targetGroupData);
         }        
@@ -279,10 +506,6 @@ function getTargetsInTargetGroup(targetGroupArn, cb){
         }
         else {
             for (var i in instanceData.TargetHealthDescriptions){
-                //log("InstanceId:" + instanceData.TargetHealthDescriptions[i].Target.Id + " Port:" + instanceData.TargetHealthDescriptions[i].Target.Port);
-                //var pushable = data.TargetGroups.filter(function (targetGroup) {
-                //return targetGroup.TargetGroupArn == targetParams.TargetGroupArn;
-                //});
                 targets.push({Id:instanceData.TargetHealthDescriptions[i].Target.Id, Port:instanceData.TargetHealthDescriptions[i].Target.Port});
             }
             log("TARGETS IN targetGroupArn:" + targetGroupArn);
@@ -309,14 +532,15 @@ function retrieveEnvironmentInfo(cb){
          ]
        };
 
-    elasticbeanstalk.describeInstancesHealth(params, function(err, data) {
+    elasticbeanstalk.describeInstancesHealth(params, function(err, EBinfo) {
         if (err) {
             log(err, err.stack);
-            cb(null);
+            cb(false);
         }
         else { //Success
-            logObj(data); 
-            cb(data);
+            log("EB INSTANCE DESCRIPTIONS:");
+            logObj(EBinfo); 
+            cb(EBinfo);
         }
     });
 }
@@ -325,13 +549,15 @@ function logData(count, info){
     log("fullServers: " + count.fullServers);
     log("emptyServers: " + count.emptyServers);
     log("playableServers: " + count.playableServers);
+    log("TOTALServers: " + count.totalServers);
 }
 
 function getServerCount(res){
     var count = {
         fullServers:0,
         emptyServers:0,
-        playableServers:0
+        playableServers:0,
+        totalServers:0,
     };
     
     for (var s = 0; s < res.length; s++){
@@ -345,6 +571,7 @@ function getServerCount(res){
         if (players == 0){
             count.emptyServers++;
         }
+        count.totalServers++;
     }	
     return count;
 }
@@ -410,11 +637,17 @@ function updateInstanceCount(targetCount, cb){
     if (updateEB == 0){
         log("WARNING! CURRENTLY CONFIGURED TO SKIP BEANSTALK UPDATE. Would have updated to " + targetCount);
         cb();
-        return;
-        
+        return;        
+    }
+    else if (targetCount === false){
+        log("No need to scale EB at this time...");
+        cb();
+        return;        
     }
     
-    log("Updating EB instance count to " + targetCount + "...");
+    log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    log("UPDATING EB INSTANCE COUNT TO " + targetCount + "...");
+    log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
     var params = {
         EnvironmentName: EBName, 
@@ -435,38 +668,13 @@ function updateInstanceCount(targetCount, cb){
     elasticbeanstalk.updateEnvironment(params, function(err, data) {
         if (err){ 
             log("ERROR FAILED BEANSTALK UPDATE");
-            log(err, err.stack); // an error occurred
+            log(err, err.stack); 
         }
         else {
             log("BEANSTALK UPDATE SUCCESS!!!");
-            log(data);           // successful response
+            //log(data);
         }
-        cb();
-
-        /*
-        "OptionName": "MinSize",
-        "OptionName": "MaxSize"
-
-        data = {
-         ApplicationName: "my-app", 
-         CNAME: "my-env.elasticbeanstalk.com", 
-         DateCreated: <Date Representation>, 
-         DateUpdated: <Date Representation>, 
-         EndpointURL: "awseb-e-i-AWSEBLoa-1RDLX6TC9VUAO-0123456789.us-west-2.elb.amazonaws.com", 
-         EnvironmentId: "e-szqipays4h", 
-         EnvironmentName: "my-env", 
-         Health: "Grey", 
-         SolutionStackName: "64bit Amazon Linux running Tomcat 7", 
-         Status: "Updating", 
-         Tier: {
-          Name: "WebServer", 
-          Type: "Standard", 
-          Version: " "
-         }, 
-         VersionLabel: "v2"
-        }
-        */
-        
+        cb();        
       });
 
 }
@@ -474,14 +682,15 @@ function updateInstanceCount(targetCount, cb){
 function getPublicServersFromDB(cb){
 	var servers = [];
 	dataAccess.dbFindAwait("RW_SERV", {privateServer:false}, function(err,res){
-		if (res && res[0]){
-				
+        if (err){
+            log("ERROR GETTING SERVERS FROM DB");
+            cb(false);
+        }
+		else if (res && res[0]){				
 			for (var i = 0; i < res.length; i++){
-
 				if (res[i].gametype == "ctf"){
 					res[i].gametype = "CTF";
 				}
-
 				servers.push(res[i]);
 			}					
         }
@@ -496,4 +705,22 @@ function getCurrentNumPlayers(currentUsers){
             players++;
     }
     return players;
+}
+
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function addToArrayIfNotAlreadyPresent(incomingArray, valueToAdd){
+    for (var x = 0; x < incomingArray.length; x++){
+        if (incomingArray[x] == valueToAdd){
+            return incomingArray;
+            break;
+        }
+    }
+
+    incomingArray.push(valueToAdd);
+
+    return incomingArray;
 }

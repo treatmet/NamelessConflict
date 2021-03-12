@@ -15,7 +15,6 @@ var AWS = require("aws-sdk");
 var elasticbeanstalk = new AWS.ElasticBeanstalk({region:config.AWSRegion});
 var elbv2 = new AWS.ELBv2({region:config.AWSRegion});
 
-
 function getClientPath(relativePath) {
 	return path.join(__dirname, "../client", relativePath);
 }
@@ -33,6 +32,7 @@ app.use("/client", express.static(getClientPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
 logg("----------------------SERVER STARTUP-----------------------");
+
 logg('Express server started on port ' + port + '.');
 
 function testDB(){
@@ -128,7 +128,10 @@ function crash(){
 
 //High-level steps
 //1. Get Self Instance Id
-//2. 
+//2. Get all Target Groups for EB Load Balancer
+//3. Check if any Target Groups already contain the processes of self
+//4. Create/Add Target Groups for Web + Game servers
+//5. Add rules to Load Balancer pointing to these target groups
 
 
 function getInstanceIdAndAddProcessesToLoadBalancer(){
@@ -217,7 +220,6 @@ function addGameServerToLoadBalancer(instanceId){
 
 
       //Game processes registration      
-
       var portArray = [];
       for (let p = 1; p <= gameInstanceCount; p++) {
         portArray.push(3000 + p);
@@ -228,13 +230,19 @@ function addGameServerToLoadBalancer(instanceId){
   });
 }
 
-function addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, gameTargetGroupArns, portArray){
+async function addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, gameTargetGroupArns, portArray){
+
   if (!portArray[0]){
     log("Add Processes To load balancer recursive COMPLETED");
     return;
   }
+  log("Sleeping 1000 to avoid AWS throttling... [" + portArray[0] +"]");
+  await sleep(1000);
+  log("Done sleeping [" + portArray[0] +"]");
+
   log("Adding Processes To load balancer for these ports:");
   logObj(portArray);
+  log("Now adding port " + portArray[0]);
   var portToCheck = portArray[0];
   portArray.shift();
 
