@@ -337,6 +337,11 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.speedY = -selfMaxSpeed;
 				}
 			}
+			else if (self.speedY < -playerMaxSpeed){
+				self.speedY += boostDecay;
+				if (self.speedY > -playerMaxSpeed)
+					self.speedY = -playerMaxSpeed;
+			}				
 			if (self.walkingDir != 1){
 				self.walkingDir = 1;
 				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
@@ -348,6 +353,11 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				if (self.speedX > selfMaxSpeed){
 					self.speedX = selfMaxSpeed;
 				}
+			}
+			else if (self.speedX > playerMaxSpeed){
+				self.speedX -= boostDecay;
+				if (self.speedX < playerMaxSpeed)
+					self.speedX = playerMaxSpeed;
 			}
 			if (self.walkingDir != 3){
 				self.walkingDir = 3;
@@ -361,6 +371,11 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.speedY = selfMaxSpeed;
 				}
 			}
+			else if (self.speedY > playerMaxSpeed){
+				self.speedY -= boostDecay;
+				if (self.speedY < playerMaxSpeed)
+					self.speedY = playerMaxSpeed;
+			}
 			if (self.walkingDir != 5){
 				self.walkingDir = 5;
 				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
@@ -373,11 +388,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.speedX = -selfMaxSpeed;
 				}
 			}
+			else if (self.speedX < -playerMaxSpeed){
+				self.speedX += boostDecay;
+				if (self.speedX > -playerMaxSpeed)
+					self.speedX = -playerMaxSpeed;
+			}	
 			if (self.walkingDir != 7){
 				self.walkingDir = 7;
 				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
 			}
 		}
+		//Diags
 		else if(self.pressingW && self.pressingD){
 			if (self.speedY > -selfMaxSpeed * (2/3)){
 				self.speedY -= playerAcceleration * (2/3);
@@ -391,6 +412,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.speedX = selfMaxSpeed * (2/3);
 				}
 			}
+			if (self.speedY < -playerMaxSpeed * (2/3)){
+				self.speedY += boostDecay * (2/3);
+				if (self.speedY > -playerMaxSpeed)
+					self.speedY = -playerMaxSpeed;
+			}
+			if (self.speedX > playerMaxSpeed * (2/3)){
+				self.speedX -= boostDecay * (2/3);
+				if (self.speedX < playerMaxSpeed)
+					self.speedX = playerMaxSpeed;
+			}
+
 			if (self.walkingDir != 2){
 				self.walkingDir = 2;
 				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
@@ -408,6 +440,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				if (self.speedY > selfMaxSpeed * (2/3)){
 					self.speedY = selfMaxSpeed * (2/3);
 				}
+			}
+			if (self.speedY > playerMaxSpeed * (2/3)){
+				self.speedY -= boostDecay * (2/3);
+				if (self.speedY < playerMaxSpeed)
+					self.speedY = playerMaxSpeed;
+			}
+			if (self.speedX > playerMaxSpeed * (2/3)){
+				self.speedX -= boostDecay * (2/3);
+				if (self.speedX < playerMaxSpeed)
+					self.speedX = playerMaxSpeed;
 			}
 			if (self.walkingDir != 4){
 				self.walkingDir = 4;
@@ -427,6 +469,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.speedY = selfMaxSpeed * (2/3);
 				}
 			}
+			if (self.speedX < -playerMaxSpeed * (2/3)){
+				self.speedX += boostDecay * (2/3);
+				if (self.speedX > -playerMaxSpeed)
+					self.speedX = -playerMaxSpeed;
+			}
+			if (self.speedY > playerMaxSpeed * (2/3)){
+				self.speedY -= boostDecay * (2/3);
+				if (self.speedY < playerMaxSpeed)
+					self.speedY = playerMaxSpeed;
+			}			
 			if (self.walkingDir != 6){
 				self.walkingDir = 6;
 				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
@@ -445,6 +497,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.speedX = -selfMaxSpeed * (2/3);
 				}
 			}
+			if (self.speedY < -playerMaxSpeed * (2/3)){
+				self.speedY += boostDecay * (2/3);
+				if (self.speedY > -playerMaxSpeed)
+					self.speedY = -playerMaxSpeed;
+			}
+			if (self.speedX < -playerMaxSpeed * (2/3)){
+				self.speedX += boostDecay * (2/3);
+				if (self.speedX > -playerMaxSpeed)
+					self.speedX = -playerMaxSpeed;
+			}			
 			if (self.walkingDir != 8){
 				self.walkingDir = 8;
 				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
@@ -458,7 +520,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 
 
-		if (!isSpeedingDiag(self.speedX, self.speedY) && !isSpeedingOrthogonal(self.speedX, self.speedY)){		
+		//if (!isSpeedingDiag(self.speedX, self.speedY) && !isSpeedingOrthogonal(self.speedX, self.speedY)){		
+		if (self.boosting == 0){		
 			if (!self.pressingW && !self.pressingS){
 				if (self.speedY > 0){
 					self.speedY -= playerAcceleration;
@@ -484,51 +547,37 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		else {
 			//"Speeding" drag (exceeding playerMaxSpeed)
-			if (Math.abs(self.speedY * (2/3)) + Math.abs(self.speedX) * (2/3) > playerMaxSpeed * 2 * (2/3)){
-				if (self.speedX > 0){
-					self.speedX -= boostDecay * (2/3);
-					if (self.speedX < playerMaxSpeed)
-						self.speedX = playerMaxSpeed;
-				}
-				else if (self.speedX < 0){
-					self.speedX += boostDecay * (2/3);
-					if (self.speedX > -playerMaxSpeed)
-						self.speedX = -playerMaxSpeed;
-				}
-				if (self.speedY > 0){
-					self.speedY -= boostDecay * (2/3);
-					if (self.speedY < playerMaxSpeed)
-						self.speedY = playerMaxSpeed;
-				}
-				else if (self.speedY < 0){
-					self.speedY += boostDecay * (2/3);
-					if (self.speedY > -playerMaxSpeed)
-						self.speedY = -playerMaxSpeed;
-				}
-			}
-			else {
-				if (self.speedX > playerMaxSpeed){
-					self.speedX -= boostDecay;
-					if (self.speedX < playerMaxSpeed)
-						self.speedX = playerMaxSpeed;
-				}
-				else if (self.speedX < -playerMaxSpeed){
-					self.speedX += boostDecay;
-					if (self.speedX > -playerMaxSpeed)
-						self.speedX = -playerMaxSpeed;
-				}	
+			// if (Math.abs(self.speedY * (2/3)) + Math.abs(self.speedX) * (2/3) > playerMaxSpeed * 2 * (2/3)){
 
-				if (self.speedY > playerMaxSpeed){
-					self.speedY -= boostDecay;
-					if (self.speedY < playerMaxSpeed)
-						self.speedY = playerMaxSpeed;
-				}
-				else if (self.speedY < -playerMaxSpeed){
-					self.speedY += boostDecay;
-					if (self.speedY > -playerMaxSpeed)
-						self.speedY = -playerMaxSpeed;
-				}	
-			}
+			// 	if (self.speedX > playerMaxSpeed * (2/3)){
+			// 		self.speedX -= boostDecay * (2/3);
+			// 		if (self.speedX < playerMaxSpeed)
+			// 			self.speedX = playerMaxSpeed;
+			// 	}
+			// 	if (self.speedX < -playerMaxSpeed * (2/3)){
+			// 		self.speedX += boostDecay * (2/3);
+			// 		if (self.speedX > -playerMaxSpeed)
+			// 			self.speedX = -playerMaxSpeed;
+			// 	}
+			// 	if (self.speedY > playerMaxSpeed * (2/3)){
+			// 		self.speedY -= boostDecay * (2/3);
+			// 		if (self.speedY < playerMaxSpeed)
+			// 			self.speedY = playerMaxSpeed;
+			// 	}
+			// 	if (self.speedY < -playerMaxSpeed * (2/3)){
+			// 		self.speedY += boostDecay * (2/3);
+			// 		if (self.speedY > -playerMaxSpeed)
+			// 			self.speedY = -playerMaxSpeed;
+			// 	}
+			// 	if (self.speedX < -playerMaxSpeed * (2/3)){
+			// 		self.speedX += boostDecay * (2/3);
+			// 		if (self.speedX > -playerMaxSpeed)
+			// 			self.speedX = -playerMaxSpeed;
+			// 	}
+			// }
+			// else {
+
+			// }
 		}
 
 		if (Math.abs(self.speedY) > playerMaxSpeed || Math.abs(self.speedX) > playerMaxSpeed || (Math.abs(self.speedY * (2/3)) + Math.abs(self.speedX) * (2/3) > playerMaxSpeed * 2 * (2/3))){
