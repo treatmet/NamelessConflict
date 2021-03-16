@@ -24,7 +24,8 @@ function checkIfTasksAreComplete(){
         return completedTasks.indexOf(item) == pos;
     });
 
-    log((taskList.length - uniqueCompletedTasks.length)  + " tasks still remain.");
+    log((taskList.length - uniqueCompletedTasks.length)  + " tasks still remain. Completed tasks:");
+    logObj(uniqueCompletedTasks);
     if (uniqueCompletedTasks.length >= taskList.length){
         return true;
     }
@@ -82,49 +83,35 @@ function executeFunction(event, context, callback){
     removeStaleRequests(function(){
         completedTasks.push("removeStaleRequests");
         if (checkIfTasksAreComplete())
-            callback(null, "All tasks finished successfully!");
+            callback(null, "All tasks finished!");
     });
     removeStaleServers(function(){
         completedTasks.push("removeStaleServers");
         if (checkIfTasksAreComplete())
-            callback(null, "All tasks finished successfully!");
+            callback(null, "All tasks finished!");
     });
     removeStaleTargetGroups(function(result){
-        if (result){
-            completedTasks.push("removeStaleTargetGroups");
-            if (checkIfTasksAreComplete())
-                callback(null, "All tasks finished successfully!");
-        }
+        completedTasks.push("removeStaleTargetGroups");
+        if (checkIfTasksAreComplete())
+            callback(null, "All tasks finished!");
+    });
+    //Update instance count
+    getEnvironmentInfo(function(EBinfo, DBres, EBConfig, ASGInfo){
+        calculateTargetInstanceCount(EBinfo, DBres, EBConfig, ASGInfo, function(targetInstanceCount){
+            updateInstanceCount(targetInstanceCount, function(){
+                completedTasks.push("updateInstanceCount");
+                if (checkIfTasksAreComplete())
+                    callback(null, "All tasks finished!");                        
+            });        
+        });
     });
 
-    getPublicServersFromDB(function(DBres){
-       retrieveEnvironmentInfo(function(EBinfo){
-           getEBConfiguration(function(EBConfig){
-               getASGInfo(function(ASGInfo){
-                    calculateTargetInstanceCount(EBinfo, DBres, EBConfig, ASGInfo, function(targetInstanceCount){
-                        updateInstanceCount(targetInstanceCount, function(){
-                            completedTasks.push("updateInstanceCount");
-                            if (checkIfTasksAreComplete())
-                                callback(null, "All tasks finished successfully!");                        
-                        });        
-                    });
-               });
-            });
-        });
-    });	
 }
 
 
 function calculateTargetInstanceCount(EBinfo, DBres, EBConfig, ASGInfo, cb){
-    //return 3;
+    //return 3; //For testing
     log("CALCULATING TARGET INSTANCE COUNT");
-
-
-
-
-
-
-
 
     if (!EBinfo || !DBres || !EBConfig || !ASGInfo){
         log("ERROR RETRIEVING NECESSARY DATA FOR EB SCALING. CHECK LOGS ABOVE FOR ERRORS!");
@@ -132,21 +119,18 @@ function calculateTargetInstanceCount(EBinfo, DBres, EBConfig, ASGInfo, cb){
         return;
     }
 
-    var OkInstances = EBinfo.InstanceHealthList.filter(instance => instance.HealthStatus == 'Ok').length;
+    var OkInstances = EBinfo.InstanceHealthList.filter(instance => instance.Color == 'Green' || instance.Color == 'Yellow').length;
     var instanceMin = ASGInfo.MinSize;
-
-    
-    log("OkInstances:" + OkInstances + " InstanceMin:" + instanceMin);
-    
     var dbServerCount = getServerCount(DBres);
 
+    log("OkInstances:" + OkInstances + " InstanceMin:" + instanceMin + " | playableServers:" + dbServerCount.playableServers + " minimumPlayableServers:" + minimumPlayableServers + " | emptyServers:" + dbServerCount.emptyServers + "");
     if (instanceMin > OkInstances){ //There are currently pending instances, wait until Beanstalk finishes increasing instance count 
         log("There are currently pending instances, wait until Beanstalk finishes increasing instance count before scaling...");
         cb(false);
         return;
     }    
     else if (dbServerCount.playableServers < minimumPlayableServers){ //scale up
-        log("THERE ARE LESS THAN " + minimumPlayableServers + " PLAYABLE SERVERS[" + dbServerCount.playableServers + ". INCREASING INSTANCE COUNT BY 1 (from " + instanceMin + " to " + (instanceMin+1) + ")");
+        log("THERE ARE LESS THAN " + minimumPlayableServers + " PLAYABLE SERVERS[" + dbServerCount.playableServers + "]. INCREASING INSTANCE COUNT BY 1 (from " + instanceMin + " to " + (instanceMin+1) + ")");
         cb((instanceMin + 1));
         return;
     }    
@@ -208,6 +192,18 @@ function calculateTargetInstanceCount(EBinfo, DBres, EBConfig, ASGInfo, cb){
 
 
 ///-------------------------------------------------------------------------------------
+function getEnvironmentInfo(cb){
+    getPublicServersFromDB(function(DBres){
+        retrieveBeanstalkInfo(function(EBinfo){
+            getEBConfiguration(function(EBConfig){
+                getASGInfo(function(ASGInfo){
+                    cb(EBinfo, DBres, EBConfig, ASGInfo);                    
+                });
+             });
+         });
+     });	 
+}
+
 
 function getASGInfo(cb){
     getEBData(EBName, function(EBdata){
@@ -269,10 +265,11 @@ function removeStaleTargetGroups(cb){
             if (!listenerArn){log("ERROR - Didn't get listenerArn"); cb(true); return;}        
             getListenerRules(listenerArn, function(listenerRules){
                 if (!listenerRules){log("ERROR - Didn't get listenerRules"); cb(true); return;}        
-                getLBTargetGroups(loadBalancerArn, async function(targetGroupData){
+                getLBGameServerTargetGroups(loadBalancerArn, async function(targetGroupData){
                     log("FOUND " + targetGroupData.length + " TARGET GROUPS");
                     if (!targetGroupData){log("ERROR - Didn't get targetGroups"); cb(true); return;}   
                     var analyzedTargetGroups = 0;
+                    if (targetGroupData.length <= 0){log("WARNING -- DID NOT FIND ANY TARGET GROUPS ON LOADBALANCER"); cb(true); return;}
                     for (var t = 0; t < targetGroupData.length; t++){
                         log("Sleeping 2000 to avoid AWS throttling... [" + t +"]");
                         await sleep(2000);
@@ -465,7 +462,7 @@ function deleteTargetGroup(tgArn, cb){
 }
   
 
-function getLBTargetGroups(loadBalancerArn, cb){
+function getLBGameServerTargetGroups(loadBalancerArn, cb){
     log("Getting LoadBalancer Target Groups...");
     var LBparams = {
         LoadBalancerArn: loadBalancerArn,
@@ -521,7 +518,7 @@ function getTargetsInTargetGroup(targetGroupArn, cb){
 
 
 
-function retrieveEnvironmentInfo(cb){
+function retrieveBeanstalkInfo(cb){
     //Get curent EB instance count
     log("Inside retrieve env info");
     
@@ -561,17 +558,19 @@ function getServerCount(res){
     };
     
     for (var s = 0; s < res.length; s++){
-        var players = getCurrentNumPlayers(res[s].currentUsers);
-        if (players >= res[s].maxPlayers){
-            count.fullServers++;
+        if (res[s].instanceId != "local" && res[s].instanceId.length > 0){
+            var players = getCurrentNumPlayers(res[s].currentUsers);
+            if (players >= res[s].maxPlayers){
+                count.fullServers++;
+            }
+            else {
+                count.playableServers++;
+            }
+            if (players == 0){
+                count.emptyServers++;
+            }
+            count.totalServers++;
         }
-        else {
-            count.playableServers++;
-        }
-        if (players == 0){
-            count.emptyServers++;
-        }
-        count.totalServers++;
     }	
     return count;
 }

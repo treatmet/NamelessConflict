@@ -458,7 +458,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 
 
-
 		if (!isSpeedingDiag(self.speedX, self.speedY) && !isSpeedingOrthogonal(self.speedX, self.speedY)){		
 			if (!self.pressingW && !self.pressingS){
 				if (self.speedY > 0){

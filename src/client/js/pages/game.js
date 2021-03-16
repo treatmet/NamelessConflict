@@ -4141,17 +4141,16 @@ function drawEverything(){
 
 	updateCamera();	
 	noShadow();
-	console.log("CLEARING");
-	ctx.clearRect(0,0,canvasWidth,canvasHeight); //Clears previous frame
-	
-	//drawMap();
+	ctx.fillStyle = "#101010";
+	ctx.fillRect(0, 0, canvasWidth, canvasHeight); 	
+	//ctx.clearRect(0,0,canvasWidth,canvasHeight); //Clears previous frame. I DONT KNOW WHY THIS STOPPED WORKING!!!
+
 	drawMapCanvas();
 	//drawBlackMarkets();
 	drawMissingBags();
 	drawBodies();	
 	drawLegs();
 	drawLaser();
-	//drawBlocks();
 	drawBlockCanvas();	
 	drawWallBodies();
 	drawPickups();
@@ -5020,8 +5019,8 @@ function disconnect(){
 }
 
 window.onbeforeunload = function(){
-	if (!gameOver)
-		return 'Are you sure you want to leave?'; //unsaved changes
+	if (!gameOver && !pregame)
+		return 'Are you sure you want to leave?'; //Leave site? unsaved changes
 	return;
 };
 
