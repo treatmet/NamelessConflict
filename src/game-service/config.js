@@ -59,7 +59,7 @@ global.shop = {
 
 //Player config
 global.startingCash = 0;
-global.boostAmount = 18;
+global.boostAmount = 24;
 global.boostDecay = 1;
 global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;

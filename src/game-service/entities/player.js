@@ -398,7 +398,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
 			}
 		}
-		//Diags
+		} //Diags
 		else if(self.pressingW && self.pressingD){
 			if (self.speedY > -selfMaxSpeed * (2/3)){
 				self.speedY -= playerAcceleration * (2/3);
@@ -519,17 +519,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 
-
-		//if (!isSpeedingDiag(self.speedX, self.speedY) && !isSpeedingOrthogonal(self.speedX, self.speedY)){		
-		if (self.boosting == 0){		
 			if (!self.pressingW && !self.pressingS){
-				if (self.speedY > 0){
-					self.speedY -= playerAcceleration;
-				}
-				else if (self.speedY < 0){
-					self.speedY += playerAcceleration;
-				}
-				if (Math.abs(self.speedY) <= 0.5){
 					self.speedY = 0;
 				}
 			}
@@ -542,48 +532,68 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				}
 				if (Math.abs(self.speedX) <= 0.5){
 					self.speedX = 0;
-				}
-			}
-		}
-		else {
-			//"Speeding" drag (exceeding playerMaxSpeed)
-			// if (Math.abs(self.speedY * (2/3)) + Math.abs(self.speedX) * (2/3) > playerMaxSpeed * 2 * (2/3)){
+		//console.log("Diag:" + isSpeedingDiag(self.speedX, self.speedY) + " Orth:" + isSpeedingOrthogonal(self.speedX, self.speedY) + " pressingW:" + self.pressingW + " pressingS:" + self.pressingS);
+	
+		// if (!isSpeedingDiag(self.speedX, self.speedY) && !isSpeedingOrthogonal(self.speedX, self.speedY)){		
+		// 	if (!self.pressingW && !self.pressingS){
+		// 		if (self.speedY > 0){
+		// 			console.log("SPEED MINUS" + playerAcceleration);
+		// 			self.speedY -= playerAcceleration;
+		// 		}
+		// 		else if (self.speedY < 0){
+		// 			console.log("SPEED PLUS " + playerAcceleration);
+		// 			self.speedY += playerAcceleration;
+		// 		}
+		// 		if (Math.abs(self.speedY) <= 0.5){
+		// 			self.speedY = 0;
+		// 		}
+		// 	}
+		// 	if (!self.pressingA && !self.pressingD){
+		// 		if (self.speedX > 0){
+		// 			self.speedX -= playerAcceleration;
+		// 		}
+		// 		else if (self.speedX < 0){
+		// 			self.speedX += playerAcceleration;
+		// 		}
+		// 		if (Math.abs(self.speedX) <= 0.5){
+		// 			self.speedX = 0;
+		// 		}
+		// 	}
+		// }
+		// else {
+		// 	//"Speeding" drag (exceeding playerMaxSpeed)
+		// }
 
-			// 	if (self.speedX > playerMaxSpeed * (2/3)){
-			// 		self.speedX -= boostDecay * (2/3);
-			// 		if (self.speedX < playerMaxSpeed)
-			// 			self.speedX = playerMaxSpeed;
-			// 	}
-			// 	if (self.speedX < -playerMaxSpeed * (2/3)){
-			// 		self.speedX += boostDecay * (2/3);
-			// 		if (self.speedX > -playerMaxSpeed)
-			// 			self.speedX = -playerMaxSpeed;
-			// 	}
-			// 	if (self.speedY > playerMaxSpeed * (2/3)){
-			// 		self.speedY -= boostDecay * (2/3);
-			// 		if (self.speedY < playerMaxSpeed)
-			// 			self.speedY = playerMaxSpeed;
-			// 	}
-			// 	if (self.speedY < -playerMaxSpeed * (2/3)){
-			// 		self.speedY += boostDecay * (2/3);
-			// 		if (self.speedY > -playerMaxSpeed)
-			// 			self.speedY = -playerMaxSpeed;
-			// 	}
-			// 	if (self.speedX < -playerMaxSpeed * (2/3)){
-			// 		self.speedX += boostDecay * (2/3);
-			// 		if (self.speedX > -playerMaxSpeed)
-			// 			self.speedX = -playerMaxSpeed;
-			// 	}
-			// }
-			// else {
 
-			// }
+
+		var airDrag = getAirDrag(self.speedX, self.speedY);
+		self.speedX += airDrag.x;
+		self.speedY += airDrag.y;
+
+
+		if (self.speedX > 0 && !self.pressingD){
+			self.speedX -= boostDecay;
+			if (self.speedX < 0)
+				self.speedX = 0;
+		}
+		if (self.speedX < 0 && !self.pressingA){
+			self.speedX += boostDecay;
+			if (self.speedX > 0)
+				self.speedX = 0;
+		}
+		if (self.speedY < 0 && !self.pressingW){
+			self.speedY += boostDecay;
+			if (self.speedY > 0)
+				self.speedY = 0;
+		}
+		if (self.speedY > 0 && !self.pressingS){
+			self.speedY -= boostDecay;
+			if (self.speedY < 0)
+				self.speedY = 0;
 		}
 
-		if (Math.abs(self.speedY) > playerMaxSpeed || Math.abs(self.speedX) > playerMaxSpeed || (Math.abs(self.speedY * (2/3)) + Math.abs(self.speedX) * (2/3) > playerMaxSpeed * 2 * (2/3))){
-			//Positive boosting trigger handled upon spacebar press for now
-		}
-		else {
+
+		if (Math.sqrt(self.speedX*self.speedX + self.speedY*self.speedY) <= 5){
 			if (self.boosting != 0){
 				self.boosting = 0;
 				updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
@@ -989,20 +999,20 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.speedX -= boostAmount;
 		}
 		else if(self.walkingDir == 2){
-			self.speedX += boostAmount * (2/3);
-			self.speedY -= boostAmount * (2/3);
+			self.speedX += boostAmount * 0.5;
+			self.speedY -= boostAmount * 0.5;
 		}
 		else if(self.walkingDir == 4){
-			self.speedX += boostAmount * (2/3);
-			self.speedY += boostAmount * (2/3);
+			self.speedX += boostAmount * 0.5;
+			self.speedY += boostAmount * 0.5;
 		}
 		else if(self.walkingDir == 6){
-			self.speedX -= boostAmount * (2/3);
-			self.speedY += boostAmount * (2/3);
+			self.speedX -= boostAmount * 0.5;
+			self.speedY += boostAmount * 0.5;
 		}
 		else if(self.walkingDir == 8){
-			self.speedX -= boostAmount * (2/3);
-			self.speedY -= boostAmount * (2/3);
+			self.speedX -= boostAmount * 0.5;
+			self.speedY -= boostAmount * 0.5;
 		}			
 	}
 
@@ -1254,7 +1264,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 Player.list = [];
 
 function isSpeedingDiag(speedX, speedY){
-	if (Math.abs(speedY * (2/3)) + Math.abs(speedX) * (2/3) > playerMaxSpeed * 2 * (2/3)){
+	if (Math.abs(speedY) + Math.abs(speedX) > playerMaxSpeed * 2 * (2/3)){
 		return true;
 	}
 	return false;
@@ -1265,6 +1275,64 @@ function isSpeedingOrthogonal(speedX, speedY){
 		return true;
 	}
 	return false;
+}
+
+
+15, 10
+
+
+
+function getAirDrag(x, y){
+	var airDrag = {
+		x:0,
+		y:0
+	};
+
+	var xSq = x*x;
+	var ySq = y*y;
+
+	var velocity = Math.sqrt(x*x + y*y);
+	//console.log("velocity = " + velocity + " x2:" + x*x + " y2:" + y*y);
+	if (velocity <= 5)
+		return airDrag;
+
+	const multiplier = 0.01;
+
+	airDrag.x = 0.5 * xSq;
+	airDrag.y = 0.5 * ySq;
+
+	airDrag.x *= multiplier;
+	airDrag.y *= multiplier;
+
+	if (airDrag.x > 2.5)
+		airDrag.x = 2.5;
+	if (airDrag.y > 2.5)
+		airDrag.y = 2.5;
+	if (airDrag.x > 0.05 && airDrag.x < 0.15)
+		airDrag.x = 0.15;
+	if (airDrag.y > 0.05 && airDrag.y < 0.15)
+		airDrag.y = 0.15;
+	console.log("CHANGING x:" + airDrag.x + " changingY:"  + airDrag.y);
+
+
+	if (x > 0){
+		airDrag.x = -Math.abs(airDrag.x);
+	}
+	else {
+		airDrag.x = Math.abs(airDrag.x);
+	}
+	if (y > 0){
+		airDrag.y = -Math.abs(airDrag.y);
+	}
+	else {
+		airDrag.y = Math.abs(airDrag.y);
+	}
+
+	airDrag.y = isNaN(airDrag.y) ? 0 : airDrag.y;
+	airDrag.x = isNaN(airDrag.x) ? 0 : airDrag.x;
+
+	//console.log("speedX:" + x + " airDrag.x:" + airDrag.x + " speedY:" + y + " airDrag.y" + airDrag.y);
+	return airDrag;
 }
 
 
