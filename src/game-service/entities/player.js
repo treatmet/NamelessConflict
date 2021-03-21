@@ -397,7 +397,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				self.walkingDir = 7;
 				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
 			}
-		}
 		} //Diags
 		else if(self.pressingW && self.pressingD){
 			if (self.speedY > -selfMaxSpeed * (2/3)){
@@ -519,19 +518,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 
-			if (!self.pressingW && !self.pressingS){
-					self.speedY = 0;
-				}
-			}
-			if (!self.pressingA && !self.pressingD){
-				if (self.speedX > 0){
-					self.speedX -= playerAcceleration;
-				}
-				else if (self.speedX < 0){
-					self.speedX += playerAcceleration;
-				}
-				if (Math.abs(self.speedX) <= 0.5){
-					self.speedX = 0;
 		//console.log("Diag:" + isSpeedingDiag(self.speedX, self.speedY) + " Orth:" + isSpeedingOrthogonal(self.speedX, self.speedY) + " pressingW:" + self.pressingW + " pressingS:" + self.pressingS);
 	
 		// if (!isSpeedingDiag(self.speedX, self.speedY) && !isSpeedingOrthogonal(self.speedX, self.speedY)){		
