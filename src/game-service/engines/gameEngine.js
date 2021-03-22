@@ -949,88 +949,91 @@ function ensureCorrectThugCount(){
 //------------------------------------------------------------------------------
 //EVERY 1 SECOND
 setInterval( 
-	function(){
-		if (pause == true)
-			return;
-				
-		//Post game voting updates
-		if (gameOver == true){
-			for (var i in SOCKET_LIST){
-				if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
-					continue;
-				}
-				
-				var socket = SOCKET_LIST[i];
-				
-				var votesData = {
-					ctfVotes:ctfVotes,
-					slayerVotes:slayerVotes,
-					thePitVotes:thePitVotes,
-					longestVotes:longestVotes, 
-					crikVotes:crikVotes,
-				};
-				
-				socket.emit('votesUpdate',votesData);
-			}
-		}
-		
-		//Clock shit
-		if ((gameMinutesLength > 0 || gameSecondsLength > 0) && !gameOver){
-			if (!pregame){
-				if (secondsLeft > 0){
-					secondsLeft--;
-				}
-				else {
-					if (minutesLeft > 0){
-						minutesLeft--;
-						secondsLeft = 59;
-					}
-					else {
-						//END GAME
-					}			
-				}
-			}				
-			var secondsLeftPlusZero = secondsLeft.toString();	
-			if (secondsLeft < 10){
-				secondsLeftPlusZero = "0" + secondsLeft.toString();
-			}		
-			for (var i in SOCKET_LIST){
-				if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
-					continue;
-				}
-
-				var socket = SOCKET_LIST[i];
-				socket.emit('sendClock',secondsLeftPlusZero, minutesLeft);
-			}
-		}
-		
-		//Pickup timer stuff
-		pickup.clockTick();
-		
-		if (gameOver == true){
-			if (nextGameTimer > 0){
-				nextGameTimer--;
-				updateMisc.nextGameTimer = nextGameTimer;
-			}
-			if (nextGameTimer == 0) {
-				restartGame();
-				nextGameTimer = timeBeforeNextGame;
-				updateMisc.nextGameTimer = nextGameTimer;
-			}
-		}	
-			
-		//Repeating game server DB sync
-		secondsSinceLastServerSync++;
-		if (secondsSinceLastServerSync > syncServerWithDbInterval){
-			dataAccessFunctions.syncGameServerWithDatabase();
-			secondsSinceLastServerSync = 0;
-			if (pregame == true && getNumPlayersInGame() >= 4){
-				restartGame();
-			}
-		}						
-	},
+	gameLoop,
 	1000/1 //Ticks per second
 );
+
+
+function gameLoop(){
+	if (pause == true)
+		return;
+			
+	//Post game voting updates
+	if (gameOver == true){
+		for (var i in SOCKET_LIST){
+			if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
+				continue;
+			}
+			
+			var socket = SOCKET_LIST[i];
+			
+			var votesData = {
+				ctfVotes:ctfVotes,
+				slayerVotes:slayerVotes,
+				thePitVotes:thePitVotes,
+				longestVotes:longestVotes, 
+				crikVotes:crikVotes,
+			};
+			
+			socket.emit('votesUpdate',votesData);
+		}
+	}
+	
+	//Clock shit
+	if ((gameMinutesLength > 0 || gameSecondsLength > 0) && !gameOver){
+		if (!pregame){
+			if (secondsLeft > 0){
+				secondsLeft--;
+			}
+			else {
+				if (minutesLeft > 0){
+					minutesLeft--;
+					secondsLeft = 59;
+				}
+				else {
+					//END GAME
+				}			
+			}
+		}				
+		var secondsLeftPlusZero = secondsLeft.toString();	
+		if (secondsLeft < 10){
+			secondsLeftPlusZero = "0" + secondsLeft.toString();
+		}		
+		for (var i in SOCKET_LIST){
+			if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
+				continue;
+			}
+
+			var socket = SOCKET_LIST[i];
+			socket.emit('sendClock',secondsLeftPlusZero, minutesLeft);
+		}
+	}
+	
+	//Pickup timer stuff
+	pickup.clockTick();
+	
+	if (gameOver == true){
+		if (nextGameTimer > 0){
+			nextGameTimer--;
+			updateMisc.nextGameTimer = nextGameTimer;
+		}
+		if (nextGameTimer == 0) {
+			restartGame();
+			nextGameTimer = timeBeforeNextGame;
+			updateMisc.nextGameTimer = nextGameTimer;
+		}
+	}	
+		
+	//Repeating game server DB sync
+	secondsSinceLastServerSync++;
+	if (secondsSinceLastServerSync > syncServerWithDbInterval){
+		dataAccessFunctions.syncGameServerWithDatabase();
+		secondsSinceLastServerSync = 0;
+		if (pregame == true && getNumPlayersInGame() >= 4){
+			restartGame();
+		}
+	}						
+}
 
 //TIMER1 - EVERY FRAME timer1 tiemer1 tiemr1
 //------------------------------------------------------------------------------
