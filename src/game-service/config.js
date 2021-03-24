@@ -59,10 +59,11 @@ global.shop = {
 
 //Player config
 global.startingCash = 0;
-global.boostAmount = 24;
-global.boostDecay = 1;
+global.boostAmount = 20;
 global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
+global.diagMovementScale = (2/3);
+
 global.rechargeDelayTime = 150; //Double for breaking under zero energy
 global.healDelayTime = 300;
 global.healRate = 10; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal)

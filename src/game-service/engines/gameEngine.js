@@ -1054,7 +1054,7 @@ var gameLoop = function(){
 setInterval( 
 	function(){
 
-		console.log("ticksSinceLastSecond" + ticksSinceLastSecond + " Time:" + Date.now());
+		//console.log("ticksSinceLastSecond" + ticksSinceLastSecond + " Time:" + Date.now());
 		ticksSinceLastSecond = 0;
 		if (pause == true)
 			return;
