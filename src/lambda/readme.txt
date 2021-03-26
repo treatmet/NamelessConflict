@@ -1,5 +1,5 @@
 Upload to lambda:
-Create zip file from code
+Create zip file from all code in src/lambda. (E.g.: index.zip)
 aws lambda update-function-code --function-name gameServerAdmin --zip-file fileb://index.zip
 
 Test Locally:

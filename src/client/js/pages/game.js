@@ -3274,7 +3274,7 @@ function drawChat(){
 		ctx.globalAlpha = 1;
 
 		//QuickChat keys
-		if (myPlayer.settings && myPlayer.team){
+		if (myPlayer.settings && myPlayer.team && myPlayer.settings.quickChat){
 			smallCenterShadow();
 			ctx.font = 'bold 15px Electrolize';
 			ctx.fillStyle="#FFFFFF";
@@ -4473,6 +4473,8 @@ Body.list = {};
 
 //Key Presses
 document.onkeydown = function(event){
+	if (chatInput.style.display == "none" && event.keycode != 123)
+		event.preventDefault();
 	var hitKeyCode = event.keyCode;
 	if (myPlayer.settings){
 		const keyHit = myPlayer.settings.keybindings.find(key => key.primary == event.keyCode || key.secondary == event.keyCode);
@@ -4506,8 +4508,6 @@ document.onkeydown = function(event){
 		myPlayer.pressingA = true;
 	}		
 	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up
-		//if (hitKeyCode === 38)
-			//event.preventDefault();
 		if (myPlayer.team != 0){
 			myPlayer.pressingUp = true;
 			if (!shop.active){
@@ -4522,8 +4522,6 @@ document.onkeydown = function(event){
 		}
 	}
 	else if(hitKeyCode === 39 && chatInput.style.display == "none"){ //Right
-		//if (hitKeyCode === 39)
-			//event.preventDefault();
 		if (myPlayer.team != 0){
 			myPlayer.pressingRight = true;
 			if (!shop.active){
@@ -4545,8 +4543,6 @@ document.onkeydown = function(event){
 		}
 	}
 	else if(hitKeyCode === 40 && chatInput.style.display == "none"){ //Down
-		//if (hitKeyCode === 40)
-			//event.preventDefault();
 		if (myPlayer.team != 0){
 			myPlayer.pressingDown = true;
 			if (!shop.active){
@@ -4558,8 +4554,6 @@ document.onkeydown = function(event){
 		}
 	}
 	else if(hitKeyCode === 37 && chatInput.style.display == "none"){ //Left
-		//if (hitKeyCode === 37)
-			//event.preventDefault();
 		if (myPlayer.team != 0){
 			myPlayer.pressingLeft = true;
 			if (!shop.active){

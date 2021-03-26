@@ -56,7 +56,6 @@ global.shop = {
 	purchaseEffectTimer:0,
 };
 
-
 //Player config
 global.startingCash = 0;
 global.boostAmount = 20;
