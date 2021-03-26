@@ -950,6 +950,8 @@ function ensureCorrectThugCount(){
 //EVERY 1 SECOND
 setInterval( 
 	function(){
+		log("ticksSinceLastSec:" + ticksSinceLastSec + " Time:" + Date.now());
+		ticksSinceLastSec = 0;
 		if (pause == true)
 			return;
 				
@@ -1034,8 +1036,11 @@ setInterval(
 
 //TIMER1 - EVERY FRAME timer1 tiemer1 tiemr1
 //------------------------------------------------------------------------------
+var ticksSinceLastSec = 0;
+
 setInterval(
 	function(){
+		ticksSinceLastSec++;
 		if (pause == true)
 			return;
 
