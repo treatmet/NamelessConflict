@@ -67,7 +67,7 @@ function getTokenFromUrlParameterAndLogin(){
 			federatedUser = data.federatedUser;
 			isLocal = data.isLocal;
 			if (isLocal){
-				serverHomePage = "/";
+				serverHomePage = "http://localhost:8080/";
 			}
 			console.log("SET SERVER HOMEPAGE: " + serverHomePage);
 			defaultCustomizations = data.defaultCustomizations;

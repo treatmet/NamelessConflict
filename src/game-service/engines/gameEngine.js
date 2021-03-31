@@ -945,7 +945,6 @@ function ensureCorrectThugCount(){
 	}
 }
 
-
 var getAllPlayersFromDB = function(cb){
 	var cognitoSubsInGame = [];
 	var playerList = player.getPlayerList();
