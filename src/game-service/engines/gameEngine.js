@@ -945,136 +945,6 @@ function ensureCorrectThugCount(){
 	}
 }
 
-
-//------------------------------------------------------------------------------
-//EVERY 1 SECOND
-setInterval( 
-	function(){
-		log("ticksSinceLastSec:" + ticksSinceLastSec + " Time:" + Date.now());
-		ticksSinceLastSec = 0;
-		if (pause == true)
-			return;
-				
-		//Post game voting updates
-		if (gameOver == true){
-			for (var i in SOCKET_LIST){
-				if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
-					continue;
-				}
-				
-				var socket = SOCKET_LIST[i];
-				
-				var votesData = {
-					ctfVotes:ctfVotes,
-					slayerVotes:slayerVotes,
-					thePitVotes:thePitVotes,
-					longestVotes:longestVotes, 
-					crikVotes:crikVotes,
-				};
-				
-				socket.emit('votesUpdate',votesData);
-			}
-		}
-		
-		//Clock shit
-		if ((gameMinutesLength > 0 || gameSecondsLength > 0) && !gameOver){
-			if (!pregame){
-				if (secondsLeft > 0){
-					secondsLeft--;
-				}
-				else {
-					if (minutesLeft > 0){
-						minutesLeft--;
-						secondsLeft = 59;
-					}
-					else {
-						//END GAME
-					}			
-				}
-			}				
-			var secondsLeftPlusZero = secondsLeft.toString();	
-			if (secondsLeft < 10){
-				secondsLeftPlusZero = "0" + secondsLeft.toString();
-			}		
-			for (var i in SOCKET_LIST){
-				if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
-					continue;
-				}
-
-				var socket = SOCKET_LIST[i];
-				socket.emit('sendClock',secondsLeftPlusZero, minutesLeft);
-			}
-		}
-		
-		//Pickup timer stuff
-		pickup.clockTick();
-		
-		if (gameOver == true){
-			if (nextGameTimer > 0){
-				nextGameTimer--;
-				updateMisc.nextGameTimer = nextGameTimer;
-			}
-			if (nextGameTimer == 0) {
-				restartGame();
-				nextGameTimer = timeBeforeNextGame;
-				updateMisc.nextGameTimer = nextGameTimer;
-			}
-		}	
-			
-		//Repeating game server DB sync
-		secondsSinceLastServerSync++;
-		if (secondsSinceLastServerSync > syncServerWithDbInterval){
-			dataAccessFunctions.syncGameServerWithDatabase();
-			secondsSinceLastServerSync = 0;
-			if (pregame == true && getNumPlayersInGame() >= 4){
-				restartGame();
-			}
-		}						
-	},
-	1000/1 //Ticks per second
-);
-
-//TIMER1 - EVERY FRAME timer1 tiemer1 tiemr1
-//------------------------------------------------------------------------------
-var ticksSinceLastSec = 0;
-
-setInterval(
-	function(){
-		ticksSinceLastSec++;
-		if (pause == true)
-			return;
-
-		player.runPlayerEngines();
-		thug.runThugEngines();
-			
-		if (gametype == "ctf"){
-			moveBags();
-		}
-		
-		for (var i in SOCKET_LIST){			
-			var socket = SOCKET_LIST[i];			
-			const teamFilteredUpdateEffectList = updateEffectList.filter(function(effect){
-				if (effect.type != 7){
-					return effect;
-				}
-				else if (effect.type == 7 && (!effect.team || (player.getPlayerById(socket.id) && effect.team == player.getPlayerById(socket.id).team))){
-					return effect;
-				}
-			});
-			socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
-		}
-		updatePlayerList = [];
-		updateThugList = [];
-		updatePickupList = [];
-		updateNotificationList = [];
-		updateEffectList = []; 	//1=shot, 2=blood, 3=boost, 4=smash, 5=body, 6=notification?, 7=chat
-		updateMisc = {};		
-		
-		checkForGameOver();
-	},
-	1000/60 //FPS frames per second
-);
-
 var getAllPlayersFromDB = function(cb){
 	var cognitoSubsInGame = [];
 	var playerList = player.getPlayerList();
@@ -1120,6 +990,278 @@ var joinGame = function(cognitoSub, username, team, partyId){
 		socket.emit('signInResponse',{success:true,id:socket.id, mapWidth:mapWidth, mapHeight:mapHeight, whiteScore:whiteScore, blackScore:blackScore});
 	}	
 }
+
+
+//TIMER1 - EVERY FRAME timer1 tiemer1 tiemr1
+//------------------------------------------------------------------------------
+const tickLengthMs = 1000/60;
+var previousTick = Date.now();
+var prevPrevTick = Date.now();
+var nextTick = Date.now() + tickLengthMs;
+var ticksSinceLastSecond = 0;
+var sloppyGameTimerWindowMs = 8;
+var warnCount = 0;
+
+
+function gameLoopIntervalLoop(){
+	var now = Date.now();
+
+	
+	// if (previousTick + tickLengthMs - (sloppyGameTimerWindowMs/2) <= now){
+	// 	var beforeGL = Date.now();
+	// 	var msSinceLastLastTick = Date.now() - prevPrevTick;
+	// 	var msSinceLastTick = Date.now() - previousTick;
+	// 	log("msSinceLastTick:" + msSinceLastTick + " Now:" + Date.now() + " nextTick:" + nextTick + " previousTick:" + previousTick + " ticksSinceLast:" + ticksSinceLastSecond);
+	// 	gameLoop();
+	// 	var timeTake = Date.now() - beforeGL;
+	// 	//console.log("Took " + timeTake + "ms");
+	// 	prevPrevTick = previousTick;
+	// 	previousTick = Date.now();
+	// 	nextTick = previousTick + tickLengthMs;
+	// 	while (nextTick < Date.now()){
+	// 		console.log("AD THYME");
+	// 		nextTick += tickLengthMs;
+	// 	}
+	// }
+	
+
+	nextTick = Date.now() + tickLengthMs;
+	gameLoop();
+	var msToNextTick = (nextTick - Date.now()) - sloppyGameTimerWindowMs;
+	if (msToNextTick <= 1){msToNextTick = 0;}
+	var msSinceLastTick = (Date.now() - previousTick);
+	var warn = "";
+	if (Math.abs(msSinceLastTick - tickLengthMs) > 5){warn = " WARNING"; warnCount++;}
+	//console.log("msToNextTick:" + msToNextTick.toFixed(2) + " msSinceLastTick:" + msSinceLastTick + " " + warn);
+	setTimeout(gameLoopIntervalLoop, 1);
+	previousTick = Date.now();
+	
+	// if (Date.now() - previousTick < tickLengthMs - sloppyGameTimerWindowMs){ //if how long it's been since the previous tick is LESS than the tick length
+	// 	var aFewMsBeforeNextLoopShouldExecute = (nextTick - Date.now()) - (sloppyGameTimerWindowMs/2);
+	// 	if (aFewMsBeforeNextLoopShouldExecute < 0){aFewMsBeforeNextLoopShouldExecute = 0;}
+	// 	setTimeout(gameLoopIntervalLoop, aFewMsBeforeNextLoopShouldExecute); //sloppy timer 
+	// }
+	// else {
+	// 	log("NOW");
+	// 	setImmediate(gameLoopIntervalLoop); //DO IT NOW!!
+	// }
+}
+
+var gameLoop = function(){
+	ticksSinceLastSecond++;
+	if (pause == true)
+		return;
+	
+	player.runPlayerEngines();
+	thug.runThugEngines();
+		
+	if (gametype == "ctf"){
+		moveBags();
+	}
+
+	var veforeTimer = Date.now();
+	for (var i in SOCKET_LIST){			
+		var socket = SOCKET_LIST[i];			
+		const teamFilteredUpdateEffectList = updateEffectList.filter(function(effect){
+			if (effect.type != 7){
+				return effect;
+			}
+			else if (effect.type == 7 && (!effect.team || (player.getPlayerById(socket.id) && effect.team == player.getPlayerById(socket.id).team))){
+				return effect;
+			}
+		});
+		socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
+	}
+	var msSinceLastTick = Date.now() - previousTick;
+	var msSinceEmit = Date.now() - veforeTimer;
+	//console.log("Sent " + msSinceLastTick + "ms after last tick. Emit took " + msSinceEmit + "ms");
+	updatePlayerList = [];
+	updateThugList = [];
+	updatePickupList = [];
+	updateNotificationList = [];
+	updateEffectList = []; 	//1=shot, 2=blood, 3=boost, 4=smash, 5=body, 6=notification?, 7=chat
+	updateMisc = {};		
+
+	checkForGameOver();
+}
+
+var HighResolutionTimer = function(options) {
+    this.timer = false;
+
+    this.total_ticks = 0;
+
+    this.start_time = undefined;
+    this.current_time = undefined;
+
+    this.duration = (options.duration) ? options.duration : 1000;
+    this.callback = (options.callback) ? options.callback : function() {};
+
+    this.run = function() {
+      this.current_time = Date.now();
+      if (!this.start_time) { this.start_time = this.current_time; }
+      
+      this.callback(this);
+
+	  var nextTick = this.duration - (this.current_time - (this.start_time + (this.total_ticks * this.duration) ) );
+	  if (nextTick < this.duration - this.duration/2){nextTick = this.duration/2;}
+
+	  this.total_ticks++;
+
+      (function(i) {
+        i.timer = setTimeout(function() {
+          i.run();
+        }, nextTick);
+      }(this));
+
+      return this;
+    };
+
+    this.stop = function(){
+      clearTimeout(this.timer);
+      return this;
+    };
+    
+    return this;
+  };
+
+var _timer = HighResolutionTimer({
+    duration: tickLengthMs,
+    callback: gameLoop
+});
+_timer.run();
+
+// var NanoTimer = require('nanotimer');
+// var timer = new NanoTimer();
+// timer.setInterval(gameLoop, '', '16666u');
+//setInterval(gameLoop, tickLengthMs);
+
+
+// const os = require('os');
+// if (os.hostname().toLowerCase().includes("compute")){
+// 	setInterval(gameLoop, tickLengthMs);
+// }
+// else {
+// 	gameLoopIntervalLoop();
+// }
+
+
+//------------------------------------------------------------------------------
+//EVERY 1 SECOND
+const secondLengthMs = 1000;
+var previousSecond = Date.now();
+var nextSecond = Date.now() + secondLengthMs;
+var sloppyTimerWindowMs = 16;
+
+secondIntervalLoop();
+function secondIntervalLoop(){
+	var now = Date.now();
+
+	if (previousSecond + secondLengthMs - sloppyTimerWindowMs <= now){
+		previousSecond = now;
+		nextSecond += secondLengthMs;
+		while (nextSecond < Date.now()){
+			nextSecond += secondLengthMs;
+		}
+
+		secondIntervalFunction();
+	}
+	
+	if (Date.now() - previousSecond < secondLengthMs - sloppyTimerWindowMs){ //if the current time is NOT within a very short time from the NEXT time code should be executed
+		var aFewMsBeforeNextLoopShouldExecute = (nextSecond - Date.now()) - sloppyTimerWindowMs;
+		if (aFewMsBeforeNextLoopShouldExecute < 0){aFewMsBeforeNextLoopShouldExecute = 0;}
+			
+		setTimeout(secondIntervalLoop, aFewMsBeforeNextLoopShouldExecute); //sloppy timer
+	}
+	else {
+		setImmediate(secondIntervalLoop); //DO IT NOW!!
+	}
+}
+
+var secondIntervalFunction = function(){
+	//log("ticksSinceLastSecond:" + ticksSinceLastSecond + " Time:" + Date.now() + " TargetNextSecond:" + nextSecond + " WARNING_COUNT:" + warnCount);
+	warnCount = 0;
+	ticksSinceLastSecond = 0;
+	if (pause == true)
+		return;
+			
+	//Post game voting updates
+	if (gameOver == true){
+		for (var i in SOCKET_LIST){
+			if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
+				continue;
+			}
+			
+			var socket = SOCKET_LIST[i];
+			
+			var votesData = {
+				ctfVotes:ctfVotes,
+				slayerVotes:slayerVotes,
+				thePitVotes:thePitVotes,
+				longestVotes:longestVotes, 
+				crikVotes:crikVotes,
+			};
+			
+			socket.emit('votesUpdate',votesData);
+		}
+	}
+	
+	//Clock shit
+	if ((gameMinutesLength > 0 || gameSecondsLength > 0) && !gameOver){
+		if (!pregame){
+			if (secondsLeft > 0){
+				secondsLeft--;
+			}
+			else {
+				if (minutesLeft > 0){
+					minutesLeft--;
+					secondsLeft = 59;
+				}
+				else {
+					//END GAME
+				}			
+			}
+		}				
+		var secondsLeftPlusZero = secondsLeft.toString();	
+		if (secondsLeft < 10){
+			secondsLeftPlusZero = "0" + secondsLeft.toString();
+		}		
+		for (var i in SOCKET_LIST){
+			if (typeof SOCKET_LIST[i].cognitoSub === 'undefined'){
+				continue;
+			}
+
+			var socket = SOCKET_LIST[i];
+			socket.emit('sendClock',secondsLeftPlusZero, minutesLeft);
+		}
+	}
+	
+	//Pickup timer stuff
+	pickup.clockTick();
+	
+	if (gameOver == true){
+		if (nextGameTimer > 0){
+			nextGameTimer--;
+			updateMisc.nextGameTimer = nextGameTimer;
+		}
+		if (nextGameTimer == 0) {
+			restartGame();
+			nextGameTimer = timeBeforeNextGame;
+			updateMisc.nextGameTimer = nextGameTimer;
+		}
+	}	
+		
+	//Repeating game server DB sync
+	secondsSinceLastServerSync++;
+	if (secondsSinceLastServerSync > syncServerWithDbInterval){
+		dataAccessFunctions.syncGameServerWithDatabase();
+		secondsSinceLastServerSync = 0;
+		if (pregame == true && getNumPlayersInGame() >= 4){
+			restartGame();
+		}
+	}
+}
+
+
 
 var sendFullGameStatus = function(socketId){
 	var playerPack = [];

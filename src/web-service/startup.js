@@ -63,7 +63,7 @@ function processArgs(){
 	}
 
 	isLocal = !hostname.toLowerCase().includes("compute");
-		
+  
 	if (isLocal){
 		logg("Updating app to run locally");
 		getIP();

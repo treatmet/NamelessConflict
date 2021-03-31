@@ -1,6 +1,6 @@
 const { spawn } = require('child_process');
 
-global.gameInstanceCount = 4;
+global.gameInstanceCount = 1;
 const gameProcesses = [];
 
 for (let i = 1; i <= gameInstanceCount; i++) {

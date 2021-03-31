@@ -166,6 +166,7 @@ global.getDistance = function(entity1, entity2){
 		return Math.round(Math.sqrt(dx1*dx1 + dy1*dy1) * 10)/10;	
 }
 
+
 global.checkIfBlocking = function(object, pointA, pointB){
 	//intersect with top side of block?
 	if (line_intersects(pointA.x, pointA.y, pointB.x, pointB.y, object.x, object.y, (object.x + object.width), object.y)){

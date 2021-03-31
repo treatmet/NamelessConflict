@@ -56,13 +56,13 @@ global.shop = {
 	purchaseEffectTimer:0,
 };
 
-
 //Player config
 global.startingCash = 0;
-global.boostAmount = 18;
-global.boostDecay = 1;
+global.boostAmount = 20;
 global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
+global.diagMovementScale = (2/3);
+
 global.rechargeDelayTime = 150; //Double for breaking under zero energy
 global.healDelayTime = 300;
 global.healRate = 10; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal)
@@ -158,7 +158,7 @@ global.gameMinutesLength = 5;
 global.gameSecondsLength = 0;
 global.map = "longest";
 global.gametype = "ctf";
-global.maxPlayers = 2;
+global.maxPlayers = 4;
 global.isWebServer = false;
 global.isLocal = false;
 global.privateServer = false;
