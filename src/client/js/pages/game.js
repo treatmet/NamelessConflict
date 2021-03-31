@@ -4473,9 +4473,10 @@ Body.list = {};
 
 //Key Presses
 document.onkeydown = function(event){
-	if (chatInput.style.display == "none" && event.keycode != 123)
-		event.preventDefault();
 	var hitKeyCode = event.keyCode;
+	if (chatInput.style.display == "none" && hitKeyCode != 123){
+		event.preventDefault();
+	}
 	if (myPlayer.settings){
 		const keyHit = myPlayer.settings.keybindings.find(key => key.primary == event.keyCode || key.secondary == event.keyCode);
 		if (keyHit && keyHit.default){
@@ -4928,7 +4929,7 @@ function hexToHSL(H) {
 	l = (cmax + cmin) / 2;
 	s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
 	s = +(s * 100).toFixed(1);
-	l = +(l * 100).toFixed(1);
+	l = +(l * 100).toFixed(1); //Round to decimal place
 
 	return "hsl(" + h + "," + s + "%," + l + "%)";
 }

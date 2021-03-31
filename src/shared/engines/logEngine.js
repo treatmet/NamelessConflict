@@ -3,21 +3,25 @@ const S3StreamLogger = require('s3-streamlogger').S3StreamLogger;
 var s3stream = new S3StreamLogger({ bucket: config.s3LoggingBucket, name_format: isWebServer ? "WEBADMIN_" + port + ".txt" : "_" + port + ".txt"});
 
 var reinitStream = function(){
-	var name_format = "_" + port + ".txt";
+	var date = new Date();
+	var hour = date.getUTCHours();
+	var min = date.getUTCMinutes();
+	var sec = date.getUTCSeconds();
+	var name_format = "_" + port + "_" + hour + "-" + min + "-" + sec + ".txt";
 	if (myIP && myIP.length > 0){
-		name_format = myIP.replace(/\./g,"_") + "_" + port + ".txt";
+		name_format = myIP.replace(/\./g,"_") + name_format;
 	}
 		
 	if (isWebServer){
 		name_format = "WEBADMIN_" + name_format;
 	}
 
-	var reinitYear = (new Date().getUTCFullYear()).toString();
-	var reinitMonth = (new Date().getUTCMonth()+1).toString();
+	var reinitYear = (date.getUTCFullYear()).toString();
+	var reinitMonth = (date.getUTCMonth()+1).toString();
 	if (reinitMonth.length === 1) {
 		reinitMonth = "0" + reinitMonth;
 	}
-	var reinitDate = (new Date().getUTCDate()).toString();
+	var reinitDate = (date.getUTCDate()).toString();
 	if (reinitDate.length === 1) {
 		reinitDate = "0" + reinitDate;
 	}

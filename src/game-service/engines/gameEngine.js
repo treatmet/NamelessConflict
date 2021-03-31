@@ -995,30 +995,57 @@ var joinGame = function(cognitoSub, username, team, partyId){
 
 //TIMER1 - EVERY FRAME timer1 tiemer1 tiemr1
 //------------------------------------------------------------------------------
-
 const tickLengthMs = 1000/60;
-const secondLengthMs = 1000;
 var previousTick = Date.now();
-var previousSecond = Date.now();
+var prevPrevTick = Date.now();
+var nextTick = Date.now() + tickLengthMs;
 var ticksSinceLastSecond = 0;
-frameRateLoop();
-secondIntervalLoop();
+var sloppyGameTimerWindowMs = 8;
+var warnCount = 0;
 
-function frameRateLoop(){
+
+function gameLoopIntervalLoop(){
 	var now = Date.now();
 
-	if (previousTick + tickLengthMs <= now){
-		previousTick = now;
-		gameLoop();
-		var ms = Date.now() - now;
-		//log("Took " + ms + "ms to run gameloop");
-	}
-	else {
-		var msSinceLastGameLoop = Date.now() - previousTick;
-		//log("waiting. it's been " + msSinceLastGameLoop + " since last gameloop");
-	}
 	
-	setImmediate(frameRateLoop);
+	// if (previousTick + tickLengthMs - (sloppyGameTimerWindowMs/2) <= now){
+	// 	var beforeGL = Date.now();
+	// 	var msSinceLastLastTick = Date.now() - prevPrevTick;
+	// 	var msSinceLastTick = Date.now() - previousTick;
+	// 	log("msSinceLastTick:" + msSinceLastTick + " Now:" + Date.now() + " nextTick:" + nextTick + " previousTick:" + previousTick + " ticksSinceLast:" + ticksSinceLastSecond);
+	// 	gameLoop();
+	// 	var timeTake = Date.now() - beforeGL;
+	// 	//console.log("Took " + timeTake + "ms");
+	// 	prevPrevTick = previousTick;
+	// 	previousTick = Date.now();
+	// 	nextTick = previousTick + tickLengthMs;
+	// 	while (nextTick < Date.now()){
+	// 		console.log("AD THYME");
+	// 		nextTick += tickLengthMs;
+	// 	}
+	// }
+	
+
+	nextTick = Date.now() + tickLengthMs;
+	gameLoop();
+	var msToNextTick = (nextTick - Date.now()) - sloppyGameTimerWindowMs;
+	if (msToNextTick <= 1){msToNextTick = 0;}
+	var msSinceLastTick = (Date.now() - previousTick);
+	var warn = "";
+	if (Math.abs(msSinceLastTick - tickLengthMs) > 5){warn = " WARNING"; warnCount++;}
+	//console.log("msToNextTick:" + msToNextTick.toFixed(2) + " msSinceLastTick:" + msSinceLastTick + " " + warn);
+	setTimeout(gameLoopIntervalLoop, 1);
+	previousTick = Date.now();
+	
+	// if (Date.now() - previousTick < tickLengthMs - sloppyGameTimerWindowMs){ //if how long it's been since the previous tick is LESS than the tick length
+	// 	var aFewMsBeforeNextLoopShouldExecute = (nextTick - Date.now()) - (sloppyGameTimerWindowMs/2);
+	// 	if (aFewMsBeforeNextLoopShouldExecute < 0){aFewMsBeforeNextLoopShouldExecute = 0;}
+	// 	setTimeout(gameLoopIntervalLoop, aFewMsBeforeNextLoopShouldExecute); //sloppy timer 
+	// }
+	// else {
+	// 	log("NOW");
+	// 	setImmediate(gameLoopIntervalLoop); //DO IT NOW!!
+	// }
 }
 
 var gameLoop = function(){
@@ -1033,6 +1060,7 @@ var gameLoop = function(){
 		moveBags();
 	}
 
+	var veforeTimer = Date.now();
 	for (var i in SOCKET_LIST){			
 		var socket = SOCKET_LIST[i];			
 		const teamFilteredUpdateEffectList = updateEffectList.filter(function(effect){
@@ -1045,6 +1073,9 @@ var gameLoop = function(){
 		});
 		socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
 	}
+	var msSinceLastTick = Date.now() - previousTick;
+	var msSinceEmit = Date.now() - veforeTimer;
+	//console.log("Sent " + msSinceLastTick + "ms after last tick. Emit took " + msSinceEmit + "ms");
 	updatePlayerList = [];
 	updateThugList = [];
 	updatePickupList = [];
@@ -1053,32 +1084,103 @@ var gameLoop = function(){
 	updateMisc = {};		
 
 	checkForGameOver();
-
 }
 
+var HighResolutionTimer = function(options) {
+    this.timer = false;
+
+    this.total_ticks = 0;
+
+    this.start_time = undefined;
+    this.current_time = undefined;
+
+    this.duration = (options.duration) ? options.duration : 1000;
+    this.callback = (options.callback) ? options.callback : function() {};
+
+    this.run = function() {
+      this.current_time = Date.now();
+      if (!this.start_time) { this.start_time = this.current_time; }
+      
+      this.callback(this);
+
+	  var nextTick = this.duration - (this.current_time - (this.start_time + (this.total_ticks * this.duration) ) );
+	  if (nextTick < this.duration - this.duration/2){nextTick = this.duration/2;}
+
+	  this.total_ticks++;
+
+      (function(i) {
+        i.timer = setTimeout(function() {
+          i.run();
+        }, nextTick);
+      }(this));
+
+      return this;
+    };
+
+    this.stop = function(){
+      clearTimeout(this.timer);
+      return this;
+    };
+    
+    return this;
+  };
+
+var _timer = HighResolutionTimer({
+    duration: tickLengthMs,
+    callback: gameLoop
+});
+_timer.run();
+
+// var NanoTimer = require('nanotimer');
+// var timer = new NanoTimer();
+// timer.setInterval(gameLoop, '', '16666u');
+//setInterval(gameLoop, tickLengthMs);
+
+
+// const os = require('os');
+// if (os.hostname().toLowerCase().includes("compute")){
+// 	setInterval(gameLoop, tickLengthMs);
+// }
+// else {
+// 	gameLoopIntervalLoop();
+// }
 
 
 //------------------------------------------------------------------------------
 //EVERY 1 SECOND
+const secondLengthMs = 1000;
+var previousSecond = Date.now();
+var nextSecond = Date.now() + secondLengthMs;
+var sloppyTimerWindowMs = 16;
 
+secondIntervalLoop();
 function secondIntervalLoop(){
 	var now = Date.now();
 
-	if (previousSecond + secondLengthMs <= now){
+	if (previousSecond + secondLengthMs - sloppyTimerWindowMs <= now){
 		previousSecond = now;
+		nextSecond += secondLengthMs;
+		while (nextSecond < Date.now()){
+			nextSecond += secondLengthMs;
+		}
+
 		secondIntervalFunction();
-		//var ms = Date.now() - now;
-	}
-	else {
-		//var msSinceLastGameLoop = Date.now() - previousTick;
-		//log("waiting. it's been " + msSinceLastGameLoop + " since last gameloop");
 	}
 	
-	setImmediate(secondIntervalLoop);
+	if (Date.now() - previousSecond < secondLengthMs - sloppyTimerWindowMs){ //if the current time is NOT within a very short time from the NEXT time code should be executed
+		var aFewMsBeforeNextLoopShouldExecute = (nextSecond - Date.now()) - sloppyTimerWindowMs;
+		if (aFewMsBeforeNextLoopShouldExecute < 0){aFewMsBeforeNextLoopShouldExecute = 0;}
+			
+		setTimeout(secondIntervalLoop, aFewMsBeforeNextLoopShouldExecute); //sloppy timer
+	}
+	else {
+		setImmediate(secondIntervalLoop); //DO IT NOW!!
+	}
 }
 
 var secondIntervalFunction = function(){
-	log("ticksSinceLastSecond:" + ticksSinceLastSecond + " Time:" + Date.now());
+	//log("ticksSinceLastSecond:" + ticksSinceLastSecond + " Time:" + Date.now() + " TargetNextSecond:" + nextSecond + " WARNING_COUNT:" + warnCount);
+	warnCount = 0;
 	ticksSinceLastSecond = 0;
 	if (pause == true)
 		return;

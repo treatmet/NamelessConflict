@@ -21,7 +21,7 @@
 The `infrastructure/` folder defines all the AWS resources in the form of TypeScript using CDK (see the [API reference](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html)).
 
 ## How to Deploy using Beanstalk
-1. Install [EB CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install-advanced.html) (Note the compatibility notes. If you have trouble installing, try EB CLI version 3.14.5 or earlier.)
+1. Install [EB CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install-advanced.html) (Note the compatibility notes. If you have trouble installing, try EB CLI version 3.14.5 or earlier.) (If YAML errors, try: pip install PyYAML==3.11)
 1. `cd src`
 1. Run `eb deploy`
 
