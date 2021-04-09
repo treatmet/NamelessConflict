@@ -4840,11 +4840,12 @@ var tips = [
 	"If you’re dying a lot, try sticking with your teammates and using them as meat shields.",
 	"Shooting enemies in the back does much more damage. Use cloak to get behind unsuspecting enemies.",
 	"If you are running away from a deadly situation, make an effort to stay away from the 8 angles the enemy can shoot.",
-	" Controlling weapons and armor is key to victory. Be aware of the spawn timers for pickups.",
+	"Controlling weapons and armor is key to victory. Be aware of the spawn timers for pickups.",
 	"Press [Enter] to use chat and taunt your foes!",
 	"Stand still and press [Space] to use cloak. Press [Space] while moving to boost.",
 	"Boosting into your opponents will cause heavy damage if you can hit them.",
 	"Don't be racist.",
+	"Like playing with one of your teammates? Search them on the homepage, and invite them to your party to stay teamed up!",
 	"For best game performance, close all other browser tabs and applications."
 ];
 

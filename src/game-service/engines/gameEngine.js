@@ -591,12 +591,14 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 		{
 			partyId: "123456",
 			partySize: 2,
-			playerIds: ["1234","5678"]
+			playerIds: ["1234","5678"],
+			avgPartyRanking: 1000
 		},
 		{
 			partyId: "123456",
 			partySize: 1,
-			playerIds: ["1234"]
+			playerIds: ["1234"],
+			avgPartyRanking: 1200
 		}
 
 	]
