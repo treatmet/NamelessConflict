@@ -654,8 +654,98 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 	}
 }
 
+
 function restartGame(){
 
+	tabulateVotes();
+	assignSpectatorsToTeam(true);
+	rebalanceTeams();
+	initializeNewGame();
+
+	
+	
+	
+	gameOver = false;
+	pregame = false;
+
+	whiteScore = 0;
+	blackScore = 0;
+	minutesLeft = gameMinutesLength;
+	secondsLeft = gameSecondsLength;
+	var secondsLeftPlusZero = secondsLeft.toString();	
+	if (secondsLeft < 10){
+		secondsLeftPlusZero = "0" + secondsLeft.toString();
+	}	
+	if (gametype == "slayer"){
+		respawnTimeLimit = slayerRespawnTimeLimit;
+	}
+	else if (gametype == "ctf"){
+		respawnTimeLimit = ctfRespawnTimeLimit;
+	}
+
+	var thugList = thug.getThugList();
+	for (var t in thugList){
+		for(var i in SOCKET_LIST){
+			SOCKET_LIST[i].emit('removeThug', thugList[t].id);
+		}			
+	}
+	thug.clearThugList();
+	ensureCorrectThugCount();
+	mapEngine.initializePickups(map);
+	mapEngine.initializeBlocks(map);
+	logg("Initializing map: " + map + " Dimensions:" + mapWidth + "," + mapHeight);
+
+	for (var i in SOCKET_LIST){
+		var socket = SOCKET_LIST[i];	
+		sendCapturesToClient(socket);
+	}
+	updateMisc.gameOver = gameOver;	
+	updateMisc.bagRed = bagRed;
+	updateMisc.bagBlue = bagBlue;
+	updateMisc.mapWidth = mapWidth;
+	updateMisc.mapHeight = mapHeight;
+	updateMisc.variant = {};
+	updateMisc.variant.map = map;
+	updateMisc.variant.gametype = gametype;
+	updateMisc.variant.scoreToWin = scoreToWin;
+	if (gameMinutesLength > 0 || gameSecondsLength > 0){
+		updateMisc.variant.timeLimit = true;
+	}
+	else {
+		updateMisc.variant.timeLimit = false;
+	}
+	
+	for(var i in playerList){		
+		playerList[i].cash = startingCash;
+		playerList[i].cashEarnedThisGame = 0;
+		playerList[i].kills = 0;
+		playerList[i].deaths = 0;
+		playerList[i].steals = 0;
+		playerList[i].returns = 0;
+		playerList[i].captures = 0;		
+		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
+		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
+		updatePlayerList.push({id:playerList[i].id,property:"kills",value:playerList[i].kills});
+		updatePlayerList.push({id:playerList[i].id,property:"deaths",value:playerList[i].deaths});
+		updatePlayerList.push({id:playerList[i].id,property:"steals",value:playerList[i].steals});
+		updatePlayerList.push({id:playerList[i].id,property:"returns",value:playerList[i].returns});
+		updatePlayerList.push({id:playerList[i].id,property:"captures",value:playerList[i].captures});	
+		playerList[i].respawn();
+	}//End player for loop update
+
+	for(var i in SOCKET_LIST){
+		SOCKET_LIST[i].emit('sendClock',secondsLeftPlusZero, minutesLeft);
+		SOCKET_LIST[i].emit('gameStart');
+		SOCKET_LIST[i].emit('addToChat', getObjectiveText(), 0);
+	}	
+	
+	if (!isWebServer)
+		dataAccessFunctions.dbGameServerUpdate();
+		
+}//End restartGame
+
+//Updates gametype, map based on postgame player votes
+function tabulateVotes(){
 	if (ctfVotes > slayerVotes && gametype == "slayer"){
 		scoreToWin = 3;
 		gametype = "ctf";
@@ -673,8 +763,8 @@ function restartGame(){
 	}
 	else if (crikVotes > thePitVotes && crikVotes > longestVotes){
 		map = "crik";
-	}	
-
+	}
+	
 	ctfVotes = 0;
 	slayerVotes = 0;
 	thePitVotes = 0;
@@ -682,10 +772,9 @@ function restartGame(){
 	crikVotes = 0;
 	voteMapIds = [];
 	voteGametypeIds = [];	
+}
 
-	assignSpectatorsToTeam(true);
-	
-	/////////REBALANCE TEAMS////////////////////////////////////////////////////
+function rebalanceTeams(){
 	var playerList = player.getPlayerList();
 	var moreWhitePlayers = 0; 
 	for (var p in playerList){
@@ -791,87 +880,8 @@ function restartGame(){
 			}			
 		}
 	}
-	
-	
-	
-	gameOver = false;
-	pregame = false;
+}
 
-	whiteScore = 0;
-	blackScore = 0;
-	minutesLeft = gameMinutesLength;
-	secondsLeft = gameSecondsLength;
-	var secondsLeftPlusZero = secondsLeft.toString();	
-	if (secondsLeft < 10){
-		secondsLeftPlusZero = "0" + secondsLeft.toString();
-	}	
-	if (gametype == "slayer"){
-		respawnTimeLimit = slayerRespawnTimeLimit;
-	}
-	else if (gametype == "ctf"){
-		respawnTimeLimit = ctfRespawnTimeLimit;
-	}
-
-	var thugList = thug.getThugList();
-	for (var t in thugList){
-		for(var i in SOCKET_LIST){
-			SOCKET_LIST[i].emit('removeThug', thugList[t].id);
-		}			
-	}
-	thug.clearThugList();
-	ensureCorrectThugCount();
-	mapEngine.initializePickups(map);
-	mapEngine.initializeBlocks(map);
-	logg("Initializing map: " + map + " Dimensions:" + mapWidth + "," + mapHeight);
-
-	for (var i in SOCKET_LIST){
-		var socket = SOCKET_LIST[i];	
-		sendCapturesToClient(socket);
-	}
-	updateMisc.gameOver = gameOver;	
-	updateMisc.bagRed = bagRed;
-	updateMisc.bagBlue = bagBlue;
-	updateMisc.mapWidth = mapWidth;
-	updateMisc.mapHeight = mapHeight;
-	updateMisc.variant = {};
-	updateMisc.variant.map = map;
-	updateMisc.variant.gametype = gametype;
-	updateMisc.variant.scoreToWin = scoreToWin;
-	if (gameMinutesLength > 0 || gameSecondsLength > 0){
-		updateMisc.variant.timeLimit = true;
-	}
-	else {
-		updateMisc.variant.timeLimit = false;
-	}
-	
-	for(var i in playerList){		
-		playerList[i].cash = startingCash;
-		playerList[i].cashEarnedThisGame = 0;
-		playerList[i].kills = 0;
-		playerList[i].deaths = 0;
-		playerList[i].steals = 0;
-		playerList[i].returns = 0;
-		playerList[i].captures = 0;		
-		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
-		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
-		updatePlayerList.push({id:playerList[i].id,property:"kills",value:playerList[i].kills});
-		updatePlayerList.push({id:playerList[i].id,property:"deaths",value:playerList[i].deaths});
-		updatePlayerList.push({id:playerList[i].id,property:"steals",value:playerList[i].steals});
-		updatePlayerList.push({id:playerList[i].id,property:"returns",value:playerList[i].returns});
-		updatePlayerList.push({id:playerList[i].id,property:"captures",value:playerList[i].captures});	
-		playerList[i].respawn();
-	}//End player for loop update
-
-	for(var i in SOCKET_LIST){
-		SOCKET_LIST[i].emit('sendClock',secondsLeftPlusZero, minutesLeft);
-		SOCKET_LIST[i].emit('gameStart');
-		SOCKET_LIST[i].emit('addToChat', getObjectiveText(), 0);
-	}	
-	
-	if (!isWebServer)
-		dataAccessFunctions.dbGameServerUpdate();
-		
-}//End restartGame
 
 function ensureCorrectThugCount(){
 	var expectedWhiteThugs = 0;
@@ -1004,51 +1014,6 @@ var ticksSinceLastSecond = 0;
 var sloppyGameTimerWindowMs = 8;
 var warnCount = 0;
 
-
-function gameLoopIntervalLoop(){
-	var now = Date.now();
-
-	
-	// if (previousTick + tickLengthMs - (sloppyGameTimerWindowMs/2) <= now){
-	// 	var beforeGL = Date.now();
-	// 	var msSinceLastLastTick = Date.now() - prevPrevTick;
-	// 	var msSinceLastTick = Date.now() - previousTick;
-	// 	log("msSinceLastTick:" + msSinceLastTick + " Now:" + Date.now() + " nextTick:" + nextTick + " previousTick:" + previousTick + " ticksSinceLast:" + ticksSinceLastSecond);
-	// 	gameLoop();
-	// 	var timeTake = Date.now() - beforeGL;
-	// 	//console.log("Took " + timeTake + "ms");
-	// 	prevPrevTick = previousTick;
-	// 	previousTick = Date.now();
-	// 	nextTick = previousTick + tickLengthMs;
-	// 	while (nextTick < Date.now()){
-	// 		console.log("AD THYME");
-	// 		nextTick += tickLengthMs;
-	// 	}
-	// }
-	
-
-	nextTick = Date.now() + tickLengthMs;
-	gameLoop();
-	var msToNextTick = (nextTick - Date.now()) - sloppyGameTimerWindowMs;
-	if (msToNextTick <= 1){msToNextTick = 0;}
-	var msSinceLastTick = (Date.now() - previousTick);
-	var warn = "";
-	if (Math.abs(msSinceLastTick - tickLengthMs) > 5){warn = " WARNING"; warnCount++;}
-	//console.log("msToNextTick:" + msToNextTick.toFixed(2) + " msSinceLastTick:" + msSinceLastTick + " " + warn);
-	setTimeout(gameLoopIntervalLoop, 1);
-	previousTick = Date.now();
-	
-	// if (Date.now() - previousTick < tickLengthMs - sloppyGameTimerWindowMs){ //if how long it's been since the previous tick is LESS than the tick length
-	// 	var aFewMsBeforeNextLoopShouldExecute = (nextTick - Date.now()) - (sloppyGameTimerWindowMs/2);
-	// 	if (aFewMsBeforeNextLoopShouldExecute < 0){aFewMsBeforeNextLoopShouldExecute = 0;}
-	// 	setTimeout(gameLoopIntervalLoop, aFewMsBeforeNextLoopShouldExecute); //sloppy timer 
-	// }
-	// else {
-	// 	log("NOW");
-	// 	setImmediate(gameLoopIntervalLoop); //DO IT NOW!!
-	// }
-}
-
 var gameLoop = function(){
 	ticksSinceLastSecond++;
 	if (pause == true)
@@ -1124,27 +1089,13 @@ var HighResolutionTimer = function(options) {
     };
     
     return this;
-  };
+};
 
 var _timer = HighResolutionTimer({
     duration: tickLengthMs,
     callback: gameLoop
 });
 _timer.run();
-
-// var NanoTimer = require('nanotimer');
-// var timer = new NanoTimer();
-// timer.setInterval(gameLoop, '', '16666u');
-//setInterval(gameLoop, tickLengthMs);
-
-
-// const os = require('os');
-// if (os.hostname().toLowerCase().includes("compute")){
-// 	setInterval(gameLoop, tickLengthMs);
-// }
-// else {
-// 	gameLoopIntervalLoop();
-// }
 
 
 //------------------------------------------------------------------------------
