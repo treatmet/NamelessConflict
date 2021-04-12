@@ -655,6 +655,7 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 }
 
 
+
 function restartGame(){
 
 	tabulateVotes();
@@ -662,41 +663,8 @@ function restartGame(){
 	rebalanceTeams();
 	initializeNewGame();
 
-	
-	
-	
-	gameOver = false;
-	pregame = false;
-
-	whiteScore = 0;
-	blackScore = 0;
-	minutesLeft = gameMinutesLength;
-	secondsLeft = gameSecondsLength;
-	var secondsLeftPlusZero = secondsLeft.toString();	
-	if (secondsLeft < 10){
-		secondsLeftPlusZero = "0" + secondsLeft.toString();
-	}	
-	if (gametype == "slayer"){
-		respawnTimeLimit = slayerRespawnTimeLimit;
-	}
-	else if (gametype == "ctf"){
-		respawnTimeLimit = ctfRespawnTimeLimit;
-	}
-
-	var thugList = thug.getThugList();
-	for (var t in thugList){
-		for(var i in SOCKET_LIST){
-			SOCKET_LIST[i].emit('removeThug', thugList[t].id);
-		}			
-	}
-	thug.clearThugList();
-	ensureCorrectThugCount();
-	mapEngine.initializePickups(map);
-	mapEngine.initializeBlocks(map);
-	logg("Initializing map: " + map + " Dimensions:" + mapWidth + "," + mapHeight);
-
 	for (var i in SOCKET_LIST){
-		var socket = SOCKET_LIST[i];	
+		var socket = SOCKET_LIST[i];
 		sendCapturesToClient(socket);
 	}
 	updateMisc.gameOver = gameOver;	
@@ -722,7 +690,7 @@ function restartGame(){
 		playerList[i].deaths = 0;
 		playerList[i].steals = 0;
 		playerList[i].returns = 0;
-		playerList[i].captures = 0;		
+		playerList[i].captures = 0;				
 		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
 		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
 		updatePlayerList.push({id:playerList[i].id,property:"kills",value:playerList[i].kills});
@@ -739,9 +707,7 @@ function restartGame(){
 		SOCKET_LIST[i].emit('addToChat', getObjectiveText(), 0);
 	}	
 	
-	if (!isWebServer)
-		dataAccessFunctions.dbGameServerUpdate();
-		
+	dataAccessFunctions.dbGameServerUpdate();		
 }//End restartGame
 
 //Updates gametype, map based on postgame player votes
@@ -882,6 +848,38 @@ function rebalanceTeams(){
 	}
 }
 
+function initializeNewGame(){
+	gameOver = false;
+	pregame = false;
+
+	whiteScore = 0;
+	blackScore = 0;
+	minutesLeft = gameMinutesLength;
+	secondsLeft = gameSecondsLength;
+	var secondsLeftPlusZero = secondsLeft.toString();	
+	if (secondsLeft < 10){
+		secondsLeftPlusZero = "0" + secondsLeft.toString();
+	}	
+	if (gametype == "slayer"){
+		respawnTimeLimit = slayerRespawnTimeLimit;
+	}
+	else if (gametype == "ctf"){
+		respawnTimeLimit = ctfRespawnTimeLimit;
+	}
+
+	var thugList = thug.getThugList();
+	for (var t in thugList){
+		for(var i in SOCKET_LIST){
+			SOCKET_LIST[i].emit('removeThug', thugList[t].id);
+		}			
+	}
+	thug.clearThugList();
+	ensureCorrectThugCount();
+	mapEngine.initializePickups(map);
+	mapEngine.initializeBlocks(map);
+	logg("Initializing map: " + map + " Dimensions:" + mapWidth + "," + mapHeight);
+
+}
 
 function ensureCorrectThugCount(){
 	var expectedWhiteThugs = 0;
@@ -1129,6 +1127,7 @@ function secondIntervalLoop(){
 		setImmediate(secondIntervalLoop); //DO IT NOW!!
 	}
 }
+
 
 var secondIntervalFunction = function(){
 	//log("ticksSinceLastSecond:" + ticksSinceLastSecond + " Time:" + Date.now() + " TargetNextSecond:" + nextSecond + " WARNING_COUNT:" + warnCount);

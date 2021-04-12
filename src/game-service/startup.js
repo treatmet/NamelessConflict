@@ -84,19 +84,19 @@ function processArgs(){
 
 	if (port == "3001"){
 		gametype = "ctf";
-		maxPlayers = 14;
+		maxPlayers = 4;
 	}
 	else if (port == "3002"){
 		gametype = "ctf";
-		maxPlayers = 8;
+		maxPlayers = 4;
 	}
 	else if (port == "3003"){
 		gametype = "slayer";
-		maxPlayers = 14;
+		maxPlayers = 4;
 	}
 	else if (port == "3004"){
 		gametype = "slayer";
-		maxPlayers = 8;
+		maxPlayers = 4;
 	}
 }
 

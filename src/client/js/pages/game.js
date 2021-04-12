@@ -1147,26 +1147,6 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 
 		}
 ////////////Put future client updates after this line /////////////////
-	
-		//Play punch sfx if boosting gets halted (contact)
-		if (playerDataPack[i].property == "boosting" && playerDataPack[i].value == -1 && !mute){
-			var dx1 = myPlayer.x - Player.list[playerDataPack[i].id].x;
-			var dy1 = myPlayer.y - Player.list[playerDataPack[i].id].y;
-			var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-			var vol = (Math.round((1 - (dist1 / 1000)) * 100)/100) - .3;
-			if (vol > 1)
-				vol = 1;
-			else if (vol < 0 && vol >= -.1)
-				vol = 0.01;
-			if (vol < -.1 || mute)
-				vol = 0;
-			sfxPunch.volume(vol);
-			sfxPunch.play();
-			Smash(Player.list[playerDataPack[i].id].x, Player.list[playerDataPack[i].id].y);	
-		}
-		
-		
-
 		//Play bagGrab SFX if holdingBag switched to true for someone OR their "returns" count increased
 		if (((playerDataPack[i].property == "holdingBag" && playerDataPack[i].value == true) || (playerDataPack[i].property == "returns" && playerDataPack[i].value > 0)) && !mute){			
 			var dx1 = myPlayer.x - Player.list[playerDataPack[i].id].x;
@@ -1312,11 +1292,12 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 	}	
 	
 	for (var i = 0; i < updateEffectPack.length; i++) {
+		var id = updateEffectPack[i].playerId;
 		if (updateEffectPack[i].type == 3){//boost
-			BoostBlast(updateEffectPack[i].playerId);			
+			BoostBlast(id);			
 			if (!mute){
-				var dx1 = myPlayer.x - Player.list[updateEffectPack[i].playerId].x;
-				var dy1 = myPlayer.y - Player.list[updateEffectPack[i].playerId].y;
+				var dx1 = myPlayer.x - Player.list[id].x;
+				var dy1 = myPlayer.y - Player.list[id].y;
 				var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
 				var vol = (Math.round((1 - (dist1 / 1000)) * 100)/100) - .3; // -.x is the Volume offset
 				if (vol > 1)
@@ -1327,32 +1308,48 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 					vol = 0;
 
 				var playerBoostSfx = sfxBoost;
-				var team = Player.list[updateEffectPack[i].playerId].team;
-				if (Player.list[updateEffectPack[i].playerId].customizations[team].boost == "hearts2" || Player.list[updateEffectPack[i].playerId].customizations[team].boost == "rainbow"){
+				var team = Player.list[id].team;
+				if (Player.list[id].customizations[team].boost == "hearts2" || Player.list[id].customizations[team].boost == "rainbow"){
 					playerBoostSfx = sfxBoostRainbow;
 				}
-				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost.indexOf("streaks") > -1){
+				else if (Player.list[id].customizations[team].boost.indexOf("streaks") > -1){
 					playerBoostSfx = sfxBoostIon;
 				}
-				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost == "blast"){
+				else if (Player.list[id].customizations[team].boost == "blast"){
 					playerBoostSfx = sfxBoostBlast;
 				}
-				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost == "lightning"){
+				else if (Player.list[id].customizations[team].boost == "lightning"){
 					playerBoostSfx = sfxBoostLightning;
 				}
-				else if (Player.list[updateEffectPack[i].playerId].customizations[team].boost.indexOf("slime") > -1){
+				else if (Player.list[id].customizations[team].boost.indexOf("slime") > -1){
 					playerBoostSfx = sfxBoostSlime;
 				}
 				playerBoostSfx.volume(vol);
 				playerBoostSfx.play();
 			}
 		} 				
+		else if (updateEffectPack[i].type == 4){ //smash
+		//Play punch sfx if boosting gets halted (contact)
+			var dx1 = myPlayer.x - Player.list[id].x;
+			var dy1 = myPlayer.y - Player.list[id].y;
+			var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+			var vol = (Math.round((1 - (dist1 / 1000)) * 100)/100) - .3;
+			if (vol > 1)
+				vol = 1;
+			else if (vol < 0 && vol >= -.1)
+				vol = 0.01;
+			if (vol < -.1 || mute)
+				vol = 0;
+			sfxPunch.volume(vol);
+			sfxPunch.play();
+			Smash(Player.list[id].x, Player.list[id].y);	
+		}
 		else if (updateEffectPack[i].type == 5){ //body
-			createBody(updateEffectPack[i].targetX, updateEffectPack[i].targetY, updateEffectPack[i].pushSpeed, updateEffectPack[i].shootingDir, updateEffectPack[i].playerId);
+			createBody(updateEffectPack[i].targetX, updateEffectPack[i].targetY, updateEffectPack[i].pushSpeed, updateEffectPack[i].shootingDir, id);
 		}
 		else if (updateEffectPack[i].type == 7){ //chat
-			Player.list[updateEffectPack[i].playerId].chat = updateEffectPack[i].text;
-			Player.list[updateEffectPack[i].playerId].chatDecay = 300;
+			Player.list[id].chat = updateEffectPack[i].text;
+			Player.list[id].chatDecay = 300;
 		} 				
 	}
 	

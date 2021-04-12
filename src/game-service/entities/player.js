@@ -376,6 +376,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 						self.pushSpeed = 20;
 						self.boosting = 0;
 						updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
+						updateEffectList.push({type:4,playerId:self.id});
+						
 						
 						//Assassinations
 						if (self.walkingDir == 1){
@@ -459,6 +461,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 						self.pushSpeed = 20;
 						self.boosting = 0;
 						updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
+						updateEffectList.push({type:4,playerId:self.id});
 						
 						if (self.team != thugList[i].team){
 							thugList[i].health -= boostDamage;
