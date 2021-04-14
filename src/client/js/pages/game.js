@@ -2563,12 +2563,40 @@ function drawShots(){
 					var xOffset = 0;
 					var yOffset = 0;
 					var SGscale = .6; //!!!! Remove
-					if (Player.list[i].weapon == 3){xOffset = 6; yOffset = -3;}
-					else if (Player.list[i].weapon == 2){xOffset = -3; yOffset = 0;}					
-					else if (Player.list[i].weapon == 4){xOffset = -310 * SGscale; yOffset = -680 * SGscale;}
 
-					if (Player.list[i].weapon == 4){
-						
+					if (Player.list[i].weapon == 1){
+						drawImage(Img.shot,(-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
+						drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
+						if (shot.spark){
+							drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
+						}					
+					}
+					else if (Player.list[i].weapon == 2){
+						xOffset = -18; yOffset = -1;
+						drawImage(Img.shot, (-4 + xOffset) * zoom, (-shot.distance - 40) * zoom, Img.shot.width * zoom, shot.distance * zoom);
+						drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
+						if (shot.spark){
+							drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
+						}					
+
+						xOffset = 22; yOffset = -2;
+						drawImage(Img.shot, (-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
+						drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
+						if (shot.spark){
+							drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);					
+						}
+					}
+					else if (Player.list[i].weapon == 3){
+						xOffset = 6; yOffset = -3;
+						drawImage(Img.shot,(-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
+						drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
+						if (shot.spark){
+							drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
+						}					
+					}
+					else if (Player.list[i].weapon == 4){
+						xOffset = -310 * SGscale; yOffset = -680 * SGscale;
+
 						drawImage(Img.shotShotgun,(xOffset) * zoom, (yOffset) * zoom, Img.shotShotgun.width * zoom * SGscale, Img.shotShotgun.height * zoom * SGscale);
 						
 						shot.width *= 2;
@@ -2577,21 +2605,6 @@ function drawShots(){
 						if (shot.height < 90) shot.height = 90;
 						
 						drawImage(Img.shotFlash, (6 - shot.width/2 - 2) * zoom * SGscale, (-42 - shot.height) * zoom * SGscale, shot.width * zoom * SGscale, shot.height * zoom * SGscale);
-					}
-					else {
-						drawImage(Img.shot,(-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
-						drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
-						if (shot.spark){
-							drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
-						}					
-						if (Player.list[i].weapon == 2){
-							xOffset = 6; yOffset = -1;
-							drawImage(Img.shot, (-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
-							drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
-							if (shot.spark){
-								drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);					
-							}
-						}
 					}
 				//ctx.rotate(-(getRotation(Player.list[i].shootingDir)));
 				//ctx.translate(-(centerX - myPlayer.x * zoom + Player.list[i].x * zoom), -(centerY - myPlayer.y * zoom + Player.list[i].y * zoom)); //Center camera on controlled player

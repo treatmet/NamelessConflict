@@ -332,16 +332,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			updatePlayerList.push({id:self.id,property:"x",value:self.x});
 		}	
 
-		updatePlayerList.push({id:self.id,property:"speedX",value:self.speedX}); //For display client-side debug 
+		updatePlayerList.push({id:self.id,property:"speedX",value:self.speedX}); //For display client-side debug //!!! Remove this
 		updatePlayerList.push({id:self.id,property:"speedY",value:self.speedY});
 
-		
-		if (!self.pressingShift && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
-			if (self.shootingDir != self.walkingDir){
-				self.shootingDir = self.walkingDir;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-			}
-		} //default to shootingdir = walkingdir unless otherwise specified!
+		//default to shootingdir = walkingdir unless otherwise specified!
+		// if (!self.pressingShift && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
+		// 	if (self.shootingDir != self.walkingDir){
+		// 		self.shootingDir = self.walkingDir;
+		// 		updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+		// 	}
+		// } 
 
 		//Keep player from walls Edge detection. Walls.
 		if (self.x > mapWidth - 5){self.x = mapWidth - 5; updatePlayerList.push({id:self.id,property:"x",value:self.x});} //right
@@ -946,7 +946,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 		//Facing attacker (lowest damage)
 		if (shooter.weapon == 1){ damageInflicted += pistolDamage; } //Single Pistol
-		else if (shooter.weapon == 2){ damageInflicted += pistolDamage * 2; } //Double damage for double pistols
+		else if (shooter.weapon == 2){ damageInflicted += DPDamage; } //Double damage for double pistols
 		else if (shooter.weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
 		else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
 		
@@ -954,14 +954,14 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			if (self.shootingDir != (shootingDir + 4) && self.shootingDir != (shootingDir - 4) && self.shootingDir != (shootingDir + 5) && self.shootingDir != (shootingDir - 5) && self.shootingDir != (shootingDir + 3) && self.shootingDir != (shootingDir - 3)){
 				//self is NOT facing shooter (within 3 angles)
 				if (shooter.weapon == 1){ damageInflicted += pistolSideDamage; } //Single Pistol
-				else if (shooter.weapon == 2){ damageInflicted += pistolSideDamage * 2; } //Double damage for double pistols
+				else if (shooter.weapon == 2){ damageInflicted += DPSideDamage; } //Double damage for double pistols
 				else if (shooter.weapon == 3){ damageInflicted += mgSideDamage; } //Damage for MG
 				else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGSideDamage; } //Damage for SG
 			}
 			if (self.shootingDir == shootingDir){
 				//Back Damage
 				if (shooter.weapon == 1){ damageInflicted += pistolBackDamage; } //Single Pistol
-				else if (shooter.weapon == 2){ damageInflicted += pistolBackDamage * 2; } //Double damage for double pistols
+				else if (shooter.weapon == 2){ damageInflicted += DPBackDamage; } //Double damage for double pistols
 				else if (shooter.weapon == 3){ damageInflicted += mgBackDamage; } //Damage for MG
 				else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGBackDamage; } //Damage for SG
 			}

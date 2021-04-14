@@ -16,48 +16,52 @@ var checkIfInLineOfShot = function(shooter, target){
 	if (shooter.weapon == 1 || shooter.weapon == 2 || shooter.weapon == 3){
 		if (target.team){
 			if (target.id != shooter.id && target.health > 0){
+				var allowableMargin = 31;
+				if (shooter.weapon == 2)
+					allowableMargin = 60;
+
+
 				if (shooter.shootingDir == 1){
-					if (target.x > shooter.x - 31 && target.x < shooter.x + 31 && target.y < shooter.y){
+					if (target.x > shooter.x - allowableMargin && target.x < shooter.x + allowableMargin && target.y < shooter.y){
 						return {target:target,dist:(shooter.y - target.y),distFromDiag:distFromDiag};
 					}
 				}
 				else if (shooter.shootingDir == 2){
 					distFromDiag = -shooter.x + target.x - shooter.y + target.y; //forwardslash diag (/). Negative means target's x is left of shooter's diag.
-					if (Math.abs(distFromDiag) < 44 && target.y < shooter.y){
+					if (Math.abs(distFromDiag) < (allowableMargin * 1.5) && target.y < shooter.y){
 						return {target:target,dist:(shooter.y - target.y),distFromDiag:distFromDiag};
 					}
 				}
 				else if (shooter.shootingDir == 3){
-					if (target.y > shooter.y - 31 && target.y < shooter.y + 31 && target.x > shooter.x){
+					if (target.y > shooter.y - allowableMargin && target.y < shooter.y + allowableMargin && target.x > shooter.x){
 						return {target:target,dist:(target.x - shooter.x),distFromDiag:distFromDiag};
 					}
 				}
 				else if (shooter.shootingDir == 4){
 					distFromDiag = -shooter.x + target.x + shooter.y - target.y; //backslash diag (\). Negative means target's x is left of shooter's diag.
-					if (Math.abs(distFromDiag) < 44 && target.y > shooter.y){
+					if (Math.abs(distFromDiag) < (allowableMargin * 1.5) && target.y > shooter.y){
 						return {target:target,dist:(target.x - shooter.x),distFromDiag:distFromDiag};
 					}
 				}
-
 				else if (shooter.shootingDir == 5){
-					if (target.x > shooter.x - 31 && target.x < shooter.x + 31 && target.y > shooter.y){
+					if (target.x > shooter.x - allowableMargin && target.x < shooter.x + allowableMargin && target.y > shooter.y){
 						return {target:target,dist:(target.y - shooter.y),distFromDiag:distFromDiag};
 					}
 				}
 				else if (shooter.shootingDir == 6){
 					distFromDiag = -shooter.x + target.x - shooter.y + target.y;
-					if (Math.abs(distFromDiag) < 44 && target.y > shooter.y){
+					if (Math.abs(distFromDiag) < (allowableMargin * 1.5) && target.y > shooter.y){
 						return {target:target,dist:(target.y - shooter.y),distFromDiag:distFromDiag};
 					}
 				}
 				else if (shooter.shootingDir == 7){
-					if (target.y > shooter.y - 31 && target.y < shooter.y + 31 && target.x < shooter.x){
+					if (target.y > shooter.y - allowableMargin && target.y < shooter.y + allowableMargin && target.x < shooter.x){
 						return {target:target,dist:(shooter.x - target.x),distFromDiag:distFromDiag};
 					}
 				}
 				else if (shooter.shootingDir == 8){
 					distFromDiag = -shooter.x + target.x + shooter.y - target.y;
-					if (Math.abs(distFromDiag) < 44 && target.y < shooter.y){
+					if (Math.abs(distFromDiag) < (allowableMargin * 1.5) && target.y < shooter.y){
 						return {target:target,dist:(shooter.x - target.x),distFromDiag:distFromDiag};
 					}
 				}	

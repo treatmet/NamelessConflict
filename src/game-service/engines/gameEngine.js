@@ -657,58 +657,12 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 
 
 function restartGame(){
-
 	tabulateVotes();
 	assignSpectatorsToTeam(true);
 	rebalanceTeams();
 	initializeNewGame();
-
-	for (var i in SOCKET_LIST){
-		var socket = SOCKET_LIST[i];
-		sendCapturesToClient(socket);
-	}
-	updateMisc.gameOver = gameOver;	
-	updateMisc.bagRed = bagRed;
-	updateMisc.bagBlue = bagBlue;
-	updateMisc.mapWidth = mapWidth;
-	updateMisc.mapHeight = mapHeight;
-	updateMisc.variant = {};
-	updateMisc.variant.map = map;
-	updateMisc.variant.gametype = gametype;
-	updateMisc.variant.scoreToWin = scoreToWin;
-	if (gameMinutesLength > 0 || gameSecondsLength > 0){
-		updateMisc.variant.timeLimit = true;
-	}
-	else {
-		updateMisc.variant.timeLimit = false;
-	}
-	
-	for(var i in playerList){		
-		playerList[i].cash = startingCash;
-		playerList[i].cashEarnedThisGame = 0;
-		playerList[i].kills = 0;
-		playerList[i].deaths = 0;
-		playerList[i].steals = 0;
-		playerList[i].returns = 0;
-		playerList[i].captures = 0;				
-		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
-		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
-		updatePlayerList.push({id:playerList[i].id,property:"kills",value:playerList[i].kills});
-		updatePlayerList.push({id:playerList[i].id,property:"deaths",value:playerList[i].deaths});
-		updatePlayerList.push({id:playerList[i].id,property:"steals",value:playerList[i].steals});
-		updatePlayerList.push({id:playerList[i].id,property:"returns",value:playerList[i].returns});
-		updatePlayerList.push({id:playerList[i].id,property:"captures",value:playerList[i].captures});	
-		playerList[i].respawn();
-	}//End player for loop update
-
-	for(var i in SOCKET_LIST){
-		SOCKET_LIST[i].emit('sendClock',secondsLeftPlusZero, minutesLeft);
-		SOCKET_LIST[i].emit('gameStart');
-		SOCKET_LIST[i].emit('addToChat', getObjectiveText(), 0);
-	}	
-	
 	dataAccessFunctions.dbGameServerUpdate();		
-}//End restartGame
+}
 
 //Updates gametype, map based on postgame player votes
 function tabulateVotes(){
@@ -878,6 +832,52 @@ function initializeNewGame(){
 	mapEngine.initializePickups(map);
 	mapEngine.initializeBlocks(map);
 	logg("Initializing map: " + map + " Dimensions:" + mapWidth + "," + mapHeight);
+
+
+	for (var i in SOCKET_LIST){
+		var socket = SOCKET_LIST[i];
+		sendCapturesToClient(socket);
+	}
+	updateMisc.gameOver = gameOver;	
+	updateMisc.bagRed = bagRed;
+	updateMisc.bagBlue = bagBlue;
+	updateMisc.mapWidth = mapWidth;
+	updateMisc.mapHeight = mapHeight;
+	updateMisc.variant = {};
+	updateMisc.variant.map = map;
+	updateMisc.variant.gametype = gametype;
+	updateMisc.variant.scoreToWin = scoreToWin;
+	if (gameMinutesLength > 0 || gameSecondsLength > 0){
+		updateMisc.variant.timeLimit = true;
+	}
+	else {
+		updateMisc.variant.timeLimit = false;
+	}
+	
+	var playerList = player.getPlayerList();
+	for(var i in playerList){		
+		playerList[i].cash = startingCash;
+		playerList[i].cashEarnedThisGame = 0;
+		playerList[i].kills = 0;
+		playerList[i].deaths = 0;
+		playerList[i].steals = 0;
+		playerList[i].returns = 0;
+		playerList[i].captures = 0;				
+		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
+		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
+		updatePlayerList.push({id:playerList[i].id,property:"kills",value:playerList[i].kills});
+		updatePlayerList.push({id:playerList[i].id,property:"deaths",value:playerList[i].deaths});
+		updatePlayerList.push({id:playerList[i].id,property:"steals",value:playerList[i].steals});
+		updatePlayerList.push({id:playerList[i].id,property:"returns",value:playerList[i].returns});
+		updatePlayerList.push({id:playerList[i].id,property:"captures",value:playerList[i].captures});	
+		playerList[i].respawn();
+	}//End player for loop update
+
+	for(var i in SOCKET_LIST){
+		SOCKET_LIST[i].emit('sendClock',secondsLeftPlusZero, minutesLeft);
+		SOCKET_LIST[i].emit('gameStart');
+		SOCKET_LIST[i].emit('addToChat', getObjectiveText(), 0);
+	}	
 
 }
 

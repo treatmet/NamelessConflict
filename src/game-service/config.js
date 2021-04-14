@@ -66,9 +66,9 @@ global.diagMovementScale = (2/3);
 global.rechargeDelayTime = 150; //Double for breaking under zero energy
 global.healDelayTime = 300;
 global.healRate = 10; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal)
-global.respawnTimeLimit = 180;
-global.slayerRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
-global.ctfRespawnTimeLimit = 7 * 60; //seconds (translated to frames)
+global.respawnTimeLimit = 3 * 60;
+global.slayerRespawnTimeLimit = 3 * 60; //seconds (translated to frames)
+global.ctfRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
 global.bagDrag = 0.85;
 //Cloaking config
 global.cloakingEnabled = true;
@@ -84,13 +84,16 @@ global.bulletRange = 19 * 75;
 global.damageScale = 1;
 	global.pistolDamage = 10;
 	global.pistolSideDamage = 10; //Stacks on above
-	global.pistolBackDamage = 20; //Stacks AGAIN on above
+	global.pistolBackDamage = 10; //Stacks AGAIN on above
+	global.DPDamage = 15;
+	global.DPSideDamage = 15; //Stacks on above
+	global.DPBackDamage = 15; //Stacks AGAIN on above
 	global.mgDamage = 12; 
 	global.mgSideDamage = 12; //Stacks on above
-	global.mgBackDamage = 24; //Stacks AGAIN on above
+	global.mgBackDamage = 12; //Stacks AGAIN on above
 	global.SGDamage = 30;
 	global.SGSideDamage = 30;
-	global.SGBackDamage = 60;
+	global.SGBackDamage = 30;
 	global.friendlyFireDamageScale = 0.5;
 	global.boostDamage = 50;
 	
@@ -99,9 +102,7 @@ global.SGCloseRangeDamageScale = 4;
 global.SGPushSpeed = 12;
 global.MGPushSpeed = 2;
 
-global.DPClipSize = 20;
-global.MGClipSize = 45;
-global.SGClipSize = 6;
+
 
 global.pistolFireRateLimiter = true;	
 global.pistolFireRate = 12;
@@ -109,9 +110,12 @@ global.DPFireRate = 12;
 global.MGFireRate = 5;
 global.SGFireRate = 50;
 
-global.maxSGAmmo = 24;
-global.maxDPAmmo = 40;
-global.maxMGAmmo = 90;
+global.DPClipSize = 15;
+global.MGClipSize = 60;
+global.SGClipSize = 6;
+global.maxSGAmmo = 18;
+global.maxDPAmmo = 45;
+global.maxMGAmmo = 120;
 
 global.cloakBonusDamage = 20;
 
@@ -174,7 +178,7 @@ global.longestVotes = 0;
 global.crikVotes = 0;
 global.voteMapIds = [];
 global.voteGametypeIds = [];
-global.timeBeforeNextGame = 145; //newGameTimer
+global.timeBeforeNextGame = 45; //newGameTimer
 
 global.bagRed = {
 	homeX:0,
