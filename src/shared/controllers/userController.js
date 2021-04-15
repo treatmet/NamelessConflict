@@ -345,8 +345,9 @@ router.post('/validateToken', async function (req, res) {
 			res.send(httpResult);
 		}
 		else {
-			dataAccessFunctions.addUser(httpResult.cognitoSub, httpResult.username, function(){
+			dataAccessFunctions.addUser(httpResult.cognitoSub, httpResult.username, function(newUser){
 				logg("Added user: " + httpResult.username + ". Returning ValidateToken response:");
+				httpResult.cash = newUser.cash;
 				logObj(httpResult);
 				res.send(httpResult);
 			});

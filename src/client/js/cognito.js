@@ -55,9 +55,10 @@ function getTokenFromUrlParameterAndLogin(){
         console.log(data);
 		
         if (data && data.username){
-            cognitoSub = data.cognitoSub;
-			userCash = data.cash;
-			updateCashHeaderDisplay(data.cash);
+			cognitoSub = data.cognitoSub;
+			console.log("data.cash: " + data.cash);
+			userCash = data.cash ?? 0;
+			updateCashHeaderDisplay(userCash);
 			
 			
 			log('emmiting updateSocketInfo cognitoSub=' + cognitoSub);
@@ -667,6 +668,9 @@ function getCountInArray(string, array){
 }
 
 function numberWithCommas(x) {
+	if (x.typeOf == 'undefined'){
+		return "";
+	}
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 

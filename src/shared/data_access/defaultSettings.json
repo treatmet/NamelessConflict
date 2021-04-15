@@ -94,7 +94,7 @@
 	"display": [
 		{
 			"key": "forceTeamNameColors",
-			"value": false
+			"value": true
 		}
 	],
 	"quickChat": [

@@ -177,19 +177,19 @@ var searchUserFromDB = function(searchText,cb){
 
 var addUser = function(cognitoSub, username, cb){
 	if (!cognitoSub || !username){
-		cb();
+		cb({});
 		return;
 	}
 	var today = new Date();
 	var date = today.getUTCFullYear()+'-'+(today.getUTCMonth()+1)+'-'+today.getUTCDate();
 
-	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:''};
+	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:myUrl};
 
 	dataAccess.dbUpdateAwait("RW_USER", "ups", {cognitoSub:cognitoSub}, obj, async function(err, res){
 		if (err){
 			logg("DB ERROR - addUser() - RW_USER.insert: " + err);
 		}	
-		cb();
+		cb(obj);
 	});
 }
 

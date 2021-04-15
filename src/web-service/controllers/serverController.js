@@ -39,7 +39,7 @@ router.post('/getJoinableServer', async function (req, res) {
 		/*
 		var dbResults = {
 			partyId:"", 
-			party:[] //{cognitoSub:"12345",username:"myguy",serverUrl:serverUrl}
+			party:[] //{cognitoSub:"12345",username:"myguy",serverUrl:"123.45.678"}
 		};	
 		*/
 		party = dbResults.party;

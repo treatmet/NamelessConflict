@@ -115,6 +115,9 @@ global.parseINIString = function(data){
 }
 
 global.numberWithCommas = function(x) {
+	if (x.typeOf == 'undefined'){
+		return "";
+	}
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 

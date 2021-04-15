@@ -148,7 +148,7 @@ function showSelfProfileOptions(){
                     shopRefreshTimer = shopOptions.timer.time;
 
                     if (getUrlParam("view") == "shop"){
-                        toggleAppearanceMode('shopToggleIcon');
+                        toggleEquipBuy('buyTab');
                     }        
                     showContent("hat");
                 }
@@ -882,38 +882,6 @@ function toggleEquipBuy(divId) {
                 shopOptionsDiv.style.display = "none";
                 break;
             case "buyTab":
-                appearanceOptions.style.display = "none";
-                shopOptionsDiv.style.display = "block";            
-                break;
-            default:
-                log("Unknown appearance mode clicked...");
-                break;
-        }
-    }
-    else {
-        log("DETECTED NONEXISTANT DIV");
-    }    
-}
-
-
-
-function toggleShopSelected(event) {
-    var tablinks = document.getElementsByClassName("toggleIcons");
-    for (var i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    event.currentTarget.className += " active";
-
-    var appearanceOptions = document.getElementById("appearanceOptions");
-    var shopOptionsDiv = document.getElementById("shopOptions");
-
-    if (appearanceOptions && shopOptionsDiv){
-        switch (event.currentTarget.id){
-            case "customizeToggleIcon":
-                appearanceOptions.style.display = "block";
-                shopOptionsDiv.style.display = "none";
-                break;
-            case "shopToggleIcon":
                 appearanceOptions.style.display = "none";
                 shopOptionsDiv.style.display = "block";            
                 break;

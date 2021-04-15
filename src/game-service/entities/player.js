@@ -336,12 +336,12 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		updatePlayerList.push({id:self.id,property:"speedY",value:self.speedY});
 
 		//default to shootingdir = walkingdir unless otherwise specified!
-		// if (!self.pressingShift && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
-		// 	if (self.shootingDir != self.walkingDir){
-		// 		self.shootingDir = self.walkingDir;
-		// 		updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-		// 	}
-		// } 
+		if (!self.pressingShift && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
+			if (self.shootingDir != self.walkingDir){
+				self.shootingDir = self.walkingDir;
+				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			}
+		} 
 
 		//Keep player from walls Edge detection. Walls.
 		if (self.x > mapWidth - 5){self.x = mapWidth - 5; updatePlayerList.push({id:self.id,property:"x",value:self.x});} //right
@@ -1457,8 +1457,8 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							player.boost();
 							updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
 							player.rechargeDelay = rechargeDelayTime;
-							if (player.name != "RTPM3")
-								player.energy -= 25;
+							// if (player.name != "RTPM3")
+							// 	player.energy -= 25;
 							if (player.energy <= 0){
 								player.rechargeDelay = rechargeDelayTime * 2;
 								player.energy = 0;

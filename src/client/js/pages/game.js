@@ -350,6 +350,8 @@ Img.block = new Image();
 Img.block.src = "/client/img/block.png";
 Img.redBlock = new Image();
 Img.redBlock.src = "/client/img/blockRed.png";
+Img.redDeath = new Image();
+Img.redDeath.src = "/client/img/red-death.png";
 Img.blueBlock = new Image();
 Img.blueBlock.src = "/client/img/blockBlue.png";
 Img.pushUpBlock = new Image();
@@ -592,11 +594,11 @@ Img.whiteThugLegs2 = new Image();
 Img.whiteThugLegs2.src = "/client/img/whiteThugLegs2.png";
 
 Img.bagRed = new Image();
-Img.bagRed.src = "/client/img/bag-white-fist.png";
+Img.bagRed.src = "/client/img/bag-red.png";
 Img.bagRedStrap = new Image();
 Img.bagRedStrap.src = "/client/img/bag-black-strap.png";
 Img.bagBlue = new Image();
-Img.bagBlue.src = "/client/img/bag-black-fist.png";
+Img.bagBlue.src = "/client/img/bag-blue.png";
 Img.bagBlueStrap = new Image();
 Img.bagBlueStrap.src = "/client/img/bag-black-strap.png";
 Img.bagMissing = new Image();
@@ -2844,7 +2846,7 @@ function drawPlayerTags(){
             ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
 				if (Player.list[i].health > 0 && Player.list[i].team != 0 && !(Player.list[i].cloakEngaged == true && Player.list[i].team != Player.list[myPlayer.id].team)){
 					var nameColor = Player.list[i].customizations[Player.list[i].team].nameColor;
-					if (myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true){
+					if (myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true && Player.list[i].id != myPlayer.id){
 						nameColor = Player.list[i].team == 1 ? "#9e0b0f" : "#2e3192";
 					}
 					
@@ -3131,11 +3133,11 @@ function drawInformation(){
 //Bloody border
 function drawBloodyBorder(){
 	noShadow();
-	var bloodyScale = Player.list[myPlayer.id].health;
-	if (bloodyScale < 100){
+	if (Player.list[myPlayer.id].health < 100){ 
+		var bloodyScale = Player.list[myPlayer.id].health;
 
-		if (bloodyScale > 0)
-			bloodyScale += ((100 - bloodyScale) / 3); // increase this last number to increase the amount of blood on damage levels less than dead. Remove this line entirely to have the bloodyBorder scale smoothly all the way up until death
+		// if (bloodyScale > 0)
+		// 	bloodyScale += ((100 - bloodyScale) / 3); // increase this last number to increase the amount of blood on damage levels less than dead. Remove this line entirely to have the bloodyBorder scale smoothly all the way up until death
 
 		var alph2 = 1 - (bloodyScale / 100);
 		alph2 += .1; 
@@ -3148,6 +3150,9 @@ function drawBloodyBorder(){
 		ctx.globalAlpha = Math.round(alph2 * 100) / 100;
 		var bloodyBorderScale = 3; //increase to push blood more to edges upon low damage
 		drawImage(Img.bloodyBorder, -(bloodyScale * bloodyBorderScale)/2, -(bloodyScale * bloodyBorderScale)/2, canvasWidth + bloodyScale*bloodyBorderScale, canvasHeight + bloodyScale*bloodyBorderScale);
+		if (Player.list[myPlayer.id].health <= 0){
+			drawImage(Img.redDeath, -(bloodyScale * bloodyBorderScale)/2, -(bloodyScale * bloodyBorderScale)/2, canvasWidth + bloodyScale*bloodyBorderScale, canvasHeight + bloodyScale*bloodyBorderScale);
+		}
 		ctx.globalAlpha = 1;
 	}
 }
