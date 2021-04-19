@@ -2620,7 +2620,7 @@ function drawShots(){
 
 var laserOn = true;
 function drawLaser(){
-	if (myPlayer.pressingShift && !shop.active && Player.list[myPlayer.id].reloading <= 0){
+	if (myPlayer.pressingShift && !shop.active && Player.list[myPlayer.id].reloading <= 0 && myPlayer.health > 0){
 		if (laserOn == false){
 			laserOn = true;
 			return;

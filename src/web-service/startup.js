@@ -152,7 +152,7 @@ function getInstanceIdAndAddProcessesToLoadBalancer(){
 }
 
 function addGameServerToLoadBalancer(instanceId){
-	log("REGISTERING GAME SERVER");
+	log("REGISTERING GAME SERVER(S)");
 
   getLoadBalancerArn(config.EBName, function(loadBalancerArn){
     if (!loadBalancerArn){return;}
@@ -232,16 +232,18 @@ function addGameServerToLoadBalancer(instanceId){
 
 async function addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, gameTargetGroupArns, portArray){
 
-  if (!portArray[0]){
-    log("Add Processes To load balancer recursive COMPLETED");
-    return;
-  }
   log("Sleeping 1000 to avoid AWS throttling... [" + portArray[0] +"]");
   await sleep(1000);
   log("Done sleeping [" + portArray[0] +"]");
 
   log("Adding Processes To load balancer for these ports:");
   logObj(portArray);
+
+  if (typeof portArray[0] === 'undefined'){
+    log("Add Processes To load balancer recursive COMPLETED");
+    return;
+  }
+
   log("Now adding port " + portArray[0]);
   var portToCheck = portArray[0];
   portArray.shift();
@@ -255,7 +257,7 @@ async function addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, 
           });
         }
         else {
-          log("ERROR - Didn't get enough data to create Rule, or rule already exists (Need listenerArn:" + listenerArn + " targetGroupArn:" + upsertResult.targetGroupArn + " priority:" + priority + ")");
+          log("WARNING - Didn't get enough data to create Rule, or rule already exists (Need listenerArn:" + listenerArn + " targetGroupArn:" + upsertResult.targetGroupArn + " priority:" + priority + ")");
           addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, gameTargetGroupArns, portArray);
         }
       });

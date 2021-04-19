@@ -4,8 +4,8 @@ const ObjectId = require('mongodb').ObjectID;
 const fullShopList = require("./shopList.json");
 const defaultCustomizations = require("./defaultCustomizations.json");
 
-// const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
-const defaultCustomizationOptions = fullShopList.map(item => item.id);
+const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
+//const defaultCustomizationOptions = fullShopList.map(item => item.id); //ALL customizations unlocked
 
 const defaultSettings = require("./defaultSettings.json");
 
