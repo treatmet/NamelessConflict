@@ -72,7 +72,7 @@ global.ctfRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
 global.bagDrag = 0.85;
 //Cloaking config
 global.cloakingEnabled = true;
-global.cloakDrainSpeed = 0.09;
+global.cloakDrainSpeed = 0.12;
 global.cloakDrag = 0.5; //Walking speed multiplier when cloaked
 global.cloakInitializeSpeed = 0.02;
 global.cloakDeinitializeSpeed = 0.1;

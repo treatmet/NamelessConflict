@@ -1458,7 +1458,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
 							player.rechargeDelay = rechargeDelayTime;
 							// if (player.name != "RTPM3")
-							// 	player.energy -= 25;
+							player.energy -= 25;
 							if (player.energy <= 0){
 								player.rechargeDelay = rechargeDelayTime * 2;
 								player.energy = 0;
