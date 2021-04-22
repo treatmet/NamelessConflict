@@ -17,7 +17,7 @@ var getAuthorizedUser = async function(cookies){
 
 var getTokenFromCodeAndValidate = async function(code){
 	var error = false;
-	var redirectUri = 'https://rw.treatmetcalf.com/';
+	var redirectUri = 'https://ss.treatmetcalf.com/';
 	
 	if (isLocal)
 		redirectUri = 'https://rw2.treatmetcalf.com/';

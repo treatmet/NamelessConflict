@@ -1431,7 +1431,9 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 	if (miscPack.pcMode){
 		pcMode = miscPack.pcMode;
 	}
+	drawEverything();
 });
+
 
 //Goes to only a single player init initialize 
 socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockPack, miscPack){
@@ -1756,6 +1758,15 @@ function drawImage(img, x, y, width = 0, height = 0){
 	}
 	else {
 		ctx.drawImage(img, Math.round(x), Math.round(y), Math.round(width), Math.round(height));
+	}
+}
+
+function drawImageCtx(context, img, x, y, width = 0, height = 0){
+	if (width == 0 || height == 0){
+		context.drawImage(img, Math.round(x), Math.round(y));
+	}
+	else {
+		context.drawImage(img, Math.round(x), Math.round(y), Math.round(width), Math.round(height));
 	}
 }
 
@@ -2204,6 +2215,8 @@ function drawBlocksOnBlockCanvas(){
 	}
 }
 
+
+
 var warpImageSwapper = 1;
 function drawBlockCanvas(){
 	//noShadow();
@@ -2342,7 +2355,8 @@ function drawBags(){
 }
 
 function drawTorsos(){
-		
+	tCtx.clearRect(0,0, torso_canvas.width, torso_canvas.height); //Clears previous frame!!!!!!
+
 	for (var i in Player.list) {		
 		const team = Player.list[i].team;
 		if (Player.list[i].health > 0 && team != 0){
@@ -2480,11 +2494,30 @@ function drawTorsos(){
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
-					drawImage(img, -img.width/2 * zoom, (-img.height/2 + playerCenterOffset) * zoom, img.width * zoom, img.height * zoom); //Draw torso	
 
 
 
 
+					// var dArr = [-1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1], // offset array
+					// s = 2,  // thickness scale
+					// it = 0,  // iterator
+					// x = -img.width/2 * zoom,  // final position
+					// x = 50;
+					// y = (-img.height/2 + playerCenterOffset) * zoom;
+					// y = 50;
+					
+					// // draw images at offsets from the array scaled by s
+					// for(; it < dArr.length; it += 2){
+					// 	var finalX = x + dArr[it]*s;
+					// 	var finalY = y + dArr[it+1]*s;
+					// 	rCtx.drawImage(img, finalX, finalY, img.width * zoom, img.height * zoom);
+					// 	//console.log("rCtx x:" + finalX + " rCtx y:" + finalY);
+					// }
+					
+					var canX = -img.width/2 * zoom;
+					var canY = (-img.height/2 + playerCenterOffset) * zoom;
+					drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //Draw torso	
+					//console.log("---CTX x:" + canX + " rCtx y:" + canY);
 
 					//-------------------------------------------------------------------------------------	
 					
@@ -2512,7 +2545,7 @@ function drawTorsos(){
 						if (Player.list[i].weapon == 1 || Player.list[i].weapon == 2){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2 + strapOffset) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
 						else if (Player.list[i].weapon == 3){drawImage(Img.bagBlueStrap,-(img.width/2) * zoom,(-img.height/2+10) * zoom, Img.bagBlueStrap.width * zoom, Img.bagBlueStrap.height * zoom);}
 					}				
-                ctx.restore();	
+				ctx.restore();	
 			}
 		}//End health > 0 check
 	} //End player for loop
@@ -3116,11 +3149,12 @@ function drawInformation(){
 		//Version and debug text label1 //debug lable1
 
 		if (showStatOverlay == true){
-			fillText("Health:" + Player.list[myPlayer.id].health, 5, 35); //debug
 			fillText(version + "  |  ping:" + ping, 5, 15);
-			fillText("boosting: " + Player.list[myPlayer.id].boosting, 5, 55); //debug info
-			fillText("speedX: " + Player.list[myPlayer.id].speedX, 5, 75); //debug
-			fillText("speedY: " + Player.list[myPlayer.id].speedY, 5, 95); //debug
+			fillText("Health:" + Player.list[myPlayer.id].health, 5, 35); //debug
+			
+			//fillText("boosting: " + Player.list[myPlayer.id].boosting, 5, 55); //debug info
+			//fillText("speedX: " + Player.list[myPlayer.id].speedX, 5, 75); //debug
+			//fillText("speedY: " + Player.list[myPlayer.id].speedY, 5, 95); //debug
 			// fillText("PressingD: " + myPlayer.pressingD, 5, 115); //debug
 
 		}
@@ -4088,64 +4122,42 @@ function drawMute(){
 	}
 }
 
-//Client timer1 teimer1
+
+function drawRedEffectsLayer(){
+	noShadow();
+
+	rCtx.globalCompositeOperation = "source-over";
+	rCtx.clearRect(0,0,red_canvas.width,red_canvas.height); //Clears previous frame!!!!!!
+
+	//draw torso outlines
 
 
+	//rCtx.globalCompositeOperation = "source-in";
+	rCtx.fillStyle = "red";
+	rCtx.fillRect(0,0, red_canvas.width, red_canvas.height);
+	
 
-//Option1
-/*
-setInterval(function(){	
-	drawEverything();	
-},1000/60);// End timer1()
-
-*/
-
-/*
-//Option2
-let request;
-const animate = () => {
-    request = requestAnimationFrame(animate);
-    drawEverything();
+	rCtx.fillRect(0,0, red_canvas.width, red_canvas.height);
+	
+	ctx.drawImage(red_canvas, 0, 0);
 }
-animate();
-*/
 
-/*
-*/
-//Option3
-var fps, fpsInterval, startTime, now, then, elapsed;
-startAnimating(60);
-function startAnimating(fps) {
-    fpsInterval = 1000 / fps;
-    then = Date.now();
-    startTime = then;
-    animate();
-}
-function animate() {
-    // request another frame
-    requestAnimationFrame(animate);
-    // calc elapsed time since last loop
-    now = Date.now();
-    elapsed = now - then;
 
-    // if enough time has elapsed, draw the next frame
-    if (elapsed > fpsInterval) {
-        // Get ready for next frame by setting then=now, but...
-        // Also, adjust for fpsInterval not being multiple of 16.67
-        then = now - (elapsed % fpsInterval);
-		drawEverything();
-    }
-}
 
 var m_canvas = document.createElement('canvas');
 var mCtx = m_canvas.getContext("2d", { alpha: false });
 
-var UI_canvas = document.createElement('canvas');
-var uiCtx = UI_canvas.getContext("2d", { alpha: false });
-
 var block_canvas = document.createElement('canvas');
 var blockCtx = block_canvas.getContext("2d", { alpha: true });
 
+var torso_canvas = document.createElement('canvas');
+var tCtx = torso_canvas.getContext("2d", { alpha: false });
+torso_canvas.width = canvas.width;
+torso_canvas.height = canvas.height;
+
+var fpsCounter = 0;
+var fpsInLastSecond = 0;
+var updatesInLastSecond = 0;
 function drawEverything(){
 	//Don't draw anything if the user hasn't entered the game with a player id and name
 	if (myPlayer.name == "" || !Player.list[myPlayer.id])
@@ -4171,7 +4183,11 @@ function drawEverything(){
 	drawPickups();
 	drawBags();
 	drawThugs();
+
+	
 	drawBoosts();
+	
+
 	drawTorsos();
 	drawShots();
 	drawBlood();
@@ -4182,6 +4198,7 @@ function drawEverything(){
 	
 	drawShop();	
 	drawUILayer();
+	fpsCounter++;
 }
 
 
@@ -4189,9 +4206,106 @@ function drawEverything(){
 //drawExperiments
 
 
+//Client timer1 teimer1
+
+//Option1
+/*
+setInterval(function(){	
+	drawEverything();	
+},1000/60);// End timer1()
+
+*/
+
+/*
+//Option2
+let request;
+const animate = () => {
+    request = requestAnimationFrame(animate);
+    drawEverything();
+}
+animate();
+*/
+
+/*
+*/
+//Option3
+// var fps, fpsInterval, startTime, now, then, elapsed;
+// startAnimating(60);
+// function startAnimating(fps) {
+//     fpsInterval = 1000 / fps;
+//     then = Date.now();
+//     startTime = then;
+//     animate();
+// }
+// function animate() {
+//     // request another frame
+//     requestAnimationFrame(animate);
+//     // calc elapsed time since last loop
+//     now = Date.now();
+//     elapsed = now - then;
+
+//     // if enough time has elapsed, draw the next frame
+//     if (elapsed > fpsInterval) {
+//         // Get ready for next frame by setting then=now, but...
+//         // Also, adjust for fpsInterval not being multiple of 16.67
+//         then = now - (elapsed % fpsInterval);
+// 		drawEverything();
+//     }
+// }
+
+// //Option4
+// var HighResolutionTimer = function(options) {
+//     this.timer = false;
+
+//     this.total_ticks = 0;
+
+//     this.start_time = undefined;
+//     this.current_time = undefined;
+
+//     this.duration = (options.duration) ? options.duration : 1000;
+//     this.callback = (options.callback) ? options.callback : function() {};
+
+//     this.run = function() {
+//       this.current_time = Date.now();
+//       if (!this.start_time) { this.start_time = this.current_time; }
+      
+//       this.callback(this);
+
+// 	  var nextTick = this.duration - (this.current_time - (this.start_time + (this.total_ticks * this.duration) ) );
+// 	  if (nextTick < this.duration - this.duration/2){nextTick = this.duration/2;}
+
+// 	  this.total_ticks++;
+
+//       (function(i) {
+//         i.timer = setTimeout(function() {
+//           i.run();
+//         }, nextTick);
+//       }(this));
+
+//       return this;
+//     };
+
+//     this.stop = function(){
+//       clearTimeout(this.timer);
+//       return this;
+//     };
+    
+//     return this;
+// };
+// const tickLengthMs = 1000/60;
+// var _timer = HighResolutionTimer({
+//     duration: tickLengthMs,
+//     callback: drawEverything
+// });
+// _timer.run();
+/////////////////////////////////////////////////////////////////////////////////////////
+//Option 5
+//PUT drawEverything() in socket.on('update') function
+
 
 //--------------------------------END TIMER 1--------------------------------	
 	
+
 
 var clientTimeoutSeconds = 60000;
 var clientTimeoutTicker = clientTimeoutSeconds;
@@ -4220,8 +4334,6 @@ setInterval(
 			}
 			
 		}
-
-		
 	},
 	1000/1 //Ticks per second
 );

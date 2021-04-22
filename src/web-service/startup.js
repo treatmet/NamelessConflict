@@ -73,7 +73,7 @@ function processArgs(){
 		getAwsIp(function(){
 			getInstanceIdAndAddProcessesToLoadBalancer();
 		});
-		serverHomePage = "https://rw.treatmetcalf.com/";
+		serverHomePage = "https://ss.treatmetcalf.com/";
 	}
 }
 

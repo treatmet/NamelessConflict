@@ -1006,10 +1006,7 @@ var joinGame = function(cognitoSub, username, team, partyId){
 //------------------------------------------------------------------------------
 const tickLengthMs = 1000/60;
 var previousTick = Date.now();
-var prevPrevTick = Date.now();
-var nextTick = Date.now() + tickLengthMs;
 var ticksSinceLastSecond = 0;
-var sloppyGameTimerWindowMs = 8;
 var warnCount = 0;
 
 var gameLoop = function(){

@@ -34,7 +34,7 @@ function checkIfTasksAreComplete(){
 
 
 //Running locally
-if (!EBName){
+if (!EBName){ 
     var localConfig = require("./config.json");
     if (localConfig){
         console.log("Running locally...");

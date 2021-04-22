@@ -79,7 +79,7 @@ function processArgs(){
 	}
 	else {
 		getAwsIp();
-		serverHomePage = "https://rw.treatmetcalf.com/";
+		serverHomePage = "https://ss.treatmetcalf.com/";
 	}
 
 	if (port == "3001"){

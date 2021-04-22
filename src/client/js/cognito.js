@@ -22,7 +22,7 @@ var partyId = "";
 var userCash = 0;
 var federatedUser = false;
 var pcMode = 1;
-var serverHomePage = "https://rw.treatmetcalf.com/";
+var serverHomePage = "https://ss.treatmetcalf.com/";
 var isLocal = false;
 var defaultCustomizations = {red:{}, blue:{}};
 
@@ -104,7 +104,7 @@ function updateProfileLink(){
 
 function setPcModeAndIsLocalElements(data){
 	pcMode = data.pcMode;
-	var redirectUri = "https://rw.treatmetcalf.com/";
+	var redirectUri = "https://ss.treatmetcalf.com/";
 	if (data.isLocal == true){
 		redirectUri = "https://rw2.treatmetcalf.com/";
 	}	
@@ -163,7 +163,7 @@ function autoPlayNow(){
 function playNow(){
 	log("playNow on this server");
 	var options = {};
-	var postUrl = 'https://rw.treatmetcalf.com/playNow?server=' + serverP + '&process=' + processP;
+	var postUrl = 'https://ss.treatmetcalf.com/playNow?server=' + serverP + '&process=' + processP;
 	if (isLocal) {
 		postUrl = "/playNow";
 	}
