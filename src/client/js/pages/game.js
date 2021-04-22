@@ -158,6 +158,42 @@ function normalShadow() {
 		ctx.shadowBlur = 4;
 	}
 }
+
+function redShadow1(){
+	ctx.shadowColor = "#FF0000";
+	ctx.shadowOffsetX = 2; 
+	ctx.shadowOffsetY = 2;
+}
+function redShadow2(){
+	ctx.shadowColor = "#FF0000";
+	ctx.shadowOffsetX = -2; 
+	ctx.shadowOffsetY = 2;
+}
+function redShadow3(){
+	ctx.shadowColor = "#FF0000";
+	ctx.shadowOffsetX = -2; 
+	ctx.shadowOffsetY = -2;
+}
+function redShadow4(){
+	ctx.shadowColor = "#FF0000";
+	ctx.shadowOffsetX = 2; 
+	ctx.shadowOffsetY = -2;
+}
+
+function redShadow0() {
+	ctx.shadowColor = "red";
+	ctx.shadowOffsetX = 0; 
+	ctx.shadowOffsetY = 0;
+	ctx.shadowBlur = 3;
+}
+
+function redShadow00() {
+	ctx.shadowColor = "red";
+	ctx.shadowOffsetX = 0; 
+	ctx.shadowOffsetY = 0;
+	ctx.shadowBlur = 0;
+}
+
 function noShadow() {
 	ctx.shadowColor = "#000000";
 	ctx.shadowOffsetX = 0; 
@@ -2490,7 +2526,7 @@ function drawTorsos(){
 						img = Player.list[i].team == 1 ? Img.whitePlayerPistol : Img.blackPlayerPistol;
 					}
 
-					//actually draw the torso Actually
+					
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
@@ -2516,7 +2552,16 @@ function drawTorsos(){
 					
 					var canX = -img.width/2 * zoom;
 					var canY = (-img.height/2 + playerCenterOffset) * zoom;
-					drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //Draw torso	
+
+					redShadow1();
+					drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+					redShadow2();
+					drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+					redShadow3();
+					drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+					redShadow4();
+					drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+
 					//console.log("---CTX x:" + canX + " rCtx y:" + canY);
 
 					//-------------------------------------------------------------------------------------	
