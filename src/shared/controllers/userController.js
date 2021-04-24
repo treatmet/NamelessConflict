@@ -299,6 +299,9 @@ router.post('/validateToken', async function (req, res) {
 	}
 
 	var httpResult = {};
+
+
+		
 	if (result && result.cognitoSub && result.username && result.refresh_token && result.access_token) {
 		//Success
 		logg("Authentication SUCCESS!");
@@ -317,6 +320,7 @@ router.post('/validateToken', async function (req, res) {
 			port:port,
 			isWebServer:isWebServer,
 			isLocal:isLocal,
+			serverHomePage:serverHomePage,
 			pcMode:pcMode,
 			defaultCustomizations:dataAccessFunctions.defaultCustomizations,
 			msg:result.msg || "(no response message)"
@@ -329,6 +333,7 @@ router.post('/validateToken', async function (req, res) {
 			httpResult = {
 				isWebServer:isWebServer,
 				isLocal:isLocal,
+				serverHomePage:serverHomePage,
 				pcMode:pcMode,
 				msg:result.msg || "(unhandled error)"
 			};

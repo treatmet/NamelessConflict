@@ -19,7 +19,7 @@ var getTokenFromCodeAndValidate = async function(code){
 	var error = false;
 	var redirectUri = 'https://ss.treatmetcalf.com/';
 	
-	if (isLocal)
+	if (isLocal || isTest)
 		redirectUri = 'https://rw2.treatmetcalf.com/';
 	
 

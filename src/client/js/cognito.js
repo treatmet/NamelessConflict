@@ -54,7 +54,10 @@ function getTokenFromUrlParameterAndLogin(){
         log("validateToken response:");
         console.log(data);
 		
-        if (data && data.username){
+		serverHomePage = data.serverHomePage;
+		if (data && data.username){
+			//Login Success
+
 			cognitoSub = data.cognitoSub;
 			console.log("data.cash: " + data.cash);
 			userCash = data.cash ?? 0;
@@ -104,8 +107,8 @@ function updateProfileLink(){
 
 function setPcModeAndIsLocalElements(data){
 	pcMode = data.pcMode;
-	var redirectUri = "https://ss.treatmetcalf.com/";
-	if (data.isLocal == true){
+	var redirectUri = serverHomePage;
+	if (data.isLocal == true || serverHomePage != "https://ss.treatmetcalf.com/"){
 		redirectUri = "https://rw2.treatmetcalf.com/";
 	}	
 	
@@ -163,7 +166,7 @@ function autoPlayNow(){
 function playNow(){
 	log("playNow on this server");
 	var options = {};
-	var postUrl = 'https://ss.treatmetcalf.com/playNow?server=' + serverP + '&process=' + processP;
+	var postUrl = serverHomePage + 'playNow?server=' + serverP + '&process=' + processP;
 	if (isLocal) {
 		postUrl = "/playNow";
 	}
