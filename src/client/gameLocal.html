@@ -1,0 +1,158 @@
+<head>
+	<html style="background-color: #303030;"><head>
+	<link href='https://fonts.googleapis.com/css?family=Armata' rel='stylesheet'>
+	<link href='https://fonts.googleapis.com/css?family=Changa' rel='stylesheet'>
+	<link href='https://fonts.googleapis.com/css?family=Electrolize' rel='stylesheet'>
+	<link href='https://fonts.googleapis.com/css?family=Iceberg' rel='stylesheet'>
+	<link href='https://fonts.googleapis.com/css?family=Iceland' rel='stylesheet'>
+	<link type="text/css" rel="stylesheet" href="/client/style/style.css">
+	
+	<!--AUTH-->
+
+	<script src="https://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript"></script> 
+	<script src="/client/js/amazon-cognito-auth.min.js"></script>
+	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script> 
+	<script src="/client/js/amazon-cognito-identity.min.js"></script>   
+</head>
+
+<body style="margin: 0px;overflow-y: hidden;overflow-x: hidden;">
+<!--<div include-html-header="/client/header.html"></div>-->
+    
+<!--LEFT MENU-->
+<table class="leftMenu" id="leftMenu" style="display:none;">
+	<tbody>
+		<tr>
+			<td class="menuLeftLink"><a href="/" style="" class="elecText" id="homeLink">&lt;Back</a></td>		  
+		</tr>
+		<tr>
+			<td><br></td>
+		</tr>
+		
+		<tr>
+			<td><br></td>
+		</tr>
+
+
+
+		<tr>
+			<td>Tip:</td>
+		</tr>
+		<tr>
+			<td id="tipContent">For best game performance, close all other browser tabs and applications.</td>
+		</tr>		
+		
+
+		<tr>
+			<td>
+				<table class="leftMenu" id="voteMenu" style="display:none;">
+					<tbody id="voteGametypeTable">
+						<tr>
+							<td>Vote next game type:</td>
+						</tr>
+						<tr>
+							<td><button id="voteCTF" class="RWButton" style="" onclick="voteCTF()">CTF - [0]</button></td>
+						</tr>
+						<tr>
+							<td><button id="voteDeathmatch" class="RWButton" style="" onclick="voteDeathmatch()">Deathmatch - [0]</button></td>
+						</tr>
+						<tr>
+							<td><br></td>
+						</tr>
+					</tbody>
+					<tbody id="voteMapTable">
+						<tr>
+							<td>Vote next map:</td>
+						</tr>
+						<tr>
+							<td><button id="voteLongest" class="RWButton" style="" onclick="voteLongest()">Longest - [0]</button></td>
+						</tr>
+						<tr>
+							<td><button id="voteThePit" class="RWButton" style="" onclick="voteThePit()">The Pit - [0]</button></td>
+						</tr>								
+						<tr>
+							<td><button id="voteCrik" class="RWButton" style="" onclick="voteCrik()">Battle Creek - [0]</button></td>
+						</tr>								
+					</tbody>
+				</table>
+			</td>
+		</tr>		
+	</tbody>
+</table>
+
+<table class="rightMenu" id="rightMenu" style="display:none;">
+	<tbody>
+		<tr>
+			<td class="menuRightLink" id="menuRightLink"><a href="/" style="" class="elecText" id="profileLink">Profile&gt;</a></td>		  
+		</tr>
+		<tr>
+			<td><br></td>
+		</tr>
+		
+		<tr>
+			<td><br></td>
+		</tr>
+
+
+
+		<tr>
+			<td>CONTROLS:</td>
+		</tr>
+		<tr>
+			<td id="controlsContent">
+			Move: WASD<br>
+			Shoot: Arrow Keys<br>
+			Dash: [Space] while moving<br>
+			Cloak: [Space] while still<br>
+			<br>
+			Reload: [R]<br>
+			Change Gun: [Q],[E] or 1-4<br>
+			Look: [Shift]<br>
+			<br>
+			Chat: [Enter]<br>
+			Scoreboard: [Esc]<br>
+			</td>
+		</tr>		
+			
+	</tbody>
+</table>
+		
+<!--CANVAS-->
+<div id="canvasDiv" style="display:none; margin: auto; width: 1100px; margin-top: 8px;">	
+	<canvas id="ctx" width="1100" height="900"></canvas>
+	<!--<canvas id="ctx2" width="1100" height="900" style="border: 2px solid rgb(0, 0, 0);margin: -2px;position: absolute; top: 5px;"></canvas> -->
+
+	<div id="chat-window" style="width: 400px; position:absolute; margin-top: -200px;">
+		<div id="chat-text" style="overflow:hidden; width:400px; height:170px; color: white; 
+		text-shadow: 1px 0px 1px #333, 1px 0px 1px #333, 0px 1px 1px #333, 0px -1px 1px #333, -1px -1px 0px #333, 1px -1px 0px #333, -1px 1px 0px #333, 1px 1px 0px #333;		
+		padding-left: 5px;
+		">
+		<!---HARDER TEXT OUTLINE:text-shadow: -1px 0px 0 #333, 1px 0px 0 #333, 0px 1px 0 #333, 0px -1px 0 #333, -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333, 1px 1px 0 #333; -->
+		<!---SOFTER TEXT OUTLINE: text-shadow: 1px 0px 1px #333, 1px 0px 1px #333, 0px 1px 1px #333, 0px -1px 1px #333, -1px -1px 0px #333, 1px -1px 0px #333, -1px 1px 0px #333, 1px 1px 0px #333; -->
+			<div></div>
+		</div>
+		<form id="chat-form" style="padding-left: 5px;">
+			<input id="chat-input" type="text" maxlength="45" autocomplete="off" style="display:none; width:300px; background: rgba(255, 255, 255, 0.18);
+			color: white; 
+			text-shadow: 1px 0px 1px #444, 1px 0px 1px #444, 0px 1px 1px #444, 0px -1px 1px #444, -1px -1px 0px #444, 1px -1px 0px #444, -1px 1px 0px #444, 1px 1px 0px #444;
+			">
+		</form>
+	</div> <!--End Chat Window -->
+
+</div> <!--End Canvas -->
+
+
+
+<div id="bottom"></div>
+
+<div id="newDiv" style="margin: auto; width: 200px;">
+	<!--<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>-->
+	<script src="/client/js/socket.io-1.4.5.js"></script>
+	<script src="/client/js/howler.core.js"></script>
+	<script src="/client/js/util.js"></script>
+	<script src="/client/js/cognito.js"></script>
+	<script src="/client/js/drawCustomizations.js"></script>
+	<script src="/client/js/pages/game.js"></script>
+</div>
+
+
+</body></html>
