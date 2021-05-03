@@ -701,7 +701,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		else if (self.afk >= 0 && self.team != 0){
 			//self.afk--;
 		}
-		else { //Boot em
+		else if (self.afk <= 0 && bootOnAfk) { //Boot em
 			socket.emit('reloadHomePage');
 			socket.disconnect();
 		}

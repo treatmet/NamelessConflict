@@ -31,9 +31,16 @@ app.use("/favicon.ico", express.static(getClientPath('favicon.ico')));
 app.use("/client", express.static(getClientPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
-logg("----------------------SERVER STARTUP-----------------------");
-
+logg("----------------------WEB SERVER STARTUP-----------------------");
 logg('Express server started on port ' + port + '.');
+logg("Environment: " + process.env.Environment);
+
+if (process.env.Environment == "Test"){
+	isTest = true;
+}
+else if (process.env.Environment == "Prod"){
+	isTest = false;
+}
 
 function testDB(){
 	logg('Initializing...');
@@ -64,6 +71,9 @@ function processArgs(){
 
 	isLocal = !hostname.toLowerCase().includes("compute");
   
+  if (isTest)
+    config.EBName = "SocketShot-Test";
+
 	if (isLocal){
 		logg("Updating app to run locally");
 		getIP();
@@ -72,8 +82,13 @@ function processArgs(){
 	else {
 		getAwsIp(function(){
 			getInstanceIdAndAddProcessesToLoadBalancer();
-		});
-		serverHomePage = "https://ss.treatmetcalf.com/";
+    });
+		if (!isTest){
+			serverHomePage = "https://ss.treatmetcalf.com/";
+		}
+		else {
+			serverHomePage = "https://sstest.treatmetcalf.com/";
+		}
 	}
 }
 

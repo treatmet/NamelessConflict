@@ -26,6 +26,8 @@ global.serverHomePage = "/";
 global.isWebServer = false;
 global.isLocal = false;
 
+global.isTest = false; //Flip for test deployment Testy!
+
 global.defaultShopSlotsUnlocked = 2; //Guess
 global.maxShopSlotsUnlocked = 5; //Upper limit on how many shop slots can be unlocked
 

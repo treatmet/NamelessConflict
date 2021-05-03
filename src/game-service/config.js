@@ -77,6 +77,7 @@ global.cloakDrag = 0.5; //Walking speed multiplier when cloaked
 global.cloakInitializeSpeed = 0.02;
 global.cloakDeinitializeSpeed = 0.1;
 global.playerMaxHealth = 175;
+global.bootOnAfk = false;
 global.AfkFramesAllowed = 6000 * 60; //seconds (translated to frames) //timeout
 
 //Weapons config
@@ -165,6 +166,9 @@ global.gametype = "ctf";
 global.maxPlayers = 4;
 global.isWebServer = false;
 global.isLocal = false;
+
+global.isTest = false; //Flip for test deployment Testy!
+
 global.privateServer = false;
 global.scoreToWin = 0;
 global.serverNumber = 1;

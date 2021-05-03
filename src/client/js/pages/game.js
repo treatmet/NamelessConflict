@@ -73,6 +73,7 @@ var version = "v 0.4.5"; //Post cognito
 var screenShakeScale = 0.5;
 var drawDistance = 10; 
 var playerCenterOffset = 4;
+var noPlayerBorders = false;
 
 var camOffSet = 350;//Offset is how many pixels away from the center the camera will go when aiming, greater value means player closer to edge of screen
 var diagCamOffSet = 200;
@@ -158,6 +159,84 @@ function normalShadow() {
 		ctx.shadowBlur = 4;
 	}
 }
+const damageFlashWidth = 3;
+function redShadow1(){
+	ctx.shadowColor = "#FF0000";
+	ctx.shadowOffsetX = damageFlashWidth; 
+	ctx.shadowOffsetY = 0;
+}
+function redShadow2(){
+	ctx.shadowColor = "#FF0000";
+	ctx.shadowOffsetX = -damageFlashWidth; 
+	ctx.shadowOffsetY = 0;
+}
+function redShadow3(){
+	ctx.shadowColor = "#FF0000";
+	ctx.shadowOffsetX = 0; 
+	ctx.shadowOffsetY = damageFlashWidth;
+}
+function redShadow4(){
+	ctx.shadowColor = "#FF0000";
+	ctx.shadowOffsetX = 0; 
+	ctx.shadowOffsetY = -damageFlashWidth;
+}
+function whiteShadow1(){
+	ctx.shadowColor = "#FFFFFF";
+	ctx.shadowOffsetX = damageFlashWidth; 
+	ctx.shadowOffsetY = 0;
+}
+function whiteShadow2(){
+	ctx.shadowColor = "#FFFFFF";
+	ctx.shadowOffsetX = -damageFlashWidth; 
+	ctx.shadowOffsetY = 0;
+}
+function whiteShadow3(){
+	ctx.shadowColor = "#FFFFFF";
+	ctx.shadowOffsetX = 0; 
+	ctx.shadowOffsetY = damageFlashWidth;
+}
+function whiteShadow4(){
+	ctx.shadowColor = "#FFFFFF";
+	ctx.shadowOffsetX = 0; 
+	ctx.shadowOffsetY = -damageFlashWidth;
+}
+const blueShadowColor = "#00385e";
+//const blueShadowColor = "#005b98";
+function blueShadow1(borderLength){
+	ctx.shadowColor = blueShadowColor;
+	ctx.shadowOffsetX = 0; 
+	ctx.shadowOffsetY = borderLength;
+}
+function blueShadow2(borderLength){
+	ctx.shadowColor = blueShadowColor;
+	ctx.shadowOffsetX = -borderLength; 
+	ctx.shadowOffsetY = 0;
+}
+function blueShadow3(borderLength){
+	ctx.shadowColor = blueShadowColor;
+	ctx.shadowOffsetX = borderLength; 
+	ctx.shadowOffsetY = 0;
+}
+function blueShadow4(borderLength){
+	ctx.shadowColor = blueShadowColor;
+	ctx.shadowOffsetX = 0; 
+	ctx.shadowOffsetY = -borderLength;
+}
+
+function redShadow0() {
+	ctx.shadowColor = "red";
+	ctx.shadowOffsetX = 0; 
+	ctx.shadowOffsetY = 0;
+	ctx.shadowBlur = 3;
+}
+
+function redShadow00() {
+	ctx.shadowColor = "red";
+	ctx.shadowOffsetX = 0; 
+	ctx.shadowOffsetY = 0;
+	ctx.shadowBlur = 0;
+}
+
 function noShadow() {
 	ctx.shadowColor = "#000000";
 	ctx.shadowOffsetX = 0; 
@@ -279,13 +358,11 @@ socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
 	
 	//Border (blink on flag stolen)
 	if (myPlayer.team == 1 && bagRed.captured == true && blinkOn == false){
-		canvas.style.margin = "-5px";
-		canvas.style.border = "5px solid #FF0000";
+		canvas.style.border = "2px solid #FF0000";
 		blinkOn = true;
 	}
 	else if (myPlayer.team == 2 && bagBlue.captured == true && blinkOn == false){
-		canvas.style.margin = "-5px";
-		canvas.style.border = "5px solid #FF0000";
+		canvas.style.border = "2px solid #FF0000";
 		blinkOn = true;
 	}
 	else {
@@ -297,21 +374,8 @@ socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
 
 function determineBorderStyle(){
 	canvas.style.border = "2px solid #000000";
-	if (myPlayer.health >= 175){
-		canvas.style.margin = "-5px";
-		canvas.style.border = "5px solid #005b98";						
-	}
-	else if (myPlayer.health >= 150){
-		canvas.style.margin = "-4px";
-		canvas.style.border = "4px solid #005b98";						
-	}
-	else if (myPlayer.health >= 125){
-		canvas.style.margin = "-3px";
-		canvas.style.border = "3px solid #005b98";						
-	}
-	else if (myPlayer.health >= 101){
-		canvas.style.margin = "-1px";
-		canvas.style.border = "1px solid #005b98";			
+	if (myPlayer.health >= 101){
+		canvas.style.border = "2px solid #005b98";			
 	}
 }
 
@@ -704,6 +768,7 @@ var sfxMGEquip = new Howl({src: ['/client/sfx/MGequip.mp3']});
 var sfxSGEquip = new Howl({src: ['/client/sfx/SGequipLoud.mp3']});
 
 var sfxClick = new Howl({src: ['/client/sfx/click.mp3']});
+sfxClick.volume(0.8);
 var sfxHealthPackGrab = new Howl({src: ['/client/sfx/healthPackGrab.mp3']});
 sfxHealthPackGrab.volume(.5);
 var sfxWeaponDrop = new Howl({src: ['/client/sfx/weaponDrop2.mp3']});
@@ -774,7 +839,7 @@ var myPlayer = {
 	pressingShift:false,
 };
 
-
+//new player
 var Player = function(id){
 	var self = {
 		id:id,
@@ -785,6 +850,7 @@ var Player = function(id){
 		width:94,
 		reloading:0,
 		triggerTapLimitTimer:0,
+		healthFlashTimer:100,
 		customizations: defaultCustomizations,
 		settings: false,
 		images:{ 1:{}, 2:{} }
@@ -2464,81 +2530,97 @@ function drawTorsos(){
 						}
 					}
 					
-					//Player damage flashing under
-					if (!(Player.list[i].cloakEngaged && team != Player.list[myPlayer.id].team)){
-						if (Player.list[i].health < 100){
-							healthFlashTimer--;
-							if (healthFlashTimer <= 4){
-								ctx.shadowColor = "#FF0000";
-								ctx.shadowOffsetX = 0; 
-								ctx.shadowOffsetY = 0;
-								ctx.shadowBlur = 0;		
-							}
-							if (Player.list[i].health < 30 && healthFlashTimer > 3 && healthFlashTimer <= 6){
-								ctx.shadowColor = "#FFFFFF";
-								ctx.shadowOffsetX = 0; 
-								ctx.shadowOffsetY = 0;
-								ctx.shadowBlur = 0;
-							}
-							if (healthFlashTimer <= 0 || healthFlashTimer > Player.list[i].health){
-								//healthFlashTimer = Player.list[i].health * .75; 						
-							}
-						}
-					}
+
 
 					if (typeof img == 'undefined'){ //Load default images if animation frames not yet drawn
 						img = Player.list[i].team == 1 ? Img.whitePlayerPistol : Img.blackPlayerPistol;
 					}
 
-					//actually draw the torso Actually
+					
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
 
-
-
-
-					// var dArr = [-1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1], // offset array
-					// s = 2,  // thickness scale
-					// it = 0,  // iterator
-					// x = -img.width/2 * zoom,  // final position
-					// x = 50;
-					// y = (-img.height/2 + playerCenterOffset) * zoom;
-					// y = 50;
-					
-					// // draw images at offsets from the array scaled by s
-					// for(; it < dArr.length; it += 2){
-					// 	var finalX = x + dArr[it]*s;
-					// 	var finalY = y + dArr[it+1]*s;
-					// 	rCtx.drawImage(img, finalX, finalY, img.width * zoom, img.height * zoom);
-					// 	//console.log("rCtx x:" + finalX + " rCtx y:" + finalY);
-					// }
 					
 					var canX = -img.width/2 * zoom;
 					var canY = (-img.height/2 + playerCenterOffset) * zoom;
-					drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //Draw torso	
+
+					//Player damage flashing
+					var drewPlayerBorder = false;
+					if (!(Player.list[i].cloakEngaged && team != Player.list[myPlayer.id].team) && !noPlayerBorders){
+						if (Player.list[i].health < 100){
+							if (typeof Player.list[i].healthFlashTimer == 'undefined')
+								Player.list[i].healthFlashTimer = 100;
+							Player.list[i].healthFlashTimer--;
+							const redFlashLength = 7;
+							const whiteFlashLength = 3;
+							if (Player.list[i].healthFlashTimer <= redFlashLength && Player.list[i].healthFlashTimer > whiteFlashLength && Player.list[i].health < 80){
+								redShadow1();
+								drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+								redShadow2();
+								drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+								redShadow3();
+								drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+								redShadow4();
+								drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually				
+								drewPlayerBorder = true;
+							}
+							else if (Player.list[i].healthFlashTimer <= whiteFlashLength && Player.list[i].health < 30){
+								whiteShadow1();
+								drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+								whiteShadow2();
+								drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+								whiteShadow3();
+								drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+								whiteShadow4();
+								drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually				
+								drewPlayerBorder = true;
+							}
+							if (Player.list[i].healthFlashTimer <= 0 || Player.list[i].healthFlashTimer > Player.list[i].health){
+								Player.list[i].healthFlashTimer = Player.list[i].health * 0.75; 						
+							}
+						}
+						else if (Player.list[i].health > 100){
+							var borderLength = Math.ceil((Player.list[i].health - 100) / 25);
+							blueShadow1(borderLength);
+							drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+							blueShadow2(borderLength);
+							drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+							blueShadow3(borderLength);
+							drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+							blueShadow4(borderLength);
+							drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually				
+							drewPlayerBorder = true;
+						}
+
+					}
+
+					if (!drewPlayerBorder){
+						drawImage(img, canX, canY, img.width * zoom, img.height * zoom); //actually draw the torso Actually	
+					}
+
 					//console.log("---CTX x:" + canX + " rCtx y:" + canY);
 
 					//-------------------------------------------------------------------------------------	
 					
 					ctx.globalAlpha = 1;
 					
-					//Player damage flashing over
-					if (!(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
-						noShadow();
-						if (Player.list[i].health < 100){
-							healthFlashTimer--;
-							if (healthFlashTimer <= 4){
-								drawImage(Img.redFlash,-img.width/2 * zoom, (-img.height/2+5) * zoom, Img.redFlash.width * zoom, Img.redFlash.height * zoom);
-							}
-							if (Player.list[i].health < 30 && healthFlashTimer > 4 && healthFlashTimer <= 6){
-								drawImage(Img.whiteFlash,-img.width/2 * zoom, (-img.height/2+5) * zoom, Img.whiteFlash.width * zoom, Img.whiteFlash.height * zoom);
-							}
-							if (healthFlashTimer <= 0 || healthFlashTimer > Player.list[i].health){
-								healthFlashTimer = Player.list[i].health; 						
-							}
-						}
-					}
+					//////Player damage flashing over
+					// if (!(Player.list[i].cloakEngaged && Player.list[i].team != Player.list[myPlayer.id].team)){
+					// 	noShadow();
+					// 	if (Player.list[i].health < 100){
+					// 		healthFlashTimer--;
+					// 		if (healthFlashTimer <= 4){
+					// 			drawImage(Img.redFlash,-img.width/2 * zoom, (-img.height/2+5) * zoom, Img.redFlash.width * zoom, Img.redFlash.height * zoom);
+					// 		}
+					// 		if (Player.list[i].health < 30 && healthFlashTimer > 4 && healthFlashTimer <= 6){
+					// 			drawImage(Img.whiteFlash,-img.width/2 * zoom, (-img.height/2+5) * zoom, Img.whiteFlash.width * zoom, Img.whiteFlash.height * zoom);
+					// 		}
+					// 		if (healthFlashTimer <= 0 || healthFlashTimer > Player.list[i].health){
+					// 			healthFlashTimer = Player.list[i].health; 						
+					// 		}
+					// 	}
+					// }
 						
 					//Strap
 					if (Player.list[i].holdingBag == true){
@@ -3292,14 +3374,14 @@ function drawHUD(){
 		ctx.fillStyle="#FFFFFF";
 		ctx.lineWidth=4;
 		ctx.textAlign="right";
-		fillText(clipCount, canvasWidth - 101, canvasHeight - 9 - liftBottomHUD);
+		fillText(clipCount, canvasWidth - 99, canvasHeight - 9 - liftBottomHUD);
 		ctx.font = '63px Electrolize';
-		fillText("/", canvasWidth - 65, canvasHeight - 15 - liftBottomHUD);
+		fillText("/", canvasWidth - 63, canvasHeight - 15 - liftBottomHUD);
 		if (Player.list[myPlayer.id].weapon == 1){
 			drawImage(Img.infinity, canvasWidth - 77, canvasHeight - 42 - liftBottomHUD);		
 		}
 		else {
-			ctx.font = '44px Electrolize';
+			ctx.font = '38px Electrolize';
 			ctx.textAlign="left";
 			fillText(ammoCount,canvasWidth - 70, canvasHeight - 9 - liftBottomHUD);
 		}
@@ -3735,7 +3817,7 @@ function drawPostGameProgress(){
 			}
 			ctx.fillStyle="#000"; //Border rect
 			ctx.fillRect(canvasWidth/2 - postGameBarWidth/2 - 1, postGameProgressExpBarY - 1 + postGameProgressY, postGameBarWidth + 2, postGameBarHeight + 2); //drawrect draw rectangle
-			ctx.fillStyle="#7d7d7d"; //Unfilled grey
+			ctx.fillStyle="#7d7d7d"; //unfilled grey
 			ctx.fillRect(canvasWidth/2 - postGameBarWidth/2, postGameProgressExpBarY + postGameProgressY, postGameBarWidth, postGameBarHeight); //drawrect draw rectangle
 			ctx.fillStyle="#0eb80e"; //Experience green
 			ctx.fillRect(canvasWidth/2 - postGameBarWidth/2, postGameProgressExpBarY + postGameProgressY, (postGameBarWidth * postGameProgressInfo.expPercentageToNext), postGameBarHeight); //drawrect draw rectangle
@@ -4311,6 +4393,7 @@ var clientTimeoutSeconds = 60000;
 var clientTimeoutTicker = clientTimeoutSeconds;
 var newTipSeconds = 45;
 var newTipTicker = newTipSeconds;
+var reloadOnServerTimeout = false; //Afk
 
 //EVERY 1 SECOND
 setInterval( 
@@ -4319,7 +4402,7 @@ setInterval(
 		if (clientTimeoutTicker < clientTimeoutSeconds - 5){
 			logg("No server messages detected, " + clientTimeoutTicker + " until timeout");
 		}
-		if (clientTimeoutTicker < 1){
+		if (clientTimeoutTicker < 1 && reloadOnServerTimeout){
 			logg("ERROR: Server Timeout. Reloading page...");
 			disconnect();
 			location.reload();
@@ -4500,7 +4583,6 @@ socket.on('shootUpdate', function(shotData){
 		sfxMG.volume(vol * .35);
 		sfxMG.play();
 		if (shotData.id == myPlayer.id && Player.list[shotData.id].MGClip <= 7){
-			sfxClick.volume(vol);
 			sfxClick.play();
 		}
 	}
@@ -4508,7 +4590,6 @@ socket.on('shootUpdate', function(shotData){
 		sfxDP.volume(vol);
 		sfxDP.play();
 		if (shotData.id == myPlayer.id && Player.list[shotData.id].DPClip <= 5){
-			sfxClick.volume(vol);
 			sfxClick.play();
 		}
 	}
@@ -4516,7 +4597,6 @@ socket.on('shootUpdate', function(shotData){
 		sfxPistol.volume(vol);
 		sfxPistol.play();
 		if (shotData.id == myPlayer.id && Player.list[shotData.id].PClip <= 5){
-			sfxClick.volume(vol);
 			sfxClick.play();
 		}
 	}
@@ -4524,7 +4604,6 @@ socket.on('shootUpdate', function(shotData){
 		sfxSG.volume(vol);
 		sfxSG.play();
 		if (shotData.id == myPlayer.id && Player.list[shotData.id].SGClip <= 3){
-			sfxClick.volume(vol);
 			sfxClick.play();
 		}
 		Player.list[shotData.id].triggerTapLimitTimer = SGTriggerTapLimitTimer;
@@ -4856,13 +4935,14 @@ document.onkeydown = function(event){
 	}
 	
 	else if(hitKeyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing
-	getNewTip();
-		ctx.beginPath();
-		if (Player.list[myPlayer.id]){
+		console.log(noPlayerBorders);
+		if (noPlayerBorders){
+			noPlayerBorders = false;
+		}
+		else {
+			noPlayerBorders = true;
+		}
 
-			//drawMapElementsOnMapCanvas();
-			//socket.emit('keyPress',{inputId:85,state:true});
-		}		
 	}
 	
 	
