@@ -20,37 +20,17 @@ function loginAlways(){
 	updateProfileLink();
 }
 
-function voteCTF(){
-	socket.emit("voteEndgame", myPlayer.id, "gametype", "ctf");
-	document.getElementById("voteCTF").disabled = true;
-	document.getElementById("voteDeathmatch").disabled = true;	
-}
-
-function voteDeathmatch(){
-	socket.emit("voteEndgame", myPlayer.id, "gametype", "slayer");
-	document.getElementById("voteCTF").disabled = true;
-	document.getElementById("voteDeathmatch").disabled = true;	
-}
-
-function voteLongest(){
-	socket.emit("voteEndgame", myPlayer.id, "map", "longest");
-	document.getElementById("voteLongest").disabled = true;
-	document.getElementById("voteCrik").disabled = true;
-	document.getElementById("voteThePit").disabled = true;	
-}
-
-function voteThePit(){
-	socket.emit("voteEndgame", myPlayer.id, "map", "thepit");
-	document.getElementById("voteLongest").disabled = true;
-	document.getElementById("voteCrik").disabled = true;
-	document.getElementById("voteThePit").disabled = true;	
-}
-				
-function voteCrik(){
-	socket.emit("voteEndgame", myPlayer.id, "map", "crik");
-	document.getElementById("voteLongest").disabled = true;
-	document.getElementById("voteCrik").disabled = true;
-	document.getElementById("voteThePit").disabled = true;	
+function voteEndgame(voteType, voteSelection){
+	if (voteType == "gametype"){
+		document.getElementById("voteCTF").disabled = true;
+		document.getElementById("voteDeathmatch").disabled = true;		
+	}
+	else if (voteType == "map"){
+		document.getElementById("voteLongest").disabled = true;
+		document.getElementById("voteCrik").disabled = true;
+		document.getElementById("voteThePit").disabled = true;		
+	}
+	socket.emit("voteEndgame", myPlayer.id, voteType, voteSelection);
 }
 
 socket.on('votesUpdate', function(votesData){
@@ -64,11 +44,12 @@ socket.on('votesUpdate', function(votesData){
 
 var debugTimer = 60;
 var debugText = true;
+var localGame = false;
 //'use strict';
 
 
 //-----------------Config----------------------
-var version = "v 0.4.5"; //Post cognito
+var version = "v 0.4.6"; //Scalable + customizations
 
 var screenShakeScale = 0.5;
 var drawDistance = 10; 
@@ -344,12 +325,14 @@ socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
 	secondsLeft = secondsLeftPlusZeroData;
 	if (minutesLeft > 0 || secondsLeft > 0){suddenDeath = false; suddenDeathAlpha = 1;}
 	
-	if (parseInt(minutesLeft)*60 + parseInt(secondsLeftPlusZeroData) == 60 && !mute){
-		sfxTimeWarning.play();
+	if (parseInt(minutesLeft)*60 + parseInt(secondsLeftPlusZeroData) == 60){
+		if (!mute){
+			sfxTimeWarning.play();
+		}
 		clockHeight = 266;
 	}
 	//log("CLOCK timeLimit:" + timeLimit.toString());
-	var timerleft = parseInt(minutesLeft)*60 + parseInt(secondsLeftPlusZeroData);
+	//var timerleft = parseInt(minutesLeft)*60 + parseInt(secondsLeftPlusZeroData);
 	//log("timeleft:" + timerleft);
 	if (parseInt(minutesLeft)*60 + parseInt(secondsLeftPlusZeroData) == 0 && suddenDeath == false && blackScore == whiteScore && timeLimit == true && !mute){
 		sfxSuddenDeath.play();
@@ -1150,9 +1133,12 @@ function getRotation(direction){
 }
 ////////////////////////////////////////////////////////////////////////////////////
 
-
 ////!!! Get rid of "var player =" before the init Player function. Do we need to allocate a new player var to init a Player?
 socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, miscPack){
+	updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, miscPack);
+});
+
+function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, miscPack){
 	var debugUpdates = false;
 	clientTimeoutTicker = clientTimeoutSeconds;
 	for (var i = 0; i < playerDataPack.length; i++) {
@@ -1498,11 +1484,14 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 		pcMode = miscPack.pcMode;
 	}
 	drawEverything();
-});
-
+}
 
 //Goes to only a single player init initialize 
 socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockPack, miscPack){
+	sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack, miscPack);
+});
+
+function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack, miscPack){
 	Player.list = [];
 	for (var i = 0; i < playerPack.length; i++) {
 		//Update myPlayer
@@ -1609,7 +1598,7 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 	BoostBlast.list = [];	
 	drawMapElementsOnMapCanvas();
 	drawBlocksOnBlockCanvas();
-});
+}
 
 function endGame(){
 	if (!mute){
@@ -4453,6 +4442,10 @@ socket.on('sendLog', function(msg){
 });
 
 socket.on('endGameProgressResults', function(endGameProgressResults){
+	endGameProgressResultsFunction(endGameProgressResults);
+});
+
+function endGameProgressResultsFunction(endGameProgressResults){
 	postGameProgressInfo.originalRating = endGameProgressResults.originalRating;
 	postGameProgressInfo.ratingDif = endGameProgressResults.ratingDif;
 	postGameProgressInfo.rank = getFullRankName(endGameProgressResults.rank);
@@ -4473,7 +4466,7 @@ socket.on('endGameProgressResults', function(endGameProgressResults){
 	postGameProgressInfo.expPercentageToNext = getProgressBarPercentage(endGameProgressResults.originalExp, endGameProgressResults.experienceFloor, endGameProgressResults.experienceCeiling);
 	//postGameProgressInfo.expDifPercentage = getProgressBarPercentage(Math.abs(endGameProgressResults.expDif), endGameProgressResults.experienceFloor, endGameProgressResults.experienceCeiling);
 	postGameReady = true;
-});
+}
 
 function getProgressBarPercentage(value, floor, ceiling){
 	if (value < floor){ //This should never happen. If it does, problem is server code
@@ -4488,7 +4481,11 @@ function getProgressBarPercentage(value, floor, ceiling){
 //------------------------------BLOOD FUNCTIONS----------------------------------
 //hit //gethit
 socket.on('sprayBloodOntoTarget', function(data){
-	var blood = Blood(data.targetX, data.targetY, data.shootingDir);	
+	sprayBloodOntoTargetFunction(data);
+});
+
+function sprayBloodOntoTargetFunction(data){
+	Blood(data.targetX, data.targetY, data.shootingDir);	
 	if (data.targetId == myPlayer.id){ screenShakeCounter = 8; } 
 	if (!mute){
 		var dx1 = myPlayer.x - data.targetX;
@@ -4513,7 +4510,7 @@ socket.on('sprayBloodOntoTarget', function(data){
 			sfxHit2.play();
 		}
 	}
-});
+}
 
 var Blood = function(x, y, direction){
 	var self = {
@@ -4565,9 +4562,13 @@ BoostBlast.list = [];
 
 
 socket.on('shootUpdate', function(shotData){	
+	shootUpdateFunction(shotData);
+});
+
+function shootUpdateFunction(shotData){
 	var newShot = false; //To keep double shot sounds from playing when shooting diagonally (pressing 2 "shoot" keys at once)
 	if (!Shot.list[shotData.id]){
-		var shot = Shot(shotData.id);
+		Shot(shotData.id);
 		newShot = true;
 	}
 	//Distance calc for volume
@@ -4613,7 +4614,7 @@ socket.on('shootUpdate', function(shotData){
 	}
 	Shot.list[shotData.id].distance = shotData.distance;
 	Shot.list[shotData.id].spark = shotData.spark;	
-});
+}
 
 var Shot = function(id){
 	
@@ -4692,25 +4693,25 @@ document.onkeydown = function(event){
 
 	if(hitKeyCode === 87 && chatInput.style.display == "none"){ //W
 		if (!myPlayer.pressingW && !shop.active){
-			socket.emit('keyPress',{inputId:87,state:true});
+			keyPress(87, true);
 		}
 		myPlayer.pressingW = true;
 	}
 	else if(hitKeyCode === 68 && chatInput.style.display == "none"){ //D
 		if (!myPlayer.pressingD && !shop.active){
-			socket.emit('keyPress',{inputId:68,state:true});
+			keyPress(68, true);
 		}
 		myPlayer.pressingD = true;
 	}
 	else if(hitKeyCode === 83 && chatInput.style.display == "none"){ //S
 		if (!myPlayer.pressingS && !shop.active){
-			socket.emit('keyPress',{inputId:83,state:true});
+			keyPress(83, true);
 		}
 		myPlayer.pressingS = true;
 	}
 	else if(hitKeyCode === 65 && chatInput.style.display == "none"){ //A
 		if (!myPlayer.pressingA && !shop.active){
-			socket.emit('keyPress',{inputId:65,state:true});
+			keyPress(65, true);
 		}
 		myPlayer.pressingA = true;
 	}		
@@ -4718,7 +4719,7 @@ document.onkeydown = function(event){
 		if (myPlayer.team != 0){
 			myPlayer.pressingUp = true;
 			if (!shop.active){
-				socket.emit('keyPress',{inputId:38,state:true});
+				keyPress(38, true);
 			}
 			else {
 				purchase();
@@ -4732,7 +4733,7 @@ document.onkeydown = function(event){
 		if (myPlayer.team != 0){
 			myPlayer.pressingRight = true;
 			if (!shop.active){
-				socket.emit('keyPress',{inputId:39,state:true});
+				keyPress(39, true);
 			}
 			else if (shop.selection < 5) {
 				shop.selection++;
@@ -4753,7 +4754,7 @@ document.onkeydown = function(event){
 		if (myPlayer.team != 0){
 			myPlayer.pressingDown = true;
 			if (!shop.active){
-				socket.emit('keyPress',{inputId:40,state:true});
+				keyPress(40, true);
 			}
 		}
 		else {
@@ -4764,7 +4765,7 @@ document.onkeydown = function(event){
 		if (myPlayer.team != 0){
 			myPlayer.pressingLeft = true;
 			if (!shop.active){
-				socket.emit('keyPress',{inputId:37,state:true});
+				keyPress(37, true);
 			}
 			else if (shop.selection > 1) {
 				shop.selection--;
@@ -4815,7 +4816,7 @@ document.onkeydown = function(event){
 	}
 
 	else if(hitKeyCode === 32 && chatInput.style.display == "none" && !shop.active){ //Space
-		socket.emit('keyPress',{inputId:32,state:true});
+		keyPress(32, true);
 		if ((myPlayer.pressingW || myPlayer.pressingD || myPlayer.pressingS || myPlayer.pressingA) && Player.list[myPlayer.id].boosting == 0 && !mute){
 			if (!Player.list[myPlayer.id].holdingBag && Player.list[myPlayer.id].energy >= 1){
 				//Boosting!
@@ -4828,65 +4829,57 @@ document.onkeydown = function(event){
 
 	}		
 	else if(hitKeyCode === 81 && chatInput.style.display == "none" && !shop.active){ //Q
-		socket.emit('keyPress',{inputId:81,state:true});
+		keyPress(81, true);
 	}	
 	else if(hitKeyCode === 69 && chatInput.style.display == "none" && !shop.active){ //E
-		socket.emit('keyPress',{inputId:69,state:true});
+		keyPress(69, true);
 	}	
 	else if(hitKeyCode === 82 && chatInput.style.display == "none" && !shop.active){ //R
-		socket.emit('keyPress',{inputId:82,state:true});
-	}
-	else if(hitKeyCode === 17 && chatInput.style.display == "none" && !shop.active){ //Ctrl
-		event.preventDefault();
-		socket.emit('keyPress',{inputId:82,state:true});
+		keyPress(82, true);
 	}
 	else if(hitKeyCode === 16 && chatInput.style.display == "none"){ //Shift
 		myPlayer.pressingShift = true;
 			camOffSet = shiftCamOffSet;
 			diagCamOffSet = shiftDiagCamOffSet;
 			camMaxSpeed = 300;
-		socket.emit('keyPress',{inputId:16,state:true});
+			keyPress(16, true);
 	}
 	else if(hitKeyCode === 49 && chatInput.style.display == "none"){ //1
-		socket.emit('keyPress',{inputId:49,state:true});
+		keyPress(49, true);
 	}	
 	else if(hitKeyCode === 50 && chatInput.style.display == "none"){ //2
-		socket.emit('keyPress',{inputId:50,state:true});
+		keyPress(50, true);
 	}	
 	else if(hitKeyCode === 51 && chatInput.style.display == "none"){ //3
-		socket.emit('keyPress',{inputId:51,state:true});
+		keyPress(51, true);
 	}	
 	else if(hitKeyCode === 52 && chatInput.style.display == "none"){ //4
-		socket.emit('keyPress',{inputId:52,state:true});
+		keyPress(52, true);
 	}	
 	
 	else if(hitKeyCode === 13){ //Enter
 		canvasDiv.style.backgroundColor="black";
 		if (chatInput.style.display == "inline"){
 			if (chatInput.value != "") {
-				if(chatInput.value[0] === '/' && chatInput.value[1] === '.'){ //Server command cmd
-					if (chatInput.value == '//shadow' || chatInput.value == '//shadows'){
-						if (noShadows){
-							noShadows = false;
-						}
-						else {
-							noShadows = true;
-						}
+				if (chatInput.value == './shadow' || chatInput.value == './shadows'){
+					if (noShadows){
+						noShadows = false;
 					}
-					else if (chatInput.value == '/.zoom' || chatInput.value == '/.zoom1'){
-						if (zoom == 1){
-							zoom = 0.75;
-						}
-						else {
-							zoom = 1;
-						}
-						drawMapElementsOnMapCanvas();
-						drawBlocksOnBlockCanvas();
+					else {
+						noShadows = true;
 					}
-					socket.emit('evalServer',chatInput.value.substring(2));
 				}
-
-				else {
+				else if (chatInput.value == './zoom' || chatInput.value == './zoom1'){
+					if (zoom == 1){
+						zoom = 0.75;
+					}
+					else {
+						zoom = 1;
+					}
+					drawMapElementsOnMapCanvas();
+					drawBlocksOnBlockCanvas();
+				}
+ 				else if (!localGame){
 					socket.emit('chat',[myPlayer.id, chatInput.value]);
 				}
 			}
@@ -4944,8 +4937,10 @@ document.onkeydown = function(event){
 		}
 
 	}
-	
-	
+}//end key down
+
+function keyPress(code, state){
+	socket.emit('keyPress',{inputId:code,state:state});
 }
 
 //Key Up
@@ -4963,59 +4958,42 @@ document.onkeyup = function(event){
 
 	if(hitKeyCode === 87){ //W
 		myPlayer.pressingW = false;
-		socket.emit('keyPress',{inputId:87,state:false});
+		keyPress(87, false);
 	}
 	else if(hitKeyCode === 68){ //D
 		myPlayer.pressingD = false;
-		socket.emit('keyPress',{inputId:68,state:false});
+		keyPress(68, false);
 	}
 	else if(hitKeyCode === 83){ //S
 		myPlayer.pressingS = false;
-		socket.emit('keyPress',{inputId:83,state:false});
+		keyPress(83, false);
 	}
 	else if(hitKeyCode === 65){ //A
 		myPlayer.pressingA = false;
-		socket.emit('keyPress',{inputId:65,state:false});
+		keyPress(65, false);
 	}		
 	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up
 		myPlayer.pressingUp = false;
 		if (!shop.active){
-			socket.emit('keyPress', {inputId:38,state:false});
+			keyPress(38, false);
 		}
 	}
 	else if(hitKeyCode === 39 && chatInput.style.display == "none"){ //Right
 		myPlayer.pressingRight = false;
 		if (!shop.active){
-			socket.emit('keyPress',{inputId:39,state:false});
+			keyPress(39, false);
 		}
 	}
 	else if(hitKeyCode === 40 && chatInput.style.display == "none"){ //Down
 		myPlayer.pressingDown = false;
-		if (shop.active){
-			shop.active = false;
-			
-			if (myPlayer.pressingW == true){
-				socket.emit('keyPress',{inputId:87,state:true});
-			}
-			if (myPlayer.pressingD == true){
-				socket.emit('keyPress',{inputId:68,state:true});
-			}
-			if (myPlayer.pressingS == true){
-				socket.emit('keyPress',{inputId:83,state:true});
-			}
-			if (myPlayer.pressingA == true){
-				socket.emit('keyPress',{inputId:65,state:true});
-			}
-			
-		}
-		else {
-			socket.emit('keyPress',{inputId:40,state:false});
+		if (!shop.active){
+			keyPress(40, false);
 		}
 	}
 	else if(hitKeyCode === 37 && chatInput.style.display == "none"){ //Left
 		myPlayer.pressingLeft = false;
 		if (!shop.active){
-			socket.emit('keyPress',{inputId:37,state:false});
+			keyPress(37, false);
 		}
 	}
 	
@@ -5024,7 +5002,7 @@ document.onkeyup = function(event){
 			camOffSet = 300;
 			diagCamOffSet = 200;
 			camMaxSpeed = 300;
-		socket.emit('keyPress',{inputId:16,state:false});
+			keyPress(16, false);
 	}
 	
 	else if(hitKeyCode === 84 && chatInput.style.display == "none" && myPlayer.name != ""){ //T

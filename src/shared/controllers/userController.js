@@ -4,8 +4,15 @@ var authenticationEngine = require('../engines/authenticationEngine.js');
 
 const express = require('express');
 const router = express.Router();
+const path = require("path");
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
+router.get('/getSharedCode', function(req, res) {
+	var pathToFile = path.join(__dirname, "../../shared/engines", "smallFile.js")
+	res.send(
+		fs.readFileSync(pathToFile)
+	);
+});
 
 router.post('/getPlayerRelationship', async function (req, res) {
 	//log("Get player Relationship endpoint called with:");

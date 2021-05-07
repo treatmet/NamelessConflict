@@ -59,7 +59,6 @@ function getTokenFromUrlParameterAndLogin(){
 			//Login Success
 
 			cognitoSub = data.cognitoSub;
-			console.log("data.cash: " + data.cash);
 			userCash = data.cash ?? 0;
 			updateCashHeaderDisplay(userCash);
 			
@@ -501,9 +500,18 @@ function showLocalElements(){
 }
 
 function localClick(){
-	console.log("NAVING22");
-	window.location.href = "https://google.com",true;
-	return false;
+	var params = {};
+	$.get('/getSharedCode', params, function(data,status){
+		logg("GET SHARED CODE RESPONSE:");
+		console.log(data);
+
+		var sharedCodeDiv = document.createElement('script');
+		sharedCodeDiv.innerHTML = data;
+		eval(data);
+		doIt();
+	
+
+	});
 }
 
 function showDefaultLoginButtons(){

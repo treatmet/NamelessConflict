@@ -1,5 +1,4 @@
 <head>
-	<title>R-Wars</title>
 	<html style="background-color: #303030;"><head>
 	<link href='https://fonts.googleapis.com/css?family=Armata' rel='stylesheet'>
 	<link href='https://fonts.googleapis.com/css?family=Changa' rel='stylesheet'>
@@ -51,10 +50,10 @@
 							<td>Vote next game type:</td>
 						</tr>
 						<tr>
-							<td><button id="voteCTF" class="RWButton" style="" onclick="voteCTF()">CTF - [0]</button></td>
+							<td><button id="voteCTF" class="RWButton" style="" onclick="voteEndgame('gametype', 'ctf')">CTF - [0]</button></td>
 						</tr>
 						<tr>
-							<td><button id="voteDeathmatch" class="RWButton" style="" onclick="voteDeathmatch()">Deathmatch - [0]</button></td>
+							<td><button id="voteDeathmatch" class="RWButton" style="" onclick="voteEndgame('gametype', 'slayer')">Deathmatch - [0]</button></td>
 						</tr>
 						<tr>
 							<td><br></td>
@@ -65,13 +64,13 @@
 							<td>Vote next map:</td>
 						</tr>
 						<tr>
-							<td><button id="voteLongest" class="RWButton" style="" onclick="voteLongest()">Longest - [0]</button></td>
+							<td><button id="voteLongest" class="RWButton" style="" onclick="voteEndgame('map', 'longest')">Longest - [0]</button></td>
 						</tr>
 						<tr>
-							<td><button id="voteThePit" class="RWButton" style="" onclick="voteThePit()">The Pit - [0]</button></td>
+							<td><button id="voteThePit" class="RWButton" style="" onclick="voteEndgame('map', 'thepit')">The Pit - [0]</button></td>
 						</tr>								
 						<tr>
-							<td><button id="voteCrik" class="RWButton" style="" onclick="voteCrik()">Battle Creek - [0]</button></td>
+							<td><button id="voteCrik" class="RWButton" style="" onclick="voteEndgame('map', 'crik')">Battle Creek - [0]</button></td>
 						</tr>								
 					</tbody>
 				</table>

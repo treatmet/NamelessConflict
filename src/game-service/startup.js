@@ -24,6 +24,7 @@ app.use(gameRouter);
 app.use(userRouter);
 
 app.use("/favicon.ico", express.static(getClientPath('favicon.ico')));
+
 app.use("/client", express.static(getClientPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
@@ -47,8 +48,11 @@ mapEngine.initializePickups(map);
 //-------------------------------------------------------------------------------------
 
 
-function getClientPath(relativePath) {
-	return path.join(__dirname, "../client", relativePath);
+function getClientPath(filename) {
+	return path.join(__dirname, "../client", filename);
+}
+function getRootPath(filename) {
+	return path.join(__dirname, "../", filename);
 }
 
 function testDB(){

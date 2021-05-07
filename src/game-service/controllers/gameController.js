@@ -33,6 +33,12 @@ router.get('/ping', function(req, res) {
 	});
 });
 
+router.get('/getSharedCode', function(req, res) {
+	res.send(
+		fs.readFileSync("../../shared/engines/sampleModule.js")
+	);
+});
+
 router.post('/playNow', async function (req, res) {
 	log("playNow endpoint");
 	if (myUrl == ""){
