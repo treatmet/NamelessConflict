@@ -59,7 +59,6 @@ function getTokenFromUrlParameterAndLogin(){
 			//Login Success
 
 			cognitoSub = data.cognitoSub;
-			console.log("data.cash: " + data.cash);
 			userCash = data.cash ?? 0;
 			updateCashHeaderDisplay(userCash);
 			
@@ -178,6 +177,11 @@ function playNow(){
 			window.location.href = serverHomePage;
 		}
 	});
+}
+
+function showMoreControls(){
+	document.getElementById("controlsRowTwo").style.display = "inline-block";
+	document.getElementById("learnToPlayMore").style.display = "none";
 }
 
 function getJoinableServer(options){
@@ -501,9 +505,8 @@ function showLocalElements(){
 }
 
 function localClick(){
-	console.log("NAVING22");
-	window.location.href = "https://google.com",true;
-	return false;
+	var params = {};
+	window.location.href = '/localGame';
 }
 
 function showDefaultLoginButtons(){
@@ -770,7 +773,7 @@ function getUserIconImg(iconCanvasValue, team, cb){
 		return;
     }
     var iconImg = new Image();
-    iconImg.src = "/client/img/dynamic/icon/" + iconCanvasValue + ".png";
+    iconImg.src = "/src/client/img/dynamic/icon/" + iconCanvasValue + ".png";
 	loadImages([iconImg.src], function(invalidSrcPaths){
     	cb(iconImg, team);
 	});

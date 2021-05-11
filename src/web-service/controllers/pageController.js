@@ -5,11 +5,14 @@ const path = require("path");
 var os = require("os");
 var hostname = os.hostname();
 
-function getClientPath(relativePath) {
-	return path.join(__dirname, "../../client", relativePath);
+function getClientPath(filename) {
+	return path.join(__dirname, "../../client", filename);
 }
-function getClientFile(relativePath) {
-	return fs.readFileSync(getClientPath(relativePath), 'utf8')
+function getRootPath(filename) {
+	return path.join(__dirname, "../..", filename);
+}
+function getClientFile(filename) {
+	return fs.readFileSync(getClientPath(filename), 'utf8')
 }
 
 //Homepage
@@ -17,6 +20,14 @@ router.get('/', function(req, res) {
 	var pageData = {};
 	var pageContent = getClientFile('home.html');
 	pageData["header"] = getClientFile('header.html');		
+	pageContent = replaceValues(pageData, pageContent);	
+	res.send(pageContent);
+});
+
+//Local Game
+router.get('/localGame', function(req, res) {
+	var pageData = {};
+	var pageContent = getClientFile('gameLocal.html');
 	pageContent = replaceValues(pageData, pageContent);	
 	res.send(pageContent);
 });

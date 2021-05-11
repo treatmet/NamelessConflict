@@ -27,7 +27,7 @@ const animations = [
 ];
 
 var smallImg = new Image();
-smallImg.src = "/client/img/small.png";
+smallImg.src = "/src/client/img/small.png";
 
 
 
@@ -162,7 +162,7 @@ function drawCustomizations(customizations, id, cb){		//!!! We don't need id pas
 	var layers = getEmptyLayers();
 	
 	var imgSources = [];
-	imgSources.push("/client/img/small.png"); //Make sure small gets added to loaded images regardless of shirt pattern 
+	imgSources.push("/src/client/img/small.png"); //Make sure small gets added to loaded images regardless of shirt pattern 
 
 	for (var t = 0; t < teams.length; t++){		
 		for (var a = 0; a < animations.length; a++){
@@ -286,8 +286,8 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 			break;
 	}
 	layer.img = new Image();
-	//console.log("LOADING IMAGE: " + "/client/img/dynamic/" + layerData.layer + animationVariant + "/" + type + ".png");
-	layer.img.src = "/client/img/dynamic/" + layerData.layer + animationVariant + "/" + type + ".png";	
+	//console.log("LOADING IMAGE: " + "/src/client/img/dynamic/" + layerData.layer + animationVariant + "/" + type + ".png");
+	layer.img.src = "/src/client/img/dynamic/" + layerData.layer + animationVariant + "/" + type + ".png";	
 
 	return layer;
 }
@@ -295,9 +295,9 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 function getPattern(custPattern){
 	if (custPattern){
 		var pattern = new Image();
-		pattern.src = "/client/img/small.png";
+		pattern.src = "/src/client/img/small.png";
 		if (custPattern != "default"){
-			pattern.src = "/client/img/dynamic/patterns/" + custPattern + ".png";
+			pattern.src = "/src/client/img/dynamic/patterns/" + custPattern + ".png";
 		}
 		return pattern;
 	}

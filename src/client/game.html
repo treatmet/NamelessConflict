@@ -1,23 +1,22 @@
 <head>
-	<title>R-Wars</title>
 	<html style="background-color: #303030;"><head>
 	<link href='https://fonts.googleapis.com/css?family=Armata' rel='stylesheet'>
 	<link href='https://fonts.googleapis.com/css?family=Changa' rel='stylesheet'>
 	<link href='https://fonts.googleapis.com/css?family=Electrolize' rel='stylesheet'>
 	<link href='https://fonts.googleapis.com/css?family=Iceberg' rel='stylesheet'>
 	<link href='https://fonts.googleapis.com/css?family=Iceland' rel='stylesheet'>
-	<link type="text/css" rel="stylesheet" href="/client/style/style.css">
+	<link type="text/css" rel="stylesheet" href="/src/client/style/style.css">
 	
 	<!--AUTH-->
 
 	<script src="https://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript"></script> 
-	<script src="/client/js/amazon-cognito-auth.min.js"></script>
+	<script src="/src/client/js/amazon-cognito-auth.min.js"></script>
 	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script> 
-	<script src="/client/js/amazon-cognito-identity.min.js"></script>   
+	<script src="/src/client/js/amazon-cognito-identity.min.js"></script>   
 </head>
 
 <body style="margin: 0px;overflow-y: hidden;overflow-x: hidden;">
-<!--<div include-html-header="/client/header.html"></div>-->
+<!--<div include-html-header="/src/client/header.html"></div>-->
     
 <!--LEFT MENU-->
 <table class="leftMenu" id="leftMenu" style="display:none;">
@@ -51,10 +50,10 @@
 							<td>Vote next game type:</td>
 						</tr>
 						<tr>
-							<td><button id="voteCTF" class="RWButton" style="" onclick="voteCTF()">CTF - [0]</button></td>
+							<td><button id="voteCTF" class="RWButton" style="" onclick="voteEndgame('gametype', 'ctf')">CTF - [0]</button></td>
 						</tr>
 						<tr>
-							<td><button id="voteDeathmatch" class="RWButton" style="" onclick="voteDeathmatch()">Deathmatch - [0]</button></td>
+							<td><button id="voteDeathmatch" class="RWButton" style="" onclick="voteEndgame('gametype', 'slayer')">Deathmatch - [0]</button></td>
 						</tr>
 						<tr>
 							<td><br></td>
@@ -65,13 +64,13 @@
 							<td>Vote next map:</td>
 						</tr>
 						<tr>
-							<td><button id="voteLongest" class="RWButton" style="" onclick="voteLongest()">Longest - [0]</button></td>
+							<td><button id="voteLongest" class="RWButton" style="" onclick="voteEndgame('map', 'longest')">Longest - [0]</button></td>
 						</tr>
 						<tr>
-							<td><button id="voteThePit" class="RWButton" style="" onclick="voteThePit()">The Pit - [0]</button></td>
+							<td><button id="voteThePit" class="RWButton" style="" onclick="voteEndgame('map', 'thepit')">The Pit - [0]</button></td>
 						</tr>								
 						<tr>
-							<td><button id="voteCrik" class="RWButton" style="" onclick="voteCrik()">Battle Creek - [0]</button></td>
+							<td><button id="voteCrik" class="RWButton" style="" onclick="voteEndgame('map', 'crik')">Battle Creek - [0]</button></td>
 						</tr>								
 					</tbody>
 				</table>
@@ -147,12 +146,12 @@
 
 <div id="newDiv" style="margin: auto; width: 200px;">
 	<!--<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>-->
-	<script src="/client/js/socket.io-1.4.5.js"></script>
-	<script src="/client/js/howler.core.js"></script>
-	<script src="/client/js/util.js"></script>
-	<script src="/client/js/cognito.js"></script>
-	<script src="/client/js/drawCustomizations.js"></script>
-	<script src="/client/js/pages/game.js"></script>
+	<script src="/src/client/js/socket.io-1.4.5.js"></script>
+	<script src="/src/client/js/howler.core.js"></script>
+	<script src="/src/client/js/util.js"></script>
+	<script src="/src/client/js/cognito.js"></script>
+	<script src="/src/client/js/drawCustomizations.js"></script>
+	<script src="/src/client/js/pages/game.js"></script>
 </div>
 
 

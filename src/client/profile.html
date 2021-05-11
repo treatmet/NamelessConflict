@@ -17,10 +17,10 @@
 		<div class="columnTabContainer" id="statsOptionsToggle">
 			<div class="columnTab active" id="statsTab" onclick="toggleStatsSettings('statsTab')">
 					<span>Stats</span>
-					<img src="/client/img/lensToggle.png">
+					<img src="/src/client/img/lensToggle.png">
 			</div>
 			<div class="columnTab" id="settingsTab" onclick="toggleStatsSettings('settingsTab')">
-					<img src="/client/img/gearToggle.png">
+					<img src="/src/client/img/gearToggle.png">
 					<span>Settings</span>
 			</div>							
 		</div>
@@ -33,7 +33,7 @@
 				<button id="kickFromPartyButton" class="RWButton" style="display:none;" onclick="kickFromPartyButtonClick()">Kick from Party</button>
 			</div>
 			<div id="playerRankIcon">
-				<img src="/client/img/ranks/full-size/{{rank}}.png">
+				<img src="/src/client/img/ranks/full-size/{{rank}}.png">
 			</div>
 			<div id="playerRating">
 				{{rankFullName}}
@@ -193,10 +193,10 @@
 		<div class="columnTabContainer" id="shopCustomizeToggle">
 				<div class="columnTab active" id="customizeTab" onclick="toggleEquipBuy('customizeTab')">
 						<span>Equip</span>
-						<img src="/client/img/customizeToggle.png">
+						<img src="/src/client/img/customizeToggle.png">
 				</div>
 				<div class="columnTab" id="buyTab" onclick="toggleEquipBuy('buyTab')">
-						<img src="/client/img/shopToggle.png">
+						<img src="/src/client/img/shopToggle.png">
 						<span>Buy</span>
 				</div>							
 		</div>
@@ -212,8 +212,8 @@
 		<div id="shopOptions" style="display: none;">
 			<div class="shopCategory"></div>
 			<div class="refreshItem">
-				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/none.png"></div>
-				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/rarities/rare.png"></div>
+				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/src/client/img/shopIcons/none.png"></div>
+				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/src/client/img/shopIcons/rarities/rare.png"></div>
 				<div class="shopTitle">Refresh Store Now</div><br>
 				<div class="shopText">$10,000</div><br>
 				<div class="shopText">Hat</div>
@@ -222,32 +222,32 @@
 			<div id="refreshTimer"><div id="refreshTimerText">⟳: </div><div id="refreshTimerTimer">18:04 59s</div></div>
 			<div class="shopCategory">Store</div>
 			<div class="shopItem">
-				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/none.png"></div>
-				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/rarities/rare.png"></div>
+				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/src/client/img/shopIcons/none.png"></div>
+				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/src/client/img/shopIcons/rarities/rare.png"></div>
 				<div class="shopTitle">Refresh Store Now</div><br>
 				<div class="shopText">$10,000</div><br>
 				<div class="shopText">Hat</div>
 				<div class="shopText" style="color: #bf1f1f;">| Red team item</div>
 			</div>
 			<div class="shopItem">
-				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/none.png"></div>
-				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/rarities/rare.png"></div>
+				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/src/client/img/shopIcons/none.png"></div>
+				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/src/client/img/shopIcons/rarities/rare.png"></div>
 				<div class="shopTitle">Refresh Store Now</div><br>
 				<div class="shopText">$10,000</div><br>
 				<div class="shopText">Hat</div>
 				<div class="shopText" style="color: #bf1f1f;">| Red team item</div>
 			</div>
 			<div class="shopItem">
-				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/none.png"></div>
-				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/rarities/rare.png"></div>
+				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/src/client/img/shopIcons/none.png"></div>
+				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/src/client/img/shopIcons/rarities/rare.png"></div>
 				<div class="shopTitle">Refresh Store Now</div><br>
 				<div class="shopText">$10,000</div><br>
 				<div class="shopText">Hat</div>
 				<div class="shopText" style="color: #bf1f1f;">| Red team item</div>
 			</div>
 			<div class="shopItem">
-				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/none.png"></div>
-				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/client/img/shopIcons/rarities/rare.png"></div>
+				<div class="shopIcon" id="default" onclick="purchaseItem(event)"><img src="/src/client/img/shopIcons/none.png"></div>
+				<div class="shopIconOverlay" id="rare" onclick="purchaseItem(event)"><img src="/src/client/img/shopIcons/rarities/rare.png"></div>
 				<div class="shopTitle">Refresh Store Now</div><br>
 				<div class="shopText">$10,000</div><br>
 				<div class="shopText">Hat</div>
@@ -304,10 +304,10 @@
 <div id="bottom"></div>
 
 <div id="code" style="margin: auto; width: 200px;">
-	<script src="/client/js/util.js"></script>
-	<script src="/client/js/cognito.js"></script>
-	<script src="/client/js/drawCustomizations.js"></script>
-	<script src="/client/js/pages/profile.js"></script>		
+	<script src="/src/client/js/util.js"></script>
+	<script src="/src/client/js/cognito.js"></script>
+	<script src="/src/client/js/drawCustomizations.js"></script>
+	<script src="/src/client/js/pages/profile.js"></script>		
 </div>
 
 

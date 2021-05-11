@@ -2,14 +2,14 @@
 </head>
 
 <body style="margin: 0px;overflow-y: hidden;overflow-x: hidden;">
-<!--<div include-html-header="/client/header.html"></div>-->
+<!--<div include-html-header="/src/client/header.html"></div>-->
 {{header}}
     
 <div style="display:none;" id="mainContent">
 	<div id="sectionTitles">
 		<div id="sectionTitle1" class="sectionTitle">Select Game</div>
 		<div id="sectionTitle2" class="sectionTitle2">Leaderboard</div>
-		<div id="sectionTitle3" class="sectionTitle2">Learn To Play</div>
+		<div id="sectionTitle3" class="sectionTitle2">Community</div>
 	</div>
 
 	<div id="serverSelection" class="columnSection">
@@ -32,8 +32,57 @@
 			<br>
 		</div>
 
-		<div style="text-align: center;">Discord Server: </br> https://discord.gg/SYxHfJa </div>
+
+		<div class="learnToPlay">
+			<div class="learnToPlayTitle">
+				Controls:
+			</div>
+			<div class="controlsRow">
+				<div class="controlsElement">
+					<img class="controlsImage" src="/src/client/img/icons/wasd.png">
+					<div class="controlsText">Move</div>
+				</div>
+				<div class="controlsElement">
+					<img class="controlsImage" src="/src/client/img/icons/arrows.png">
+					<div class="controlsText">Shoot</div>
+				</div>
+				<div class="controlsElement">
+					<img class="controlsImage" src="/src/client/img/icons/space.png">
+					<div class="controlsText">Dash (while moving)</br>Cloak (while still)</div>
+				</div>
+			</div>
+			<div class="controlsRow" id="controlsRowTwo">
+				<div class="controlsElementSmall">
+					<img class="controlsImage" src="/src/client/img/icons/r.png">
+					<div class="controlsText">Reload</div>
+				</div>
+				<div class="controlsElementSmall">
+					<img class="controlsImage" src="/src/client/img/icons/qe.png">
+					<div class="controlsText">Change Gun</div>
+				</div>
+				<div class="controlsElementSmall">
+					<img class="controlsImage" src="/src/client/img/icons/shift.png">
+					<div class="controlsText">Look ahead</div>
+				</div>
+				<div class="controlsElementSmall">
+					<img class="controlsImage" src="/src/client/img/icons/enter.png">
+					<div class="controlsText">Chat</div>
+				</div>
+				<div class="controlsElementSmall">
+					<img class="controlsImage" src="/src/client/img/icons/esc.png">
+					<div class="controlsText">Scoreboard</div>
+				</div>
+			</div>
+
+
+			<div id="learnToPlayMore">
+				<a href="#" onclick="showMoreControls()">more controls</a>
+			</div>
+
+		</div>
+		
 	</div>
+
 
 	<div id="leaderboards" class="columnSection">
 	</br>
@@ -56,21 +105,47 @@
 	</div>
 
 	</div>
-	<div id="learnToPlay" class="columnSection">
+	<div class="columnSection">
+
+		<div style="text-align: center;" class="socialLinksContainer">
+			<a href="https://www.reddit.com/r/SocketShot/" class="socialLink" >
+				<div class="vertCenterContainer">
+					<img src="/src/client/img/icons/reddit.png" class="socialIcon vertCenterObj">
+					<div class="socialText">/r/SocketShot</div>
+				</div>
+			</a>
+
+			</br>
+			Discuss, share clips, meet teammates, and leave feedback.
+
+			</br>
+			</br>
+
+			<a href="https://discord.com/invite/SYxHfJa" class="socialLink" >
+				<div class="vertCenterContainer">
+					<img src="/src/client/img/icons/discord.png" class="socialIcon vertCenterObj">
+					<div class="socialText">SocketShot</div>
+				</div>
+			</a>
+			</br>
+			Chat with other players and developers.
+		</div>
+
+		<div id="homepageVideo">
+			<iframe width="100%" height="500px" src="https://www.youtube.com/embed/MU4FzvqUfm0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+		</div>
 	</br>
-	CONTROLS:</br>
-	Movement: WASD</br>
-	Shoot: Arrow Keys</br>
-	Dash: Space</br>
+
 	</div>
 </div>
 
 <div id="bottom"></div>
 
 <div id="code" style="margin: auto; width: 200px;">
-	<script src="/client/js/cognito.js"></script>
-	<script src="/client/js/util.js"></script>
-	<script src="/client/js/pages/home.js"></script>
+	<script src="/src/client/js/cognito.js"></script>
+	<script src="/src/client/js/util.js"></script>
+	<script src="/src/client/js/pages/home.js"></script>
+	<script src="/src/shared/engines/smallFile.js"></script>
 </div>
 
 

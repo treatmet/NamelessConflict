@@ -21,12 +21,13 @@ body{
 	color:white;	
 }
 
-#header a {
+a {
     color: white;
+    font-weight: bold;
 	/* text-decoration:none; */
 }
 
-#header a:hover {
+a:hover {
     color: #b0b0b0;
 	/* text-decoration:none; */
 }
@@ -67,10 +68,6 @@ div#titleText a {
     font-size: 16;
 }
 
-#userWelcomeText a {
-    color: white;
-    /* text-decoration: none; */
-}
 
 
 #cashHeaderDisplay{
@@ -340,6 +337,40 @@ div#progressColumn {
     font-family: electrolize;
     width: 100%;
     margin-top: 50px;
+}
+
+img.socialIcon {
+    width: 25px;
+    display: inline-block;
+}
+
+.socialText {
+    display: inline-block;
+    margin-left: 30px;
+}
+
+a.socialLink {
+    border: solid 1px black;
+    border-radius: 4px;
+    background-color: #262626;
+    padding: 5px;
+    display: inline-block;
+}
+
+a.socialLink:hover {
+    border: solid 1px white;
+}
+
+.vertCenterContainer { 
+    position: relative;
+}
+  
+.vertCenterObj {
+    /* margin: 0; */
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
 }
 
 
@@ -686,6 +717,41 @@ div#progressColumnContent {
 	border-right: none;
 }
 
+.learnToPlay {
+    margin-top:30px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.learnToPlayTitle {
+    font-weight: bold;
+    font-size: 40px;
+}
+
+.controlsRow {
+    width: 100%;
+}
+
+.controlsElement {
+    width: 33.3%;
+    display: inline-block;
+    float: left;
+}
+
+.controlsElementSmall {
+    width: 20%;
+    display: inline-block;
+    float: left;
+}
+
+#homepageVideo{
+    margin-top: 30px;
+}
+
+#controlsRowTwo {
+    display: none;
+}
+
 .columnSection {
 	width: 33.33%;
     height: calc(100% - 155px);
@@ -696,6 +762,8 @@ div#progressColumnContent {
     border-left: 1px solid #404040;
     box-sizing: border-box;
     text-align:center;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 div#playerProfile {
@@ -821,6 +889,16 @@ div#serversHiddenMsg {
 	font-weight:normal;
 }
 
+img.controlsImage {
+    max-width: 100%;
+    height: auto;
+}
+
+#learnToPlayMore {
+    display: inline-block;
+    margin-top: 30px;
+}
+
 .leaderboard{
     /*width: 95%;*/
 }
@@ -829,7 +907,7 @@ div#tablePrint {
     overflow-x: inherit; 
     height: 600px;
     overflow-y: auto;
-	margin: 15px;
+	/* margin: 15px; */
 }
 
 table.statsTable {
@@ -849,6 +927,7 @@ table.statsTable td {
 table.statsTable td a {
     color: black;
     text-decoration: none;
+    font-weight: normal;
 }
 
 table.statsTable th {
@@ -1058,7 +1137,7 @@ table.keybindingConfigTable td.keybindingUnclickableCell {
 }
 
 div#shopTopBar {
-    /* background-image: url("/client/img/shopIcons/background-small - Copy.png"); */
+    /* background-image: url("/src/client/img/shopIcons/background-small - Copy.png"); */
     background-color: #00292c;
     display: inline-block;
     padding-bottom: 5px;
@@ -1072,7 +1151,7 @@ div#shopMainContent {
     padding-left: 12px;
     overflow-y: auto;
     overflow-x: hidden;
-    background-image: url("/client/img/shopIcons/background-small.png");
+    background-image: url("/src/client/img/shopIcons/background-small.png");
     height: calc(100% - 330px);
 
 }
@@ -1091,7 +1170,7 @@ div#refreshTimer {
     border-bottom: 1px white solid;
     width: 140px;
     font-weight: bold;
-    background-image: url("/client/img/black-trans.png"); 
+    background-image: url("/src/client/img/black-trans.png"); 
 }
 
 #refreshTimerText {
@@ -1121,7 +1200,7 @@ div#refreshTimer {
 }
 
 .refreshItem:hover {
-    background-image: url("/client/img/white-trans.png"); 
+    background-image: url("/src/client/img/white-trans.png"); 
     background-size: cover;
     cursor: pointer;
 }
@@ -1256,15 +1335,15 @@ div#appearanceOptions {
 }
 
 .shopItem.active {
-    background-image: url("/client/img/white-trans.png");
+    background-image: url("/src/client/img/white-trans.png");
 }
 
 .shopItem.active:hover {
-    background-image: url("/client/img/white-trans.png");
+    background-image: url("/src/client/img/white-trans.png");
 }
 
 .shopItem:hover {
-    background-image: url("/client/img/black-trans.png"); 
+    background-image: url("/src/client/img/black-trans.png"); 
     border: 1px solid white;
     background-size: cover;
     cursor: pointer;

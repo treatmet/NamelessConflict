@@ -15,8 +15,11 @@ var AWS = require("aws-sdk");
 var elasticbeanstalk = new AWS.ElasticBeanstalk({region:config.AWSRegion});
 var elbv2 = new AWS.ELBv2({region:config.AWSRegion});
 
-function getClientPath(relativePath) {
-	return path.join(__dirname, "../client", relativePath);
+function getClientPath(filename) {
+	return path.join(__dirname, "../client", filename);
+}
+function getRootPath(filename) {
+	return path.join(__dirname, "../", filename);
 }
 
 processArgs();//Process command line arguments, reinit logging stream, register processes
@@ -28,7 +31,7 @@ app.use(userRouter);
 app.use(serverRouter);
 app.use(pageRouter);
 app.use("/favicon.ico", express.static(getClientPath('favicon.ico')));
-app.use("/client", express.static(getClientPath('.')));
+app.use("/src", express.static(getRootPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
 logg("----------------------WEB SERVER STARTUP-----------------------");
