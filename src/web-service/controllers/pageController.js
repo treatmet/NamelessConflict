@@ -24,6 +24,14 @@ router.get('/', function(req, res) {
 	res.send(pageContent);
 });
 
+//Local Game
+router.get('/localGame', function(req, res) {
+	var pageData = {};
+	var pageContent = getClientFile('gameLocal.html');
+	pageContent = replaceValues(pageData, pageContent);	
+	res.send(pageContent);
+});
+
 router.get('/ping', function(req, res) {
 	res.send({
 		host: hostname

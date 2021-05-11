@@ -261,6 +261,16 @@
 		"team":0,
 		"rarity":2,
 		"canvasValue":"mohawkHair"
+	},	{
+		"id":"animeHair",
+        "category":"hair",
+		"subCategory":"type",
+		"title":"Anime",
+		"text":"KAAAAAMEEEEEHAAAAMEEEEEE...",
+		"price": 100000,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"animeHair"
 	},
 	{
 		"id":"brownHairColor",

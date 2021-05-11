@@ -31,7 +31,7 @@ app.use(userRouter);
 app.use(serverRouter);
 app.use(pageRouter);
 app.use("/favicon.ico", express.static(getClientPath('favicon.ico')));
-app.use("/client", express.static(getClientPath('.')));
+app.use("/src", express.static(getRootPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
 logg("----------------------WEB SERVER STARTUP-----------------------");

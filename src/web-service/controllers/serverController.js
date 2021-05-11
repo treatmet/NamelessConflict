@@ -14,7 +14,7 @@ router.post('/getServerList', async function (req, res) {
 		
 		for (let j = 0; j < servers.length; j++) {
 			var currentPlayers = getCurrentPlayersFromUsers(servers[j].currentUsers).length;
-			serverList.push({url:servers[j].url, serverName:servers[j].serverName, gametype:servers[j].gametype, currentPlayers:currentPlayers, maxPlayers:servers[j].maxPlayers});			
+			serverList.push({url:servers[j].url, serverName:servers[j].serverName, gametype:servers[j].gametype, currentPlayers:currentPlayers, maxPlayers:servers[j].maxPlayers, instanceId:servers[j].instanceId});			
 		}
 		
 		res.send(serverList);
@@ -91,6 +91,12 @@ var getJoinableServer = function(options, cb){
 	else if (options.server.indexOf('any') > -1) { //Server IP provided //contains
 		//params = {privateServer:false};
 		params = {privateServer:false};
+		if (isLocal){
+			params.instanceId = "local";
+		}
+		else {
+			params.instanceId = { $not: /local/ };
+		}
 		options.matchmaking = false;
 	}
 	

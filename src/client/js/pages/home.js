@@ -4,14 +4,14 @@ page = "home";
 initializePage();
 function initializePage(){
     showLocalElements();
-	getTokenFromUrlParameterAndLogin(); 
-    getServerList();
+	getTokenFromUrlParameterAndLogin();     
 }
 
 function loginSuccess(){
 	hide("serverLoginButtons");
 	showAuthorizedLoginButtons();            
 	getRequests();
+	getServerList();
 }
 
 function loginFail(){
@@ -46,7 +46,9 @@ function getServerList(){
 
 		var serversHTML = "";
 		for (let j = 0; j < data.length; j++) {
-			serversHTML += '<div class="serverSelectButton" onclick="getJoinableServer({server:\'' + data[j].url + '\'})" style="cursor: pointer;">' + data[j].serverName + '<br><span style="font-size: 12;text-shadow: none;">' + data[j].gametype + ' -- ' + data[j].currentPlayers + '/' + data[j].maxPlayers + ' Players</span></div>';
+			if ((data[j].instanceId == "local" && isLocal) || (data[j].instanceId != "local" && !isLocal)){
+				serversHTML += '<div class="serverSelectButton" onclick="getJoinableServer({server:\'' + data[j].url + '\'})" style="cursor: pointer;">' + data[j].serverName + '<br><span style="font-size: 12;text-shadow: none;">' + data[j].gametype + ' -- ' + data[j].currentPlayers + '/' + data[j].maxPlayers + ' Players</span></div>';
+			}
 		}		
 		document.getElementById("serverList").innerHTML = serversHTML;
 	});

@@ -179,6 +179,11 @@ function playNow(){
 	});
 }
 
+function showMoreControls(){
+	document.getElementById("controlsRowTwo").style.display = "inline-block";
+	document.getElementById("learnToPlayMore").style.display = "none";
+}
+
 function getJoinableServer(options){
 	if (cognitoSub == "")
 		return;
@@ -501,17 +506,7 @@ function showLocalElements(){
 
 function localClick(){
 	var params = {};
-	$.get('/getSharedCode', params, function(data,status){
-		logg("GET SHARED CODE RESPONSE:");
-		console.log(data);
-
-		var sharedCodeDiv = document.createElement('script');
-		sharedCodeDiv.innerHTML = data;
-		eval(data);
-		doIt();
-	
-
-	});
+	window.location.href = '/localGame';
 }
 
 function showDefaultLoginButtons(){
@@ -778,7 +773,7 @@ function getUserIconImg(iconCanvasValue, team, cb){
 		return;
     }
     var iconImg = new Image();
-    iconImg.src = "/client/img/dynamic/icon/" + iconCanvasValue + ".png";
+    iconImg.src = "/src/client/img/dynamic/icon/" + iconCanvasValue + ".png";
 	loadImages([iconImg.src], function(invalidSrcPaths){
     	cb(iconImg, team);
 	});

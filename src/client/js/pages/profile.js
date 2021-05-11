@@ -349,7 +349,7 @@ function displayAppearanceFrame(image, zoom = 1, secondImage = false){
     var canvas = document.getElementById("ctx");
 
     var backgroundImg = new Image();
-    backgroundImg.src = "/client/img/factory-floor.png";
+    backgroundImg.src = "/src/client/img/factory-floor.png";
 
     loadImages([backgroundImg.src], function(){
         var backgroundLayer = {
@@ -1014,7 +1014,7 @@ function populateShopOptions(){
     var HTML = "";
     HTML += "<div id='shopTopBar'>";
         HTML += "<div class='shopItem' id='refresh' style='width: 260px;' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
-        HTML += "<div class='shopIcon' id='default'><img src='/client/img/shopIcons/refresh.png'></div>";
+        HTML += "<div class='shopIcon' id='default'><img src='/src/client/img/shopIcons/refresh.png'></div>";
         HTML += "<div id='shopTitle' style='color:#FFFFFF;' class='shopTitle'>Refresh Store Now</div><br><div class='shopText'>$" + numberWithCommas(options.timer.resetPrice) + "</div>";
         HTML += "<div id='rarityText' class='shopTitle' style='float:right;'></div>";
         HTML +=	"</div>";
@@ -1083,12 +1083,12 @@ function getShopItemHTML(item, active, isInShop){
 
     var iconCtxId = isInShop ? item.id + "ShopCtx" : item.id + "CustomizeCtx";
     if (item.category == "other"){
-        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><img src='/client/img/shopIcons/" + item.canvasValue + "'></div>";
+        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><img src='/src/client/img/shopIcons/" + item.canvasValue + "'></div>";
     }
     else {
         var iconClassPrefix = isInShop ? "shop" : "equip";
         HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'>";
-        HTML += "<img class='" + iconClassPrefix + "IconRoulette' style='display:none' src='/client/img/shopIcons/roulette/questionO.png'>";
+        HTML += "<img class='" + iconClassPrefix + "IconRoulette' style='display:none' src='/src/client/img/shopIcons/roulette/questionO.png'>";
         HTML += "<canvas class='" + iconClassPrefix + "IconCanvas' id='" + iconCtxId + "'></canvas>";
         HTML += "</div>";
     }
@@ -1130,7 +1130,7 @@ function getShopItemHTML(item, active, isInShop){
 
 
     if (rarityImg && showRarityImg)
-        HTML += "<div class='shopIconOverlay' id ='" + item.id + "''><img src='/client/img/shopIcons/" + rarityImg + "'></div>";
+        HTML += "<div class='shopIconOverlay' id ='" + item.id + "''><img src='/src/client/img/shopIcons/" + rarityImg + "'></div>";
     if (item.title){
         HTML += "<div id='shopTitle' class='shopTitle' ";
         if (showRarityTitleColor)  
@@ -1350,13 +1350,6 @@ setInterval(
 
             var unlockable = document.getElementById("lightningBoost");
 
-            // if (unlockable.style.border == "1px solid white"){
-            //     unlockable.style.border = "#fcff9e 1px solid";
-            // }
-            // else {
-            //     unlockable.style.border = "1px solid white";
-            // }
-
             if (rouletteOn){
                 for (var c in shopIconCanvases){
                     if (shopIconCanvases[c].style)
@@ -1368,25 +1361,25 @@ setInterval(
                         const randy = randomInt(1,6);
                         switch(randy){
                             case 1:
-                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionB.png';
+                                shopIconRoulettes[r].src = '/src/client/img/shopIcons/roulette/questionB.png';
                                 break;
                             case 2:
-                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionG.png';
+                                shopIconRoulettes[r].src = '/src/client/img/shopIcons/roulette/questionG.png';
                                 break;
                             case 3:
-                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionY.png';
+                                shopIconRoulettes[r].src = '/src/client/img/shopIcons/roulette/questionY.png';
                                 break;
                             case 4:
-                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionO.png';
+                                shopIconRoulettes[r].src = '/src/client/img/shopIcons/roulette/questionO.png';
                                 break;
                             case 5:
-                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionR.png';
+                                shopIconRoulettes[r].src = '/src/client/img/shopIcons/roulette/questionR.png';
                                 break;
                             case 6:
-                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionP.png';
+                                shopIconRoulettes[r].src = '/src/client/img/shopIcons/roulette/questionP.png';
                                 break;
                             default:
-                                shopIconRoulettes[r].src = '/client/img/shopIcons/roulette/questionB.png';
+                                shopIconRoulettes[r].src = '/src/client/img/shopIcons/roulette/questionB.png';
                                 break;
                         }
                     }

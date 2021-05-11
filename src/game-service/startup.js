@@ -24,8 +24,11 @@ app.use(gameRouter);
 app.use(userRouter);
 
 app.use("/favicon.ico", express.static(getClientPath('favicon.ico')));
-
-app.use("/client", express.static(getClientPath('.')));
+console.log("getRootPath('.')");
+console.log(getRootPath('.'));
+console.log("getClientPath('.')");
+console.log(getClientPath('.'));
+app.use("/src", express.static(getRootPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
 
