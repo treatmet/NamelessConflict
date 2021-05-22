@@ -991,30 +991,30 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.kill = function(shooter){
-		var shooterId = shooter.id;
-		if (shooterId != 0){
+
+		if (shooter.id != 0){
 			if (self.team != shooter.team || (self.lastEnemyToHit && self.lastEnemyToHit != 0)){
 				if ((self.lastEnemyToHit && self.lastEnemyToHit != 0) && self.team == shooter.team){
-					shooterId = self.lastEnemyToHit; //Give kill credit to last enemy that hit the player (if killed by own team or self)
+					if (getPlayerById(self.lastEnemyToHit))
+						shooter = getPlayerById(self.lastEnemyToHit); //Give kill credit to last enemy that hit the player (if killed by own team or self)
 				}
 				if (gametype == "slayer" && gameOver == false){
 					gameEngine.killScore(shooter.team);
 				}
-				playerEvent(shooterId, "kill");
+				playerEvent(shooter.id, "kill");
 				
 				shooter.spree++;
 				shooter.multikill++;
 				shooter.multikillTimer = 4 * 60;
 				if (shooter.multikill >= 2){
-					playerEvent(shooterId, "multikill");
+					playerEvent(shooter.id, "multikill");
 				}
 				if (shooter.spree == 5 || shooter.spree == 10 || shooter.spree == 15 || shooter.spree == 20){
-					playerEvent(shooterId, "spree");
+					playerEvent(shooter.id, "spree");
 				}
-				//playerEvent(shooterId, "killThug");
 			}
 			else { //Killed by own team or self AND no last enemy to hit
-				playerEvent(shooterId, "benedict");
+				playerEvent(shooter.id, "benedict");
 			}
 		}
 		playerEvent(self.id, "death");
@@ -1397,6 +1397,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			gameEngine.ensureCorrectThugCount();
 			
 			socket.emit('addToChat', getObjectiveText(), 0);
+			sendChatToAll("Welcome, " + name + "!");
 
 			socket.on('keyPress', function(data){
 				Player.list[socket.id].afk = AfkFramesAllowed;
@@ -2458,9 +2459,10 @@ function playerEvent(playerId, event){
 		}
 		else if (event == "return"){
 			if (Player.list[playerId].lastReturnCooldown > 0){
+				updateNotificationList.push({text:"Bag Returned",playerId:playerId});
 				return;
 			}
-			lastReturnCooldown = 300;
+			Player.list[playerId].lastReturnCooldown = 300;
 			Player.list[playerId].returns++;
 			Player.list[playerId].cash+=returnCash;
 			Player.list[playerId].cashEarnedThisGame+=returnCash;
