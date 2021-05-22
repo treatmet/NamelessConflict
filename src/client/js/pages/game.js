@@ -3743,7 +3743,7 @@ function drawPostGameProgress(){
 							postGameProgressStopRatingTicks = true;
 							sfxProgressBar.stop();
 							sfxProgressBarReverse.stop();
-							if (!mute){
+							if (!mute && isLoggedIn()){
 								sfxDefeatMusic.volume(.2);
 								sfxVictoryMusic.volume(.2);
 								sfxLevelUp.play();
@@ -3887,7 +3887,7 @@ function drawPostGameProgress(){
 						postGameProgressLevelUp = true;
 						postGameProgressStopExpTicks = true;
 						sfxProgressBar.stop();
-						if (!mute){
+						if (!mute && isLoggedIn()){
 							sfxDefeatMusic.volume(.2);
 							sfxVictoryMusic.volume(.2);
 							sfxLevelUp.play();

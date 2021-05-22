@@ -312,13 +312,26 @@ function processEntityPush(entity){
 		}
 	}
 }
-
+//checkIfIsGameOver
 function checkForGameOver(){
 	//GAME IS OVER, GAME END, ENDGAME GAMEOVER GAME OVER	
 	if (gameOver == false){	
 		//End by time
 		if ((secondsLeft <= 0 && minutesLeft <= 0) && (gameSecondsLength > 0 || gameMinutesLength > 0) && whiteScore != blackScore){ 
-			endGame();
+			if (gametype == "ctf"){
+				if (whiteScore == blackScore - 1 && (bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY)){
+					//Chance for last capture
+				}
+				else if (blackScore == whiteScore - 1 && (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY)){
+					//Chance for last capture
+				}
+				else {
+					endGame(); //End game on time ctf
+				}
+			}
+			else {
+				endGame(); //End game on time slayer
+			}
 		}
 		//End by score
 		else if (scoreToWin > 0 && (whiteScore >= scoreToWin || blackScore >= scoreToWin)){
