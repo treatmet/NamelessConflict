@@ -26,6 +26,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		pressingShift:false,
 		speedX:0,
 		speedY:0,
+		lastReturnCooldown:0,
 		shootingDir:1,
 		customizations: customizations,
 		settings: settings,
@@ -291,33 +292,37 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		if (self.rechargeDelay > 0){self.rechargeDelay--;}
 				
-	///////////////////////CLOAKING/////////////////////
-	if (self.cloakEngaged && self.energy > 0){
-		self.energy -= cloakDrainSpeed;
-		if (self.energy < 0)
-			self.energy = 0;
-		updatePlayerList.push({id:self.id,property:"energy",value:self.energy});
-		self.rechargeDelay = rechargeDelayTime;
-	}
-	if (self.cloakEngaged && self.energy > 0 && self.cloak < 1){
-		self.cloak += cloakInitializeSpeed;
-		if (self.cloak > 1)
-			self.cloak = 1;
-		self.cloak = Math.round(self.cloak * 100) / 100;
-		updatePlayerList.push({id:self.id,property:"cloak",value:self.cloak});
-	}
-	else if ((!self.cloakEngaged || self.energy <= 0) && self.cloak > 0){
-		self.cloak -= cloakDeinitializeSpeed;
-		if (self.energy == 0){
-			self.rechargeDelay = rechargeDelayTime * 2;
-			self.cloakEngaged = false;
-			updatePlayerList.push({id:self.id,property:"cloakEngaged",value:self.cloakEngaged});
-		}		
-		if (self.cloak < 0)
-			self.cloak = 0;
-		self.cloak = Math.round(self.cloak * 100) / 100;
-		updatePlayerList.push({id:self.id,property:"cloak",value:self.cloak});
-	}
+		///////////////////////CLOAKING/////////////////////
+		if (self.cloakEngaged && self.energy > 0){
+			self.energy -= cloakDrainSpeed;
+			if (self.energy < 0)
+				self.energy = 0;
+			updatePlayerList.push({id:self.id,property:"energy",value:self.energy});
+			self.rechargeDelay = rechargeDelayTime;
+		}
+		if (self.cloakEngaged && self.energy > 0 && self.cloak < 1){
+			self.cloak += cloakInitializeSpeed;
+			if (self.cloak > 1)
+				self.cloak = 1;
+			self.cloak = Math.round(self.cloak * 100) / 100;
+			updatePlayerList.push({id:self.id,property:"cloak",value:self.cloak});
+		}
+		else if ((!self.cloakEngaged || self.energy <= 0) && self.cloak > 0){
+			self.cloak -= cloakDeinitializeSpeed;
+			if (self.energy == 0){
+				self.rechargeDelay = rechargeDelayTime * 2;
+				self.cloakEngaged = false;
+				updatePlayerList.push({id:self.id,property:"cloakEngaged",value:self.cloakEngaged});
+			}		
+			if (self.cloak < 0)
+				self.cloak = 0;
+			self.cloak = Math.round(self.cloak * 100) / 100;
+			updatePlayerList.push({id:self.id,property:"cloak",value:self.cloak});
+		}
+		
+		/////RETURN COOLDOWN//////////
+		if (self.lastReturnCooldown > 0)
+			self.lastReturnCooldown--;
 		
 		/////MOVEMENT movement//////////
 		self.move();
@@ -2444,14 +2449,18 @@ function playerEvent(playerId, event){
 		}
 		else if (event == "steal"){
 			Player.list[playerId].steals++;
-			Player.list[playerId].cash += stealCash;
-			Player.list[playerId].cashEarnedThisGame += stealCash;
-			updatePlayerList.push({id:playerId,property:"steals",value:Player.list[playerId].steals});
-			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
-			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-			updateNotificationList.push({text:"+$" + stealCash + " - Bag Stolen",playerId:playerId});
+			// Player.list[playerId].cash += stealCash;
+			// Player.list[playerId].cashEarnedThisGame += stealCash;
+			// updatePlayerList.push({id:playerId,property:"steals",value:Player.list[playerId].steals});
+			// updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
+			// updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
+			updateNotificationList.push({text:"Bag Stolen",playerId:playerId});
 		}
 		else if (event == "return"){
+			if (Player.list[playerId].lastReturnCooldown > 0){
+				return;
+			}
+			lastReturnCooldown = 300;
 			Player.list[playerId].returns++;
 			Player.list[playerId].cash+=returnCash;
 			Player.list[playerId].cashEarnedThisGame+=returnCash;
