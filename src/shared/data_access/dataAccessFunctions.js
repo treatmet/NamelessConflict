@@ -4,8 +4,8 @@ const ObjectId = require('mongodb').ObjectID;
 const fullShopList = require("./shopList.json");
 const defaultCustomizations = require("./defaultCustomizations.json");
 
-//const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
-const defaultCustomizationOptions = fullShopList.map(item => item.id); //ALL customizations unlocked
+const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
+//const defaultCustomizationOptions = fullShopList.map(item => item.id); //ALL customizations unlocked
 
 const defaultSettings = require("./defaultSettings.json");
 
@@ -509,6 +509,12 @@ var getUserSettings = function(cognitoSub,cb){
 				cb({msg:"Set default user settings", result:defaultSettings});
 			}
 			else {
+				if (!settings["quickChat"]){
+					settings.quickChat = defaultSettings.quickChat;
+					dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {settings:settings}, async function(err, obj){
+					});
+				}
+
 				cb({msg:"Successfully retrieved user settings!", result:settings});
 			}
 		}
@@ -546,11 +552,11 @@ function getNewShopItem(currentShopList){
 	while (loopCount < 1000){
 		shopIndex = randomInt(2, fullShopList.length - 1); //Random element from shop, starting with index 2 (to skip unlock and refresh)
 		//New shop rules
-		// if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
+		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
 			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item already added to new shop?
 				break;				
 			}
-		// }
+		}
 		loopCount++;
 	}
 	return fullShopList[shopIndex].id;
@@ -567,7 +573,7 @@ function transformToClientShop(shopList, nextRefreshTime){ //shopList is list of
 		var shopItem = fullShopList.find(item => item.id == shopList[i]);		
 		if (shopItem){
 			const fixedPrices = true;
-			if (fixedPrices){
+			if (fixedPrices && shopItem.category != "other"){
 				switch(shopItem.rarity){
 					default:
 						shopItem.price = 2000;

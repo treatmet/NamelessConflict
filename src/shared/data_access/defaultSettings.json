@@ -100,19 +100,19 @@
 	"quickChat": [
 		{
 			"key": 38,
-			"value": "Let’s attack now!"
+			"value": "[Team] Let’s attack now!"
 		},
 		{
 			"key": 39,
-			"value": "Follow me!"
+			"value": "[Team] Follow me!"
 		},
 		{
 			"key": 40,
-			"value": "Enemy in our base!"
+			"value": "[Team] Cloaked enemy nearby!"
 		},
 		{
 			"key": 37,
-			"value": "I’m defending"
+			"value": "[Team] I’m defending"
 		}
 	]
 }

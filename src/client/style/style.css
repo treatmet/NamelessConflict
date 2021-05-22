@@ -129,7 +129,7 @@ div#titleText a {
 
 #onlineFriendsSection {
 	display: inline-block;
-	width: 45%;
+	width: auto;
 	float: left;
 	margin-top: 6px;
 }
@@ -142,6 +142,39 @@ div#titleText a {
 	display:inline-block;
 	color: #11e448;	
 }
+
+div#partyUpMessage {
+    margin-top: 6px;
+    float: left;
+    display: none;
+    margin-left: 5px;
+}
+
+  .rainbow {
+    animation: colorRotate 4s linear 0s infinite;
+  }
+
+  .rainbow2 {
+    animation: colorRotate 2s linear 0s infinite;
+  }
+  
+  @keyframes colorRotate {
+    from {
+      color: #6666ff;
+    }
+    10% {
+      color: #0099ff;
+    }
+    50% {
+      color: #00ff00;
+    }
+    75% {
+      color: #ff3399;
+    }
+    100% {
+      color: #6666ff;
+    }
+  }
 
 #partySection {
 	display: inline-block;
@@ -359,6 +392,17 @@ a.socialLink {
 
 a.socialLink:hover {
     border: solid 1px white;
+}
+
+div#communityAnnouncement {
+    font-weight: bold;
+    background-color: #3a3a3a;
+    margin: 10px;
+    padding: 5px;
+}
+
+.communityAnnouncementText {
+    margin: 10px;
 }
 
 .vertCenterContainer { 
@@ -745,7 +789,9 @@ div#progressColumnContent {
 }
 
 #homepageVideo{
-    margin-top: 30px;
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 #controlsRowTwo {
@@ -762,8 +808,8 @@ div#progressColumnContent {
     border-left: 1px solid #404040;
     box-sizing: border-box;
     text-align:center;
-    padding-left: 15px;
-    padding-right: 15px;
+    /* padding-left: 15px;
+    padding-right: 15px; */
 }
 
 div#playerProfile {
@@ -832,7 +878,20 @@ div#serversHiddenMsg {
     background-color: #0000ff00;
 }
 
+/*Performance tips*/
+div#performanceInstructions {
+    font-size: 25px;
+    font-weight: bold;
+    text-align: center;
+    margin: 20px;
+    margin-bottom: 500px;
+    display: none;
+}
 
+div#hardwareAccelGif {
+    width: 700px;
+    margin: auto;
+}
 
 
 
@@ -907,7 +966,9 @@ div#tablePrint {
     overflow-x: inherit; 
     height: 600px;
     overflow-y: auto;
-	/* margin: 15px; */
+    /* margin: 15px; */
+    margin-left:10px;
+    margin-right:10px;
 }
 
 table.statsTable {
@@ -1054,6 +1115,10 @@ table.keybindingConfigTable td.keybindingUnclickableCell {
   100% { transform: rotate(360deg); }
 }
 
+div#chat-window {
+    text-align: left;
+}
+
 .chatElement{
 	white-space: nowrap;
 	font-size: 15px;
@@ -1114,8 +1179,10 @@ table.keybindingConfigTable td.keybindingUnclickableCell {
 	margin: 8px auto auto;
     width: 1100px;
     background-color: rgb(21, 21, 21);
+    text-align: center;
     position: absolute;
     left: calc(50% - 550px);
+    
 }
 
 #ctx {

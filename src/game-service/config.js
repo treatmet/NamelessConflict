@@ -12,7 +12,7 @@ global.config = require("../settings.json");
 global.debug = true;
 global.httpOnlyCookies = false;
 global.allowDuplicateUsername = false;
-global.allowServerCommands = true;
+global.allowServerCommands = false;
 
 global.syncServerWithDbInterval = 15; //Seconds //Both sync and check for stale thresholds
 
@@ -139,7 +139,7 @@ global.thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are 
 
 
 //Map Config
-global.threatSpawnRange = 400;
+global.threatSpawnRange = 425;
 global.pushStrength = 15; //Push block strength
 
 //Rating config
@@ -167,7 +167,7 @@ global.maxPlayers = 4;
 global.isWebServer = false;
 global.isLocal = false;
 
-global.isTest = false; //Flip for test deployment Testy!
+global.isTest = false; //No need to flip manually
 
 global.privateServer = false;
 global.scoreToWin = 0;

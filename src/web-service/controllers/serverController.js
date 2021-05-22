@@ -21,6 +21,8 @@ router.post('/getServerList', async function (req, res) {
 	});	
 });
 
+
+
 router.post('/getJoinableServer', async function (req, res) {
 	if (myUrl == ""){
 		log("SENDING " + "Url for current server not set");
@@ -35,46 +37,73 @@ router.post('/getJoinableServer', async function (req, res) {
 	}*/
 
 	var party = [];
-	dataAccessFunctions.getPartyForUser(req.body.cognitoSub, function(dbResults){
-		/*
-		var dbResults = {
-			partyId:"", 
-			party:[] //{cognitoSub:"12345",username:"myguy",serverUrl:"123.45.678"}
-		};	
-		*/
-		party = dbResults.party;
-		
-		log("GOT PARTY:");
-		console.log(party);
 
+	if (req.body.cognitoSub.substring(0,2) == "0."){
 		var options = req.body;
-		options.party = party;
-		
-		log("getJoinableServer endpoint called with:");
-		console.log("Server: " + req.body.server);
-		console.log("PARTY:");
-		console.log(options.party);
+		options.party = [{
+			cognitoSub:req.body.cognitoSub,
+			username:req.body.username,
+			leader:true				
+		}];
 
-		//If matchmaking request, return res immediately, and submit matchmaking ticket to db TODO
-
-		logg("Attempting to join server: " + req.body.server);
 		getJoinableServer(options, function(msg, joinableServer){
 			if (!joinableServer){
 				log("SENDING " + msg);
 				res.send({msg:msg, server:false});
 			}
 			else { //Join approved
-				log("SENDING PARTY TO SERVER: " + msg);
-				sendPartyToGameServer(party, joinableServer);
-				res.send({msg:msg, server:joinableServer});
+				var tempCognitoSubQueryString = "&tempCognito=" + options.cognitoSub;
+				joinableServer += tempCognitoSubQueryString;
+				log("SENDING UNREGISTERED PLAYER TO SERVER: " + msg);				
+				res.send({msg:msg, server:joinableServer, unregisteredPlayer:true});
 			}
 		}); //End getJoinableServer
-	}); //End getParty
-}); //End .post('/getJoinableServer
+	}
+	else {
+		dataAccessFunctions.getPartyForUser(req.body.cognitoSub, function(dbResults){
+			/*
+			var dbResults = {
+				partyId:"", 
+				party:[] //{cognitoSub:"12345",username:"myguy",serverUrl:"123.45.678"}
+			};	
+			*/
+			party = dbResults.party;
+			
+			log("GOT PARTY:");
+			console.log(party);
 
+			var options = req.body;
+			options.party = party;
+			
+			log("getJoinableServer endpoint called with:");
+			console.log("Server: " + req.body.server);
+			console.log("PARTY:");
+			console.log(options.party);
+
+			//If matchmaking request, return res immediately, and submit matchmaking ticket to db TODO
+
+			logg("Attempting to join server: " + req.body.server);
+			getJoinableServer(options, function(msg, joinableServer){
+				if (!joinableServer){
+					log("SENDING " + msg);
+					res.send({msg:msg, server:false});
+				}
+				else { //Join approved
+					log("SENDING PARTY TO SERVER: " + msg);				
+					sendPartyToGameServer(party, joinableServer);
+					res.send({msg:msg, server:joinableServer});
+				}
+			}); //End getJoinableServer
+		}); //End getParty
+	}
+}); //End .post('/getJoinableServer
 
 //This will be overhauled greatly with matchmaking, don't fret too much over its current state
 var getJoinableServer = function(options, cb){
+
+	logg("getJoinableServer called with:");
+	console.log(options);
+
 	var joinableServer = "";
 	var unfavorableServers = [];
 	var params = {privateServer:false};
@@ -111,16 +140,22 @@ var getJoinableServer = function(options, cb){
 				
 					////////////////////RULES////////////////////////////////
 					
+					var team = -1;
 					//Server full dis-qualifier
-					if (getCurrentPlayersFromUsers(serv[i].currentUsers) + options.party.length > serv[i].maxPlayers){
-						logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");
-						if (options.server.indexOf(':') > -1)
-							cb("Server full", false);
-						continue;
+					if (getCurrentPlayersFromUsers(serv[i].currentUsers).length + options.party.length > serv[i].maxPlayers){						
+						console.log("SHOULD BE SPECTATING TEAM!1" + allowFullGameSpectating);
+						if (!allowFullGameSpectating){
+							logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");
+							if (options.server.indexOf(':') > -1)
+								cb("Server full", false);
+							continue;
+						}
+						else {
+							team = 0;
+						}
 					}
-					
+
 					//Determine if spectatingTeam
-					var team = 0;
 					var incomingUsers = serv[i].incomingUsers || [];
 					var currentUsers = serv[i].currentUsers || [];
 					
@@ -133,35 +168,40 @@ var getJoinableServer = function(options, cb){
 					*/
 
 					var moreWhitePlayers = 0; 
-					for (var u in currentUsers){
-						if (currentUsers[u].team == 1){moreWhitePlayers++;}
-						else if (currentUsers[u].team == 2){moreWhitePlayers--;}
-					}
-					for (var s in incomingUsers){
-						var continueLoop = false;
-						for (var u in currentUsers){
-							if (incomingUsers[s].cognitoSub == currentUsers[u].cognitoSub){continueLoop = true;}
-						}
-						if (continueLoop)
-							continue;						
-						if (incomingUsers[s].team == 1){moreWhitePlayers++;}
-						else if (incomingUsers[s].team == 2){moreWhitePlayers--;}
-					}
-					
-					if (moreWhitePlayers <= 0){
-						team = 1;
+					if (team === 0){
+						logg("Spectating full match.");
+						//Spectating full game
 					}
 					else {
-						team = 2;
+						for (var u in currentUsers){
+							if (currentUsers[u].team == 1){moreWhitePlayers++;}
+							else if (currentUsers[u].team == 2){moreWhitePlayers--;}
+						}
+						for (var s in incomingUsers){
+							var continueLoop = false;
+							for (var u in currentUsers){
+								if (incomingUsers[s].cognitoSub == currentUsers[u].cognitoSub){continueLoop = true;}
+							}
+							if (continueLoop)
+								continue;						
+							if (incomingUsers[s].team == 1){moreWhitePlayers++;}
+							else if (incomingUsers[s].team == 2){moreWhitePlayers--;}
+						}					
+						if (moreWhitePlayers <= 0){
+							team = 1;
+						}
+						else {
+							team = 2;
+						}
 					}
 					
 					var matchRemaining = (serv[i].currentTimeLeft / serv[i].matchTime);
 					var possibleTeamDifference = Math.abs(Math.abs(moreWhitePlayers) - options.party.length);					
 					console.log("(REMAINING TIME) IS " + matchRemaining + " LESS THAN " + joinActiveGameThreshold);
-					console.log("(CURRENT PLAYERS) IS " + getCurrentPlayersFromUsers(serv[i].currentUsers).length + " GREATER THAN OR EQUAL TO 2?");
+					console.log("(CURRENT PLAYERS) IS " + getCurrentPlayersFromUsers(serv[i].currentUsers).length + " GREATER THAN OR EQUAL TO 8?");
 					console.log("(POSSIBLE TEAM DIFF) IS " + possibleTeamDifference + " GREATER THAN OR EQUAL TO " + Math.abs(moreWhitePlayers));
 					
-					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 2){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
+					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 8){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
 						team = 0;
 					}
 					

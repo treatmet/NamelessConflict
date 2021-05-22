@@ -33,11 +33,6 @@ router.get('/ping', function(req, res) {
 	});
 });
 
-router.get('/getSharedCode', function(req, res) {
-	res.send(
-		fs.readFileSync("../../shared/engines/sampleModule.js")
-	);
-});
 
 router.post('/playNow', async function (req, res) {
 	log("playNow endpoint");
@@ -47,8 +42,14 @@ router.post('/playNow', async function (req, res) {
 		return;
     }
     	
-	var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
-	
+	let authorizedUser; 
+	if (!req.body.tempCognito){
+		logg("/playNow: NOT TEMP, Getting authorized user");
+		authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user Get authenticated User
+	}
+	console.log("REQ BODY: ");
+	console.log(req.body);
+
 	//Check if server is expecting this incoming user
 	var params = {url:myUrl, privateServer:false};
 	var approvedToJoinServer = false;
@@ -57,13 +58,14 @@ router.post('/playNow', async function (req, res) {
 		if (serv && serv[0]){
 			var incomingUsers = serv[0].incomingUsers || "[]";
 			for (var u = 0; u < incomingUsers.length; u++){
-				if (incomingUsers[u].cognitoSub == authorizedUser.cognitoSub){
+				if ((authorizedUser && incomingUsers[u].cognitoSub == authorizedUser.cognitoSub) || incomingUsers[u].cognitoSub == req.body.tempCognito){
 					approvedToJoinServer = true;
 					
 					res.status(200);
 					logg("res.send: " + "Server " + myUrl + " welcomes you!");
-					res.send({msg:"Server " + myUrl + " welcomes you!", success:true});					
-					gameEngine.joinGame(authorizedUser.cognitoSub, incomingUsers[u].username, incomingUsers[u].team, incomingUsers[u].partyId); //Join game
+					res.send({msg:"Server " + myUrl + " welcomes you!", success:true});
+					var cognitoSub = req.body.tempCognito ? req.body.tempCognito : authorizedUser.cognitoSub;
+					gameEngine.joinGame(cognitoSub, incomingUsers[u].username, incomingUsers[u].team, incomingUsers[u].partyId); //Join game
 					break;
 				}
 			}

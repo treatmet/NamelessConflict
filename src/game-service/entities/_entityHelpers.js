@@ -159,8 +159,8 @@ var checkIfInLineOfShot = function(shooter, target){
 	
 	//Shotgun hit detection
 	else if (shooter.weapon == 4){
-		if (target.team && target.health){
-			if (getDistance(target, shooter) < SGRange && target.id != shooter.id && target.health > 0){
+		if (target.team && target.health && target.health > 0){
+			if (getDistance(target, shooter) < SGRange && target.id != shooter.id){
 				const distFromDiagForward = target.x - (shooter.x + (shooter.y - target.y)); // diag[/]. Negative means target's x is left of shooter's diag.
 				const distFromDiagBack = target.x - shooter.x + (shooter.y - target.y); //  diag[\]. Negative means target's x is left of shooter's diag.
 				

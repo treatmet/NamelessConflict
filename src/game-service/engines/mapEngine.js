@@ -155,6 +155,7 @@ var initializeBlocks = function(map){
 		block.createBlock(34, 2, 1, 2.9, "blue");
 		block.createBlock(34, 4, 3, 1, "blue");
 		block.createBlock(3, 10, 9, 2, "red");
+		block.createBlock(17, 10.1, 5, 1.8, "normal"); //mid passthrough blocker
 		block.createBlock(14, 11, 8, 1, "red"); //mid bars
 		block.createBlock(17, 10, 8, 1, "blue"); //mid bars
 		block.createBlock(27, 10, 9, 2, "blue");
@@ -262,7 +263,7 @@ var initializeBlocks = function(map){
 		block.createBlock(19, -0.5, 2, 2.5, "normal");	
 		block.createBlock(22, 1, 2, 1, "normal");	
 		block.createBlock(24, 1, 5.1, 1, "pushDown");
-		block.createBlock(29, -0.5, 23, 2.5, "normal");	
+		block.createBlock(29, -0.5, 23.4, 2.5, "normal");	
 		block.createBlock(17, 4, 1, 3, "red");	
 		block.createBlock(44, 3, 2, 2, "normal");	
 		block.createBlock(5,6, 8, 1, "red");	
@@ -291,7 +292,7 @@ var initializeBlocks = function(map){
 		block.createBlock(34, 19, 3, 1, "blue");	
 		block.createBlock(39, 19, 8, 1, "blue");	
 		block.createBlock(34, 19, 1, 3, "blue");	
-		block.createBlock(0, 24, 23, 2.4, "normal");	
+		block.createBlock(-0.4, 24, 23.4, 2.4, "normal");	
 		block.createBlock(23, 24, 5.1, 1, "pushUp");	
 		block.createBlock(28, 24, 2, 1, "normal");	
 		block.createBlock(31, 24, 2, 2.5, "normal");	

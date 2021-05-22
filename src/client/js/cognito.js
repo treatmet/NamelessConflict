@@ -1,5 +1,25 @@
 console.log("cognito.js loading");
 
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+
+gtag('js', new Date());
+gtag('config', 'AW-364156363');
+function gtag_report_conversion(url) {
+	var callback = function () {
+	  if (typeof(url) != 'undefined') {
+		window.location = url;
+	  }
+	};
+	gtag('event', 'conversion', {
+		'send_to': 'AW-364156363/Ri0qCNWWlZ4CEMur0q0B',
+		'event_callback': callback
+	});
+	return false;
+  }
+  
+
+
 var serverP = getUrlParam("server");
 var processP = getUrlParam("process");
 var socket = io(getSocketParams());
@@ -17,7 +37,7 @@ const cognitoClientId = '70ru3b3jgosqa5fpre6khrislj';
 const cognitoPoolId = 'us-east-2_SbevJL5zt';
 var page = "";
 var cognitoSub = "";
-var username = "";
+var username = "SomeGuy";
 var partyId = "";
 var userCash = 0;
 var federatedUser = false;
@@ -25,6 +45,7 @@ var pcMode = 1;
 var serverHomePage = "https://ss.treatmetcalf.com/";
 var isLocal = false;
 var defaultCustomizations = {red:{}, blue:{}};
+var tempCognitoSub = "";
 
 var iconSize = 15;
 
@@ -42,37 +63,37 @@ function getTokenFromUrlParameterAndLogin(){
 	var code = getUrlParam("code").substring(0,36);
 	var cog_a = getUrlParam("cog_a");
 	var cog_r = getUrlParam("cog_r");
+	tempCognitoSub = getUrlParam("tempCognito");
 	
     const validateTokenEndpoint = '/validateToken';
     const data = {
         code:code,
 		cog_a:cog_a,
-		cog_r:cog_r
+		cog_r:cog_r,
+		tempCognitoSub:tempCognitoSub
     };
 	
-    $.post(validateTokenEndpoint, data, function(data,status){ //validation
+    $.post(validateTokenEndpoint, data, function(data, status){ //validation
         log("validateToken response:");
         console.log(data);
-		
+		cognitoSub = tempCognitoSub ? tempCognitoSub : data.cognitoSub;
+		cognitoSub = String(cognitoSub);
 		serverHomePage = data.serverHomePage;
-		if (data && data.username){
-			//Login Success
+		console.log("About to make sure page(" + page + ") is game OR isLoggedIn:" + isLoggedIn());
+		socket.emit('updateSocketInfo', cognitoSub);
 
-			cognitoSub = data.cognitoSub;
+		username = data.username;					
+		isLocal = data.isLocal;
+		if (isLocal){
+			serverHomePage = "http://localhost:8080/";
+		}
+
+		if (data && data.username && isLoggedIn()){
+			//Login Success
 			userCash = data.cash ?? 0;
-			updateCashHeaderDisplay(userCash);
+			updateCashHeaderDisplay(userCash);		
 			
-			
-			log('emmiting updateSocketInfo cognitoSub=' + cognitoSub);
-			console.log(socket);
-			socket.emit('updateSocketInfo', cognitoSub);
-            username = data.username;					
 			federatedUser = data.federatedUser;
-			isLocal = data.isLocal;
-			if (isLocal){
-				serverHomePage = "http://localhost:8080/";
-			}
-			console.log("SET SERVER HOMEPAGE: " + serverHomePage);
 			defaultCustomizations = data.defaultCustomizations;
 
 			setLocalStorage();
@@ -80,7 +101,7 @@ function getTokenFromUrlParameterAndLogin(){
 			//loginSuccess(); wait for response from updateSocketInfo before triggering loginSuccess() -- socket.on('socketInfoUpdated')
 	    }
 		else {
-			loginFail();
+			//loginFail();
 		}
 		setPcModeAndIsLocalElements({isLocal:data.isLocal, pcMode:data.pcMode});
 		loginAlways();
@@ -89,6 +110,16 @@ function getTokenFromUrlParameterAndLogin(){
 		}
     });
 }
+
+socket.on('socketInfoUpdated', function(data){
+	log("socket info updated url:" +  data.url +" isWebServer:" + data.isWebServer);
+	if (isLoggedIn()){
+		loginSuccess();
+	}
+	else {
+		loginFail();
+	}
+});
 
 function updateCashHeaderDisplay(cash){
 	if (document.getElementById("cashHeaderValue")){
@@ -139,10 +170,7 @@ function getTokenUrlParams(){
 	return tokenParams;
 }
 
-socket.on('socketInfoUpdated', function(data){
-	log("socket info updated url:" +  data.url +" isWebServer:" + data.isWebServer);
-	loginSuccess();
-});
+
 
 socket.on('reloadHomePage', function(){
 	window.location.href = serverHomePage;
@@ -163,8 +191,16 @@ function autoPlayNow(){
 }
 
 function playNow(){
+	if (!isLocal){		
+		gtag_report_conversion();
+	}
+	
 	log("playNow on this server");
-	var options = {};
+	var options = {
+		tempCognito:tempCognitoSub
+	};
+	console.log(options);
+	
 	var postUrl = serverHomePage + 'playNow?server=' + serverP + '&process=' + processP;
 	if (isLocal) {
 		postUrl = "/playNow";
@@ -185,11 +221,14 @@ function showMoreControls(){
 }
 
 function getJoinableServer(options){
-	if (cognitoSub == "")
-		return;
+	console.log("Get Joinable Server to PLAY NOW. options.server:" + options.server);
+	// if (cognitoSub == "")
+	// 	return;
 		
 	options.partyId = partyId;
 	options.cognitoSub = cognitoSub;
+	options.username = username;
+
 	if (options.server){
 		logg("Attempting to join server with: ");
 		console.log(options);
@@ -199,11 +238,14 @@ function getJoinableServer(options){
 			log("Join Server response:");
 			console.log(data);		
 			if (data.server){
-				//Redirect happens on server side, do nothing here
+				if (data.unregisteredPlayer){
+					console.log("UNREGISTERED PLAYER DETECTED");
+					window.location.href = data.server;
+				}
 			}
 			else {
 				alert(data.msg);
-				window.location.href = serverHomePage;
+				//window.location.href = serverHomePage;
 			}
 		});
 	}
@@ -491,6 +533,7 @@ function setLocalStorage(){
 }
 
 function logOutClick(){
+	cognitoSub = "";
     $.post('/logOut', {}, function(data,status){
 		window.location.reload();
     });
@@ -509,11 +552,15 @@ function localClick(){
 	window.location.href = '/localGame';
 }
 
+
+
 function showDefaultLoginButtons(){
 	if (page == "game"){return;}
+	else if (page == "home"){document.getElementById("sectionTitle1").innerHTML = "";}
     document.getElementById("createAccountH").style.display = "";
     document.getElementById("logInH").style.display = "";
-    document.getElementById("playNowH").style.display = "none";
+    document.getElementById("playNowH").style.display = "";
+    document.getElementById("playNowH").innerHTML = "Play as Guest";
     document.getElementById("logOutH").style.display = "none";
     if (document.getElementById('userWelcomeText')){
         document.getElementById('userWelcomeText').style.display = "none";
@@ -522,9 +569,11 @@ function showDefaultLoginButtons(){
 
 function showAuthorizedLoginButtons(){
 	if (page == "game"){return;}
-    document.getElementById("createAccountH").style.display = "none";
+	document.getElementById("createAccountH").style.display = "none";
+	
     document.getElementById("logInH").style.display = "none";
     document.getElementById("playNowH").style.display = "";
+    show("partyUpMessage");
     document.getElementById("logOutH").style.display = "";
     if (document.getElementById('userWelcomeText')){
         var printedUsername = username.substring(0,15);
@@ -642,7 +691,7 @@ setInterval(
 	function(){	
 	
 		//Refresh header
-		if (document.getElementById("header") && document.getElementById("header").style.display != 'none' && cognitoSub.length > 0){
+		if (document.getElementById("header") && document.getElementById("header").style.display != 'none' && isLoggedIn()){
 			headerRefreshTicker--;
 			if (headerRefreshTicker < 1){
 				//logg("Refreshing header");
@@ -658,6 +707,20 @@ setInterval(
 	},
 	1000/1 //Ticks per second
 );
+
+function isLoggedIn(){
+	if (cognitoSub.length > 0 && cognitoSub.substring(0,2) != "0."){
+		//logg("Determined user is logged in");
+		return true;
+	}
+
+	//if (cognitoSub.substring(0,2) == "0.")
+		//logg("User not logged in, temp cognitoSub in use:" + cognitoSub);
+	//if (cognitoSub.length == 0)
+		//logg("User not logged in, no cognitoSub set");
+
+	return false;
+}
 
 //Shared Functions handy handy
 function getCountInArray(string, array){
@@ -758,7 +821,7 @@ function drawName(drawingCanvas, playerUsername, color, x, y, icon = false){
 }
 
 function drawIcon(drawingCanvas, icon, x, y, width = false, height = false){
-	if (!icon)
+	if (!icon || !drawingCanvas)
 		return;
 	if (!width || !height){
 		width = iconSize;
@@ -768,7 +831,7 @@ function drawIcon(drawingCanvas, icon, x, y, width = false, height = false){
 }
 
 function getUserIconImg(iconCanvasValue, team, cb){
-    if (iconCanvasValue == "none"){
+    if (iconCanvasValue == "none" || iconCanvasValue == "rank"){
         cb(false, team);
 		return;
     }
