@@ -11,6 +11,7 @@ io.sockets.on('connection', function(socket){
 	socket.on('updateSocketInfo', function(cognitoSub){
 		for (var s in SOCKET_LIST){ //Kill any existing duplicate logins with this user on this server
 			if (SOCKET_LIST[s].cognitoSub == cognitoSub && SOCKET_LIST[s].id != socket.id){
+				console.log("Disconnecting existing socket with duplicate cognito sub");
 				SOCKET_LIST[s].disconnect();
 			}
 		}
@@ -23,6 +24,9 @@ io.sockets.on('connection', function(socket){
 				socket.rating = userData.rating;
 				socket.experience = userData.experience;
 				socket.username = userData.USERNAME;	
+				socket.emit('socketInfoUpdated', {url:myUrl, isWebServer:isWebServer});
+			}
+			else {
 				socket.emit('socketInfoUpdated', {url:myUrl, isWebServer:isWebServer});
 			}
 		});	

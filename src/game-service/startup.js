@@ -91,6 +91,7 @@ function processArgs(){
     	config.EBName = "SocketShot-Test";
 
 	if (isLocal){
+		allowServerCommands = true;
 		logg("Updating app to run locally");
 		getIP();
 	}

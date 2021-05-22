@@ -127,7 +127,7 @@ function populateProfilePage(){
 }
 
 function showSelfProfileOptions(){
-    if (viewedProfileCognitoSub == cognitoSub && cognitoSub != "") {
+    if (viewedProfileCognitoSub == cognitoSub && isLoggedIn()) {
         show("appearanceOptions");			
         show("shopCustomizeToggle");			
         show("statsOptionsToggle");			

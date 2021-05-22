@@ -25,8 +25,9 @@ global.port = 8080;
 global.serverHomePage = "/";
 global.isWebServer = false;
 global.isLocal = false;
+global.allowFullGameSpectating = true;
 
-global.isTest = false; //Flip for test deployment Testy!
+global.isTest = false; //No need to set manually
 
 global.defaultShopSlotsUnlocked = 2; //Guess
 global.maxShopSlotsUnlocked = 5; //Upper limit on how many shop slots can be unlocked

@@ -24,15 +24,19 @@
 		<tr>
 			<td class="menuLeftLink"><a href="/" style="" class="elecText" id="homeLink">&lt;Back</a></td>		  
 		</tr>
+
 		<tr>
 			<td><br></td>
 		</tr>
+
+		<tr>
+			<td style="border: 1px solid red;margin: 5px;"><a href="#" onclick="show('performanceInstructions')" style="font-size: 20px;">Having performance issues? Click here for instructions.</a></td>
+		</tr>
+
 		
 		<tr>
 			<td><br></td>
 		</tr>
-
-
 
 		<tr>
 			<td>Tip:</td>
@@ -41,7 +45,6 @@
 			<td id="tipContent">For best game performance, close all other browser tabs and applications.</td>
 		</tr>		
 		
-
 		<tr>
 			<td>
 				<table class="leftMenu" id="voteMenu" style="display:none;">
@@ -64,16 +67,17 @@
 							<td>Vote next map:</td>
 						</tr>
 						<tr>
-							<td><button id="voteLongest" class="RWButton" style="" onclick="voteEndgame('map', 'longest')">Longest - [0]</button></td>
+							<td><button id="voteLongest" class="RWButton" style="" onclick="voteEndgame('map', 'longest')">Long Hallway - [0]</button></td>
 						</tr>
 						<tr>
-							<td><button id="voteThePit" class="RWButton" style="" onclick="voteEndgame('map', 'thepit')">The Pit - [0]</button></td>
+							<td><button id="voteThePit" class="RWButton" style="" onclick="voteEndgame('map', 'thepit')">Open Warehouse - [0]</button></td>
 						</tr>								
 						<tr>
-							<td><button id="voteCrik" class="RWButton" style="" onclick="voteEndgame('map', 'crik')">Battle Creek - [0]</button></td>
+							<td><button id="voteCrik" class="RWButton" style="" onclick="voteEndgame('map', 'crik')">Bunkers - [0]</button></td>
 						</tr>								
 					</tbody>
 				</table>
+			
 			</td>
 		</tr>		
 	</tbody>
@@ -109,6 +113,7 @@
 			Look: [Shift]<br>
 			<br>
 			Chat: [Enter]<br>
+			TeamChat: [T]<br>
 			Scoreboard: [Esc]<br>
 			</td>
 		</tr>		
@@ -117,7 +122,24 @@
 </table>
 		
 <!--CANVAS-->
-<div id="canvasDiv" style="display:none; margin: auto; width: 1100px; margin-top: 8px;">	
+<div id="canvasDiv">	
+	<div id="performanceInstructions">
+			1. Game performs best in Google Chrome<br><br>
+			2. Make sure hardware acceleration is enabled in Chrome’s settings:
+				<div id="hardwareAccelGif">
+					<div style='position:relative; padding-bottom:calc(56.25% + 44px)'><iframe src='https://gfycat.com/ifr/HopefulWildBuffalo' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>
+				</div>				<br><br>
+			3. Close other browser tabs; Close other CPU intensive applications<br><br>
+			4. Use Low Graphics mode: <button id="lowGraphcsModeButton" style="background-color: #818181;" class="RWButton" onclick="reallyLowGraphicsToggle()">Low Graphics Mode [OFF]</button><br><br>
+			5. Connect to internet with ethernet cable instead of wifi<br><br>
+			<a href="#" style="font-size: 16px;"onclick="hide('performanceInstructions')">Click here to close these instructions</a>
+		
+
+
+
+
+	</div>
+
 	<canvas id="ctx" width="1100" height="900"></canvas>
 	<!--<canvas id="ctx2" width="1100" height="900" style="border: 2px solid rgb(0, 0, 0);margin: -2px;position: absolute; top: 5px;"></canvas> -->
 

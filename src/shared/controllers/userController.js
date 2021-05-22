@@ -5,6 +5,8 @@ var authenticationEngine = require('../engines/authenticationEngine.js');
 const express = require('express');
 const router = express.Router();
 const path = require("path");
+const  totemize = require('totemize');
+
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
 router.get('/getSharedCode', function(req, res) {
@@ -272,31 +274,34 @@ router.post('/validateToken', async function (req, res) {
 	//console.log(req.body);
 	
 	var result = {};
-	
-	if (code && code != ""){ //If code present in URL, use that
-		result = await authenticationEngine.getTokenFromCodeAndValidate(code);
-	}
-	if (!result.cognitoSub && (req.cookies["cog_r"] || req.body.cog_r)){ //Otherwise, check for token in cookie and body
-		//logg("COULDN'T GET TOKEN FROM CODE - ACCESSING COOKIES (or request body)");
-		
-		var tokens = {};
-		
-		if(req.body.cog_r && req.body.cog_r.length > 0) {
-			//logg("Found token on request body. Ignoring cookies.");
-			tokens = {
-				access_token:req.body.cog_a,
-				refresh_token:req.body.cog_r
-			};
+
+
+	if (!req.body.tempCognitoSub){ //Url parameter for guest game join
+		if (code && code != ""){ //If code present in URL, use that
+			result = await authenticationEngine.getTokenFromCodeAndValidate(code);
 		}
-		else if (req.cookies["cog_r"] && req.cookies["cog_r"].length > 0){
-			//logg("Could not find code or tokens on request body. Trying site cookies...");
-			tokens = {
-				access_token:req.cookies["cog_a"],
-				refresh_token:req.cookies["cog_r"]
-			};			
+		if (!result.cognitoSub && (req.cookies["cog_r"] || req.body.cog_r)){ //Otherwise, check for token in cookie and body
+			//logg("COULDN'T GET TOKEN FROM CODE - ACCESSING COOKIES (or request body)");
+			
+			var tokens = {};
+			
+			if(req.body.cog_r && req.body.cog_r.length > 0) {
+				//logg("Found token on request body. Ignoring cookies.");
+				tokens = {
+					access_token:req.body.cog_a,
+					refresh_token:req.body.cog_r
+				};
+			}
+			else if (req.cookies["cog_r"] && req.cookies["cog_r"].length > 0){
+				//logg("Could not find code or tokens on request body. Trying site cookies...");
+				tokens = {
+					access_token:req.cookies["cog_a"],
+					refresh_token:req.cookies["cog_r"]
+				};			
+			}
+			
+			result = await authenticationEngine.validateTokenOrRefresh(tokens);
 		}
-		
-		result = await authenticationEngine.validateTokenOrRefresh(tokens);
 	}
 	if (!result.cognitoSub){
 		logg("Authentication failed");
@@ -317,7 +322,7 @@ router.post('/validateToken', async function (req, res) {
 		res.status(200);
 		res.cookie("cog_a", result.access_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
 		res.cookie("cog_r", result.refresh_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
-
+		res.cookie("cog_t", "", { httpOnly: httpOnlyCookies });
 
 		httpResult = {
 			cognitoSub:result.cognitoSub,
@@ -336,10 +341,23 @@ router.post('/validateToken', async function (req, res) {
 	else { //error
 		logg("Authentication failed");
 		res.status(200);
+		let tempCognitoSub;
+		if (req.body.tempCognitoSub){
+			tempCognitoSub = req.body.tempCognitoSub;
+		}
+		else if (req.cookies["cog_t"]){
+			tempCognitoSub = req.cookies["cog_t"];
+		}
+		else {
+			tempCognitoSub = Math.random();		
+		}
+		res.cookie("cog_t", tempCognitoSub, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
 		if (result){
 			httpResult = {
 				isWebServer:isWebServer,
 				isLocal:isLocal,
+				cognitoSub:tempCognitoSub,
+				username: generateTempName(),
 				serverHomePage:serverHomePage,
 				pcMode:pcMode,
 				msg:result.msg || "(unhandled error)"
@@ -366,6 +384,23 @@ router.post('/validateToken', async function (req, res) {
 		}
 	});
 });
+
+function generateTempName(){
+	let name;
+	
+	var x = 100;
+	while (x > 0){
+		name = totemize();
+		name = name.replace(/\s/g, '');
+		if (name.length <= 15){
+			break;
+		}
+		x--;
+	}
+	return name;
+	//return "tempName";
+}
+
 
 router.post('/getLeaderboard', async function (req, res) {
 	console.log("GET LEADERBOARD");
@@ -472,6 +507,7 @@ router.post('/logOut', async function (req, res) {
 	log("Logging out user");
 	res.cookie("cog_a", "", { httpOnly: httpOnlyCookies });
 	res.cookie("cog_r", "", { httpOnly: httpOnlyCookies });
+	res.cookie("cog_t", "", { httpOnly: httpOnlyCookies });
 	res.send({msg:"Logout - Successfully removed auth cookies"});
 });
 

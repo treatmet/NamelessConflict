@@ -195,6 +195,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					var SGhitTargets = [];
 					
 					for (var t in organicHitTargets){
+						if (organicHitTargets[t].target.health <= 0)
+							continue;							
 						var isBehindCover = false;
 						for (var b in blockHitTargets){ 
 							if (checkIfBlocking(blockHitTargets[b].target, self, organicHitTargets[t].target)){ //And see if it is blocking the shooter's path
@@ -331,9 +333,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.x += self.speedX;
 			updatePlayerList.push({id:self.id,property:"x",value:self.x});
 		}	
-
-		updatePlayerList.push({id:self.id,property:"speedX",value:self.speedX}); //For display client-side debug //!!! Remove this
-		updatePlayerList.push({id:self.id,property:"speedY",value:self.speedY});
 
 		//default to shootingdir = walkingdir unless otherwise specified!
 		if (!self.pressingShift && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
@@ -1124,9 +1123,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 							
 		gameEngine.spawnSafely(self);
 		updatePlayerList.push({id:self.id,property:"y",value:self.y});
-		updatePlayerList.push({id:self.id,property:"x",value:self.x});
-		
-		gameEngine.sendFullGameStatus(self.id);
+		updatePlayerList.push({id:self.id,property:"x",value:self.x});		
 	}
 	Player.list[id] = self;
 
@@ -1146,6 +1143,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 	socket.emit('sendPlayerNameToClient', self.name);
 	
+	gameEngine.sendFullGameStatus(self.id);
 	self.respawn();
 	
 	return self;
@@ -1714,18 +1712,20 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						evalServer(socket, data[1].substring(2));
 					}
 					else {
-						for(var i in SOCKET_LIST){
-							SOCKET_LIST[i].emit('addToChat',getPlayerById(data[0]).name + ': ' + data[1].substring(0,50), getPlayerById(data[0]).id);
-							updateEffectList.push({type:7, playerId:data[0], text:data[1].substring(0,50), team:0});
+						if (data[1].substring(0,6) == "[Team]"){
+							for(var i in SOCKET_LIST){
+								if (getPlayerById(SOCKET_LIST[i].id) && getPlayerById(data[0]) && getPlayerById(data[0]).team == getPlayerById(SOCKET_LIST[i].id).team && data[1] != "[Team] " && data[1] != "[Team]"){
+									SOCKET_LIST[i].emit('addToChat',getPlayerById(data[0]).name + ': ' + data[1].substring(0,50), getPlayerById(data[0]).id);
+									updateEffectList.push({type:7, playerId:data[0], text:data[1].substring(7,50), team:getPlayerById(data[0]).team});
+								}
+							}
 						}
-					}
-				}
-			});
-			socket.on('quickChat', function(data){
-				for(var i in SOCKET_LIST){
-					if (getPlayerList()[SOCKET_LIST[i].id].team == player.team){
-						SOCKET_LIST[i].emit('addToChat', player.name + ': ' + data.substring(0,50), player.id);
-						updateEffectList.push({type:7, playerId:player.id, text:data.substring(0,50), team:player.team});
+						else {
+							for(var i in SOCKET_LIST){
+								SOCKET_LIST[i].emit('addToChat',getPlayerById(data[0]).name + ': ' + data[1].substring(0,50), getPlayerById(data[0]).id);
+								updateEffectList.push({type:7, playerId:data[0], text:data[1].substring(0,50), team:0});
+							}
+						}
 					}
 				}
 			});
@@ -1746,16 +1746,16 @@ function evalServer(socket, data){
 	//socket = socketBak;
 
 	if(!allowServerCommands){
-		if (data == "stopcmd" || data == "servercmd" || data == "servercommands"){
+		if (data == "QWOPcmd"){
+			socket.emit('addToChat', "Server commands enabled");
 			allowServerCommands = true;
 		}			
 		return;
 	}
 	
-	
 	logg("SERVER COMMAND:" + data);
-	log(data.substring(4));
-	if (data == "stopcmd" || data == "servercmd" || data == "servercommands"){
+	if (data == "QWOPcmd"){
+		socket.emit('addToChat', "Server commands disabled");
 		allowServerCommands = false;
 	}
 	else if (data == "startt" || data == "restartt"){
@@ -2027,13 +2027,21 @@ function evalServer(socket, data){
 			logg("Server command: Thugs Disabled");
 			socket.emit('addToChat', "Server command: Thugs Disabled");
 			spawnOpposingThug = false;
+
+			var thugList = thug.getThugList();
+			for (var t in thugList){
+				for(var i in SOCKET_LIST){
+					SOCKET_LIST[i].emit('removeThug', thugList[t].id);
+				}			
+			}
+			thug.clearThugList();
 		}
 		else {
 			logg("Server command: Thugs Enabled");
 			socket.emit('addToChat', "Server command: Thugs Enabled");
 			spawnOpposingThug = true;
+			gameEngine.ensureCorrectThugCount();
 		}
-		gameEngine.ensureCorrectThugCount();
 	}
 	else if (data == "shop"){		
 		if (shopEnabled){
@@ -2400,21 +2408,21 @@ function playerEvent(playerId, event){
 				Player.list[playerId].cashEarnedThisGame+=frenzyCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**GENOCIDE!!**",playerId:playerId});				
+				updateNotificationList.push({text:"**MASSACRE!!**",playerId:playerId});				
 			}		
 			else if (Player.list[playerId].spree == 15){
 				Player.list[playerId].cash+=rampageCash;
 				Player.list[playerId].cashEarnedThisGame+=rampageCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**EXTERMINATION!!**",playerId:playerId});				
+				updateNotificationList.push({text:"**GENOCIDE!!**",playerId:playerId});				
 			}		
 			else if (Player.list[playerId].spree == 20){
 				Player.list[playerId].cash+=unbelievableCash;
 				Player.list[playerId].cashEarnedThisGame+=unbelievableCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**NEXT HITLER!!**",playerId:playerId});				
+				updateNotificationList.push({text:"**HEIL HITLER!!**",playerId:playerId});				
 			}		
 		}
 		else if (event == "killThug"){
