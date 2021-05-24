@@ -58,7 +58,7 @@ global.shop = {
 
 //Player config
 global.startingCash = 0;
-global.boostAmount = 20;
+global.boostAmount = 19;
 global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
 global.diagMovementScale = (2/3);
@@ -84,23 +84,25 @@ global.AfkFramesAllowed = 6000 * 60; //seconds (translated to frames) //timeout
 global.bulletRange = 19 * 75;
 global.damageScale = 1;
 	global.pistolDamage = 10;
-	global.pistolSideDamage = 10; //Stacks on above
+	global.pistolSideDamage = 6; //Stacks on above
 	global.pistolBackDamage = 10; //Stacks AGAIN on above
 	global.DPDamage = 15;
-	global.DPSideDamage = 15; //Stacks on above
-	global.DPBackDamage = 15; //Stacks AGAIN on above
+	global.DPSideDamage = 8; //Stacks on above
+	global.DPBackDamage = 8; //Stacks AGAIN on above
 	global.mgDamage = 12; 
-	global.mgSideDamage = 12; //Stacks on above
-	global.mgBackDamage = 12; //Stacks AGAIN on above
+	global.mgSideDamage = 6; //Stacks on above
+	global.mgBackDamage = 6; //Stacks AGAIN on above
+	global.LaserDamage = 175;
 	global.SGDamage = 30;
-	global.SGSideDamage = 30;
-	global.SGBackDamage = 30;
+	global.SGSideDamage = 15;
+	global.SGBackDamage = 15;
 	global.friendlyFireDamageScale = 0.5;
 	global.boostDamage = 50;
 	
 global.SGRange = 310;
 global.SGCloseRangeDamageScale = 4;
 global.SGPushSpeed = 12;
+global.laserPushSpeed = 36;
 global.MGPushSpeed = 2;
 
 
@@ -110,13 +112,17 @@ global.pistolFireRate = 12;
 global.DPFireRate = 12;
 global.MGFireRate = 5;
 global.SGFireRate = 50;
+global.laserFireRate = 180;
 
 global.DPClipSize = 15;
 global.MGClipSize = 60;
 global.SGClipSize = 6;
+global.laserClipSize = 4;
 global.maxSGAmmo = 18;
 global.maxDPAmmo = 45;
 global.maxMGAmmo = 120;
+global.maxLaserAmmo = 4;
+global.laserMaxCharge = 170;
 
 global.cloakBonusDamage = 20;
 
@@ -183,6 +189,7 @@ global.crikVotes = 0;
 global.voteMapIds = [];
 global.voteGametypeIds = [];
 global.timeBeforeNextGame = 45; //newGameTimer
+global.bannedCognitoSubs = [];
 
 global.bagRed = {
 	homeX:0,

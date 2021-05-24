@@ -41,8 +41,8 @@ var Pickup = function(id, x, y, type, amount, respawnTime){
 		self.height = 56;
 	}
 	else if (self.type == 6){
-		self.width = 0;
-		self.height = 0;
+		self.width = 71;
+		self.height = 37;
 	}
 
 	if (respawnTime > -1){
@@ -162,6 +162,23 @@ var pickupPickup = function(playerId, pickupId){
 			if (playerList[playerId].SGAmmo > maxSGAmmo){playerList[playerId].SGAmmo = maxSGAmmo;}
 			updatePlayerList.push({id:playerId,property:"SGAmmo",value:playerList[playerId].SGAmmo});								
 		}		
+		removePickup(pickupId);		
+	}
+	else if (Pickup.list[pickupId].type == 6){ //Laser
+		if (playerList[playerId].holdingBag == false && playerList[playerId].weapon == 1){
+			if (playerList[playerId].reloading > 0){
+				playerList[playerId].reloading = 0;
+				updatePlayerList.push({id:playerId,property:"reloading",value:playerList[playerId].reloading});				
+			}
+			playerList[playerId].weapon = 5;
+			updatePlayerList.push({id:playerId,property:"weapon",value:playerList[playerId].weapon});	
+		}
+		else { //because the sfx will already trigger automatically clientside if switching weapons to SG
+			SOCKET_LIST[playerId].emit('sfx', "sfxLaserEquip");
+		}
+		playerList[playerId].laserClip += Pickup.list[pickupId].amount;
+		if (playerList[playerId].laserClip > maxLaserAmmo){playerList[playerId].laserClip = maxLaserAmmo;}
+		updatePlayerList.push({id:playerId,property:"laserClip",value:playerList[playerId].laserClip});								
 		removePickup(pickupId);		
 	}
 	else if (Pickup.list[pickupId].type == 5 && playerList[playerId].health <= 100){ //BA

@@ -23,6 +23,7 @@ const animations = [
 	"legs",
 	"boost",
 	"body1",
+	"Laser", //@
 	"bodyWall"
 ];
 
@@ -260,7 +261,6 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 			else if (layerData.animationVariant.indexOf('DP') > -1) {layer.color = teamCustomizations.dpColor;}
 			else if (layerData.animationVariant.indexOf('SG') > -1) {layer.color = teamCustomizations.sgColor;}
 			else if (layerData.animationVariant.indexOf('MG') > -1) {layer.color = teamCustomizations.mgColor;}
-			else {layer.color = "#707070";}							
 			break;
 		case "legs":			
 			if (teamCustomizations.pantsColor == "#FFFFFF"){
@@ -488,6 +488,15 @@ function getLayerOrder(animationFrame){
 							{layer:"head", x:-1, y:2},
 							{layer:"hair", x:-1, y:2},
 							{layer:"hat", x:-1, y:2}];
+			break;
+		case "Laser":
+			layerOrder = [{layer: "arms", animationVariant:animationFrame, x:0, y:0},
+							{layer:"hands", animationVariant:animationFrame, x:0, y:0},
+							{layer: "torso", animationVariant:animationFrame, x:0, y:0},
+							{layer:"gun",  animationVariant:"Laser", x:0, y:0},
+							{layer:"head", x:-2, y:1},
+							{layer:"hair", x:-2, y:1},
+							{layer:"hat", x:-2, y:1}];
 			break;
 		case "legs":
 			layerOrder = [{layer: "legs", x:0, y:0},

@@ -288,6 +288,7 @@ var Thug = function(id, team, x, y){
 		else if (shooter.weapon == 2){ damageInflicted += DPDamage; } //damage for double pistols
 		else if (shooter.weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
 		else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
+		else if (shooter.weapon == 5){ damageInflicted = 175; } //Damage for SG
 		
 		damageInflicted = damageInflicted * damageScale; //Scale damage
 		self.health -= Math.floor(damageInflicted);

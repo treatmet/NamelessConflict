@@ -77,6 +77,39 @@
 		"canvasValue":"goldWreathHat"
 	},	
 	{
+		"id":"alienHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Gray Alien Head",
+		"text":"For participating in the SocketShot community [Exclusive item]",
+		"price": 20000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"alienHat"
+	},		
+	{
+		"id":"alienGreenHat",
+		"category":"hat",
+		"subCategory":"type",
+		"title":"Green Alien Head",
+		"text":"For participating in the SocketShot community [Exclusive item]",
+		"price": 20000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"alienGreenHat"
+	},	
+	{
+		"id":"alienBlueHat",
+		"category":"hat",
+		"subCategory":"type",
+		"title":"Blue Alien Head",
+		"text":"For participating in the SocketShot community [Exclusive item]",
+		"price": 20000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"alienBlueHat"
+	},	
+	{
 		"id":"santaHat",
         "category":"hat",
 		"subCategory":"type",
@@ -1206,6 +1239,16 @@
 		"team":0,
 		"rarity":1,
 		"canvasValue":"smile"
+	},	{
+		"id":"bugIcon",
+		"category":"icon",
+		"subCategory":"type",
+		"title":"Bug Killer",
+		"text":"For helping kill SocketShot bugs! [Exclusive item]",
+		"price": 5000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"bug"
 	},	
 	{
 		"id":"alertIcon",

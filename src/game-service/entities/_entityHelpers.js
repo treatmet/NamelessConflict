@@ -12,12 +12,11 @@ var sprayBloodOntoTarget = function(shootingDir, targetX, targetY, targetId) {
 var checkIfInLineOfShot = function(shooter, target){
 	var distFromDiag = 0;
 	//&& target.team != shooter.team //Take off friendly fire
-	
-	if (shooter.weapon == 1 || shooter.weapon == 2 || shooter.weapon == 3){
+	if (shooter.weapon == 1 || shooter.weapon == 2 || shooter.weapon == 3 || shooter.weapon == 5){
 		if (target.team){
 			if (target.id != shooter.id && target.health > 0){
 				var allowableMargin = 31;
-				if (shooter.weapon == 2)
+				if (shooter.weapon == 2 || shooter.weapon == 5)
 					allowableMargin = 60;
 
 

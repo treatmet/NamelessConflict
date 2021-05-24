@@ -834,10 +834,10 @@ function rebalanceTeams(){
 		}
 	}
 }
-
 function initializeNewGame(){
 	gameOver = false;
 	pregame = false;
+	bannedCognitoSubs = [];
 
 	whiteScore = 0;
 	blackScore = 0;
@@ -892,6 +892,8 @@ function initializeNewGame(){
 		playerList[i].cash = startingCash;
 		playerList[i].cashEarnedThisGame = 0;
 		playerList[i].kills = 0;
+		playerList[i].benedicts = 0;
+		playerList[i].benedicts = 0;
 		playerList[i].deaths = 0;
 		playerList[i].steals = 0;
 		playerList[i].returns = 0;
@@ -906,6 +908,7 @@ function initializeNewGame(){
 		playerList[i].respawn();
 	}//End player for loop update
 
+
 	for(var i in SOCKET_LIST){
 		SOCKET_LIST[i].emit('sendClock',secondsLeftPlusZero, minutesLeft);
 		SOCKET_LIST[i].emit('gameStart');
@@ -918,6 +921,16 @@ function initializeNewGame(){
 }
 
 function ensureCorrectThugCount(){
+	if (!pregame){
+		for (var t in thugList){
+			for(var i in SOCKET_LIST){
+				SOCKET_LIST[i].emit('removeThug', thugList[t].id);
+			}			
+			delete thugList[t];
+		}
+		return;
+	}
+
 	var expectedWhiteThugs = 0;
 	var expectedBlackThugs = 0;
 	var whiteThugs = 0;
@@ -1271,6 +1284,7 @@ var sendFullGameStatus = function(socketId){
 			DPClip:playerList[a].DPClip,	
 			MGClip:playerList[a].MGClip,	
 			SGClip:playerList[a].SGClip,	
+			laserClip:playerList[a].laserClip,	
 			DPAmmo:playerList[a].DPAmmo,	
 			MGAmmo:playerList[a].MGAmmo,	
 			SGAmmo:playerList[a].SGAmmo,	

@@ -1123,6 +1123,11 @@ function getShopItemHTML(item, active, isInShop){
             rarityText = "Legendary";
             rarityColor = "#ffd200";
             break;
+        case 4:
+            rarityImg = "rarities/legendary.png";
+            rarityText = "Legendary";
+            rarityColor = "#ffd200";
+            break;
         default:            
             break;
     }

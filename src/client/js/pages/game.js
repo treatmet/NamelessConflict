@@ -49,6 +49,12 @@ socket.on('votesUpdate', function(votesData){
 	document.getElementById("voteCrik").innerHTML = "Bunkers - [" + votesData.crikVotes + "]";
 });
 
+socket.on('betrayalKick', function(){
+	forceToLeave = true;
+	alert("You were kicked for being a Benedict Arnold.");
+	window.location.href = serverHomePage;
+});
+
 
 var debugTimer = 60;
 var debugText = true;
@@ -440,6 +446,8 @@ Img.lightYellow = new Image();
 Img.lightYellow.src = "/src/client/img/light-yellow.png";
 Img.redLaser = new Image();
 Img.redLaser.src = "/src/client/img/red-pixel-trans.png";
+Img.laserCanonBeam = new Image();
+Img.laserCanonBeam.src = "/src/client/img/laserBeam.png";
 Img.spectatingOverlay = new Image();
 Img.spectatingOverlay.src = "/src/client/img/spectating-overlay.png";
 
@@ -591,6 +599,10 @@ Img.pickupBA = new Image();
 Img.pickupBA.src = "/src/client/img/BAammo.png";
 Img.pickupBA2 = new Image();
 Img.pickupBA2.src = "/src/client/img/BAammo2.png";
+Img.pickupLaser = new Image();
+Img.pickupLaser.src = "/src/client/img/LaserAmmo.png";
+Img.pickupLaser2 = new Image();
+Img.pickupLaser2.src = "/src/client/img/LaserAmmo2.png";
 Img.pickupMD = new Image();
 Img.pickupMD.src = "/src/client/img/MDammo.png";
 Img.pickupMD2 = new Image();
@@ -716,6 +728,7 @@ Img.bloodyBorder.src = "/src/client/img/bloody-border.png";
 //-----------------------------Loading Sounds-------------------------------
 var mute = false;
 
+var sfx = {};
 var sfxPistol = new Howl({src: ['/src/client/sfx/pistol.mp3']});
 var sfxMG = new Howl({src: ['/src/client/sfx/mgShot.mp3']});
 var sfxDP = new Howl({src: ['/src/client/sfx/double_pistolsLoud.mp3']});
@@ -748,6 +761,10 @@ var sfxPistolEquip = new Howl({src: ['/src/client/sfx/Pistolequip2.mp3']});
 var sfxDPEquip = new Howl({src: ['/src/client/sfx/dpPick.mp3']});
 var sfxMGEquip = new Howl({src: ['/src/client/sfx/MGequip.mp3']});
 var sfxSGEquip = new Howl({src: ['/src/client/sfx/SGequipLoud.mp3']});
+var sfxLaserEquip = new Howl({src: ['/src/client/sfx/laserEquip.mp3']});
+var sfxLaserCharging = new Howl({src: ['/src/client/sfx/laserCharging.mp3']});
+sfxLaserCharging.volume(0.6);
+var sfxLaserDischarge = new Howl({src: ['/src/client/sfx/laserDischarge.mp3']});
 
 var sfxClick = new Howl({src: ['/src/client/sfx/click.mp3']});
 sfxClick.volume(0.8);
@@ -1117,10 +1134,40 @@ chatForm.onsubmit = function(e){
 }
 
 socket.on('sfx', function(sfx){
+	sfxPlay(sfx);
+});
+function sfxPlay(sfx){
 	if (!mute)
 		eval(sfx + ".play();");	
+}
+
+socket.on('sfxStop', function(sfx){
+	sfxStop(sfx);
+});
+function sfxStop(sfx){
+	if (!mute)
+		eval(sfx + ".stop();");	
+}
+
+socket.on('sfxRanged', function(sfx, x, y){
+	sfxRanged(sfx, x, y);
 });
 
+function sfxRanged(sfx, x, y){
+	var dx1 = myPlayer.x - x;
+	var dy1 = myPlayer.y - y;
+	var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+	var vol = (Math.round((1 - (dist1 / 1000)) * 100)/100) - .3;
+	if (vol > 1)
+		vol = 1;
+	else if (vol < 0 && vol >= -.1)
+		vol = 0.01;
+	if (vol < -.1 || mute)
+		return;
+
+	eval(sfx + ".volume(" + vol + ");");	
+	eval(sfx + ".play();");	
+}
 
 //----------------Player Functionality----------------
 socket.on('sendPlayerNameToClient',function(data){
@@ -1171,24 +1218,32 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			}
 		}
 								
-		//Update myPlayer and add blue border for armor
+		//Add blue border for armor
+		if (playerDataPack[i].property == "health" && playerDataPack[i].value == 175){
+			determineBorderStyle();
+		}
 
-			if (playerDataPack[i].id == myPlayer.id){
-				myPlayer[playerDataPack[i].property] = playerDataPack[i].value;
-				if (playerDataPack[i].property == "health" && ((myPlayer.team == 2 && bagBlue.captured == false) || (myPlayer.team == 1 && bagRed.captured == false))){
-					determineBorderStyle();
+		//Laser charging sounds
+		if (playerDataPack[i].property == "chargingLaser"){
+			if (playerDataPack[i].id == myPlayer.id){ //sfx only for myPlayer charging laser
+				if (playerDataPack[i].value == 1 && !Player.list[playerDataPack[i].id].chargingLaser){
+					sfxPlay("sfxLaserCharging");
+				}
+				else if (playerDataPack[i].value == 0 && Player.list[playerDataPack[i].id].chargingLaser){
+					sfxStop("sfxLaserCharging");
 				}
 			}
-
-		//Update player list. This has to be last because of previous code comparisons between Pack and player.list[i] values
-			if (Player.list[playerDataPack[i].id]){
-				Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
-			}
-			else {
-				Player(playerDataPack[i].id);
-				Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
-			}
+		}
 		
+		//Update player list. This has to be last because of previous code comparisons between Pack and player.list[i] values
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		if (!Player.list[playerDataPack[i].id]){
+			Player(playerDataPack[i].id);
+		}
+		Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
+		if (playerDataPack[i].id == myPlayer.id)
+			myPlayer[playerDataPack[i].property] = playerDataPack[i].value;
+
 		//Draw customizations
 		if (playerDataPack[i].property == "customizations"){	
 			drawCustomizations(Player.list[playerDataPack[i].id].customizations, playerDataPack[i].id, function(playerAnimations, id){
@@ -1285,13 +1340,22 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				sfxSGEquip.volume(vol);
 				sfxSGEquip.play();
 			}			//Stop all reloading sfx upon weapon change
+			else if (playerDataPack[i].value == 5){
+				sfxLaserEquip.volume(vol);
+				sfxLaserEquip.play();
+			}			//Stop all reloading sfx upon weapon change
 			sfxDPReload.stop();
 			sfxMGReload.stop();
 			sfxPistolReload.stop();
 			
 			Player.list[playerDataPack[i].id].triggerTapLimitTimer = 0;
 		}
+
+
+
+
 	}//END Player loop
+
 	for (var i = 0; i < pickupDataPack.length; i++) {
 		if (typeof pickupDataPack[i] == "number"){
 			if (debugUpdates){
@@ -2367,12 +2431,16 @@ function drawPickups(){
 				pickupImg = Img.pickupBA;
 				pickupImg2 = Img.pickupBA2;
 			}
+			else if (Pickup.list[i].type == 6){
+				pickupImg = Img.pickupLaser;
+				pickupImg2 = Img.pickupLaser2;
+			}
 
 
 			if (Pickup.list[i].respawnTimer != 0){
 				ctx.globalAlpha = .15; //Make transparent if pickup is queued to respawn
 			}
-			drawImage(pickupImg, centerX - myPlayer.x * zoom + Pickup.list[i].x * zoom, centerY - myPlayer.y * zoom + Pickup.list[i].y * zoom, pickupImg.width * zoom, pickupImg.height * zoom);
+			drawImage(pickupImg, centerX - myPlayer.x * zoom + Pickup.list[i].x * zoom, centerY - myPlayer.y * zoom + Pickup.list[i].y * zoom, Pickup.list[i].width * zoom, Pickup.list[i].height * zoom);
 			
 			if (Pickup.list[i].respawnTimer == 0){				
 				if (pickupFlash < 0){
@@ -2381,7 +2449,7 @@ function drawPickups(){
 				else {
 					ctx.globalAlpha = pickupFlash.toFixed(2);
 				}
-				drawImage(pickupImg2, centerX - myPlayer.x * zoom + Pickup.list[i].x * zoom, centerY - myPlayer.y * zoom + Pickup.list[i].y * zoom, pickupImg.width * zoom, pickupImg.height * zoom);
+				drawImage(pickupImg2, centerX - myPlayer.x * zoom + Pickup.list[i].x * zoom, centerY - myPlayer.y * zoom + Pickup.list[i].y * zoom, Pickup.list[i].width * zoom, Pickup.list[i].height * zoom);
 			}
 			else if (!gameOver){
 				//Draw pickup respawn timer
@@ -2404,6 +2472,11 @@ function drawPickups(){
 					ctx.fillStyle="#FFFFFF";
 					ctx.strokeStyle="#005b98";
 					ctx.shadowColor = "#005b98";
+				}
+				else if (Pickup.list[i].type == 6){
+					ctx.fillStyle="#FFFFFF";
+					ctx.strokeStyle="#3f3eaa";
+					ctx.shadowColor = "#3f3eaa";
 				}
 				ctx.shadowOffsetX = 0; 
 				ctx.shadowOffsetY = 0;
@@ -2452,6 +2525,9 @@ function drawTorsos(){
 				}
 				else if (Player.list[i].weapon == 4){
 					img = Player.list[i].images[team].SG;
+				}
+				else if (Player.list[i].weapon == 5){
+					img = Player.list[i].images[team].Laser;
 				}
                 ctx.save();
 				ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player			
@@ -2554,7 +2630,7 @@ function drawTorsos(){
 					
 					ctx.globalAlpha = 1 - Player.list[i].cloak;
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
-					if (Player.list[i].team == Player.list[myPlayer.id].team && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
+					if ((Player.list[myPlayer.id].team == 0 || Player.list[i].team == Player.list[myPlayer.id].team) && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
 
 					
 					var canX = -img.width/2 * zoom;
@@ -2708,6 +2784,15 @@ function drawShots(){
 							drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
 						}					
 					}
+					else if (Player.list[i].weapon == 5){
+						xOffset = -10; yOffset = -3;
+						ctx.globalAlpha = shot.decay / 10;
+						drawImage(Img.laserCanonBeam, (-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, 50 * zoom, shot.distance * zoom);
+						//drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
+						if (shot.spark){
+							//drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
+						}					
+					}
 					else if (Player.list[i].weapon == 4){
 						xOffset = -310 * SGscale; yOffset = -680 * SGscale;
 
@@ -2773,6 +2858,37 @@ function drawLaser(){
 				if (shot.height < 90) shot.height = 90;
 			}
         ctx.restore();
+	}
+}
+var laserCanonBlinkTime = 4;
+var laserCanonBlink = laserCanonBlinkTime;
+var drawingLaserChargingLaser = true;
+function drawLaserCanonLaser(){
+	if (drawingLaserChargingLaser){
+		for (var i in Player.list) {
+			if (Player.list[i].chargingLaser && Player.list[i].weapon == 5){
+				var laser = {};
+				laser.distance = canvasWidth * 2;
+
+				ctx.save();
+				ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on lasering player
+				ctx.rotate(getRotation(Player.list[i].shootingDir));
+					noShadow();
+					var xOffset = 13; var yOffset = -3;
+					drawImage(Img.redLaser, (-4 + xOffset) * zoom, (-laser.distance - 40 + yOffset) * zoom, 4 * zoom, laser.distance * zoom);
+				ctx.restore();
+
+			}
+		}//End player loop
+	}
+
+	laserCanonBlink--;
+	if (laserCanonBlink <= 0){
+		laserCanonBlink = laserCanonBlinkTime;
+		if (drawingLaserChargingLaser)
+			drawingLaserChargingLaser = false;
+		else
+			drawingLaserChargingLaser = true;
 	}
 }
 
@@ -3387,6 +3503,10 @@ function drawHUD(){
 			ammoCount = Player.list[myPlayer.id].SGAmmo;		
 			const ammoWidth = 190 - ((12 - Player.list[myPlayer.id].SGClip) * 16); //Was 135, 11
 	 		ctx.drawImage(Img.ammoSG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+		}
+		else if (Player.list[myPlayer.id].weapon == 5){
+			clipCount = Player.list[myPlayer.id].laserClip;
+			ammoCount = "x";		
 		}
 		
 		//Draw separating line
@@ -4293,6 +4413,7 @@ function drawEverything(){
 	drawBodies();	
 	drawLegs();
 	drawLaser();
+	drawLaserCanonLaser();
 	drawBlockCanvas();	
 	drawWallBodies();
 	drawPickups();
@@ -4427,12 +4548,20 @@ var clientTimeoutTicker = clientTimeoutSeconds;
 var newTipSeconds = 45;
 var newTipTicker = newTipSeconds;
 var reloadOnServerTimeout = false; //Afk
+var countdownToRedrawGraphics = 0;
 
 //EVERY 1 SECOND
 setInterval( 
 	function(){
-
-
+		if (countdownToRedrawGraphics != -1){
+			countdownToRedrawGraphics++;
+		}
+		if (countdownToRedrawGraphics >= 5){
+			countdownToRedrawGraphics = -1;
+			logg("Redrawing map and blocks on timer");
+			drawMapElementsOnMapCanvas();
+			drawBlocksOnBlockCanvas();
+		}
 		if (myPlayer.team == 0 && zoom != spectateZoom){
 			zoom = spectateZoom;
 			drawMapElementsOnMapCanvas();
@@ -4667,6 +4796,15 @@ function shootUpdateFunction(shotData){
 			sfxClick.play();
 		}
 	}
+	else if (Player.list[shotData.id].weapon == 5 && newShot == true) {
+		sfxLaserDischarge.volume(vol);
+		sfxLaserDischarge.play();
+		if (dist1 < 1000){
+			screenShakeCounter = 16;
+		}
+		screenShakeCounter = 8;
+		Shot.list[shotData.id].decay = 10;
+	}
 	else if (Player.list[shotData.id].weapon == 4 && newShot == true) {
 		sfxSG.volume(vol);
 		sfxSG.play();
@@ -4679,15 +4817,16 @@ function shootUpdateFunction(shotData){
 		Player.list[shotData.id].shootingDir = shotData.shootingDir;
 	}
 	Shot.list[shotData.id].distance = shotData.distance;
+	Shot.list[shotData.id].weapon = shotData.weapon;
 	Shot.list[shotData.id].spark = shotData.spark;	
 }
 
-var Shot = function(id){
+var Shot = function(id, decay = 2){
 	
 	var self = {
 		id:id,
 		distance:10000,
-		decay:2,
+		decay:decay,
 		spark:false,
 		width:Math.floor((Math.random() * 46) + 26),   //36
 		height:Math.floor((Math.random() * 45) + 65),  //55
@@ -4921,10 +5060,10 @@ document.onkeydown = function(event){
 	}
 	else if(hitKeyCode === 16 && chatInput.style.display == "none"){ //Shift
 		myPlayer.pressingShift = true;
-			camOffSet = shiftCamOffSet;
-			diagCamOffSet = shiftDiagCamOffSet;
-			camMaxSpeed = 300;
-			keyPress(16, true);
+		camOffSet = shiftCamOffSet;
+		diagCamOffSet = shiftDiagCamOffSet;
+		camMaxSpeed = 300;
+		keyPress(16, true);
 	}
 	else if(hitKeyCode === 49 && chatInput.style.display == "none"){ //1
 		keyPress(49, true);
@@ -4937,6 +5076,9 @@ document.onkeydown = function(event){
 	}	
 	else if(hitKeyCode === 52 && chatInput.style.display == "none"){ //4
 		keyPress(52, true);
+	}	
+	else if(hitKeyCode === 53 && chatInput.style.display == "none"){ //5
+		keyPress(53, true);
 	}	
 	
 	else if(hitKeyCode === 13){ //Enter
@@ -5297,9 +5439,9 @@ function stopStopwatch(){
 function disconnect(){
 	socket.disconnect();
 }
-
+var forceToLeave = false;
 window.onbeforeunload = function(){
-	if (!gameOver && !pregame)
+	if (!gameOver && !pregame && !forceToLeave)
 		return 'Are you sure you want to leave?'; //Leave site? unsaved changes
 	return;
 };

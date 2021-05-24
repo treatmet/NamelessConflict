@@ -38,7 +38,9 @@ var initializePickups = function(map){
 		pickup.createPickup(Math.random(), 29, 4, 4, 24, 60); //SG
 		pickup.createPickup(Math.random(), 11, 19, 4, 24, 60); //SG
 		pickup.createPickup(Math.random(), 2, 12, 2, 40, 30); //DP
-		pickup.createPickup(Math.random(), 38, 11, 2, 40, 30); //DP
+		 pickup.createPickup(Math.random(), 38, 11, 2, 40, 30); //DP
+		pickup.createPickup(Math.random(), 2, 13, 6, 4, 90); //Laser
+		pickup.createPickup(Math.random(), 38, 10, 6, 4, 90); //Laser
 		pickup.createPickup(Math.random(), 2, 4, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 38, 19, 1, 50, 10); //MD		
 	}

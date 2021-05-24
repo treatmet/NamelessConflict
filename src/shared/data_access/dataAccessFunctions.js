@@ -552,9 +552,11 @@ function getNewShopItem(currentShopList){
 	while (loopCount < 1000){
 		shopIndex = randomInt(2, fullShopList.length - 1); //Random element from shop, starting with index 2 (to skip unlock and refresh)
 		//New shop rules
-		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item part of default unlocks?
-			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item already added to new shop?
-				break;				
+		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT part of default unlocks?
+			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT already added to new shop?
+				if (fullShopList[shopIndex].rarity != 4){ //Is item NOT exclusive
+					break; //PASSED RULES, ADD THIS ITEM
+				}
 			}
 		}
 		loopCount++;

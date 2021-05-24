@@ -164,9 +164,15 @@ global.getFullRankName = function(rank){
 }
 
 global.getDistance = function(entity1, entity2){
-		var dx1 = entity1.x - entity2.x;
-		var dy1 = entity1.y - entity2.y;
-		return Math.round(Math.sqrt(dx1*dx1 + dy1*dy1) * 10)/10;	
+	if (!entity1){
+		console.log("ERROR - getDistance:entity1 not defined");
+	}
+	if (!entity2){
+		console.log("ERROR - getDistance:entity2 not defined");
+	}
+	var dx1 = entity1.x - entity2.x;
+	var dy1 = entity1.y - entity2.y;
+	return Math.round(Math.sqrt(dx1*dx1 + dy1*dy1) * 10)/10;	
 }
 
 

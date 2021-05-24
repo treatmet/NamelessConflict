@@ -38,7 +38,7 @@ router.post('/playNow', async function (req, res) {
 	log("playNow endpoint");
 	if (myUrl == ""){
 		logg("res.send: " + "Url for current server not set");
-		res.send({autoJoin:false, error:"Url for current server not set"});
+		res.send({msg:"Url for current server not set", success:false});
 		return;
     }
     	
@@ -49,6 +49,13 @@ router.post('/playNow', async function (req, res) {
 	}
 	console.log("REQ BODY: ");
 	console.log(req.body);
+
+	if ((authorizedUser && bannedCognitoSubs.find(sub => sub == authorizedUser.cognitoSub)) || bannedCognitoSubs.find(sub => sub == req.body.tempCognito)){
+		logg("res.send: " + "You are banned from the current game for betraying. Please try again in a few minutes.");
+		res.send({msg:"You are banned from the current game for betraying. Please try again in a few minutes.", success:false});
+		return;
+    }
+
 
 	//Check if server is expecting this incoming user
 	var params = {url:myUrl, privateServer:false};
