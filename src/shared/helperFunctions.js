@@ -1,3 +1,53 @@
+//globalHelperFunctions global helper functions sharedHelperF shared helper
+
+
+
+global.minutesLeft = 9;
+global.secondsLeft = 99;
+global.gameMinutesLength = 5;
+global.gameSecondsLength = 0;
+global.scoreToWin = 0;
+global.whiteScore = 0;
+global.blackScore = 0;
+
+global.isGameInFullSwing = function(currentTimeLeft = false, matchTime = false, currentHighestScore = false, scoreToWinGame = false){
+	if (!currentTimeLeft){
+		currentTimeLeft = (minutesLeft * 60) + secondsLeft;
+	}
+	if (!matchTime){
+		matchTime = (gameMinutesLength * 60) + gameSecondsLength;
+	}
+	if (!currentHighestScore){
+		currentHighestScore = whiteScore > blackScore ? whiteScore : blackScore;
+	}
+	if (!scoreToWinGame){
+		scoreToWinGame = scoreToWin == false ? 0 : scoreToWin;
+	}
+
+	log("isGameInFullSwing? currentTimeLeft:" + currentTimeLeft + " matchTime:" + matchTime + " currentHighestScore:" + currentHighestScore + " scoreToWinGame:" + scoreToWinGame);
+
+	if (typeof joinActiveGameThreshold === 'undefined')
+		var joinActiveGameThreshold = 0.5;
+
+		var tfract = (currentTimeLeft / matchTime);
+		var sfract = (currentHighestScore/scoreToWinGame);
+
+	log("Time left fraction" + tfract + " must be less than " + joinActiveGameThreshold);
+	log("Score left fraction" + sfract + " must be less than " + joinActiveGameThreshold);
+
+	if (matchTime != 0 && tfract < joinActiveGameThreshold){
+		log("game is in FullSwing cause time too low: true");
+		return true;
+	}
+	if (scoreToWin != 0 && sfract > joinActiveGameThreshold){
+		log("game is in FullSwing cause score too high: true");
+		return true;
+	}
+
+	log("game is in NOT FullSwing: false");
+	return false;
+}
+
 global.removeCognitoSubFromArray = function(incomingUsers, cognitoSub){
 	var updatedIncomingUsers = [];
 	

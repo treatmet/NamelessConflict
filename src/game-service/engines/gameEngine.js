@@ -139,6 +139,13 @@ function calculateEndgameStats(){
 				ptsGained += Math.abs(playerList[p].rating + ptsGained);
 			}
 
+			//Eligible for rank up/down this game?
+			log("playerList[p].eligibleForRank: " + playerList[p].eligibleForRank);
+			if (!playerList[p].eligibleForRank){
+				logg("Player ineligible for rank influence this game");
+				ptsGained = 0;
+			}
+
 			//Trigger client's end of game progress results report
 			var endGameProgressResults = {};
 			endGameProgressResults.originalRating = playerList[p].rating;
@@ -897,7 +904,8 @@ function initializeNewGame(){
 		playerList[i].deaths = 0;
 		playerList[i].steals = 0;
 		playerList[i].returns = 0;
-		playerList[i].captures = 0;				
+		playerList[i].captures = 0;			
+		playerList[i].eligibleForRank = true;	
 		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
 		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
 		updatePlayerList.push({id:playerList[i].id,property:"kills",value:playerList[i].kills});

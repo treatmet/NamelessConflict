@@ -12,7 +12,7 @@ global.config = require("../settings.json");
 global.debug = true;
 global.httpOnlyCookies = false;
 global.allowDuplicateUsername = false;
-global.allowServerCommands = false;
+global.allowServerCommands = true;
 
 global.syncServerWithDbInterval = 15; //Seconds //Both sync and check for stale thresholds
 
@@ -104,6 +104,7 @@ global.SGCloseRangeDamageScale = 4;
 global.SGPushSpeed = 12;
 global.laserPushSpeed = 36;
 global.MGPushSpeed = 2;
+global.speedCap = 45;
 
 
 

@@ -31,6 +31,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		shootingDir:1,
 		customizations: customizations,
 		settings: settings,
+		eligibleForRank:!isGameInFullSwing(),
 
 		cash:startingCash,
 		cashEarnedThisGame:0,
@@ -224,7 +225,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 						SOCKET_LIST[i].emit('shootUpdate',shotData);
 					}	
 				}
-				if (self.weapon == 5){
+				else if (self.weapon == 5){
 					//Out of all blocks in line of shot, which is closest?				
 					var stoppingBlock = entityHelpers.getHitTarget(blockHitTargets);
 					var laserDistance = stoppingBlock ? getDistance(self, stoppingBlock) : bulletRange;		
@@ -258,10 +259,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 						SOCKET_LIST[i].emit('shootUpdate',shotData);
 					}	
 				}
-				else {
+				else { //Weapons 1-3
 					//Out of all targets in line of shot, which is closest?				
 					var hitTarget = entityHelpers.getHitTarget(hitTargets);	
-					console.log(hitTarget);			
 					if (hitTarget != null){
 						//We officially have a hit on a specific target
 						self.liveShot = false;
@@ -761,7 +761,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			else if (self.chargingLaser >= laserMaxCharge){
 				//DISCHARGE!!!!
-				console.log("DISCHARGE CAUSE ITS BIG");
 				Discharge(self);
 				updatePlayerList.push({id:self.id,property:"laserClip",value:self.laserClip});
 				self.chargingLaser = 0;
@@ -972,18 +971,21 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.speedX -= boostAmount * diagMovementScale;
 			self.speedY -= boostAmount * diagMovementScale;
 		}	
-		if (self.speedX > 50)
-			self.speedX = 50;
-		else if (self.speedX < -50)
-			self.speedX = -50;
-		if (self.speedY > 50)
-			self.speedY = 50;
-		else if (self.speedY < -50)
-			self.speedY = -50;		
+		if (self.speedX > speedCap)
+			self.speedX = speedCap;
+		else if (self.speedX < -speedCap)
+			self.speedX = -speedCap;
+		if (self.speedY > speedCap)
+			self.speedY = speedCap;
+		else if (self.speedY < -speedCap)
+			self.speedY = -speedCap;		
 	}
 
 
 	self.hit = function(shootingDir, distance, shooter, targetDistance){
+		if (self.health <= 0)
+			return;
+
 		if (shooter.weapon != 4){
 			var shotData = {};
 			shotData.id = shooter.id;
@@ -1046,6 +1048,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}			
 		else if (self.team == shooter.team){
 			damageInflicted *= friendlyFireDamageScale;
+			if (shooter.weapon == 5){damageInflicted *= friendlyFireDamageScale;}
 		}
 		
 		damageInflicted = damageInflicted * damageScale; //Scale damage
@@ -2376,7 +2379,6 @@ function reload(playerId){
 }
 
 function Discharge(player){
-	console.log("DISCHARGE!!!!!!");
 	if (player.reloading > 0 && player.weapon != 4){return;}	
 	else if (player.weapon == 1 && player.PClip <= 0){
 		reload(player.id);
@@ -2454,8 +2456,6 @@ function Discharge(player){
 		player.triggerTapLimitTimer = SGFireRate;
 	}
 	else if(player.weapon == 5 && player.firing <= 0){
-		console.log("DISCHARGE LASER!!!!!!");
-
 		player.laserClip--;
 		updatePlayerList.push({id:player.id,property:"laserClip",value:player.laserClip});
 		

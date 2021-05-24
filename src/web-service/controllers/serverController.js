@@ -198,10 +198,11 @@ var getJoinableServer = function(options, cb){
 					var matchRemaining = (serv[i].currentTimeLeft / serv[i].matchTime);
 					var possibleTeamDifference = Math.abs(Math.abs(moreWhitePlayers) - options.party.length);					
 					console.log("(REMAINING TIME) IS " + matchRemaining + " LESS THAN " + joinActiveGameThreshold);
+					console.log("(isGameInFullSwing) " + isGameInFullSwing(serv[i].currentTimeLeft, serv[i].matchTime, serv[i].currentHighestScore, serv[i].scoreToWin));
 					console.log("(CURRENT PLAYERS) IS " + getCurrentPlayersFromUsers(serv[i].currentUsers).length + " GREATER THAN OR EQUAL TO 8?");
 					console.log("(POSSIBLE TEAM DIFF) IS " + possibleTeamDifference + " GREATER THAN OR EQUAL TO " + Math.abs(moreWhitePlayers));
 					
-					if ((serv[i].currentTimeLeft / serv[i].matchTime) < joinActiveGameThreshold && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 8){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
+					if (!isGameInFullSwing(serv[i].currentTimeLeft, serv[i].matchTime, serv[i].currentHighestScore, serv[i].scoreToWin) && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 8){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
 						team = 0;
 					}
 					

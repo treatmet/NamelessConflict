@@ -119,6 +119,10 @@ var chatText = document.getElementById("chat-text");
 var chatInput = document.getElementById("chat-input");
 var chatForm = document.getElementById("chat-form");
 var chatStale = 0;
+var chatSpam = 0;
+const chatSpamGain = 120;
+const chatSpamThresh = 300;
+var pressShiftTimer = 300;
 
 var	showStatOverlay = false;
 
@@ -603,6 +607,8 @@ Img.pickupLaser = new Image();
 Img.pickupLaser.src = "/src/client/img/LaserAmmo.png";
 Img.pickupLaser2 = new Image();
 Img.pickupLaser2.src = "/src/client/img/LaserAmmo2.png";
+Img.pressShiftInstructions = new Image();
+Img.pressShiftInstructions.src = "/src/client/img/pressShiftInstructions.png";
 Img.pickupMD = new Image();
 Img.pickupMD.src = "/src/client/img/MDammo.png";
 Img.pickupMD2 = new Image();
@@ -4393,7 +4399,11 @@ torso_canvas.height = canvas.height;
 var fpsCounter = 0;
 var fpsInLastSecond = 0;
 var updatesInLastSecond = 0;
+
+//Client timer1 teimer1
 function drawEverything(){
+	if (chatSpam > 0)
+		chatSpam--;
 	//Don't draw anything if the user hasn't entered the game with a player id and name
 	if (myPlayer.name == "" || !Player.list[myPlayer.id])
 		return;
@@ -4442,7 +4452,6 @@ function drawEverything(){
 //drawExperiments
 
 
-//Client timer1 teimer1
 
 //Option1
 /*
@@ -5006,32 +5015,40 @@ document.onkeydown = function(event){
 	else if (event.keyCode == 38 && chatInput.style.display != "none" && chatInput.value == ""){ //Up 
 		const quickChat = myPlayer.settings.quickChat[0].value;
 		if (quickChat){
-			log(quickChat);
-			socket.emit('chat',[myPlayer.id, quickChat]);
+			if (chatSpam < chatSpamThresh){
+				chatSpam += chatSpamGain;
+				socket.emit('chat',[myPlayer.id, quickChat]);
+			}
 			hideChatBox();
 		}
 	}
 	else if (event.keyCode == 39 && chatInput.style.display != "none" && chatInput.value == ""){ //Right 
 		const quickChat = myPlayer.settings.quickChat[1].value;
 		if (quickChat){
-			log(quickChat);
-			socket.emit('chat',[myPlayer.id, quickChat]);
+			if (chatSpam < chatSpamThresh){
+				chatSpam += chatSpamGain;
+				socket.emit('chat',[myPlayer.id, quickChat]);
+			}
 			hideChatBox();
 		}
 	}
 	else if (event.keyCode == 40 && chatInput.style.display != "none" && chatInput.value == ""){ //Down
 		const quickChat = myPlayer.settings.quickChat[2].value;
 		if (quickChat){
-			log(quickChat);
-			socket.emit('chat',[myPlayer.id, quickChat]);
+			if (chatSpam < chatSpamThresh){
+				chatSpam += chatSpamGain;
+				socket.emit('chat',[myPlayer.id, quickChat]);
+			}
 			hideChatBox();
 		}
 	}
 	else if (event.keyCode == 37 && chatInput.style.display != "none" && chatInput.value == ""){ //Left
 		const quickChat = myPlayer.settings.quickChat[3].value;
 		if (quickChat){
-			log(quickChat);
-			socket.emit('chat',[myPlayer.id, quickChat]);
+			if (chatSpam < chatSpamThresh){
+				chatSpam += chatSpamGain;
+				socket.emit('chat',[myPlayer.id, quickChat]);
+			}
 			hideChatBox();
 		}
 	}
@@ -5118,7 +5135,10 @@ document.onkeydown = function(event){
 					}					
 				}
  				else if (!localGame && chatInput.value != "[Team] " && chatInput.value != "[Team]"){
-					socket.emit('chat',[myPlayer.id, chatInput.value]);
+					if (chatSpam < chatSpamThresh){
+						chatSpam += chatSpamGain;
+						socket.emit('chat',[myPlayer.id, chatInput.value]);
+					}		
 				}
 			}
 			hideChatBox();
