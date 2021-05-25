@@ -58,7 +58,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	updatePlayerList.push({id:self.id,property:"customizations",value:customizations});
 	
 	var socket = SOCKET_LIST[id];
-	
+
+	self.shotList = [];
+
 	//Player Update (Timer1 for player - Happens every frame)	
 	self.engine = function(){	
 		self.processChargingLaser();
@@ -156,145 +158,124 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		
 		//Firing and aiming decay (every frame)
-		if (self.aiming > 0){
-			self.aiming--;
-		}
+		if (self.aiming > 0){self.aiming--;}
 		if (self.triggerTapLimitTimer > 0){self.triggerTapLimitTimer--;}
+		if (self.firing > 0){self.firing--;}
+		
+		//Hit detection
+		for (var s in self.shotList){
 
-		if (self.firing > 0){
-			self.firing--;
-			
-			//Hit detection
-			if (self.liveShot){
-				var hitTargets = [];
-				var blockHitTargets = [];
-				var organicHitTargets = [];
-				for (var i in Player.list){
-					if (Player.list[i].team == 0)
-						continue;
-					var isHitTarget = entityHelpers.checkIfInLineOfShot(self, Player.list[i]);
-					if (isHitTarget && isHitTarget != false){
-						hitTargets.push(isHitTarget);
-						organicHitTargets.push(isHitTarget);
-					}	
-				}
-				var thugList = thug.getThugList();
-				for (var i in thugList){
-					var isHitTarget = entityHelpers.checkIfInLineOfShot(self, thugList[i]);
-					if (isHitTarget && isHitTarget != false){
-						hitTargets.push(isHitTarget);
-						organicHitTargets.push(isHitTarget);
-					}	
-				}					
-				var blockList = block.getBlockList();
-				for (var i in blockList){
-					if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
-						var isHitTarget = entityHelpers.checkIfInLineOfShot(self, blockList[i]);
-						if (isHitTarget && isHitTarget != false){
-							hitTargets.push(isHitTarget);
-							blockHitTargets.push(isHitTarget);
-						}	
-					}
-				}				
+			/*{
+				all:[]
+				organic:[]
+				block:[]
+			}*/
+			var targetsInRange = getTargetsInRangeOfShot(self, self.shotList[s]);
 
-				if (self.weapon == 4){
-					for (var t in organicHitTargets){
-						if (organicHitTargets[t].target.health <= 0)
-							continue;							
-						var isBehindCover = false;
-						for (var b in blockHitTargets){ 
-							if (checkIfBlocking(blockHitTargets[b].target, self, organicHitTargets[t].target)){ //And see if it is blocking the shooter's path
-								isBehindCover = true;
-							}										
-						}
-						if (!isBehindCover){
-							organicHitTargets[t].target.hit(self.shootingDir, organicHitTargets[t].dist, self, getDistance(self,organicHitTargets[t].target));
-							//Calculate blood effect if target is organic
-							var bloodX = organicHitTargets[t].target.x;
-							var bloodY = organicHitTargets[t].target.y;
-							entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, organicHitTargets[t].target.id);
-						}
+			if (self.weapon == 4){
+				for (var t in targetsInRange.organic){
+					if (targetsInRange.organic[t].target.health <= 0)
+						continue;							
+					var isBehindCover = false;
+					for (var b in targetsInRange.block){ 
+						if (checkIfBlocking(targetsInRange.block[b].target, self, targetsInRange.organic[t].target)){ //And see if it is blocking the shooter's path
+							isBehindCover = true;
+						}										
 					}
-					var shotData = {};
-					shotData.id = self.id;
-					shotData.spark = false;
-					shotData.distance = 10000;
-					shotData.shootingDir = self.shootingDir;
-					self.liveShot = false;
-					for(var i in SOCKET_LIST){
-						SOCKET_LIST[i].emit('shootUpdate',shotData);
-					}	
-				}
-				else if (self.weapon == 5){
-					//Out of all blocks in line of shot, which is closest?				
-					var stoppingBlock = entityHelpers.getHitTarget(blockHitTargets);
-					var laserDistance = stoppingBlock ? getDistance(self, stoppingBlock) : bulletRange;		
-
-					for (var t in organicHitTargets){
-						if (organicHitTargets[t].target.health <= 0)
-							continue;							
-						var isBehindCover = false;
-						for (var b in blockHitTargets){ 
-							if (checkIfBlocking(blockHitTargets[b].target, self, organicHitTargets[t].target)){ //And see if it is blocking the shooter's path
-								isBehindCover = true;
-							}										
-						}
-						if (!isBehindCover){
-							organicHitTargets[t].target.hit(self.shootingDir, organicHitTargets[t].dist, self, laserDistance);
-							//Calculate blood effect if target is organic
-							var bloodX = organicHitTargets[t].target.x;
-							var bloodY = organicHitTargets[t].target.y;
-							entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, organicHitTargets[t].target.id);
-						}
-					}
-					self.liveShot = false;
-
-					var shotData = {};
-					shotData.id = self.id;
-					shotData.spark = false;
-					shotData.distance = laserDistance;
-					shotData.shootingDir = self.shootingDir;
-					shotData.weapon = 5;
-					for(var i in SOCKET_LIST){
-						SOCKET_LIST[i].emit('shootUpdate',shotData);
-					}	
-				}
-				else { //Weapons 1-3
-					//Out of all targets in line of shot, which is closest?				
-					var hitTarget = entityHelpers.getHitTarget(hitTargets);	
-					if (hitTarget != null){
-						//We officially have a hit on a specific target
-						self.liveShot = false;
-						hitTarget.hit(self.shootingDir, hitTarget.dist, self, getDistance(self,hitTarget));				
-						 
-						if (hitTarget.team && hitTarget.health){
-							//Calculate blood effect if target is organic
-							var bloodX = hitTarget.x;
-							var bloodY = hitTarget.y;
-							if (self.shootingDir == 1){if (self.weapon != 4) bloodX = self.x;}
-							if (self.shootingDir == 2){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y - hitTarget.distFromDiag/2;}
-							if (self.shootingDir == 3){if (self.weapon != 4) bloodY = self.y;}
-							if (self.shootingDir == 4){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y + hitTarget.distFromDiag/2;}
-							if (self.shootingDir == 5){if (self.weapon != 4) bloodX = self.x;}
-							if (self.shootingDir == 6){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y - hitTarget.distFromDiag/2;}
-							if (self.shootingDir == 7){if (self.weapon != 4) bloodY = self.y;}
-							if (self.shootingDir == 8){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y + hitTarget.distFromDiag/2;}
-							entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, hitTarget.id);
-						}
-					}
-					else {
-						var shotData = {};
-						shotData.id = self.id;
-						shotData.spark = false;
-						shotData.distance = bulletRange;
-						self.liveShot = false;
-						for(var i in SOCKET_LIST){
-							SOCKET_LIST[i].emit('shootUpdate',shotData);
-						}					
+					if (!isBehindCover){
+						targetsInRange.organic[t].target.hit(self.shootingDir, targetsInRange.organic[t].dist, self, getDistance(self,targetsInRange.organic[t].target), self.shotList[s].x);
+						//Calculate blood effect if target is organic
+						var bloodX = targetsInRange.organic[t].target.x;
+						var bloodY = targetsInRange.organic[t].target.y;
+						entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, targetsInRange.organic[t].target.id);
 					}
 				}
+				var shotData = {};
+				shotData.id = Math.random();
+				shotData.playerId = self.id;
+				shotData.weapon = self.weapon;
+				shotData.x = self.shotList[s].x;
+				shotData.spark = false;
+				shotData.distance = 10000;
+				shotData.shootingDir = self.shootingDir;
+				for(var i in SOCKET_LIST){
+					SOCKET_LIST[i].emit('shootUpdate',shotData);
+				}	
 			}
-		}
+			else if (self.weapon == 5){
+				//Out of all blocks in line of shot, which is closest?				
+				var stoppingBlock = entityHelpers.getHitTarget(targetsInRange.block);
+				var laserDistance = stoppingBlock ? getDistance(self, stoppingBlock) : laserRange;		
+
+				for (var t in targetsInRange.organic){
+					if (targetsInRange.organic[t].target.health <= 0)
+						continue;							
+					var isBehindCover = false;
+					for (var b in targetsInRange.block){ 
+						if (checkIfBlocking(targetsInRange.block[b].target, self, targetsInRange.organic[t].target)){ //And see if it is blocking the shooter's path
+							isBehindCover = true;
+						}										
+					}
+					if (!isBehindCover){
+						targetsInRange.organic[t].target.hit(self.shootingDir, targetsInRange.organic[t].dist, self, laserDistance, self.shotList[s].x);
+						//Calculate blood effect if target is organic
+						var bloodX = targetsInRange.organic[t].target.x;
+						var bloodY = targetsInRange.organic[t].target.y;
+						entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, targetsInRange.organic[t].target.id);
+					}
+				}
+
+				var shotData = {};
+				shotData.id = Math.random();
+				shotData.playerId = self.id;
+				shotData.weapon = self.weapon;
+				shotData.x = self.shotList[s].x;
+				shotData.spark = false;				
+				shotData.distance = laserDistance;
+				shotData.shootingDir = self.shootingDir;
+				for(var i in SOCKET_LIST){
+					SOCKET_LIST[i].emit('shootUpdate',shotData);
+				}	
+			}
+			else { //Weapons 1-3
+				//Out of all targets in line of shot, which is closest?				
+				var hitTarget = entityHelpers.getHitTarget(targetsInRange.all);	
+				if (hitTarget != null){
+					hitTarget.hit(self.shootingDir, hitTarget.dist, self, getDistance(self,hitTarget), self.shotList[s].x);				
+						
+					if (hitTarget.team && hitTarget.health){
+						//Calculate blood effect if target is organic
+						var bloodX = hitTarget.x;
+						var bloodY = hitTarget.y;
+						if (self.shootingDir == 1){bloodX = self.x;}
+						if (self.shootingDir == 2){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y - hitTarget.distFromDiag/2;}
+						if (self.shootingDir == 3){bloodY = self.y;}
+						if (self.shootingDir == 4){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y + hitTarget.distFromDiag/2;}
+						if (self.shootingDir == 5){bloodX = self.x;}
+						if (self.shootingDir == 6){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y - hitTarget.distFromDiag/2;}
+						if (self.shootingDir == 7){bloodY = self.y;}
+						if (self.shootingDir == 8){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y + hitTarget.distFromDiag/2;}
+						entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, hitTarget.id);
+					}
+				}
+				else {
+					var shotData = {};
+					shotData.id = Math.random();
+					shotData.playerId = self.id;
+					shotData.weapon = self.weapon;
+					shotData.x = self.shotList[s].x;
+					shotData.spark = false;
+					shotData.distance = bulletRange;
+					for(var i in SOCKET_LIST){
+						SOCKET_LIST[i].emit('shootUpdate',shotData);
+					}					
+				}
+			}	
+		} //Shot loop
+
+		self.shotList = [];
+
+		
 		/////////////////////// MULTIKILL ////////////////////
 		if (self.multikillTimer > 0){
 			self.multikillTimer--;
@@ -982,13 +963,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 
-	self.hit = function(shootingDir, distance, shooter, targetDistance){
+	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX){
 		if (self.health <= 0)
 			return;
 
 		if (shooter.weapon != 4){
 			var shotData = {};
-			shotData.id = shooter.id;
+			shotData.id = Math.random();
+			shotData.playerId = shooter.id;
+			shotData.weapon = shooter.weapon;
+			shotData.x = shotX;
 			shotData.spark = false;
 			shotData.shootingDir = shootingDir;
 			if (!self.team){shotData.spark = true;}
@@ -1182,7 +1166,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 		self.firing = 0; //0-3; 0 = not firing
 		self.aiming = 0;
-		self.liveShot = false; ////!! This variable may not need to exist, it never gets set to false when missing a target
 		self.respawnTimer = 0;
 		self.holdingBag = false;
 		updatePlayerList.push({id:self.id,property:"holdingBag",value:self.holdingBag});
@@ -1525,8 +1508,8 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						player.pressingRight = data.state;
 					}
 					else if(data.inputId === 40){ //Down
-						if (!player.pressingShift && (player.weapon == 1 || player.weapon == 2 || player.weapon == 3 || player.weapon == 4)){
-							if (!player.pressingShift){
+						if (player.pressingDown === false && data.state == true){
+							if (!player.pressingShift && (player.weapon == 1 || player.weapon == 2 || player.weapon == 3 || player.weapon == 4)){
 								discharge = true;
 							}
 							if (player.pressingLeft == false && player.pressingRight == true){player.shootingDir = 4; updatePlayerList.push({id:player.id,property:"shootingDir",value:player.shootingDir});}
@@ -2304,7 +2287,7 @@ function evalServer(socket, data){
 	else if (data == "godt" || data == "haxt"){
 		getPlayerById(socket.id).SGClip = 99;
 		getPlayerById(socket.id).MGClip = 999;
-		getPlayerById(socket.id).DPClip = 99;
+		getPlayerById(socket.id).DPClip = 999;
 		getPlayerById(socket.id).laserClip = 99;
 		getPlayerById(socket.id).health = 175;
 		getPlayerById(socket.id).hasBattery = 2;
@@ -2433,19 +2416,29 @@ function Discharge(player){
 		if (pistolFireRateLimiter){
 			player.triggerTapLimitTimer = pistolFireRate;
 		}
+		player.shotList.push(
+			{weapon:player.weapon, x:0, y:0}
+		);
 	}
 	else if(player.weapon == 2 && player.firing <= 0){
 		player.DPClip--;
 		updatePlayerList.push({id:player.id,property:"DPClip",value:player.DPClip});
 		player.fireRate = DPFireRate;
 		if (pistolFireRateLimiter){
-			player.triggerTapLimitTimer = DPFireRate;
+			player.triggerTapLimitTimer = DPFireRate;			
 		}
+		player.shotList.push(
+			{weapon:player.weapon, x:-20, y:0},
+			{weapon:player.weapon, x:20, y:0}
+		);
 	}
 	else if(player.weapon == 3 && player.firing <= 0){
 		player.MGClip--;
 		updatePlayerList.push({id:player.id,property:"MGClip",value:player.MGClip});
 		player.fireRate = MGFireRate;
+		player.shotList.push(
+			{weapon:player.weapon, x:0, y:0}
+		);
 	}
 	else if(player.weapon == 4 && player.firing <= 0){
 		player.SGClip--;
@@ -2454,16 +2447,21 @@ function Discharge(player){
 		
 		player.fireRate = SGFireRate;
 		player.triggerTapLimitTimer = SGFireRate;
+		player.shotList.push(
+			{weapon:player.weapon, x:0, y:0}
+		);
 	}
 	else if(player.weapon == 5 && player.firing <= 0){
 		player.laserClip--;
 		updatePlayerList.push({id:player.id,property:"laserClip",value:player.laserClip});
 		
 		player.fireRate = laserFireRate;
+		player.shotList.push(
+			{weapon:player.weapon, x:0, y:0}
+		);
 	}
 	
 	player.firing = 3; 
-	player.liveShot = true;
 }
 
 Player.onDisconnect = function(id){
@@ -2678,6 +2676,47 @@ var isSafeCoords = function(potentialX, potentialY, team){
 		}
 	}
 	return true;
+}
+
+function getTargetsInRangeOfShot(shooter, shot){
+	var hitTargets = [];
+	var blockHitTargets = [];
+	var organicHitTargets = [];
+	for (var i in Player.list){
+		if (Player.list[i].team == 0)
+			continue;
+		var isHitTarget = entityHelpers.checkIfInLineOfShot(shooter, Player.list[i], shot);
+		if (isHitTarget){
+			hitTargets.push(isHitTarget);
+			organicHitTargets.push(isHitTarget);
+		}	
+	}
+	var thugList = thug.getThugList();
+	for (var i in thugList){
+		var isHitTarget = entityHelpers.checkIfInLineOfShot(shooter, thugList[i], shot);
+		if (isHitTarget){
+			hitTargets.push(isHitTarget);
+			organicHitTargets.push(isHitTarget);
+		}	
+	}					
+	var blockList = block.getBlockList();
+	for (var i in blockList){
+		if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
+			var isHitTarget = entityHelpers.checkIfInLineOfShot(shooter, blockList[i], shot);
+			if (isHitTarget){
+				hitTargets.push(isHitTarget);
+				blockHitTargets.push(isHitTarget);
+			}	
+		}
+	}				
+
+	return {
+		all:hitTargets,
+		block:blockHitTargets,
+		organic:organicHitTargets
+	};
+
+
 }
 
 module.exports.connect = connect;

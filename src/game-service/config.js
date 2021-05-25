@@ -81,14 +81,13 @@ global.bootOnAfk = false;
 global.AfkFramesAllowed = 6000 * 60; //seconds (translated to frames) //timeout
 
 //Weapons config
-global.bulletRange = 19 * 75;
 global.damageScale = 1;
 	global.pistolDamage = 10;
 	global.pistolSideDamage = 6; //Stacks on above
 	global.pistolBackDamage = 10; //Stacks AGAIN on above
-	global.DPDamage = 15;
-	global.DPSideDamage = 8; //Stacks on above
-	global.DPBackDamage = 8; //Stacks AGAIN on above
+	global.DPDamage = 10;
+	global.DPSideDamage = 5; //Stacks on above
+	global.DPBackDamage = 5; //Stacks AGAIN on above
 	global.mgDamage = 12; 
 	global.mgSideDamage = 6; //Stacks on above
 	global.mgBackDamage = 6; //Stacks AGAIN on above
@@ -99,6 +98,8 @@ global.damageScale = 1;
 	global.friendlyFireDamageScale = 0.5;
 	global.boostDamage = 50;
 	
+global.bulletRange = 19 * 75;
+global.laserRange = 19 * 75;
 global.SGRange = 310;
 global.SGCloseRangeDamageScale = 4;
 global.SGPushSpeed = 12;

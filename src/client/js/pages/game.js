@@ -1186,7 +1186,6 @@ function getRotation(direction){
 }
 ////////////////////////////////////////////////////////////////////////////////////
 
-////!!! Get rid of "var player =" before the init Player function. Do we need to allocate a new player var to init a Player?
 var clientInitialized = false;
 socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, miscPack){
 	if (clientInitialized){
@@ -1637,7 +1636,7 @@ function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack,
 		pickupCount++;
 	}
 	for (var i = 0; i < pickupPack.length; i++) { 
-		if (typeof pickupPack[i] == "string"){//!!! Why is this checking for pickuptype is string instead of number???
+		if (typeof pickupPack[i] == "string"){
 			if (Pickup.list[pickupPack[i]].id){
 				delete Pickup.list[pickupPack[i]];
 			}
@@ -1952,7 +1951,7 @@ function drawMapElementsOnMapCanvas(){
 	logg("Drawing map elements...");
 	m_canvas.width = mapWidth * zoom;
 	m_canvas.height = mapHeight * zoom;
-	mCtx.clearRect(0,0,m_canvas.width,m_canvas.height); //Clears previous frame!!!!!!
+	mCtx.clearRect(0,0,m_canvas.width,m_canvas.height); //Clears previous frame
 
 	var tile = Img.tile;
 	
@@ -2229,7 +2228,6 @@ function drawMissingBags(){
 	}
 }
 
-///!!! Leg swing should be outside of drawLegs
 function drawLegs(){
 	normalShadow();
 	for (var i in Player.list) {
@@ -2328,7 +2326,7 @@ function drawBlocksOnBlockCanvas(){
 	block_canvas.height = (mapHeight + 150) * zoom;
 	
 	//normalShadow();
-	blockCtx.clearRect(0,0,block_canvas.width,block_canvas.height); //Clears previous frame!!!!!!
+	blockCtx.clearRect(0,0,block_canvas.width,block_canvas.height); //Clears previous frame
 	
 	for (var i in Block.list) {
 		var imgBlock = Img.block;
@@ -2515,7 +2513,7 @@ function drawBags(){
 }
 
 function drawTorsos(){
-	tCtx.clearRect(0,0, torso_canvas.width, torso_canvas.height); //Clears previous frame!!!!!!
+	tCtx.clearRect(0,0, torso_canvas.width, torso_canvas.height); //Clears previous frame
 
 	for (var i in Player.list) {		
 		const team = Player.list[i].team;
@@ -2712,7 +2710,7 @@ function drawTorsos(){
 	} //End player for loop
 }
 
-function drawThugs(){ //TODO!!! Rouge image of thug appears after attacking (What?)
+function drawThugs(){
 	for (var i in Thug.list){
 		if (Thug.list[i].health > 0){
 			if (Thug.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Thug.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Thug.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Thug.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){				
@@ -2748,76 +2746,76 @@ function drawThugs(){ //TODO!!! Rouge image of thug appears after attacking (Wha
 }
 
 function drawShots(){
-	for (var i in Player.list) {
-		if (Shot.list[Player.list[i].id]){
-			var shot = Shot.list[Player.list[i].id];			
-			if (shot.decay > 0){
-                ctx.save();
-				ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player
-				ctx.rotate(getRotation(Player.list[i].shootingDir));
-					noShadow();
-					var xOffset = 0;
-					var yOffset = 0;
-					var SGscale = .6; //!!!! Remove
+	for (var s in Shot.list) {
+		var shot = Shot.list[s];		
+		var player = Player.list[shot.playerId];	
+		if (shot.decay > 0 && player){
+			ctx.save();
+			ctx.translate(centerX - myPlayer.x * zoom + player.x * zoom, centerY - myPlayer.y * zoom + player.y * zoom); //Center camera on controlled player
+			ctx.rotate(getRotation(player.shootingDir));
+				noShadow();
+				var xOffset = shot.x;
+				var yOffset = 0;
+				var SGscale = .6;
 
-					if (Player.list[i].weapon == 1){
-						drawImage(Img.shot,(-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
-						drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
-						if (shot.spark){
-							drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
-						}					
-					}
-					else if (Player.list[i].weapon == 2){
-						xOffset = -18; yOffset = -1;
-						drawImage(Img.shot, (-4 + xOffset) * zoom, (-shot.distance - 40) * zoom, Img.shot.width * zoom, shot.distance * zoom);
-						drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
-						if (shot.spark){
-							drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
-						}					
+				if (shot.weapon == 1){
+					var calc = (-shot.distance - 40 + yOffset) * zoom;
+					drawImage(Img.shot,(-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
+					drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
+					if (shot.spark){
+						drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
+					}					
+				}
+				else if (shot.weapon == 2){
+					drawImage(Img.shot, (-4 + xOffset) * zoom, (-shot.distance - 40) * zoom, Img.shot.width * zoom, shot.distance * zoom);
+					drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
+					if (shot.spark){
+						drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
+					}					
 
-						xOffset = 22; yOffset = -2;
-						drawImage(Img.shot, (-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
-						drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
-						if (shot.spark){
-							drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);					
-						}
-					}
-					else if (Player.list[i].weapon == 3){
-						xOffset = 6; yOffset = -3;
-						drawImage(Img.shot,(-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
-						drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
-						if (shot.spark){
-							drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
-						}					
-					}
-					else if (Player.list[i].weapon == 5){
-						xOffset = -10; yOffset = -3;
-						ctx.globalAlpha = shot.decay / 10;
-						drawImage(Img.laserCanonBeam, (-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, 50 * zoom, shot.distance * zoom);
-						//drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
-						if (shot.spark){
-							//drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
-						}					
-					}
-					else if (Player.list[i].weapon == 4){
-						xOffset = -310 * SGscale; yOffset = -680 * SGscale;
+					// xOffset = 22; yOffset = -2;
+					// drawImage(Img.shot, (-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
+					// drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
+					// if (shot.spark){
+					// 	drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);					
+					// }
+				}
+				else if (player.weapon == 3){
+					xOffset = 6; yOffset = -3;
+					drawImage(Img.shot,(-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
+					drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
+					if (shot.spark){
+						drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
+					}					
+				}
+				else if (player.weapon == 5){
+					xOffset = -10; yOffset = -3;
+					ctx.globalAlpha = shot.decay / 10;
+					drawImage(Img.laserCanonBeam, (-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, 50 * zoom, shot.distance * zoom);
+					//drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
+					if (shot.spark){
+						//drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
+					}					
+				}
+				else if (player.weapon == 4){
+					xOffset = -310 * SGscale; yOffset = -680 * SGscale;
 
-						drawImage(Img.shotShotgun,(xOffset) * zoom, (yOffset) * zoom, Img.shotShotgun.width * zoom * SGscale, Img.shotShotgun.height * zoom * SGscale);
-						
-						shot.width *= 2;
-						shot.height *= 2;
-						if (shot.width < 100) shot.width = 100;
-						if (shot.height < 90) shot.height = 90;
-						
-						drawImage(Img.shotFlash, (6 - shot.width/2 - 2) * zoom * SGscale, (-42 - shot.height) * zoom * SGscale, shot.width * zoom * SGscale, shot.height * zoom * SGscale);
-					}
-				//ctx.rotate(-(getRotation(Player.list[i].shootingDir)));
-				//ctx.translate(-(centerX - myPlayer.x * zoom + Player.list[i].x * zoom), -(centerY - myPlayer.y * zoom + Player.list[i].y * zoom)); //Center camera on controlled player
-                ctx.restore();
-			}
-			shot.decay--;
-			if (shot.decay <= 0){delete Shot.list[Player.list[i].id];}
-		} 
+					drawImage(Img.shotShotgun,(xOffset) * zoom, (yOffset) * zoom, Img.shotShotgun.width * zoom * SGscale, Img.shotShotgun.height * zoom * SGscale);
+					
+					shot.width *= 2;
+					shot.height *= 2;
+					if (shot.width < 100) shot.width = 100;
+					if (shot.height < 90) shot.height = 90;
+					
+					drawImage(Img.shotFlash, (6 - shot.width/2 - 2) * zoom * SGscale, (-42 - shot.height) * zoom * SGscale, shot.width * zoom * SGscale, shot.height * zoom * SGscale);
+				}
+			//ctx.rotate(-(getRotation(player.shootingDir)));
+			//ctx.translate(-(centerX - myPlayer.x * zoom + player.x * zoom), -(centerY - myPlayer.y * zoom + player.y * zoom)); //Center camera on controlled player
+			ctx.restore();
+		}
+		shot.decay--;
+		if (shot.decay <= 0){delete Shot.list[shot.id];}
+		
 	}
 }
 
@@ -4368,7 +4366,7 @@ function drawRedEffectsLayer(){
 	noShadow();
 
 	rCtx.globalCompositeOperation = "source-over";
-	rCtx.clearRect(0,0,red_canvas.width,red_canvas.height); //Clears previous frame!!!!!!
+	rCtx.clearRect(0,0,red_canvas.width,red_canvas.height); //Clears previous frame
 
 	//draw torso outlines
 
@@ -4415,8 +4413,7 @@ function drawEverything(){
 	noShadow();
 	ctx.fillStyle = "#101010";
 	ctx.fillRect(0, 0, canvasWidth, canvasHeight); 	
-	//ctx.clearRect(0,0,canvasWidth,canvasHeight); //Clears previous frame. I DONT KNOW WHY THIS STOPPED WORKING!!!
-
+	
 	drawMapCanvas();
 	//drawBlackMarkets();
 	drawMissingBags();
@@ -4766,83 +4763,85 @@ socket.on('shootUpdate', function(shotData){
 });
 
 function shootUpdateFunction(shotData){
-	if (!Player.list[shotData.id])
+	if (!myPlayer.x || !Player.list[shotData.playerId])
 		return;
 
 	var newShot = false; //To keep double shot sounds from playing when shooting diagonally (pressing 2 "shoot" keys at once)
 	if (!Shot.list[shotData.id]){
-		Shot(shotData.id);
+		shotData.decay = shotData.weapon == 5 ? 10 : 2;
+		Shot.list[shotData.id] = shotData;
+
+		Shot.list[shotData.id].width = Math.floor((Math.random() * 46) + 26);
+		Shot.list[shotData.id].height = Math.floor((Math.random() * 45) + 65);
 		newShot = true;
 	}
 	//Distance calc for volume
-
-	var dx1 = myPlayer.x - Player.list[shotData.id].x;
-	var dy1 = myPlayer.y - Player.list[shotData.id].y;
+	var dx1 = myPlayer.x - Player.list[shotData.playerId].x;
+	var dy1 = myPlayer.y - Player.list[shotData.playerId].y;
 	var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
 	var vol = Math.round((1 - (dist1 / 1000)) * 100)/100;
 	if (vol < 0 && vol >= -.1)
 		vol = 0.01;
 	if (vol < -.1 || mute)
 		vol = 0;
-	if (Player.list[shotData.id].weapon == 3 && newShot == true){
+	if (Player.list[shotData.playerId].weapon == 3 && newShot == true){
 		sfxMG.volume(vol * .35);
 		sfxMG.play();
-		if (shotData.id == myPlayer.id && Player.list[shotData.id].MGClip <= 7){
+		if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].MGClip <= 7){
 			sfxClick.play();
 		}
 	}
-	else if (Player.list[shotData.id].weapon == 2 && newShot == true) {
+	else if (Player.list[shotData.playerId].weapon == 2 && newShot == true) {
 		sfxDP.volume(vol);
 		sfxDP.play();
-		if (shotData.id == myPlayer.id && Player.list[shotData.id].DPClip <= 5){
+		if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].DPClip <= 5){
 			sfxClick.play();
 		}
 	}
-	else if (Player.list[shotData.id].weapon == 1 && newShot == true) {
+	else if (Player.list[shotData.playerId].weapon == 1 && newShot == true) {
 		sfxPistol.volume(vol);
 		sfxPistol.play();
-		if (shotData.id == myPlayer.id && Player.list[shotData.id].PClip <= 5){
+		if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].PClip <= 5){
 			sfxClick.play();
 		}
 	}
-	else if (Player.list[shotData.id].weapon == 5 && newShot == true) {
+	else if (Player.list[shotData.playerId].weapon == 5 && newShot == true) {
 		sfxLaserDischarge.volume(vol);
 		sfxLaserDischarge.play();
 		if (dist1 < 1000){
 			screenShakeCounter = 16;
 		}
 		screenShakeCounter = 8;
-		Shot.list[shotData.id].decay = 10;
+		Shot.list[shotData.playerId].decay = 10;
 	}
-	else if (Player.list[shotData.id].weapon == 4 && newShot == true) {
+	else if (Player.list[shotData.playerId].weapon == 4 && newShot == true) {
 		sfxSG.volume(vol);
 		sfxSG.play();
-		if (shotData.id == myPlayer.id && Player.list[shotData.id].SGClip <= 3){
+		if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].SGClip <= 3){
 			sfxClick.play();
 		}
-		Player.list[shotData.id].triggerTapLimitTimer = SGTriggerTapLimitTimer;
+		Player.list[shotData.playerId].triggerTapLimitTimer = SGTriggerTapLimitTimer;
 	}
 	if (shotData.shootingDir){
-		Player.list[shotData.id].shootingDir = shotData.shootingDir;
+		Player.list[shotData.playerId].shootingDir = shotData.shootingDir;
 	}
-	Shot.list[shotData.id].distance = shotData.distance;
-	Shot.list[shotData.id].weapon = shotData.weapon;
-	Shot.list[shotData.id].spark = shotData.spark;	
 }
 
-var Shot = function(id, decay = 2){
+// var Shot = function(playerId, decay = 2){
 	
-	var self = {
-		id:id,
-		distance:10000,
-		decay:decay,
-		spark:false,
-		width:Math.floor((Math.random() * 46) + 26),   //36
-		height:Math.floor((Math.random() * 45) + 65),  //55
-	}	
-	Shot.list[self.id] = self;		
-}
-Shot.list = {};
+// 	var self = {
+// 		id:Math.random(),
+// 		playerId:playerId,
+// 		distance:10000,
+// 		decay:decay,
+// 		spark:false,
+// 		width:Math.floor((Math.random() * 46) + 26),   //36
+// 		height:Math.floor((Math.random() * 45) + 65),  //55
+// 	}	
+// 	Shot.list[self.id] = self;		
+// }
+var Shot = {};
+Shot.list = [];
 
 
 
@@ -4930,87 +4929,95 @@ document.onkeydown = function(event){
 		myPlayer.pressingA = true;
 	}		
 	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up
-		myPlayer.pressingUp = true;
-		if (myPlayer.team != 0){
-			if (!shop.active){
-				keyPress(38, true);
+		if (myPlayer.pressingUp != true){
+			myPlayer.pressingUp = true;
+			if (myPlayer.team != 0){
+				if (!shop.active){
+					keyPress(38, true);
+				}
+				else {
+					purchase();
+				}
 			}
 			else {
-				purchase();
-			}
-		}
-		else {
-			if (!spectatePlayers){
-			}
-			else {
-				getNextOrderedPlayer(spectatingPlayerId, true);
+				if (!spectatePlayers){
+				}
+				else {
+					getNextOrderedPlayer(spectatingPlayerId, true);
+				}
 			}
 		}
 	}
 	else if(hitKeyCode === 39 && chatInput.style.display == "none"){ //Right
-		myPlayer.pressingRight = true;
-		if (myPlayer.team != 0){
-			if (!shop.active){
-				keyPress(39, true);
-			}
-			else if (shop.selection < 5) {
-				shop.selection++;
-				if (!mute)
-					sfxMenuMove.play();
-			}
-		}
-		else {
-			if (!spectatePlayers){
+		if (myPlayer.pressingRight != true){
+			myPlayer.pressingRight = true;
+			if (myPlayer.team != 0){
+				if (!shop.active){
+					keyPress(39, true);
+				}
+				else if (shop.selection < 5) {
+					shop.selection++;
+					if (!mute)
+						sfxMenuMove.play();
+				}
 			}
 			else {
-				if (spectatingPlayerId == "bagRed"){
-					spectatingPlayerId = "";
+				if (!spectatePlayers){
 				}
 				else {
-					spectatingPlayerId = "bagBlue";
+					if (spectatingPlayerId == "bagRed"){
+						spectatingPlayerId = "";
+					}
+					else {
+						spectatingPlayerId = "bagBlue";
+					}
 				}
 			}
 		}
 	}
 	else if(hitKeyCode === 40 && chatInput.style.display == "none"){ //Down
-		myPlayer.pressingDown = true;
-		if (myPlayer.team != 0){
-			if (!shop.active){
-				keyPress(40, true);
-			}
-		}
-		else {
-			if (!spectatePlayers){
+		if (myPlayer.pressingDown != true){
+			myPlayer.pressingDown = true;
+			if (myPlayer.team != 0){
+				if (!shop.active){
+					keyPress(40, true);
+				}
 			}
 			else {
-				getNextOrderedPlayer(spectatingPlayerId, false);
+				if (!spectatePlayers){
+				}
+				else {
+					getNextOrderedPlayer(spectatingPlayerId, false);
+				}
 			}
 		}
 	}
 	else if(hitKeyCode === 37 && chatInput.style.display == "none"){ //Left
-		myPlayer.pressingLeft = true;
-		if (myPlayer.team != 0){
-			if (!shop.active){
-				keyPress(37, true);
-			}
-			else if (shop.selection > 1) {
-				shop.selection--;
-				if (!mute)
-					sfxMenuMove.play();			
-			}
-		}	
-		else {
-			if (!spectatePlayers){
-			}
+		if (myPlayer.pressingLeft != true){
+			myPlayer.pressingLeft = true;
+			if (myPlayer.team != 0){
+				if (!shop.active){
+					keyPress(37, true);
+				}
+				else if (shop.selection > 1) {
+					shop.selection--;
+					if (!mute)
+						sfxMenuMove.play();			
+				}
+			}	
 			else {
-				if (spectatingPlayerId == "bagBlue"){
-					spectatingPlayerId = "";
+				if (!spectatePlayers){
 				}
 				else {
-					spectatingPlayerId = "bagRed";
+					if (spectatingPlayerId == "bagBlue"){
+						spectatingPlayerId = "";
+					}
+					else {
+						spectatingPlayerId = "bagRed";
+					}
 				}
-			}
-		}	
+			}	
+		}
 	}	//Quick Chat
 	else if (event.keyCode == 38 && chatInput.style.display != "none" && chatInput.value == ""){ //Up 
 		const quickChat = myPlayer.settings.quickChat[0].value;
@@ -5468,3 +5475,62 @@ window.onbeforeunload = function(){
 
 
 logg("game.js loaded");
+
+//////////MODS///////////////
+
+//Frog's Mouse Mod
+let pressing = [];
+var press=(c)=>{
+    if (pressing[c]) return;
+    document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': c})); pressing[c]=1
+}; 
+var release=(c)=>{
+    if (!pressing[c]) return;
+    document.dispatchEvent(new KeyboardEvent('keyup', {'keyCode': c})); pressing[c]=0
+};
+
+
+var mousepos = [0, 0];
+var mouseangle = 0;
+var dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
+document.onmousemove=(evt)=>{
+    let rect = document.getElementById("ctx").getBoundingClientRect();
+    mousepos = [((evt.clientX - rect.left)-centerX)/canvasHeight, ((evt.clientY - rect.top)-centerY)/canvasWidth]; // mouse
+    mouseangle = Math.atan2(mousepos[1], mousepos[0]);
+}
+
+function mod(x,y) {
+    var xPrime = x;
+    while(xPrime<0) {
+        xPrime += y; // ASSUMES y > 0
+    }
+    return xPrime % y;
+}
+
+var mouseDown = 0;
+document.onmousedown=()=>++mouseDown;
+document.onmouseup=()=>--mouseDown;
+
+var threshold = 0.4;
+
+var update=()=>{
+    if (mouseDown != 0) {
+
+        if (Math.cos(mouseangle) > threshold) press(39)
+        else release(39);
+        if (Math.cos(mouseangle) < -threshold) press(37) 
+        else release(37);
+
+        if (Math.sin(mouseangle) > threshold) press(40) 
+        else release(40);
+        if (Math.sin(mouseangle) < -threshold) press(38) 
+        else release(38); 
+    } else {
+        release(39);
+        release(37);
+        release(40);
+        release(38); 
+	}
+	setTimeout(update, 0.25);
+}
+setTimeout(update, 0.25);

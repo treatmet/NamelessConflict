@@ -258,10 +258,13 @@ var Thug = function(id, team, x, y){
 	}
 
     
-	self.hit = function(shootingDir, distance, shooter, targetDistance){
+	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX){
 		if (shooter.weapon != 4){
 			var shotData = {};
-			shotData.id = shooter.id;
+			shotData.id = Math.random();
+			shotData.playerId = shooter.id;
+			shotData.weapon = shooter.weapon;		
+			shotData.x = shotX;
 			shotData.spark = false;
 			shotData.shootingDir = shootingDir;
 			if (!self.team){shotData.spark = true;}
