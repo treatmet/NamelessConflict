@@ -575,6 +575,8 @@ Img.ammoDP = new Image();
 Img.ammoDP.src = "/src/client/img/ammo-double-9mm-30.png";
 Img.ammoSG = new Image();
 Img.ammoSG.src = "/src/client/img/ammo-SG-24.png";
+Img.ammoLZ = new Image();
+Img.ammoLZ.src = "/src/client/img/ammo-laser-10.png";
 Img.infinity = new Image();
 Img.infinity.src = "/src/client/img/infinity2.png";
 Img.weapon1Key = new Image();
@@ -585,6 +587,8 @@ Img.weapon3Key = new Image();
 Img.weapon3Key.src = "/src/client/img/3mg.png";
 Img.weapon4Key = new Image();
 Img.weapon4Key.src = "/src/client/img/4sg.png";
+Img.weapon5Key = new Image();
+Img.weapon5Key.src = "/src/client/img/5lz.png";
 
 
 Img.pickupDP = new Image();
@@ -2864,6 +2868,26 @@ function drawLaser(){
         ctx.restore();
 	}
 }
+
+var personalInstructions = [
+	{name:"laser", life:400}
+];
+function drawPersonalInstructions(){
+	for (var i in personalInstructions){
+		if (personalInstructions[i].name == "laser" && personalInstructions[i].life > 0 && myPlayer.weapon == 5){
+			ctx.save();
+			ctx.translate(centerX - myPlayer.x * zoom + Player.list[myPlayer.id].x * zoom, centerY - myPlayer.y * zoom + Player.list[myPlayer.id].y * zoom); //Center camera on controlled player
+				drawImage(Img.pressShiftInstructions, -(Img.pressShiftInstructions.width * zoom)/2, -100, Img.pressShiftInstructions.width * zoom, Img.pressShiftInstructions.height * zoom);
+			ctx.restore();
+			if (personalInstructions[i].life < 400)
+				personalInstructions[i].life--;
+			break;
+			}
+	}
+
+}
+
+
 var laserCanonBlinkTime = 4;
 var laserCanonBlink = laserCanonBlinkTime;
 var drawingLaserChargingLaser = true;
@@ -2871,6 +2895,8 @@ function drawLaserCanonLaser(){
 	if (drawingLaserChargingLaser){
 		for (var i in Player.list) {
 			if (Player.list[i].chargingLaser && Player.list[i].weapon == 5){
+				if (Player.list[i].id == myPlayer.id)
+					personalInstructions[0].life--;
 				var laser = {};
 				laser.distance = canvasWidth * 2;
 
@@ -3433,23 +3459,27 @@ function drawHUD(){
 			//Weapon selected highlight
 			ctx.globalAlpha = 0.3;
 			ctx.fillStyle="#FFFFFF";						
-			if (Player.list[myPlayer.id].weapon == 1){ ctx.fillRect(canvasWidth - 195, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75 - 10, Img.weapon1Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 2){ ctx.fillRect(canvasWidth - 150,canvasHeight - 130 - liftBottomHUD,Img.weapon2Key.width*0.75 - 10,Img.weapon2Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 3){ ctx.fillRect(canvasWidth - 108, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 4){ ctx.fillRect(canvasWidth - 55, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
+			if (Player.list[myPlayer.id].weapon == 1){ ctx.fillRect(canvasWidth - 248, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75 - 10, Img.weapon1Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 2){ ctx.fillRect(canvasWidth - 203,canvasHeight - 130 - liftBottomHUD,Img.weapon2Key.width*0.75 - 10,Img.weapon2Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 3){ ctx.fillRect(canvasWidth - 161, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 4){ ctx.fillRect(canvasWidth - 108, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 5){ ctx.fillRect(canvasWidth - 55, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
 			ctx.globalAlpha = 1.0;
 
 
-			drawImage(Img.weapon1Key, canvasWidth - 200, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75, Img.weapon1Key.height*0.75);			
+			drawImage(Img.weapon1Key, canvasWidth - 254, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75, Img.weapon1Key.height*0.75);			
 			if (myPlayer.DPAmmo > 0 || myPlayer.DPClip > 0){
 
-				drawImage(Img.weapon2Key, canvasWidth - 155, canvasHeight - 130 - liftBottomHUD, Img.weapon2Key.width*0.75, Img.weapon2Key.height*0.75);
+				drawImage(Img.weapon2Key, canvasWidth - 208, canvasHeight - 130 - liftBottomHUD, Img.weapon2Key.width*0.75, Img.weapon2Key.height*0.75);
 			}
 			if (myPlayer.MGAmmo > 0 || myPlayer.MGClip > 0){
-				drawImage(Img.weapon3Key, canvasWidth - 108, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75);
+				drawImage(Img.weapon3Key, canvasWidth - 161, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75);
 			}
 			if (myPlayer.SGAmmo > 0 || myPlayer.SGClip > 0){
-				drawImage(Img.weapon4Key, canvasWidth - 55, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75);
+				drawImage(Img.weapon4Key, canvasWidth - 108, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75);
+			}
+			if (myPlayer.laserClip > 0){
+				drawImage(Img.weapon5Key, canvasWidth - 55, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75);
 			}
 		}
 
@@ -3485,33 +3515,38 @@ function drawHUD(){
 
 		var clipCount = "0";
 		var ammoCount = "0";
+		var img = Img.ammo9mm;
+		var ammoWidth = 0;
 		if (Player.list[myPlayer.id].weapon == 1){
 			clipCount = Player.list[myPlayer.id].PClip;
-			const ammoWidth = 136 - ((15 - Player.list[myPlayer.id].PClip) * 9);
-			ctx.drawImage(Img.ammo9mm, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+			ammoWidth = 136 - ((15 - Player.list[myPlayer.id].PClip) * 9);
+			img = Img.ammo9mm;
 		}
 		else if (Player.list[myPlayer.id].weapon == 2){
 			clipCount = Player.list[myPlayer.id].DPClip;
 			ammoCount = Player.list[myPlayer.id].DPAmmo;		
-			const ammoWidth = 180 - ((20 - Player.list[myPlayer.id].DPClip) * 9) + 1;
-			ctx.drawImage(Img.ammoDP, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+			ammoWidth = 180 - ((20 - Player.list[myPlayer.id].DPClip) * 9) + 1;
+			img = Img.ammoDP;
 		}
 		else if (Player.list[myPlayer.id].weapon == 3){
 			clipCount = Player.list[myPlayer.id].MGClip;
 			ammoCount = Player.list[myPlayer.id].MGAmmo;		
-			const ammoWidth = 182 - ((30 - Player.list[myPlayer.id].MGClip) * 6);
-			ctx.drawImage(Img.ammoMG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+			ammoWidth = 182 - ((30 - Player.list[myPlayer.id].MGClip) * 6);
+			img = Img.ammoMG;
 		}
 		else if (Player.list[myPlayer.id].weapon == 4){
 			clipCount = Player.list[myPlayer.id].SGClip;
 			ammoCount = Player.list[myPlayer.id].SGAmmo;		
-			const ammoWidth = 190 - ((12 - Player.list[myPlayer.id].SGClip) * 16); //Was 135, 11
-	 		ctx.drawImage(Img.ammoSG, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+			ammoWidth = 190 - ((12 - Player.list[myPlayer.id].SGClip) * 16); //Was 135, 11
+	 		img = Img.ammoSG;
 		}
 		else if (Player.list[myPlayer.id].weapon == 5){
 			clipCount = Player.list[myPlayer.id].laserClip;
-			ammoCount = "x";		
+			ammoCount = "xx";		
+			ammoWidth = (Player.list[myPlayer.id].laserClip * 52); //Final number is bullet width
+			img = Img.ammoLZ;
 		}
+ 		ctx.drawImage(img, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		
 		//Draw separating line
 		ctx.strokeStyle = "#FFF";
@@ -4426,11 +4461,7 @@ function drawEverything(){
 	drawPickups();
 	drawBags();
 	drawThugs();
-
-	
 	drawBoosts();
-	
-
 	drawTorsos();
 	drawShots();
 	drawBlood();
@@ -4440,6 +4471,7 @@ function drawEverything(){
 
 	
 	drawShop();	
+	drawPersonalInstructions();
 	drawUILayer();
 	fpsCounter++;
 }
@@ -4812,7 +4844,6 @@ function shootUpdateFunction(shotData){
 			screenShakeCounter = 16;
 		}
 		screenShakeCounter = 8;
-		Shot.list[shotData.playerId].decay = 10;
 	}
 	else if (Player.list[shotData.playerId].weapon == 4 && newShot == true) {
 		sfxSG.volume(vol);

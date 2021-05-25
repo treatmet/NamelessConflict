@@ -749,11 +749,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 		//RELEASE SHIFT
-		else if (self.weapon == 5 && !self.pressingShift){ 
-			if (self.chargingLaser > 0){
-				self.chargingLaser = 0;
-				updatePlayerList.push({id:self.id,property:"chargingLaser",value:self.chargingLaser});
-			}
+		else if (self.chargingLaser > 0){ 
+			self.chargingLaser = 0;
+			updatePlayerList.push({id:self.id,property:"chargingLaser",value:self.chargingLaser});
 		}
 
 	}
@@ -1256,173 +1254,35 @@ function gunCycle(player, forwards){
 		player.reloading = 0;
 		updatePlayerList.push({id:player.id,property:"reloading",value:player.reloading});				
 	}
-	player.chargingLaser = 0;
-	updatePlayerList.push({id:player.id,property:"chargingLaser",value:player.chargingLaser});										
 
-	if (forwards){
-		if (player.weapon == 1){
-			if (player.DPAmmo > 0 || player.DPClip > 0) {
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
-				}
-				else {
-					player.weapon = 2;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});						
-				}
+	if (!player.holdingBag || (player.holdingBag && allowBagWeapons)){
+		var availWeapons = [1];
+		if (player.DPAmmo > 0 || player.DPClip > 0) {availWeapons.push(2);}
+		if (player.MGAmmo > 0 || player.MGClip > 0){availWeapons.push(3);}
+		if (player.SGAmmo > 0 || player.SGClip > 0){availWeapons.push(4);}
+		if (player.laserClip > 0){availWeapons.push(5);}
+
+		const max = 5;
+		while (true){
+			if (forwards) {player.weapon++;}
+			else {player.weapon--;}
+			if (availWeapons.includes(player.weapon)){
+				break;
 			}
-			else if (player.MGAmmo > 0 || player.MGClip > 0){
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
-				}
-				else {
-					player.weapon = 3;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-				}
-			}
-			else if (player.SGAmmo > 0 || player.SGClip > 0){
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
-				}
-				else {
-					player.weapon = 4;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-				}
-			}	
-			else {
+			if (player.weapon > max){
 				player.weapon = 1;
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}		
-		}
-		else if (player.weapon == 2){
-			if (player.MGAmmo > 0 || player.MGClip > 0){
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
-				}
-				else {
-					player.weapon = 3;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-				}
+				break;
 			}
-			else if (player.SGAmmo > 0 || player.SGClip > 0){
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
-				}
-				else {
-					player.weapon = 4;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-				}
+			if (player.weapon < 1){
+				player.weapon = max;
+				break;
 			}
-			else {
-				player.weapon = 1;
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}		
-		}	
-		else if (player.weapon == 3){
-			if (player.SGAmmo > 0 || player.SGClip > 0){
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
-				}
-				else {
-					player.weapon = 4;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-				}
-			}
-			else {
-				player.weapon = 1;
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}		
-		}		
-		else if (player.weapon == 4){
-			player.weapon = 1;
-			updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-		}		
-		else {
-			player.weapon = 1;
-			updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-		}
-	}//forwards
-	else {
-		if (player.weapon == 1){
-			if (player.SGAmmo > 0 || player.SGClip > 0){
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sg equip sfx
-				}
-				else {
-					player.weapon = 4;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-				}
-			}
-			else if (player.MGAmmo > 0 || player.MGClip > 0){
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
-				}
-				else {
-					player.weapon = 3;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-				}
-			}	
-			else if (player.DPAmmo > 0 || player.DPClip > 0) {
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
-				}
-				else {
-					player.weapon = 2;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});						
-				}
-			}
-			else {
-				player.weapon = 1;
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}		
-		}
-		else if (player.weapon == 4){
-			if (player.MGAmmo > 0 || player.MGClip > 0){
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
-				}
-				else {
-					player.weapon = 3;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-				}
-			}
-			else if (player.DPAmmo > 0 || player.DPClip > 0) {
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
-				}
-				else {
-					player.weapon = 2;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});						
-				}
-			}
-			else {
-				player.weapon = 1;
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}		
-		}	
-		else if (player.weapon == 3){
-			if (player.DPAmmo > 0 || player.DPClip > 0) {
-				if (player.holdingBag == true && !allowBagWeapons) {
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon}); //Play sfx
-				}
-				else {
-					player.weapon = 2;
-					updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});						
-				}
-			}
-			else {
-				player.weapon = 1;
-				updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-			}		
-		}		
-		else if (player.weapon == 2){
-			player.weapon = 1;
-			updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-		}		
-		else {
-			player.weapon = 1;
-			updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
 		}
 	}
+	else {
+		player.weapon = 1;
+	}
+	updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
 }
 
 function gunSwap(player){
@@ -1430,6 +1290,8 @@ function gunSwap(player){
 		player.reloading = 0;
 		updatePlayerList.push({id:player.id,property:"reloading",value:player.reloading});				
 	}
+
+
 	if (player.weapon == 1){
 		if (player.SGAmmo > 0 || player.SGClip > 0){
 			if (player.holdingBag == true && !allowBagWeapons) {
@@ -1613,8 +1475,6 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							}
 							player.weapon = 1;
 							updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-							player.chargingLaser = 0;
-							updatePlayerList.push({id:player.id,property:"chargingLaser",value:player.chargingLaser});										
 
 						}
 					}
@@ -1629,10 +1489,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							}
 							else {
 								player.weapon = 2;
-								updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});			
-								player.chargingLaser = 0;
-								updatePlayerList.push({id:player.id,property:"chargingLaser",value:player.chargingLaser});										
-			
+								updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});						
 							}
 						}
 					}
@@ -1649,8 +1506,6 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							else {
 								player.weapon = 3;
 								updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-								player.chargingLaser = 0;
-								updatePlayerList.push({id:player.id,property:"chargingLaser",value:player.chargingLaser});																
 							}
 						}
 					}
@@ -1667,8 +1522,6 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							else {
 								player.weapon = 4;
 								updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-								player.chargingLaser = 0;
-								updatePlayerList.push({id:player.id,property:"chargingLaser",value:player.chargingLaser});										
 							}
 						}
 					}
@@ -2288,7 +2141,7 @@ function evalServer(socket, data){
 		getPlayerById(socket.id).SGClip = 99;
 		getPlayerById(socket.id).MGClip = 999;
 		getPlayerById(socket.id).DPClip = 999;
-		getPlayerById(socket.id).laserClip = 99;
+		getPlayerById(socket.id).laserClip = 10;
 		getPlayerById(socket.id).health = 175;
 		getPlayerById(socket.id).hasBattery = 2;
 		updatePlayerList.push({id:socket.id,property:"hasBattery",value:getPlayerById(socket.id).hasBattery});
@@ -2297,7 +2150,7 @@ function evalServer(socket, data){
 		updatePlayerList.push({id:socket.id,property:"DPClip",value:getPlayerById(socket.id).DPClip});
 		updatePlayerList.push({id:socket.id,property:"MGClip",value:getPlayerById(socket.id).MGClip});
 		updatePlayerList.push({id:socket.id,property:"SGClip",value:getPlayerById(socket.id).SGClip});
-		updatePlayerList.push({id:socket.id,property:"laserClip",value:getPlayerById(socket.id).SGClip});
+		updatePlayerList.push({id:socket.id,property:"laserClip",value:getPlayerById(socket.id).laserClip});
 		socket.emit('addToChat', 'INITIATE HAX');
 	}
 
