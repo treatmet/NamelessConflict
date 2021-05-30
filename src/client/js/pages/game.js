@@ -81,7 +81,7 @@ const spectateZoom = 0.5;
 const defaultZoom = 0.75;
 var zoom = defaultZoom;
 
-const maxCloakStrength = 0.99;
+const maxCloakStrength = 0.98; //minCloak
 const maxAlliedCloakOpacity = .2; 
 var dualBoostXOffset = 15;
 
@@ -318,6 +318,8 @@ var bagBlue = {
 
 var strapOffset = 18;
 
+var laserMaxCharge = 150;
+
 socket.on('pingResponse', function (socketId){
 	if (Player.list[socketId]){
 		ping = stopStopwatch();
@@ -452,6 +454,12 @@ Img.redLaser = new Image();
 Img.redLaser.src = "/src/client/img/red-pixel-trans.png";
 Img.laserCanonBeam = new Image();
 Img.laserCanonBeam.src = "/src/client/img/laserBeam.png";
+Img.laserRing = new Image();
+Img.laserRing.src = "/src/client/img/laserRing.png";
+Img.laserFlare = new Image();
+Img.laserFlare.src = "/src/client/img/laserFlare.png";
+Img.laserFlare2 = new Image();
+Img.laserFlare2.src = "/src/client/img/laserFlare2.png";
 Img.spectatingOverlay = new Image();
 Img.spectatingOverlay.src = "/src/client/img/spectating-overlay.png";
 
@@ -563,6 +571,8 @@ Img.shotFlash = new Image();
 Img.shotFlash.src = "/src/client/img/shot-flash.png";
 Img.shotSpark = new Image();
 Img.shotSpark.src = "/src/client/img/shot-spark.png";
+Img.laserSpark = new Image();
+Img.laserSpark.src = "/src/client/img/laserFlare2.png";
 Img.shotShotgun = new Image();
 Img.shotShotgun.src = "/src/client/img/shotgun-shot.png";
 
@@ -772,7 +782,7 @@ var sfxDPEquip = new Howl({src: ['/src/client/sfx/dpPick.mp3']});
 var sfxMGEquip = new Howl({src: ['/src/client/sfx/MGequip.mp3']});
 var sfxSGEquip = new Howl({src: ['/src/client/sfx/SGequipLoud.mp3']});
 var sfxLaserEquip = new Howl({src: ['/src/client/sfx/laserEquip.mp3']});
-var sfxLaserCharging = new Howl({src: ['/src/client/sfx/laserCharging.mp3']});
+var sfxLaserCharging = new Howl({src: ['/src/client/sfx/laserChargingFast.mp3']});
 sfxLaserCharging.volume(0.6);
 var sfxLaserDischarge = new Howl({src: ['/src/client/sfx/laserDischarge.mp3']});
 
@@ -1242,6 +1252,12 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 					sfxStop("sfxLaserCharging");
 				}
 			}
+			if (playerDataPack[i].value == 0){
+				Player.list[playerDataPack[i].id].laserChargeGraphic = 0;
+			}
+			else if (playerDataPack[i].value > 1){
+				Player.list[playerDataPack[i].id].laserChargeGraphic = laserMaxCharge - 40;
+			}
 		}
 		
 		//Update player list. This has to be last because of previous code comparisons between Pack and player.list[i] values
@@ -1686,8 +1702,10 @@ function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack,
 	logg("Server URL: " + miscPack.ip+":"+miscPack.port);
 	
 	BoostBlast.list = [];	
-	logg("myPlayer:");
-	console.log(Player.list[myPlayer.id]);
+	if (Player.list[myPlayer.id])
+		logg("myPlayer:");
+
+	log(Player.list[myPlayer.id]);
 	drawMapElementsOnMapCanvas();
 	drawBlocksOnBlockCanvas();
 }
@@ -1891,8 +1909,8 @@ function screenShake(){
 			centerY += 3 * screenShakeScale;
 		}
 		else if (screenShakeCounter == 0 && !myPlayer.pressingShift){
-			centerX = targetCenterX;
-			centerY = targetCenterY;
+			// centerX = targetCenterX;
+			// centerY = targetCenterY;
 		}
 		screenShakeCounter--;
 	}
@@ -2798,7 +2816,8 @@ function drawShots(){
 					drawImage(Img.laserCanonBeam, (-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, 50 * zoom, shot.distance * zoom);
 					//drawImage(Img.shotFlash, (xOffset - shot.width/2 - 2) * zoom, (yOffset - 34 - shot.height) * zoom, shot.width * zoom, shot.height * zoom);
 					if (shot.spark){
-						//drawImage(Img.shotSpark, (-22 + xOffset) * zoom, (-shot.distance - 60) * zoom, Img.shotSpark.width * zoom, Img.shotSpark.height * zoom);
+						var sparkWidth = Img.laserSpark.width * 1.5;
+						drawImage(Img.laserSpark, (-sparkWidth/2 + xOffset + 20) * zoom, (-shot.distance - (sparkWidth/2) - 70) * zoom, sparkWidth * zoom, sparkWidth * zoom);
 					}					
 				}
 				else if (player.weapon == 4){
@@ -2898,14 +2917,17 @@ function drawLaserCanonLaser(){
 				if (Player.list[i].id == myPlayer.id)
 					personalInstructions[0].life--;
 				var laser = {};
-				laser.distance = canvasWidth * 2;
+				if (laserCanonBlink <= 1 || typeof Player.list[i].laserDistance === 'undefined'){
+					Player.list[i].laserDistance = getLaserDistance(Player.list[i]);
+				}
+				laser.distance = Player.list[i].laserDistance;
 
 				ctx.save();
 				ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on lasering player
 				ctx.rotate(getRotation(Player.list[i].shootingDir));
 					noShadow();
-					var xOffset = 13; var yOffset = -3;
-					drawImage(Img.redLaser, (-4 + xOffset) * zoom, (-laser.distance - 40 + yOffset) * zoom, 4 * zoom, laser.distance * zoom);
+					var xOffset = 9; var yOffset = -20;
+					drawImage(Img.redLaser, xOffset * zoom, (-laser.distance + yOffset) * zoom, 4 * zoom, laser.distance * zoom);
 				ctx.restore();
 
 			}
@@ -2917,9 +2939,146 @@ function drawLaserCanonLaser(){
 		laserCanonBlink = laserCanonBlinkTime;
 		if (drawingLaserChargingLaser)
 			drawingLaserChargingLaser = false;
-		else
+		else {
 			drawingLaserChargingLaser = true;
+		}
 	}
+}
+
+function getLaserDistance(shooter){
+	var potentialTargets = [];
+	var shot = {x:9};
+	var range = 19 * 75;
+	for (var b in Block.list){
+		if (!(Block.list[b].type == "normal" || Block.list[b].type == "red" || Block.list[b].type == "blue"))
+			continue;
+
+		var target = Block.list[b];
+
+		var overlapTop = shooter.y - target.y;  
+		var overlapBottom = (target.y + target.height) - shooter.y;
+		var overlapLeft = shooter.x - target.x;
+		var overlapRight = (target.x + target.width) - shooter.x;		
+		
+		if (shooter.shootingDir == 1){
+			if (target.x + target.width > shooter.x + shot.x &&
+				target.x < shooter.x + shot.x &&
+				target.y < shooter.y){
+				var dist = (shooter.y - (target.y + target.height)) + 5;
+				if (dist < range)
+				potentialTargets.push(dist);
+			}
+		}
+		else if (shooter.shootingDir == 2){
+			distFromDiag = (target.x + target.width/2) - ((shooter.x + shot.x * 1.5) + (shooter.y - (target.y + target.height/2)));
+			if (Math.abs(distFromDiag) < target.width/2 + target.height/2 &&
+				target.y < shooter.y &&
+				target.x + target.width > shooter.x){
+				var dist = 0;
+				if (overlapBottom >= overlapLeft){
+					//Hitting the left side of block
+					dist = target.x - (shooter.x + shot.x * 0.8);
+				}
+				else if (overlapLeft >= overlapBottom){
+					//Hitting bottom of block
+					dist = ((shooter.y + shot.x * 0.8) - (target.y + target.height));
+				}
+				if (dist < range * 1.5){
+					potentialTargets.push(dist);
+				}
+			}
+		}
+		else if (shooter.shootingDir == 3){
+			if (shooter.y + shot.x < target.y + target.height &&
+				shooter.y + shot.x > target.y &&
+				shooter.x < target.x + target.width){
+				var dist = (target.x - shooter.x) + 5;
+				if (dist < range)
+					potentialTargets.push(dist);
+			}
+		}
+		else if (shooter.shootingDir == 4){
+			distFromDiag = (target.x + target.width/2) - (shooter.x - shot.x * 1.5) + (shooter.y - (target.y + target.height/2));
+			if (Math.abs(distFromDiag) < target.width/2 + target.height/2 &&
+				target.y + target.height > shooter.y &&
+				target.x + target.width > shooter.x){
+				var dist = 0;
+				if (overlapTop >= overlapLeft){
+					//Hitting the left side of block
+					dist = target.x - (shooter.x - shot.x * 0.8);
+				}
+				else if (overlapLeft >= overlapTop){
+					//Hitting top of block
+					dist = target.y - (shooter.y + shot.x * 0.8);
+				}
+				if (dist < range){
+					potentialTargets.push(dist);
+				}
+			}
+		}
+		else if (shooter.shootingDir == 5){
+			if (target.x + target.width > shooter.x - shot.x &&
+				target.x < shooter.x - shot.x &&
+				target.y + target.height > shooter.y){
+				var dist = (target.y - shooter.y) + 5;
+				if (dist < range)
+				potentialTargets.push(dist);
+			}
+		}
+		else if (shooter.shootingDir == 6){
+			distFromDiag = (target.x + target.width/2) - ((shooter.x - shot.x * 1.5) + (shooter.y - (target.y + target.height/2)));
+			if (Math.abs(distFromDiag) < target.width/2 + target.height/2 && target.y + target.height > shooter.y && target.x < shooter.x){
+				var dist = 0;
+				if (overlapTop >= overlapRight){
+					//Hitting the right side of block
+					dist = shooter.x - (target.x + target.width) - shot.x * 0.8;
+				}
+				else if (overlapRight >= overlapTop){
+					//Hitting top of block
+					dist = target.y - shooter.y + shot.x * 0.8;
+				}
+				if (dist < range){
+					potentialTargets.push(dist);
+				}
+			}
+		}
+		else if (shooter.shootingDir == 7){
+			if (target.y + target.height > shooter.y - shot.x &&
+				target.y < shooter.y - shot.x &&
+				target.x < shooter.x){
+				var dist = (shooter.x - (target.x + target.width)) + 5;
+				if (dist < range)
+					potentialTargets.push(dist);
+			}
+		}
+		else if (shooter.shootingDir == 8){
+			//distFromDiag = (target.x + target.width/2) - shooter.x + (shooter.y - (target.y + target.height/2));
+			distFromDiag = (target.x + target.width/2) - shooter.x - shot.x * 1.5 + (shooter.y - (target.y + target.height/2));
+			if (Math.abs(distFromDiag) < target.width/2 + target.height/2 && target.y < shooter.y && target.x < shooter.x){
+				var dist = 0;
+				if (overlapBottom >= overlapRight){
+					//Hitting the right side of block
+					dist = shooter.x - (target.x + target.width) + shot.x * 0.8;
+				}
+				else if (overlapRight >= overlapBottom){
+					//Hitting bottom of block
+					dist = (shooter.y - (target.y + target.height)) - shot.x * 0.8;
+				}
+				if (dist < range){
+					potentialTargets.push(dist);
+				}
+			}
+		}
+	}// Block loop
+	for (var t in potentialTargets){
+		if (potentialTargets[t] < range){
+			range = potentialTargets[t];
+		}
+	}
+	if (shooter.shootingDir % 2 == 0){
+		range= range * 1.42 - 10;
+	}
+	return range - 10;
 }
 
 function drawBoosts(){
@@ -2988,6 +3147,9 @@ function drawBoosts(){
 		}
 	}
 }
+
+
+
 var reallyLowGraphicsMode = false;
 function reallyLowGraphicsToggle(){
 	if (reallyLowGraphicsMode){
@@ -4315,7 +4477,7 @@ function drawStatOverlay(){
 			else {
 				ctx.fillStyle="#AAAAAA";
 			}
-			strokeAndFillText(blackPlayers[a].name,143,blackScoreY);
+			strokeAndFillText(blackPlayers[a].name.substring(0, 15),143,blackScoreY);
 			ctx.textAlign="center";
 			ctx.fillStyle="#19BE44";
 			if (gameOver == false){
@@ -4416,7 +4578,68 @@ function drawRedEffectsLayer(){
 	ctx.drawImage(red_canvas, 0, 0);
 }
 
+//LaserEffects
+function drawLaserChargingEffect(){
+	for (var p in Player.list){
+		if (Player.list[p].chargingLaser >= 1){
+			if (!Player.list[p].laserChargeGraphic)
+				Player.list[p].laserChargeGraphic = 0;
 
+			Player.list[p].laserChargeGraphic++;
+
+
+			var ringWidth = 10 + 1.6*(100 - (Player.list[p].laserChargeGraphic * (100/170)));
+			var flareWidth = (Img.laserFlare.width/100) * Player.list[p].laserChargeGraphic;
+			var flareHeight = (Img.laserFlare.height/100) * Player.list[p].laserChargeGraphic * 2;
+
+			if (!isCenteredObjVisible(Player.list[p].x, Player.list[p].y, flareWidth, flareHeight))
+				continue;
+
+			var rotRing = rotateAndCache(Img.laserRing,(Player.list[p].laserChargeGraphic/30) * (Player.list[p].laserChargeGraphic/30))
+			var rotFlare = rotateAndCache(Img.laserFlare,90)
+
+			ctx.save();
+			ctx.translate(centerX - myPlayer.x * zoom + Player.list[p].x * zoom, centerY - myPlayer.y * zoom + Player.list[p].y * zoom); //Center camera on lasering player
+				ctx.rotate(getRotation(Player.list[p].shootingDir));
+				ctx.globalAlpha = Player.list[p].laserChargeGraphic / 170;
+				noShadow();
+				ctx.drawImage(rotRing,  10 - ringWidth/2, -35 - ringWidth/2, ringWidth, ringWidth); //rotating ring
+				ctx.drawImage(rotFlare,  10 - flareWidth/2, -35 - flareHeight/2, flareWidth, flareHeight); //Slowly growing flare
+
+			ctx.restore();
+
+		}
+	}
+}
+
+function isVisible(x, y, width, height){
+	if ((x + width)*zoom + drawDistance > cameraX && x*zoom - drawDistance < cameraX + canvasWidth && (y + height)*zoom + drawDistance > cameraY && y*zoom - drawDistance < cameraY + canvasHeight){
+		return true;
+	}
+	return false;
+}
+
+function isCenteredObjVisible(x, y, width, height){
+	if ((x + width/2)*zoom + drawDistance > cameraX && (x - width/2)*zoom - drawDistance < cameraX + canvasWidth && (y + height/2)*zoom + drawDistance > cameraY && (y-height/2)*zoom - drawDistance < cameraY + canvasHeight){
+		return true;
+	}
+	return false;
+}
+
+rotateAndCache = function(image,angle) {
+	var offscreenCanvas = document.createElement('canvas');
+	var offscreenCtx = offscreenCanvas.getContext('2d');
+  
+	var size = Math.max(image.width, image.height);
+	offscreenCanvas.width = size;
+	offscreenCanvas.height = size;
+  
+	offscreenCtx.translate(size/2, size/2);
+	offscreenCtx.rotate(angle + Math.PI/2);
+	offscreenCtx.drawImage(image, -(image.width/2), -(image.height/2));
+  
+	return offscreenCanvas;
+  }
 
 var m_canvas = document.createElement('canvas');
 var mCtx = m_canvas.getContext("2d", { alpha: false });
@@ -4438,7 +4661,7 @@ function drawEverything(){
 	if (chatSpam > 0)
 		chatSpam--;
 	//Don't draw anything if the user hasn't entered the game with a player id and name
-	if (myPlayer.name == "" || !Player.list[myPlayer.id])
+	if (myPlayer.name == "" || !Player.list[myPlayer.id] || !clientInitialized)
 		return;
 
 	if (myPlayer.team == 0)
@@ -4455,14 +4678,15 @@ function drawEverything(){
 	drawBodies();	
 	drawLegs();
 	drawLaser();
-	drawLaserCanonLaser();
 	drawBlockCanvas();	
+	drawLaserCanonLaser();
 	drawWallBodies();
 	drawPickups();
 	drawBags();
 	drawThugs();
 	drawBoosts();
 	drawTorsos();
+	drawLaserChargingEffect();
 	drawShots();
 	drawBlood();
 	drawSmashes();
@@ -4581,7 +4805,7 @@ animate();
 	
 
 
-var clientTimeoutSeconds = 60000;
+var clientTimeoutSeconds = 45 * 1000;
 var clientTimeoutTicker = clientTimeoutSeconds;
 var newTipSeconds = 45;
 var newTipTicker = newTipSeconds;
@@ -4594,7 +4818,7 @@ setInterval(
 		if (countdownToRedrawGraphics != -1){
 			countdownToRedrawGraphics++;
 		}
-		if (countdownToRedrawGraphics >= 5){
+		if (countdownToRedrawGraphics >= 10){
 			countdownToRedrawGraphics = -1;
 			logg("Redrawing map and blocks on timer");
 			drawMapElementsOnMapCanvas();
@@ -4611,13 +4835,14 @@ setInterval(
 			drawBlocksOnBlockCanvas();
 		}
 
-		//clientTimeoutTicker--;
+		clientTimeoutTicker--;
 		fpsInLastSecond = fpsCounter;
 		fpsCounter = 0;
 		if (clientTimeoutTicker < clientTimeoutSeconds - 5){
 			logg("No server messages detected, " + clientTimeoutTicker + " until timeout");
 		}
 		if (clientTimeoutTicker < 1 && reloadOnServerTimeout){
+			forceToLeave = true;
 			logg("ERROR: Server Timeout. Reloading page...");
 			disconnect();
 			location.reload();
@@ -4798,14 +5023,17 @@ function shootUpdateFunction(shotData){
 	if (!myPlayer.x || !Player.list[shotData.playerId])
 		return;
 
-	var newShot = false; //To keep double shot sounds from playing when shooting diagonally (pressing 2 "shoot" keys at once)
+	var newShot = true; //To keep double shot sounds from playing when shooting diagonally (pressing 2 "shoot" keys at once)
 	if (!Shot.list[shotData.id]){
+
+		for (var s in Shot.list){
+			if (Shot.list[s].playerId == shotData.playerId && Shot.list[s].weapon == shotData.weapon){newShot = false;}
+		}
 		shotData.decay = shotData.weapon == 5 ? 10 : 2;
 		Shot.list[shotData.id] = shotData;
 
 		Shot.list[shotData.id].width = Math.floor((Math.random() * 46) + 26);
 		Shot.list[shotData.id].height = Math.floor((Math.random() * 45) + 65);
-		newShot = true;
 	}
 	//Distance calc for volume
 	var dx1 = myPlayer.x - Player.list[shotData.playerId].x;
@@ -4816,42 +5044,45 @@ function shootUpdateFunction(shotData){
 		vol = 0.01;
 	if (vol < -.1 || mute)
 		vol = 0;
-	if (Player.list[shotData.playerId].weapon == 3 && newShot == true){
-		sfxMG.volume(vol * .35);
-		sfxMG.play();
-		if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].MGClip <= 7){
-			sfxClick.play();
+
+	if (newShot == true){
+		if (Player.list[shotData.playerId].weapon == 3){
+			sfxMG.volume(vol * .35);
+			sfxMG.play();
+			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].MGClip <= 7){
+				sfxClick.play();
+			}
 		}
-	}
-	else if (Player.list[shotData.playerId].weapon == 2 && newShot == true) {
-		sfxDP.volume(vol);
-		sfxDP.play();
-		if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].DPClip <= 5){
-			sfxClick.play();
+		else if (Player.list[shotData.playerId].weapon == 2) {
+			sfxDP.volume(vol);
+			sfxDP.play();
+			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].DPClip <= 5){
+				sfxClick.play();
+			}
 		}
-	}
-	else if (Player.list[shotData.playerId].weapon == 1 && newShot == true) {
-		sfxPistol.volume(vol);
-		sfxPistol.play();
-		if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].PClip <= 5){
-			sfxClick.play();
+		else if (Player.list[shotData.playerId].weapon == 1) {
+			sfxPistol.volume(vol);
+			sfxPistol.play();
+			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].PClip <= 5){
+				sfxClick.play();
+			}
 		}
-	}
-	else if (Player.list[shotData.playerId].weapon == 5 && newShot == true) {
-		sfxLaserDischarge.volume(vol);
-		sfxLaserDischarge.play();
-		if (dist1 < 1000){
-			screenShakeCounter = 16;
+		else if (Player.list[shotData.playerId].weapon == 5) {
+			sfxLaserDischarge.volume(vol);
+			sfxLaserDischarge.play();
+			if (dist1 < 1000){
+				screenShakeCounter = 16;
+			}
+			screenShakeCounter = 8;
 		}
-		screenShakeCounter = 8;
-	}
-	else if (Player.list[shotData.playerId].weapon == 4 && newShot == true) {
-		sfxSG.volume(vol);
-		sfxSG.play();
-		if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].SGClip <= 3){
-			sfxClick.play();
+		else if (Player.list[shotData.playerId].weapon == 4) {
+			sfxSG.volume(vol);
+			sfxSG.play();
+			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].SGClip <= 3){
+				sfxClick.play();
+			}
+			Player.list[shotData.playerId].triggerTapLimitTimer = SGTriggerTapLimitTimer;
 		}
-		Player.list[shotData.playerId].triggerTapLimitTimer = SGTriggerTapLimitTimer;
 	}
 	if (shotData.shootingDir){
 		Player.list[shotData.playerId].shootingDir = shotData.shootingDir;
@@ -5499,11 +5730,17 @@ function disconnect(){
 }
 var forceToLeave = false;
 window.onbeforeunload = function(){
-	if (!gameOver && !pregame && !forceToLeave)
+	if (!gameOver && !pregame && !forceToLeave) {
 		return 'Are you sure you want to leave?'; //Leave site? unsaved changes
+	}
 	return;
 };
 
+socket.on('bootAfk', function(){
+	forceToLeave = true;
+	socket.disconnect();
+	window.location.href = serverHomePage;
+});
 
 logg("game.js loaded");
 
@@ -5520,7 +5757,6 @@ var release=(c)=>{
     document.dispatchEvent(new KeyboardEvent('keyup', {'keyCode': c})); pressing[c]=0
 };
 
-
 var mousepos = [0, 0];
 var mouseangle = 0;
 var dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
@@ -5530,17 +5766,14 @@ document.onmousemove=(evt)=>{
     mouseangle = Math.atan2(mousepos[1], mousepos[0]);
 }
 
-function mod(x,y) {
-    var xPrime = x;
-    while(xPrime<0) {
-        xPrime += y; // ASSUMES y > 0
-    }
-    return xPrime % y;
-}
-
 var mouseDown = 0;
-document.onmousedown=()=>++mouseDown;
-document.onmouseup=()=>--mouseDown;
+document.onmousedown=(etx)=>{
+    if (etx.button == 0) mouseDown = 1;
+    else mouseDown = 0;
+}
+document.onmouseup=(etx)=>{
+    mouseDown = 0;
+}
 
 var threshold = 0.4;
 
@@ -5562,6 +5795,92 @@ var update=()=>{
         release(40);
         release(38); 
 	}
-	setTimeout(update, 0.25);
+	setTimeout(update, 1);
 }
-setTimeout(update, 0.25);
+setTimeout(update, 1);
+
+//Gamepad by Frog
+var gamepad_lastsent = 0;
+function gamepad() {
+    if (navigator.getGamepads()[0] != null) {
+        let movedir = [navigator.getGamepads()[0].axes[0], navigator.getGamepads()[0].axes[1]];
+        let movedist = Math.sqrt(Math.hypot(movedir[0], movedir[1]));
+        let moveangle = Math.atan2(movedir[1], movedir[0]);
+        if (movedist > 0.6) {
+            if (Math.cos(moveangle) > threshold) press(68)
+            else release(68);
+            if (Math.cos(moveangle) < -threshold) press(65) 
+            else release(65);
+    
+            if (Math.sin(moveangle) > threshold) press(83) 
+            else release(83);
+            if (Math.sin(moveangle) < -threshold) press(87) 
+            else release(87); 
+        } else {
+            release(68);
+            release(65);
+            release(83);
+            release(87); 
+        }
+        let aimdir = [navigator.getGamepads()[0].axes[2], navigator.getGamepads()[0].axes[3]];
+        let aimdist = Math.sqrt(Math.hypot(aimdir[0], aimdir[1]));
+        let aimangle = (Math.atan2(aimdir[1], aimdir[0])/(Math.PI/4))*(Math.PI/4);
+        if (aimdist > 0.7) {
+            if (Math.cos(aimangle) > threshold) keyPress(39, true);
+            else keyPress(39, false);
+            if (Math.cos(aimangle) < -threshold) keyPress(37, true) 
+            else keyPress(37, false);
+    
+            if (Math.sin(aimangle) > threshold) keyPress(40, true) 
+            else keyPress(40, false);
+            if (Math.sin(aimangle) < -threshold) keyPress(38, true) 
+            else keyPress(38, false); 
+        } else {
+            keyPress(39, false);
+            keyPress(37, false);
+            keyPress(40, false);
+            keyPress(38, false);
+        }
+        navigator.getGamepads()[0].buttons[7].pressed? press(32) : release(32); //R-Trig // Space
+        navigator.getGamepads()[0].buttons[6].pressed? press(16) : release(16); //L-Trig // Shift
+		
+		//Face buttons
+		if (navigator.getGamepads()[0].buttons[6].pressed) {
+            navigator.getGamepads()[0].buttons[0].pressed? press(53) : release(53);
+        } else {
+			navigator.getGamepads()[0].buttons[0].pressed? press(52) : release(52); //A // 4
+        }
+        navigator.getGamepads()[0].buttons[1].pressed? press(50) : release(50); //B // 2
+		navigator.getGamepads()[0].buttons[2].pressed? press(82) : release(82); //X // Reload
+		navigator.getGamepads()[0].buttons[3].pressed? press(51) : release(51); //Y // 3
+
+		//Shoulders
+        navigator.getGamepads()[0].buttons[4].pressed? press(81) : release(81); //Weapon back
+		navigator.getGamepads()[0].buttons[5].pressed? press(69) : release(69); //Weapon forward
+		
+        navigator.getGamepads()[0].buttons[9].pressed? press(27) : release(27);
+
+
+        if ((navigator.getGamepads()[0].timestamp - gamepad_lastsent) > 1) {
+            if (navigator.getGamepads()[0].buttons[12].pressed) {
+                socket.emit('chat',[myPlayer.id,  myPlayer.settings.quickChat[0].value]);
+                gamepad_lastsent = navigator.getGamepads()[0].timestamp;
+            }
+            if (navigator.getGamepads()[0].buttons[15].pressed) {
+                socket.emit('chat',[myPlayer.id,  myPlayer.settings.quickChat[1].value]);
+                gamepad_lastsent = navigator.getGamepads()[0].timestamp;
+            }
+            if (navigator.getGamepads()[0].buttons[13].pressed) {
+                socket.emit('chat',[myPlayer.id,  myPlayer.settings.quickChat[2].value]);
+                gamepad_lastsent = navigator.getGamepads()[0].timestamp;
+            }
+            if (navigator.getGamepads()[0].buttons[14].pressed) {
+                socket.emit('chat',[myPlayer.id,  myPlayer.settings.quickChat[3].value]);
+                gamepad_lastsent = navigator.getGamepads()[0].timestamp;
+            }
+        }
+    } 
+
+
+    setTimeout(gamepad, 1);
+} gamepad();

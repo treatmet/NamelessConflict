@@ -433,7 +433,7 @@
 		"title":"Cartoon Skin",
 		"text":"*Simpsons reference*",
 		"price": 50000,
-		"team":0,
+		"team":1,
 		"rarity":3,
 		"canvasValue":"#fbbd00"
 	},		
@@ -565,8 +565,8 @@
 		"title":"Charcoal",
 		"text":"#2a2a2a",
 		"price": 100000,
-		"team":4,
-		"rarity":3,
+		"team":2,
+		"rarity":4,
 		"canvasValue":"#2a2a2a"
 	},	
 	{
@@ -741,8 +741,8 @@
 		"title":"Slate",
 		"text":"#dfdfdf",
 		"price": 100000,
-		"team":4,
-		"rarity":3,
+		"team":1,
+		"rarity":4,
 		"canvasValue":"#dfdfdf"
 	},	
 	{
@@ -1239,7 +1239,8 @@
 		"team":0,
 		"rarity":1,
 		"canvasValue":"smile"
-	},	{
+	},	
+	{
 		"id":"bugIcon",
 		"category":"icon",
 		"subCategory":"type",
@@ -1249,6 +1250,17 @@
 		"team":0,
 		"rarity":4,
 		"canvasValue":"bug"
+	},	
+	{
+		"id":"frogIcon",
+		"category":"icon",
+		"subCategory":"type",
+		"title":"Frog",
+		"text":"Did you find this? :]",
+		"price": 5000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"frog"
 	},	
 	{
 		"id":"alertIcon",

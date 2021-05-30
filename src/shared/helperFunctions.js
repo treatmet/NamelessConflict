@@ -121,11 +121,17 @@ global.compareCurrentPlayerSize = function(a,b) { //order
 	var aPort = a.url.substring(a.url.length - 4);
 	var bPort = b.url.substring(b.url.length - 4);
 	
+	var aIsCustom = a.customServer;
+	var bIsCustom = b.customServer;
 	
   if (aCurrentPlayers < bCurrentPlayers)
     return 1;
   else if (aCurrentPlayers > bCurrentPlayers)
     return -1;
+  else if (bIsCustom && !aIsCustom)
+    return -1;
+  else if (aIsCustom && !bIsCustom)
+    return 1;
   else if (aPort < bPort)
     return -1;
   else if (aPort > bPort)
@@ -382,7 +388,9 @@ global.getLevelFromExperience = function(experience){
 
 global.getObjectiveText = function(){
 	var objectiveText = "Kill enemy players to win!";
-	if (gametype == "ctf")
+	if (customServer && pregame)
+		objectiveText = "Type ./start to start the match!";
+	else if (gametype == "ctf")
 		objectiveText = "Capture the enemy's bag to win!";
 	return objectiveText;
 }

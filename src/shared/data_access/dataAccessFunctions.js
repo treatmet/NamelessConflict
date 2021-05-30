@@ -979,6 +979,24 @@ var getPublicServersFromDB = function(cb){
 	});
 }
 
+var getEmptyServersFromDB = function(cb){
+	var servers = [];
+
+	var searchObj = { privateServer:false, currentUsers: {$size:0}, incomingUsers: {$size:0}};
+	searchObj.instanceId = isLocal ? "local" : {$not:/local/};
+	dataAccess.dbFindAwait("RW_SERV", searchObj, function(err,res){
+		if (res && res[0]){
+			for (var i = 0; i < res.length; i++){
+				servers.push(res[i]);
+			}		
+			cb(servers);
+		}
+		else {
+			cb(servers);
+		}
+	});
+}
+
 var dbGameServerRemoveAndAdd = function(){
 	dataAccess.dbUpdateAwait("RW_SERV", "rem", {url: myUrl}, {}, async function(err, obj){
 		if (!err){
@@ -989,34 +1007,31 @@ var dbGameServerRemoveAndAdd = function(){
 
 //!!!This function references variables in the gameServer scope (whiteScore, etc)
 var dbGameServerUpdate = function() {
+	console.log(port + "Now im in to dbGameServerUpdate customServer:" + customServer);
+
 	if ((!myUrl || myUrl == "") || (!isLocal && myQueryString.length <= 0)){
 		logg("ERROR - NO SERVER URL - NOT READY TO SYNC WITH DB");
 		return;
 	}
 	if (isWebServer == true)
 		return;
-	
-	serverName = "";
-	
-	if (maxPlayers >= 14){
-		serverName = "BigTeam ";
+
+	if (!customServer)
+		serverName = "Ranked " + port.substring(2,4);
+
+	var serverSubName = "";
+	if (maxPlayers%2 != 0)
+	{
+		maxPlayers++;
 	}
-	else if (maxPlayers == 8){
-		serverName = "4v4 ";
-	}	
-	else if (maxPlayers == 6){
-		serverName = "3v3 ";
-	}	
-	else if (maxPlayers == 10){
-		serverName = "5v5 ";
-	}	
-	
+	serverSubName += "[" + maxPlayers/2 + "v" + maxPlayers/2;
 	if (gametype == "ctf"){
-		serverName += "CTF" + " [" + port.substring(1) + "]";
+		serverSubName += " Capture]";
 	}
 	else if (gametype == "slayer"){
-		serverName += "Deathmatch" + " [" + port.substring(1) + "]";
+		serverSubName += " Deathmatch]";
 	}
+	
 	
 	var healthCheckTimestamp = new Date();
 	var matchTime = (gameMinutesLength * 60) + gameSecondsLength;
@@ -1032,6 +1047,9 @@ var dbGameServerUpdate = function() {
 
 	var currentUsers = [];
 	for (var s in SOCKET_LIST){
+		if (typeof SOCKET_LIST[s].team === 'undefined' || SOCKET_LIST[s].team === 0)
+			continue;
+
 		currentUsers.push({
 			socketId:SOCKET_LIST[s].id,
 			cognitoSub:SOCKET_LIST[s].cognitoSub,
@@ -1043,9 +1061,7 @@ var dbGameServerUpdate = function() {
 		});
 	}
 	
-	console.log(currentUsers);
-	var obj = {instanceId:instanceId, serverNumber:serverNumber, serverName:serverName,  privateServer:privateServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:currentUsers, queryString:myQueryString};
-	
+	var obj = {instanceId:instanceId, serverNumber:serverNumber, serverName:serverName, serverSubName:serverSubName,  privateServer:privateServer, customServer:customServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:currentUsers, queryString:myQueryString};
 	dataAccess.dbUpdateAwait("RW_SERV", "ups", {url: myUrl}, obj, async function(err, res){
 		//logg("dbGameServerUpdate DB: Set: " + myUrl + " with: ");
 		//console.log(obj);
@@ -1062,17 +1078,7 @@ var syncGameServerWithDatabase = function(){
 	dataAccess.dbFindAwait("RW_SERV", {url:myUrl}, async function(err, res){
 		if (res && res[0]){
 			serverNumber = res[0].serverNumber;
-			
-			//serverName = res[0].serverName;
-			
-			//These source of truth are the DB. Be sure to differentiate these from the ones that should be written to DB from server values
-			//maxPlayers = res[0].maxPlayers;
-			//voteGametype = res[0].voteGametype;
-			//voteMap = res[0].voteMap;
-			if (res[0].gametype == "slayer" || res[0].gametype == "ctf"){
-				//gametype = res[0].gametype;
-			}
-			
+						
 			var healthyTimestamp = new Date();
 			if (res[1]){ //More than one entry found for this URL. Remove all, and add just one.				
 				dbGameServerRemoveAndAdd();
@@ -1177,6 +1183,7 @@ module.exports.getPlayerRelationshipFromDB = getPlayerRelationshipFromDB;
 module.exports.upsertFriend = upsertFriend;
 module.exports.removeFriend = removeFriend;
 module.exports.getPublicServersFromDB = getPublicServersFromDB;
+module.exports.getEmptyServersFromDB = getEmptyServersFromDB;
 module.exports.dbGameServerRemoveAndAdd = dbGameServerRemoveAndAdd;
 module.exports.dbGameServerUpdate = dbGameServerUpdate;
 module.exports.syncGameServerWithDatabase = syncGameServerWithDatabase;

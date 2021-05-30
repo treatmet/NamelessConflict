@@ -19,7 +19,7 @@ function getClientFile(relativePath) {
 
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
-router.get('/', function(req, res) {
+router.get('/game', function(req, res) {
 	var pageData = {};
 	var pageContent = getClientFile('game.html');
 	pageContent = replaceValues(pageData, pageContent);	
@@ -56,7 +56,6 @@ router.post('/playNow', async function (req, res) {
 		return;
     }
 
-
 	//Check if server is expecting this incoming user
 	var params = {url:myUrl, privateServer:false};
 	var approvedToJoinServer = false;
@@ -83,5 +82,21 @@ router.post('/playNow', async function (req, res) {
 		}
 	});
 });
+
+
+router.post('/updateGameServer', async function (req, res) {
+	log("updateGameServer endpoint");
+	console.log(req.body);
+	if (myUrl == ""){
+		logg("res.send: " + "Url for current server not set");
+		res.send({msg:"Url for current server not set", success:false});
+		return;
+	}	
+	gameEngine.updateRequestedSettings(req.body.settings, function(result){
+		res.send({result:result});
+	});    	
+});
+
+
 
 module.exports = router;

@@ -3,6 +3,13 @@ console.log("cognito.js loading");
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 
+
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-MM3TQ3F');
+
 gtag('js', new Date());
 gtag('config', 'AW-364156363');
 function gtag_report_conversion(url) {
@@ -46,6 +53,7 @@ var serverHomePage = "https://ss.treatmetcalf.com/";
 var isLocal = false;
 var defaultCustomizations = {red:{}, blue:{}};
 var tempCognitoSub = "";
+var isInParty = false; //implement
 
 var iconSize = 15;
 
@@ -106,7 +114,7 @@ function getTokenFromUrlParameterAndLogin(){
 		setPcModeAndIsLocalElements({isLocal:data.isLocal, pcMode:data.pcMode});
 		loginAlways();
 		if (page != "profile"){
-			removeUrlParams();
+			//removeUrlParams();
 		}
     });
 }
@@ -170,8 +178,6 @@ function getTokenUrlParams(){
 	return tokenParams;
 }
 
-
-
 socket.on('reloadHomePage', function(){
 	window.location.href = serverHomePage;
 });
@@ -221,6 +227,7 @@ function showMoreControls(){
 }
 
 function getJoinableServer(options){
+
 	console.log("Get Joinable Server to PLAY NOW. options.server:" + options.server);
 	// if (cognitoSub == "")
 	// 	return;
@@ -241,11 +248,13 @@ function getJoinableServer(options){
 				if (data.unregisteredPlayer){
 					console.log("UNREGISTERED PLAYER DETECTED");
 					window.location.href = data.server;
+				} else {
+					setTimeout(function(){ alert("Temporary error when joining game. If you try joining again, I'm sure it will work.");window.location.href = serverHomePage; }, 20000);
 				}
 			}
 			else {
 				alert(data.msg);
-				//window.location.href = serverHomePage;
+				window.location.href = serverHomePage;
 			}
 		});
 	}
@@ -264,6 +273,7 @@ function getOnlineFriendsAndParty(){
 			//console.log("getOnlineFriends response:");
 			//console.log(data);		
 			updateOnlineFriendsSectionHtml(data);		
+			waitingOnRequest = false;
 		});
 	}	
 	//Get party
@@ -548,11 +558,9 @@ function showLocalElements(){
 }
 
 function localClick(){
-	var params = {};
-	window.location.href = '/localGame';
+
+
 }
-
-
 
 function showDefaultLoginButtons(){
 	if (page == "game"){return;}
@@ -687,6 +695,7 @@ function hide(element){
 //EVERY 1 SECOND
 const headerRefreshSeconds = 10;
 var headerRefreshTicker = headerRefreshSeconds;
+var waitingOnRequest = false;
 setInterval( 
 	function(){	
 	
@@ -696,7 +705,9 @@ setInterval(
 			if (headerRefreshTicker < 1){
 				//logg("Refreshing header");
 				getRequests();
-				getOnlineFriendsAndParty();
+				if (!waitingOnRequest)
+					getOnlineFriendsAndParty();
+				waitingOnRequest = true;
 				if (page == "profile"){
 					checkViewedProfileIsFriendOrParty();
 				}

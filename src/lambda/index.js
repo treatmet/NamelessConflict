@@ -124,18 +124,24 @@ function calculateTargetInstanceCount(EBinfo, DBres, EBConfig, ASGInfo, cb){
     }
 
     var OkInstances = EBinfo.InstanceHealthList.filter(instance => instance.Color == 'Green' || instance.Color == 'Yellow').length;
+    var SevereInstances = EBinfo.InstanceHealthList.filter(instance => instance.Color == 'Red').length;
     var instanceMin = ASGInfo.MinSize;
     var dbServerCount = getServerCount(DBres);
 
-    log(logID + " " + "OkInstances:" + OkInstances + " InstanceMin:" + instanceMin + " | playableServers:" + dbServerCount.playableServers + " minimumPlayableServers:" + minimumPlayableServers + " | emptyServers:" + dbServerCount.emptyServers + "");
+    log(logID + " " + "OkInstances:" + OkInstances + "SevereInstances:" + SevereInstances + " InstanceMin:" + instanceMin + " | playableServers:" + dbServerCount.playableServers + " minimumPlayableServers:" + minimumPlayableServers + " | emptyServers:" + dbServerCount.emptyServers + "");
     
-    if (instanceMin > OkInstances){ //There are currently pending instances, wait until Beanstalk finishes increasing instance count 
-        log(logID + " " + "There are currently pending instances, wait until Beanstalk finishes increasing instance count before scaling...");
+    if ((instanceMin - SevereInstances) > OkInstances){ //There are currently pending instances, wait until Beanstalk finishes increasing instance count 
+        log(logID + " " + "There are currently gray(pending) instances, wait until Beanstalk finishes increasing instance count before scaling...");
         cb(false);
         return;
     }    
-    else if (dbServerCount.playableServers < minimumPlayableServers){ //scale up
-        log(logID + " " + "THERE ARE LESS THAN " + minimumPlayableServers + " PLAYABLE SERVERS[" + dbServerCount.playableServers + "]. INCREASING INSTANCE COUNT BY 1 (from " + instanceMin + " to " + (instanceMin+1) + ")");
+    else if (dbServerCount.playableServers < minimumPlayableServers || dbServerCount.emptyServers <= 0){ //scale up
+        if (dbServerCount.emptyServers <= 0){
+            log(logID + " " + "THERE ARE LESS THAN " + minimumPlayableServers + " PLAYABLE SERVERS[" + dbServerCount.playableServers + "]. INCREASING INSTANCE COUNT BY 1 (from " + instanceMin + " to " + (instanceMin+1) + ")");
+        }
+        else {
+            log(logID + " " + "THERE ARE ZERO emptyServers available for custom games. Scaling up 1");
+        }
         cb((instanceMin + 1));
         return;
     }    

@@ -33,14 +33,14 @@ var initializePickups = function(map){
 		
 		pickup.createPickup(Math.random(), 16, 11, 5, 75, 60); //Body Armor
 		pickup.createPickup(Math.random(), 24, 12, 5, 75, 60); //Body Armor
-		pickup.createPickup(Math.random(), 13, 2, 3, 90, 45); //MG
-		pickup.createPickup(Math.random(), 27, 21, 3, 90, 45); //MG
-		pickup.createPickup(Math.random(), 29, 4, 4, 24, 60); //SG
-		pickup.createPickup(Math.random(), 11, 19, 4, 24, 60); //SG
-		pickup.createPickup(Math.random(), 2, 12, 6, 4, 90); //Laser
-		pickup.createPickup(Math.random(), 38, 11, 6, 4, 90); //Laser
-		pickup.createPickup(Math.random(), 4, 17, 2, 40, 30); //DP
-		pickup.createPickup(Math.random(), 36, 6, 2, 40, 30); //DP
+		pickup.createPickup(Math.random(), 13, 2, 3, MGClipSize*2, 45); //MG
+		pickup.createPickup(Math.random(), 27, 21, 3, MGClipSize*2, 45); //MG
+		pickup.createPickup(Math.random(), 29, 4, 4, SGClipSize*2, 60); //SG
+		pickup.createPickup(Math.random(), 11, 19, 4, SGClipSize*2, 60); //SG
+		pickup.createPickup(Math.random(), 2, 12, 6, laserClipSize, 90); //Laser
+		pickup.createPickup(Math.random(), 38, 11, 6, laserClipSize, 90); //Laser
+		pickup.createPickup(Math.random(), 4, 17, 2, DPClipSize*3, 30); //DP
+		pickup.createPickup(Math.random(), 36, 6, 2, DPClipSize*3, 30); //DP
 		pickup.createPickup(Math.random(), 2, 4, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 38, 19, 1, 50, 10); //MD		
 	}
@@ -53,12 +53,12 @@ var initializePickups = function(map){
 		pickup.createPickup(Math.random(), 4, 7, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 38, 7, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 21, 22, 5, 75, 45); //Body Armor
-		pickup.createPickup(Math.random(), 21, 3, 3, 90, 45); //MG
-		pickup.createPickup(Math.random(), 21, 28, 3, 90, 45); //MG
-		pickup.createPickup(Math.random(), 3, 29, 4, 24, 40); //SG
-		pickup.createPickup(Math.random(), 39, 29, 4, 24, 40); //SG
-		pickup.createPickup(Math.random(), 5, 20, 2, 40, 25); //DP
-		pickup.createPickup(Math.random(), 37, 20, 2, 40, 25); //DP
+		pickup.createPickup(Math.random(), 21, 2, 6, laserClipSize, 90); //Laser
+		pickup.createPickup(Math.random(), 21, 28, 3, MGClipSize*2, 45); //MG
+		pickup.createPickup(Math.random(), 3, 29, 4, SGClipSize*2, 40); //SG
+		pickup.createPickup(Math.random(), 39, 29, 4, SGClipSize*2, 40); //SG
+		pickup.createPickup(Math.random(), 5, 20, 2, DPClipSize*3, 25); //DP
+		pickup.createPickup(Math.random(), 37, 20, 2, DPClipSize*3, 25); //DP
 	}
 	else if (map == "crik"){
 		bagRed.homeX = 7*75;
@@ -70,13 +70,13 @@ var initializePickups = function(map){
 		pickup.createPickup(Math.random(), 26.5, 22.5, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 1, 13.5, 5, 75, 45); //Body Armor
 		pickup.createPickup(Math.random(), 52, 13.5, 5, 75, 45); //Body Armor
-		pickup.createPickup(Math.random(), 24, 26, 3, 135, 45); //MG
-		pickup.createPickup(Math.random(), 29, 1, 3, 135, 45); //MG
-		pickup.createPickup(Math.random(), 17, 6, 2, 40, 25); //DP
-		pickup.createPickup(Math.random(), 14, 22, 2, 40, 25); //DP		
-		pickup.createPickup(Math.random(), 39, 5, 2, 40, 25); //DP
-		pickup.createPickup(Math.random(), 36, 21, 2, 40, 25); //DP		
-		pickup.createPickup(Math.random(), 26.5, 13.5, 4, 24, 40); //SG
+		pickup.createPickup(Math.random(), 24, 26, 3, MGClipSize*2, 45); //MG
+		pickup.createPickup(Math.random(), 29, 1, 3, MGClipSize*2, 45); //MG
+		pickup.createPickup(Math.random(), 17, 6, 2, DPClipSize*2, 25); //DP
+		pickup.createPickup(Math.random(), 14, 22, 2, DPClipSize*2, 25); //DP		
+		pickup.createPickup(Math.random(), 39, 5, 2, DPClipSize*2, 25); //DP
+		pickup.createPickup(Math.random(), 36, 21, 2, DPClipSize*2, 25); //DP		
+		pickup.createPickup(Math.random(), 26.5, 13.5, 4, SGClipSize*2, 40); //SG
 	}	
 	else if (map == "close"){
 		bagRed.homeX = 5*75;

@@ -941,6 +941,9 @@ function cycleAppearance(){
         displayAnimation = "SG";
     }
     else if (displayAnimation == "SG"){
+        displayAnimation = "Laser";
+    }
+    else if (displayAnimation == "Laser"){
         displayAnimation = "pistol";
     }
     else {

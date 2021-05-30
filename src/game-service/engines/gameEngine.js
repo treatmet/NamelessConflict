@@ -8,6 +8,105 @@ var mapEngine = require('./mapEngine.js');
 
 var secondsSinceLastServerSync = syncServerWithDbInterval - 2;
 
+var resetGameSettingsToStandard = function(){
+boostAmount = 18;
+playerMaxSpeed = 5;
+playerAcceleration = 1;
+diagMovementScale = (2/3);
+voteGametype = true;
+voteMap = true;
+minutesLeft = 9;
+secondsLeft = 99;
+scoreToWin = 0;
+nextGameTimer = 20;
+timeBeforeNextGame = 45; //newGameTimer
+gameMinutesLength = 5;
+gameSecondsLength = 0;
+map = "longest";
+gametype = "ctf";
+freeForAll = false;
+maxPlayers = 14;
+maxEnergyMultiplier = 1;
+rechargeDelayTime = 120; //Double for breaking under zero energy
+healDelayTime = 300;
+healRate = 7; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal)
+respawnTimeLimit = 3 * 60;
+slayerRespawnTimeLimit = 3 * 60; //seconds (translated to frames)
+ctfRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
+bagDrag = 0.85;
+cloakingEnabled = true;
+cloakDrainSpeed = 0.12;
+cloakDrag = 0.5; //Walking speed multiplier when cloaked
+cloakInitializeSpeed = 0.02;
+cloakDeinitializeSpeed = 0.1;
+playerMaxHealth = 175;
+bootOnAfk = true;
+AfkFramesAllowed = 120 * 60; //seconds (translated to frames) //timeout
+damageScale = 1;
+pistolDamage = 10;
+pistolSideDamage = 6; //Stacks on above
+pistolBackDamage = 10; //Stacks AGAIN on above
+DPDamage = 12;
+DPSideDamage = DPDamage/2; //Stacks on above
+DPBackDamage = DPDamage/2; //Stacks AGAIN on above
+mgDamage = 9; 
+mgSideDamage = mgDamage/2; //Stacks on above
+mgBackDamage = mgDamage/2; //Stacks AGAIN on above
+SGDamage = 30;
+SGSideDamage = SGDamage/2;
+SGBackDamage = SGDamage/2;
+LaserDamage = 250;
+friendlyFireDamageScale = 0.5;
+boostDamage = 50;
+cloakBonusDamage = 20;
+startingWeapon = 1;
+bulletRange = 19 * 75;
+laserRange = 19 * 75;
+SGRange = 310;
+SGCloseRangeDamageScale = 4;
+SGPushSpeed = 12;
+laserPushSpeed = 36;
+laserOffsetX = 9;
+MGPushSpeed = 2;
+speedCap = 45;
+pistolFireRateLimiter = true;	
+pistolFireRate = 12;
+DPFireRate = 12;
+MGFireRate = 5;
+SGFireRate = 50;
+laserFireRate = 50;
+laserMaxCharge = 150;
+DPClipSize = 15;
+MGClipSize = 60;
+SGClipSize = 6;
+laserClipSize = 5;
+maxSGAmmo = SGClipSize*3;
+maxDPAmmo = DPClipSize*3;
+maxMGAmmo = MGClipSize*2;
+maxLaserAmmo = 10;
+infiniteAmmo = false;
+staggerScale = 0.60;
+staggerTime = 20;
+damagePushScale = 2;
+pushMaxSpeed = 35;
+allowBagWeapons = false;
+spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
+thugSightDistance = 600;
+thugHealth = 80;
+thugDamage = 50;
+thugSpeed = 4;
+thugAttackDelay = 30;
+thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are wiped off map (for performance concerns)
+threatSpawnRange = 500;
+pushStrength = 15; //Push block strength
+
+console.log("I'm setting " + port + " customServer to false");
+customServer = false;
+serverName = "Ranked " + port.substring(2,4);
+bannedCognitoSubs = [];
+dataAccessFunctions.dbGameServerUpdate();
+}
+
 var changeTeams = function(playerId){
 	var playerList = player.getPlayerList();
  	console.log("change teams: " + playerList[playerId]);
@@ -92,7 +191,6 @@ function calculateEndgameStats(){
 	getAllPlayersFromDB(function(mongoRes){
 		//Get CURRENT player rating and experience from mongo (before any stats from this game are added)
 		updatePlayersRatingAndExpWithMongoRes(mongoRes);		
-		console.log(player.getPlayerList());
 		var whiteAverageRating = calculateTeamAvgRating(1);
 		var blackAverageRating = calculateTeamAvgRating(2);
 		
@@ -141,9 +239,12 @@ function calculateEndgameStats(){
 
 			//Eligible for rank up/down this game?
 			log("playerList[p].eligibleForRank: " + playerList[p].eligibleForRank);
-			if (!playerList[p].eligibleForRank){
+			if (!playerList[p].eligibleForRank || customServer){
 				logg("Player ineligible for rank influence this game");
-				ptsGained = 0;
+				ptsGained = 0;				
+			}
+			if (customServer){
+				playerList[p].cashEarnedThisGame =  Math.round(playerList[p].cashEarnedThisGame/2);
 			}
 
 			//Trigger client's end of game progress results report
@@ -1057,9 +1158,8 @@ var joinGame = function(cognitoSub, username, team, partyId){
 //TIMER1 - EVERY FRAME timer1 tiemer1 tiemr1
 //------------------------------------------------------------------------------
 const tickLengthMs = 1000/60;
-var previousTick = Date.now();
 var ticksSinceLastSecond = 0;
-var warnCount = 0;
+var staleCustomGameThresholdTimer = 0;
 
 var gameLoop = function(){
 	ticksSinceLastSecond++;
@@ -1073,7 +1173,20 @@ var gameLoop = function(){
 		moveBags();
 	}
 
-	var veforeTimer = Date.now();
+	if (customServer){
+		var playerListLength = player.getPlayerList().length;
+		if (staleCustomGameThresholdTimer < staleCustomGameThreshold && playerListLength <= 0){
+			staleCustomGameThresholdTimer++;
+		}
+		else if (playerListLength > 0){
+			staleCustomGameThresholdTimer = 0;
+		}
+		else if (staleCustomGameThresholdTimer >= staleCustomGameThreshold){
+			resetGameSettingsToStandard();
+			staleCustomGameThresholdTimer = 0;
+		}
+	}
+
 	for (var i in SOCKET_LIST){			
 		var socket = SOCKET_LIST[i];			
 		const teamFilteredUpdateEffectList = updateEffectList.filter(function(effect){
@@ -1086,8 +1199,7 @@ var gameLoop = function(){
 		});
 		socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
 	}
-	var msSinceLastTick = Date.now() - previousTick;
-	var msSinceEmit = Date.now() - veforeTimer;
+
 	//console.log("Sent " + msSinceLastTick + "ms after last tick. Emit took " + msSinceEmit + "ms");
 	updatePlayerList = [];
 	updateThugList = [];
@@ -1363,6 +1475,115 @@ var sendFullGameStatus = function(socketId){
 	SOCKET_LIST[socketId].emit('sendFullGameStatus', playerPack, thugPack, pickupPack, blockPack, miscPack); //Goes to a single player
 }
 
+var updateRequestedSettings = function(settings, cb){
+/*
+	var allowAbleSettings = [		
+		"serverName",
+		"minutesLeft",
+		"secondsLeft",
+		"nextGameTimer",
+		"gameMinutesLength",
+		"gameSecondsLength",
+		"map",
+		"gametype",
+		"maxPlayers",
+		"scoreToWin",
+		"rechargeDelayTime", //Double for breaking under zero energy
+		"healDelayTime",
+		"healRate", //Milisecond delay between heal tick after player already started healing (Higher number is slower heal)
+		"respawnTimeLimit",
+		"slayerRespawnTimeLimit3", //seconds (translated to frames)
+		"ctfRespawnTimeLimit5", //seconds (translated to frames)
+		"bagDrag",
+		"cloakingEnabled",
+		"cloakDrainSpeed",
+		"cloakDrag", //Walking speed multiplier when cloaked
+		"cloakInitializeSpeed",
+		"cloakDeinitializeSpeed",
+		"playerMaxHealth",
+		"bootOnAfk",
+		"AfkFramesAllowed", //seconds (translated to frames) //timeout
+		"damageScale",
+		"pistolDamage",
+		"pistolSideDamage", //Stacks on above
+		"pistolBackDamage", //Stacks AGAIN on above
+		"DPDamage",
+		"DPSideDamage", //Stacks on above
+		"DPBackDamage", //Stacks AGAIN on above
+		"mgDamage", 
+		"mgSideDamage", //Stacks on above
+		"mgBackDamage", //Stacks AGAIN on above
+		"LaserDamage",
+		"SGDamage",
+		"SGSideDamage",
+		"SGBackDamage",
+		"friendlyFireDamageScale",
+		"boostDamage",
+		"cloakBonusDamage",
+		"bulletRange",
+		"laserRange",
+		"SGRange",
+		"SGCloseRangeDamageScale",
+		"SGPushSpeed",
+		"laserPushSpeed",
+		"MGPushSpeed",
+		"speedCap",
+		"boostAmount",
+		"playerMaxSpeed",
+		"startingWeapon",
+		"spawnOpposingThug",
+		"timeBeforeNextGame",
+		"maxEnergyMultiplier",
+		"voteMap",
+		"voteGametype",
+		"customServer"
+	];
+	*/
+
+	var allowAbleSettings = [
+		"serverName",
+		"gameMinutesLength", 
+		"scoreToWin",
+		"map",
+		"gametype",
+		"maxPlayers",
+		"voteGametype",
+		"voteMap",
+		"startingWeapon",
+		"maxEnergyMultiplier",
+		"cloakingEnabled",
+		"boostAmount",
+		"playerMaxSpeed",
+		"healRate",
+		"bagDrag",
+		"damageScale",
+		"spawnOpposingThug", 
+		"timeBeforeNextGame"
+	];
+
+	for (var s in settings){
+		if (allowAbleSettings.indexOf(settings[s].name) > -1){
+
+			if (settings[s].name == 'serverName'){
+				settings[s].value = "'" + settings[s].value + "'";
+			}
+
+			var evalText = settings[s].name + " = " + settings[s].value + ";";
+			log("Updating setting: " + evalText);
+			try{
+				eval(evalText);
+			}
+			catch(err){
+
+			}
+		}
+	}
+	customServer = true;
+	pregame = true;
+	log(port + " And of course, setting customServer to " + customServer);
+	cb("done");
+}
+
 
 
 module.exports.changeTeams = changeTeams;
@@ -1379,3 +1600,4 @@ module.exports.restartGame = restartGame;
 module.exports.assignSpectatorsToTeam = assignSpectatorsToTeam;
 module.exports.joinGame = joinGame;
 module.exports.sendFullGameStatus = sendFullGameStatus;
+module.exports.updateRequestedSettings = updateRequestedSettings;

@@ -2,6 +2,11 @@
 </head>
 
 <body style="margin: 0px;overflow-y: hidden;overflow-x: hidden;">
+	<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MM3TQ3F"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+	<!-- End Google Tag Manager (noscript) -->
+	
 <!--<div include-html-header="/src/client/header.html"></div>-->
 {{header}}
     
@@ -21,13 +26,16 @@
 		</div>
 		
 		<div id="serverLoginButtons">
+			<button id="bigAssPlayNow" class="RWButton heavyTextShadow" onclick="getJoinableServer({server:'any'})">Play Now!</button>			<br>
+			(Not logged in)
+			<br>
+			Log in to customize your character, party up with friends, save your progress, and track stats!
+			<br>
 			<button id="createAccount" class="serverSelectButton" style="margin: 0px;" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://ss.treatmetcalf.com/';">Create Account</button>
 			<br>
 			Or
 			<br>
 			<button id="logIn" class="serverSelectButton" style="margin: 0px;" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://ss.treatmetcalf.com/';">Log In</button>
-			<br>
-			to customize your character, PARTY UP with friends, save your progress, and track stats!
 			<br>
 			<br>
 		</div>
@@ -107,15 +115,18 @@
 	<div class="columnSection">
 		<div id="communityAnnouncement">
 			<div class="communityAnnouncementText" style="font-style: italic;">
+				<span style="color:red;">CURRENTLY DOING SOME SERVER MAINTENENCE. THERE MAY BE DISCONNECTS. SORRY :[</span>
+			</div>
+			<div class="communityAnnouncementText" style="font-style: italic;">
 				Welcome to the SocketShot Alpha!
 			</div>
 			<div class="communityAnnouncementText">
-				Designated community nights are <span style="color:red;">Thursdays at 9pm.</span> Bring a friend and party up!
+				Designated community nights are <span style="color:red;">Thursday evenings.</span> Bring a friend and party up!
 			</div>
 			<div class="communityAnnouncementText">
-				<span class="" style="color:red;">4v4 Tournament June 17th!</span> <br>
-				<div class="vertCenterContainer"><span class="rainbow2">Grand Prize: $400 of Bitcoin&nbsp</span> <img src="/src/client/img/icons/bitcoin.png" class="socialIcon vertCenterObj"></div>
-				2nd Place:  $100 of Bitcoin <br>
+				<span class="" style="color:red;">3v3 Tournament June 17th!</span> <br>
+				<div class="vertCenterContainer"><span class="rainbow2">Grand Prize: $400 cash or &nbsp</span> <img src="/src/client/img/icons/bitcoin.png" class="socialIcon vertCenterObj"></div>
+				2nd Place:  $100<br>
 				Sign up on the <a href="https://discord.com/invite/SYxHfJa">Discord server!</a>
 			</div>
 		</div>

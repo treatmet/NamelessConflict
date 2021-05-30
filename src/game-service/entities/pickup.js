@@ -221,6 +221,9 @@ var createPickup = function(id, x, y, type, amount, respawn){
 }
 
 var clearPickupList = function(){
+	for (var p in Pickup.list){
+		updatePickupList.push(Pickup.list[p].id);
+	}
 	Pickup.list = [];
 }
 

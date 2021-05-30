@@ -14,9 +14,9 @@ router.post('/getServerList', async function (req, res) {
 		
 		for (let j = 0; j < servers.length; j++) {
 			var currentPlayers = getCurrentPlayersFromUsers(servers[j].currentUsers).length;
-			serverList.push({url:servers[j].url, serverName:servers[j].serverName, gametype:servers[j].gametype, currentPlayers:currentPlayers, maxPlayers:servers[j].maxPlayers, instanceId:servers[j].instanceId});			
-		}
-		
+			servers[j].currentPlayers = currentPlayers;
+			serverList.push(servers[j]);	
+		}		
 		res.send(serverList);
 	});	
 });
@@ -220,9 +220,9 @@ var getJoinableServer = function(options, cb){
 					dataAccess.dbUpdateAwait("RW_SERV", "set", {url: serv[selectedServer].url}, obj, async function(err2, res){
 						if (!err2){
 							logg("DB: UPDATING incomingUsers: " + serv[selectedServer].url + " with: " + JSON.stringify(obj));
-							var targetUrl = serverHomePage + serv[selectedServer].queryString;
+							var targetUrl = serverHomePage + "game/" + serv[selectedServer].queryString;
 							if (isLocal)
-								targetUrl = "http://" + serv[selectedServer].url + "/?join=true"; 
+								targetUrl = "http://" + serv[selectedServer].url  + "/game" + "/?join=true"; 
 							cb("Found joinable server. Joining...", targetUrl);
 						}
 						else {
@@ -283,5 +283,242 @@ router.post('/sendPlayerToGameServer', async function (req, res) {
 	}
 	res.send({msg:"Request received"});
 });
+
+//-------------------------------------------------------------------------------------
+//Custom game server
+
+//CONFIG
+var customSettingsList = [
+	{name:"serverName", desc:"Server Name (Letters and numbers only)", type:2, default:"Custom", standard:true},
+	{name:"gameMinutesLength", desc:"Game Length in Minutes [0 is no time limit]", type:2, default:5, standard:true},
+	{name:"scoreToWin", desc:"Score to win [0 is no score limit]", type:2, default:0, standard:true},
+	{name:"map", desc:"Map [1=hall, 2=warehouse, 3=bunkers]", type:2, default:1, standard:true},
+	{name:"gametype", desc:"Gametype [1=capture, 2=deathmatch]", type:2, default:1, standard:true},
+	{name:"maxPlayers", desc:"Max Team Size", type:2, default:7, standard:true},
+	{name:"voteGametype", desc:"Allow voting for gametype after match", type:1, default:true, standard:true},
+	{name:"voteMap", desc:"Allow voting for map after match", type:1, default:true, standard:true},
+	{name:"startingWeapon", desc:"Starting Weapon [1: Pistol, 2:DP, 3:MG, 4:SG, 5:Laser]", type:2, default:1},
+	{name:"maxEnergyMultiplier", desc:"Max Energy Multiplier", type:2, default:1},
+	{name:"cloakingEnabled", desc:"Cloaking Enabled", type:1, default:true},
+	{name:"boostAmount", desc:"Boost Power", type:2, default:19},
+	{name:"playerMaxSpeed", desc:"Max Player Speed", type:2, default:5},
+	{name:"healRate", desc:"Heal Rate", type:2, default:10},
+	{name:"bagDrag", desc:"Player speed ratio while carying bag", type:2, default:0.85},
+	{name:"damageScale", desc:"Global Damage Multiplier", type:2, default:1},
+	{name:"spawnOpposingThug", desc:"Bots Enabled", type:1, default:true},
+	{name:"timeBeforeNextGame", desc:"Time Between Games [Seconds]", type:2, default:45}
+];
+
+router.post('/getCustomServerHTML', async function (req, res) {
+	var customServerHTML = "";
+	var standardCustomSettingsHTML = "";
+	var advancedCustomSettingsHTML = "";
+
+	for (var s in customSettingsList){
+		var addHTML = "";
+		addHTML += "<div class='customServerSetting'>";
+		switch(customSettingsList[s].type){
+			case 1:
+				var defaultCheckBoxValue = customSettingsList[s].default ? 'checked' : '';
+				addHTML += '<input type="checkbox" class="settingsCheckbox customServerSettingInput" id="' + customSettingsList[s].name + '" name="' + customSettingsList[s].name + '" value="' + customSettingsList[s].name + '" ' + defaultCheckBoxValue + '>';
+				addHTML += '<label for="' + customSettingsList[s].name + '">' + customSettingsList[s].desc + '</label>';
+				break;
+			case 2:
+				addHTML += '<div class="settingsLabel" style="display: block;padding-top: 5px;">' + customSettingsList[s].desc + '</div>';
+				var nameOfClass = "settingsTextInput";
+				var maxLength = 2;
+				if (customSettingsList[s].name == "serverName"){
+					nameOfClass = "settingsTextInputLarge";
+					maxLength = 20;
+				}
+				addHTML += '<input maxlength="' + maxLength + '" placeholder="' + customSettingsList[s].default + '" id="' + customSettingsList[s].name + '" autocomplete="off" class="' + nameOfClass + ' customServerSettingInput">';
+				break;
+			default:
+				break;
+		}
+
+		addHTML += "</div>";		
+		if (customSettingsList[s].standard){
+			standardCustomSettingsHTML += addHTML;
+		}
+		else {
+			advancedCustomSettingsHTML += addHTML;
+		}
+	}
+
+	customServerHTML += "<div id='standardCustomSettings'>";
+	customServerHTML += standardCustomSettingsHTML;
+	customServerHTML += "</div>";
+	customServerHTML += "<div id='advancedSettingsLink'><a href='#' onclick='showAdvancedCustomSettings()'>Show Advanced Custom Settings</a></div>";
+	customServerHTML += "<div id='advancedCustomSettings'>";
+	customServerHTML += advancedCustomSettingsHTML;
+	customServerHTML += "</div>";
+
+	customServerHTML+= '<div id="customServerButtons">'
+	customServerHTML+= '<button id="createCustomServerButton" class="RWButton" onclick="createServerClick()">CREATE SERVER</button>'
+	customServerHTML+= '<button id="createCustomServerCancelButton" class="RWButton" onclick="createServerCancelClick()">Cancel</button>'
+	customServerHTML+= '</div>'
+
+	res.send({success:true, HTML:customServerHTML, data:customSettingsList});
+});
+
+router.post('/sendUpdateRequestToGameServer', async function (req, res) {
+	log("HIT SEND REQUEST TO GAME SERVER ENDPOINT:");
+
+	req.body.settings = processCustomGameServerUpdateRequest(req.body.settings);
+
+
+	dataAccessFunctions.getEmptyServersFromDB(function(emptyServers){
+		if (!emptyServers[0]){
+			var err = "No empty servers to customize currently. Autoscaling should be creating more. Please wait a few minutes and try again.";
+			logg(err);
+			res.send({msg:err, success:false});
+			return;
+		}
+		var selectedServerUrl = emptyServers[0].url;
+	
+		var options = {
+			method: 'POST',
+			uri: "http://" + selectedServerUrl + "/updateGameServer",
+			//uri: 'http://' + party[p].serverUrl + '/sendPlayerToGameServer',
+			form: req.body
+		};
+		 
+		logg("Attempting to update server [" + selectedServerUrl + "]...");
+		request(options)
+			.then(function (parsedBody) {
+				// POST succeeded...
+				logg("SUCCESSFUL update of game server!");
+				res.send({msg:"Success!!", server:selectedServerUrl, success:true});
+			})
+			.catch(function (err) {
+				// POST failed...
+				logg("ERROR updating game server");
+				logObj(err);
+				res.send({msg:err, server:false, success:false});
+		});	
+	});
+});
+
+function processCustomGameServerUpdateRequest(settings){
+	for (var s in settings){
+		if (settings[s].name == "serverName"){
+			settings[s].value = settings[s].value.substring(0,20);
+			if (!settings[s].value.match(/^[a-z 0-9]+$/i)){
+				settings[s].value = "Custom";
+			}
+		}
+		else if (settings[s].name == "gameMinutesLength"){
+			if (isNaN(settings[s].value) || settings[s].value > 99 || settings[s].value < 0){
+				settings[s].value = 5;
+				continue;
+			} 
+			settings[s].value = Math.round(settings[s].value);
+		}
+		else if (settings[s].name == "scoreToWin"){
+			if (isNaN(settings[s].value) || settings[s].value > 99 || settings[s].value < 0){
+				settings[s].value = 0;
+				continue;
+			} 
+			settings[s].value = Math.round(settings[s].value);
+		}
+		else if (settings[s].name == "map"){
+			switch(settings[s].value){
+				case "1":
+					settings[s].value = "'longest'";
+					break;
+				case "2":
+					settings[s].value = "'thepit'";
+					break;
+				case "3":
+					settings[s].value = "'crik'";
+					break;
+				default:								
+					settings[s].value = "'longest'";
+				break;
+			}
+		}
+		else if (settings[s].name == "gametype"){
+			switch(settings[s].value){
+				case "1":
+					settings[s].value = "'ctf'";
+					break;
+				case "2":
+					settings[s].value = "'slayer'";
+					break;
+				default:								
+					settings[s].value = "'ctf'";
+				break;
+			}
+		}
+		else if (settings[s].name == "maxPlayers"){
+			if (isNaN(settings[s].value) || settings[s].value > 10 || settings[s].value < 0){
+				settings[s].value = 14;
+				continue;
+			} 
+			settings[s].value = parseFloat(settings[s].value) * 2;
+			settings[s].value = Math.round(settings[s].value);
+		}
+		else if (settings[s].name == "startingWeapon"){
+			if (isNaN(settings[s].value) || settings[s].value > 5 || settings[s].value < 1){
+				settings[s].value = 1;
+				continue;
+			} 
+			settings[s].value = Math.round(settings[s].value);
+		}
+		else if (settings[s].name == "maxEnergyMultiplier"){
+			if (isNaN(settings[s].value) || settings[s].value < 0){
+				settings[s].value = 1;
+				continue;
+			} 
+			else if (settings[s].value > 9){
+				settings[s].value = 9;
+			}
+		}
+		else if (settings[s].name == "boostAmount"){
+			if (isNaN(settings[s].value) || settings[s].value > 99){
+				settings[s].value = 19;
+				continue;
+			} 
+		}
+		else if (settings[s].name == "playerMaxSpeed"){
+			if (isNaN(settings[s].value) || settings[s].value > 99){
+				settings[s].value = 5;
+				continue;
+			} 
+		}
+		else if (settings[s].name == "healRate"){
+			if (isNaN(settings[s].value) || settings[s].value > 99){
+				settings[s].value = 10;
+				continue;
+			} 
+		}
+		else if (settings[s].name == "bagDrag"){
+			if (isNaN(settings[s].value) || settings[s].value > 99){
+				settings[s].value = 0.85;
+				continue;
+			} 
+		}
+		else if (settings[s].name == "damageScale"){
+			if (isNaN(settings[s].value) || settings[s].value > 99){
+				settings[s].value = 1;
+				continue;
+			} 
+		}
+		else if (settings[s].name == "timeBeforeNextGame"){
+			if (isNaN(settings[s].value) || settings[s].value > 99){
+				settings[s].value = 45;
+				continue;
+			} 
+		}
+		else if (settings[s].name == "voteGametype" || settings[s].name == "voteMap" || settings[s].name == "spawnOpposingThug" || settings[s].name == "cloakingEnabled"){
+			if (!settings[s].value === 'true'){
+				settings[s].value = 'false';
+			}
+		}
+	}
+	return settings;
+
+}
 
 module.exports = router;
