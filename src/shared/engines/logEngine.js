@@ -44,8 +44,8 @@ var reinitStream = function(){
 
 
 
-	logg("\r\n");
-	logg("----------STREAMWRITER INITIALIZED WITH IP: " + myIP + "---------FOLDER: " + reinitYear + "_" + reinitMonth + "_" + reinitDate + "------------\r\n");		
+	// logg("\r\n");
+	// logg("----------STREAMWRITER INITIALIZED WITH IP: " + myIP + "---------FOLDER: " + reinitYear + "_" + reinitMonth + "_" + reinitDate + "------------\r\n");		
 }
 
 
@@ -73,9 +73,9 @@ global.logg = function(msg) {
 	
 	var logMsgText = hours + ':' + minutes + '.' + seconds + '> ' + msg;
 	console.log(logMsgText);	
-	if (s3stream){
-		s3stream.write(logMsgText+'\r\n');
-	}
+	// if (s3stream){
+	// 	s3stream.write(logMsgText+'\r\n');
+	// }
 }
 
 module.exports.reinitStream = reinitStream;

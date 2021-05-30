@@ -399,74 +399,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				var ay1 = dy1/dist1;
 				if (dist1 < 40){				
 					if (self.boosting > 0){  //melee boost collision bash
-						//Player.list[i].getSmashed(self);
-						Player.list[i].pushSpeed = 20;
-						Player.list[i].pushDir = self.walkingDir;
-						if (self.team != Player.list[i].team){
-							Player.list[i].health -= boostDamage;
-						}
-						self.pushSpeed = 20;
-						self.boosting = 0;
-						updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
-						updateEffectList.push({type:4,playerId:self.id});
-						
-						
-						//Assassinations
-						if (self.walkingDir == 1){
-							self.pushDir = 5;
-							if ((Player.list[i].shootingDir == 1 || Player.list[i].shootingDir == 8 || Player.list[i].shootingDir == 2) && self.team != Player.list[i].team){
-								Player.list[i].health = 0;
-							}
-						}
-						else if (self.walkingDir == 2){
-							self.pushDir = 6;
-							if ((Player.list[i].shootingDir == 1 || Player.list[i].shootingDir == 2 || Player.list[i].shootingDir == 3) && self.team != Player.list[i].team){
-								Player.list[i].health = 0;
-							}
-						}
-						else if (self.walkingDir == 3){
-							self.pushDir = 7;
-							if ((Player.list[i].shootingDir == 2 || Player.list[i].shootingDir == 3 || Player.list[i].shootingDir == 4) && self.team != Player.list[i].team){
-								Player.list[i].health = 0;
-							}
-						}
-						else if (self.walkingDir == 4){
-							self.pushDir = 8;
-							if ((Player.list[i].shootingDir == 3 || Player.list[i].shootingDir == 4 || Player.list[i].shootingDir == 5) && self.team != Player.list[i].team){
-								Player.list[i].health = 0;
-							}
-						}
-						else if (self.walkingDir == 5){
-							self.pushDir = 1;
-							if ((Player.list[i].shootingDir == 4 || Player.list[i].shootingDir == 5 || Player.list[i].shootingDir == 6) && self.team != Player.list[i].team){
-								Player.list[i].health = 0;
-							}
-						}
-						else if (self.walkingDir == 6){
-							self.pushDir = 2;
-							if ((Player.list[i].shootingDir == 5 || Player.list[i].shootingDir == 6 || Player.list[i].shootingDir == 7) && self.team != Player.list[i].team){
-								Player.list[i].health = 0;
-							}
-						}
-						else if (self.walkingDir == 7){
-							self.pushDir = 3;
-							if ((Player.list[i].shootingDir == 6 || Player.list[i].shootingDir == 7 || Player.list[i].shootingDir == 8) && self.team != Player.list[i].team){
-								Player.list[i].health = 0;
-							}
-						}
-						else if (self.walkingDir == 8){
-							self.pushDir = 4;
-							if ((Player.list[i].shootingDir == 7 || Player.list[i].shootingDir == 8 || Player.list[i].shootingDir == 1) && self.team != Player.list[i].team){
-								Player.list[i].health = 0;
-							}
-						}
-						updatePlayerList.push({id:Player.list[i].id,property:"health",value:Player.list[i].health})
-						Player.list[i].healDelay = healDelayTime;
-						entityHelpers.sprayBloodOntoTarget(self.walkingDir, Player.list[i].x, Player.list[i].y, Player.list[i].id);
-						if (Player.list[i].health <= 0){
-							Player.list[i].kill(self);
-						}
-
+						Player.list[i].getSlammed(self.id, self.walkingDir);
 					}
 					
 					self.x += ax1 / (dist1 / 70); //Higher number is greater push
@@ -652,21 +585,33 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 			//Check Player collision with bag - RETURN
 			if (self.team == 1 && bagRed.captured == false && self.health > 0 && (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY)){
+				console.log("Checking for getting slammed " + self.id);
+
 				if (self.x > bagRed.x - 67 && self.x < bagRed.x + 67 && self.y > bagRed.y - 50 && self.y < bagRed.y + 50){			
-					playerEvent(self.id, "return");
-					bagRed.x = bagRed.homeX;
-					bagRed.y = bagRed.homeY;
-					bagRed.speed = 0;
-					updateMisc.bagRed = bagRed;		
+					if (bagRed.speed > 0){
+						self.getSlammed(bagRed.playerThrowing, bagRed.direction, 40, true);
+					}
+					else {
+						playerEvent(self.id, "return");
+						bagRed.x = bagRed.homeX;
+						bagRed.y = bagRed.homeY;
+						bagRed.speed = 0;
+						updateMisc.bagRed = bagRed;		
+					}
 				}
 			}
 			if (self.team == 2 && bagBlue.captured == false && self.health > 0 && (bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY)){
 				if (self.x > bagBlue.x - 67 && self.x < bagBlue.x + 67 && self.y > bagBlue.y - 50 && self.y < bagBlue.y + 50){												
-					playerEvent(self.id, "return");
-					bagBlue.x = bagBlue.homeX;
-					bagBlue.y = bagBlue.homeY;
-					bagBlue.speed = 0;
-					updateMisc.bagBlue = bagBlue;
+					if (bagBlue.speed > 0){
+						self.getSlammed(bagBlue.playerThrowing, bagBlue.direction, 40, true);
+					}
+					else {
+						playerEvent(self.id, "return");
+						bagBlue.x = bagBlue.homeX;
+						bagBlue.y = bagBlue.homeY;
+						bagBlue.speed = 0;
+						updateMisc.bagBlue = bagBlue;
+					}
 				}
 			}
 
@@ -766,6 +711,85 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		
 	}//End engine()
+
+	self.getSlammed = function(playerId, direction = player.walkingDir, pushSpeed = 20, bagSlam = false){
+		//self.getSmashed(player);
+		var player = Player.list[playerId];
+
+		if (!player)
+			return; 
+
+
+		self.pushSpeed = pushSpeed;
+		self.pushDir = direction;
+		if (player.team != self.team){
+			self.health -= boostDamage;
+		}
+		//player.pushSpeed = pushSpeed;
+		player.boosting = 0;
+		updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
+		updateEffectList.push({type:4,playerId:player.id});
+		
+		
+
+		//Assassinations
+		if (player.walkingDir == 1){
+			player.pushDir = 5;
+			if ((self.shootingDir == 1 || self.shootingDir == 8 || self.shootingDir == 2) && player.team != self.team && bagSlam == false){
+				self.health = 0;
+			}
+		}
+		else if (player.walkingDir == 2){
+			player.pushDir = 6;
+			if ((self.shootingDir == 1 || self.shootingDir == 2 || self.shootingDir == 3) && player.team != self.team && bagSlam == false){
+				self.health = 0;
+			}
+		}
+		else if (player.walkingDir == 3){
+			player.pushDir = 7;
+			if ((self.shootingDir == 2 || self.shootingDir == 3 || self.shootingDir == 4) && player.team != self.team && bagSlam == false){
+				self.health = 0;
+			}
+		}
+		else if (player.walkingDir == 4){
+			player.pushDir = 8;
+			if ((self.shootingDir == 3 || self.shootingDir == 4 || self.shootingDir == 5) && player.team != self.team && bagSlam == false){
+				self.health = 0;
+			}
+		}
+		else if (player.walkingDir == 5){
+			player.pushDir = 1;
+			if ((self.shootingDir == 4 || self.shootingDir == 5 || self.shootingDir == 6) && player.team != self.team && bagSlam == false){
+				self.health = 0;
+			}
+		}
+		else if (player.walkingDir == 6){
+			player.pushDir = 2;
+			if ((self.shootingDir == 5 || self.shootingDir == 6 || self.shootingDir == 7) && player.team != self.team && bagSlam == false){
+				self.health = 0;
+			}
+		}
+		else if (player.walkingDir == 7){
+			player.pushDir = 3;
+			if ((self.shootingDir == 6 || self.shootingDir == 7 || self.shootingDir == 8) && player.team != self.team && bagSlam == false){
+				self.health = 0;
+			}
+		}
+		else if (player.walkingDir == 8){
+			player.pushDir = 4;
+			if ((self.shootingDir == 7 || self.shootingDir == 8 || self.shootingDir == 1) && player.team != self.team && bagSlam == false){
+				self.health = 0;
+			}
+		}
+
+
+		updatePlayerList.push({id:self.id,property:"health",value:self.health})
+		self.healDelay = healDelayTime;
+		entityHelpers.sprayBloodOntoTarget(direction, self.x, self.y, self.id);
+		if (self.health <= 0){
+			self.kill(self);
+		}		
+	}
 
 	//Triggered upon Shift press or unpress
 	self.processChargingLaser = function(){	
@@ -1468,7 +1492,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						else if (player.holdingBag == true && player.walkingDir != 0){
 							player.holdingBag = false;
 							if (player.previousWeapon){
-								player.weapon = player.previousWeapon;
+								player.weapon = player.previousWeapon == 5 ? 1 : player.previousWeapon;
 								updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
 							}
 							if (player.energy > 0){
@@ -1484,6 +1508,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							if (player.team == 1){
 								bagBlue.captured = false;
 								updateMisc.bagBlue = bagBlue;
+								console.log("Setting player throwing to " + player.id);
 								bagBlue.playerThrowing = player.id;
 								bagBlue.speed = 25;
 								bagBlue.direction = player.walkingDir;
@@ -1491,6 +1516,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							else if (player.team == 2){
 								bagRed.captured = false;
 								updateMisc.bagRed = bagRed;
+								console.log("Setting player throwing to " + player.id);
 								bagRed.playerThrowing = player.id;
 								bagRed.speed = 25;
 								bagRed.direction = player.walkingDir;

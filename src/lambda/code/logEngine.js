@@ -24,8 +24,8 @@ var reinitStream = function(){
 	  max_file_size: 500000000,
 	  rotate_every: 86405000
 	});
-	s3stream.write("\r\n");
-	logg("----------STREAMWRITER INITIALIZED---------FOLDER: " + reinitYear + "_" + reinitMonth + "_" + reinitDate + "------------\r\n");		
+	// s3stream.write("\r\n");
+	// logg("----------STREAMWRITER INITIALIZED---------FOLDER: " + reinitYear + "_" + reinitMonth + "_" + reinitDate + "------------\r\n");		
 }
 
 
@@ -58,9 +58,9 @@ global.logg = function(msg) {
 		
 		var logMsgText = hours + ':' + minutes + '.' + seconds + '> ' + msg;
 		console.log(logMsgText);	
-		if (s3stream){
-			s3stream.write(logMsgText+'\r\n');
-		}
+		// if (s3stream){
+		// 	s3stream.write(logMsgText+'\r\n');
+		// }
 	}
 	catch(e){
 		console.log("!!! ERROR LOGGING !!! May be a problem accessing S3");

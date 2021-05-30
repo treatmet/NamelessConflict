@@ -428,10 +428,10 @@ function checkForGameOver(){
 		if ((secondsLeft <= 0 && minutesLeft <= 0) && (gameSecondsLength > 0 || gameMinutesLength > 0) && whiteScore != blackScore){ 
 			if (gametype == "ctf"){
 				if (whiteScore == blackScore - 1 && (bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY)){
-					//Chance for last capture
+					//Chance for last capture, don't end game
 				}
 				else if (blackScore == whiteScore - 1 && (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY)){
-					//Chance for last capture
+					//Chance for last capture, dont end game
 				}
 				else {
 					endGame(); //End game on time ctf
