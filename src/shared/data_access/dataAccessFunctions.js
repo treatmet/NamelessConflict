@@ -1007,8 +1007,6 @@ var dbGameServerRemoveAndAdd = function(){
 
 //!!!This function references variables in the gameServer scope (whiteScore, etc)
 var dbGameServerUpdate = function() {
-	console.log(port + "Now im in to dbGameServerUpdate customServer:" + customServer);
-
 	if ((!myUrl || myUrl == "") || (!isLocal && myQueryString.length <= 0)){
 		logg("ERROR - NO SERVER URL - NOT READY TO SYNC WITH DB");
 		return;

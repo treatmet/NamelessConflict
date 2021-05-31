@@ -78,6 +78,8 @@ var initializePickups = function(map){
 		pickup.createPickup(Math.random(), 36, 21, 2, DPClipSize*2, 25); //DP		
 		pickup.createPickup(Math.random(), 26.5, 13.5, 4, SGClipSize*2, 40); //SG
 	}	
+	else if (map == "horde"){
+	}	
 	else if (map == "close"){
 		bagRed.homeX = 5*75;
 		bagRed.homeY = 17*75;
@@ -311,7 +313,32 @@ var initializeBlocks = function(map){
 		block.createBlock(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
 		block.createBlock(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
 		block.createBlock(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
-	}		
+	}	
+	else if (map == "horde"){
+		mapWidth = 30*75;
+		mapHeight = 30*75;
+		
+		//Spawn areas
+		spawnXminBlack = mapWidth/2 - 500;
+		spawnXmaxBlack = mapWidth/2 + 500;
+		spawnYminBlack = mapHeight/2 - 500;
+		spawnYmaxBlack = mapHeight/2 + 500;
+		spawnXminWhite = mapWidth/2 - 500;
+		spawnXmaxWhite = mapWidth/2 + 500;
+		spawnYminWhite = mapHeight/2 - 500;
+		spawnYmaxWhite = mapHeight/2 + 500;		
+
+		var hordeHoleWidth = 4;
+		var hordeHoleXDistFromEdge = 10;
+		block.createBlock(-1/2, mapHeight/75, (mapWidth/75) - hordeHoleXDistFromEdge + 1/2, 1/2, "normal"); //Bottom Left
+		block.createBlock(-1/2, -1/2, 1/2, (mapHeight/75) - hordeHoleXDistFromEdge + 1/2, "normal"); //Left Top
+		block.createBlock(mapWidth/75, -1/2, 1/2, hordeHoleXDistFromEdge + 1/2, "normal"); //Right Top
+		block.createBlock(-1/2, -1/2, hordeHoleXDistFromEdge + 1/2, 1/2, "normal");	//Top Left
+		block.createBlock((mapWidth/75) - hordeHoleXDistFromEdge + hordeHoleWidth, mapHeight/75, hordeHoleXDistFromEdge - hordeHoleWidth, 1/2, "normal"); //Bottom Right
+		block.createBlock(-1/2, (mapHeight/75) - hordeHoleXDistFromEdge + hordeHoleWidth, 1/2, hordeHoleXDistFromEdge - hordeHoleWidth, "normal"); //Left Bottom
+		block.createBlock(mapWidth/75, hordeHoleXDistFromEdge + hordeHoleWidth, 1/2, (mapHeight/75) - (hordeHoleXDistFromEdge + hordeHoleWidth) + 1/2, "normal"); //Right Bottom
+		block.createBlock(hordeHoleXDistFromEdge + hordeHoleWidth, -1/2, (mapWidth/75) - (hordeHoleXDistFromEdge + hordeHoleWidth) + 1/2, 1/2, "normal");	//Top Right
+	}	
 	else if (map == "close"){
 		mapWidth = 8*75;
 		mapHeight = 8*75;

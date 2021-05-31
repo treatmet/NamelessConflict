@@ -351,19 +351,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.lastReturnCooldown--;
 		
 		/////MOVEMENT movement//////////
-
+		var posUpdated = false;
 		self.move();
-
-
-
 		//Actually move player based on speed
 		if (self.speedY != 0){
+			posUpdated = true;
 			self.y += self.speedY;
-			updatePlayerList.push({id:self.id,property:"y",value:self.y});
 		}
 		if (self.speedX != 0){
+			posUpdated = true;
 			self.x += self.speedX;
-			updatePlayerList.push({id:self.id,property:"x",value:self.x});
 		}	
 
 		//default to shootingdir = walkingdir unless otherwise specified!
@@ -374,11 +371,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		} 
 
-		//Keep player from walls Edge detection. Walls.
-		if (self.x > mapWidth - 5){self.x = mapWidth - 5; updatePlayerList.push({id:self.id,property:"x",value:self.x});} //right
-		if (self.y > mapHeight - 5){self.y = mapHeight - 5; updatePlayerList.push({id:self.id,property:"y",value:self.y});} // bottom
-		if (self.x < 5){self.x = 5; updatePlayerList.push({id:self.id,property:"x",value:self.x});} //left
-		if (self.y < 5){self.y = 5; updatePlayerList.push({id:self.id,property:"y",value:self.y});} //top
 		
 		if (self.stagger > 0){self.stagger--;}
 		//End MOVEMENT
@@ -391,7 +383,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		//Check collision with players
 		for (var i in Player.list){
 			if (Player.list[i].team != 0 && Player.list[i].id != self.id  && Player.list[i].health > 0 && self.x + self.width > Player.list[i].x && self.x < Player.list[i].x + Player.list[i].width && self.y + self.height > Player.list[i].y && self.y < Player.list[i].y + Player.list[i].height){								
-				if (self.x == Player.list[i].x && self.y == Player.list[i].y){self.x -= 5; updatePlayerList.push({id:self.id,property:"x",value:self.x});} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+				if (self.x == Player.list[i].x && self.y == Player.list[i].y){self.x -= 5; posUpdated = true;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
 				var dx1 = self.x - Player.list[i].x;
 				var dy1 = self.y - Player.list[i].y;
 				var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
@@ -400,12 +392,11 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				if (dist1 < 40){				
 					if (self.boosting > 0){  //melee boost collision bash
 						Player.list[i].getSlammed(self.id, self.walkingDir);
-					}
-					
+					}					
 					self.x += ax1 / (dist1 / 70); //Higher number is greater push
-					updatePlayerList.push({id:self.id,property:"x",value:self.x})
+					posUpdated = true
 					self.y += ay1 / (dist1 / 70);
-					updatePlayerList.push({id:self.id,property:"y",value:self.y});
+					posUpdated = true;
 				}
 			}
 		}
@@ -440,9 +431,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					}
 				
 					self.x += ax1 / (dist1 / 70); //Higher number is greater push
-					updatePlayerList.push({id:self.id,property:"x",value:self.x})
 					self.y += ay1 / (dist1 / 70);
-					updatePlayerList.push({id:self.id,property:"y",value:self.y});
 				}				
 			}
 		}
@@ -482,65 +471,87 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - self.x);			
 					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){	
 						self.y = blockList[i].y - (1 + extendTopOfBlock);
-						updatePlayerList.push({id:self.id,property:"y",value:self.y});
+						if (self.y < 0)
+							self.y = 0;
+						posUpdated = true;
 					}
 					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
 						self.y = blockList[i].y + blockList[i].height + (1 + extendBottomOfBlock);
-						updatePlayerList.push({id:self.id,property:"y",value:self.y});
+						if (self.y > mapHeight)
+							self.y = mapHeight;
+						posUpdated = true;
 					}
 					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
 						self.x = blockList[i].x - (1 + extendLeftOfBlock);
-						updatePlayerList.push({id:self.id,property:"x",value:self.x});
+						if (self.x < 0)
+							self.x = 0;
+						posUpdated = true;
 					}
 					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
 						self.x = blockList[i].x + blockList[i].width + (1 + extendRightOfBlock);
-						updatePlayerList.push({id:self.id,property:"x",value:self.x});
+						if (self.x > mapWidth)
+							self.x = mapWidth;
+						posUpdated = true;
 					}
 				}
 				else if (blockList[i].type == "pushUp"){
 					self.y -= pushStrength;
 					if (self.y < blockList[i].y){self.y = blockList[i].y;}
-					updatePlayerList.push({id:self.id,property:"y",value:self.y});
+					posUpdated = true;
 				}
 				else if (blockList[i].type == "pushRight"){
 					self.x += pushStrength;
 					if (self.x > blockList[i].x + blockList[i].width){self.x = blockList[i].x + blockList[i].width;}
-					updatePlayerList.push({id:self.id,property:"x",value:self.x});
+					posUpdated = true;
 				}
 				else if (blockList[i].type == "pushDown"){
 					self.y += pushStrength;
 					if (self.y > blockList[i].y + blockList[i].height){self.y = blockList[i].y + blockList[i].height;}
-					updatePlayerList.push({id:self.id,property:"y",value:self.y});
+					posUpdated = true;
 				}
 				else if (blockList[i].type == "pushLeft"){
 					self.x -= pushStrength;
 					if (self.x < blockList[i].x){self.x = blockList[i].x;}
-					updatePlayerList.push({id:self.id,property:"x",value:self.x});
+					posUpdated = true;
 				}
 				else if (blockList[i].type == "warp1"){
 					self.x = warp1X;
-					updatePlayerList.push({id:self.id,property:"x",value:self.x});
+					posUpdated = true;
 					self.y = warp1Y;
-					updatePlayerList.push({id:self.id,property:"y",value:self.y});
+					posUpdated = true;
 					SOCKET_LIST[self.id].emit('sfx', "sfxWarp");
 				}
 				else if (blockList[i].type == "warp2"){
 					self.x = warp2X;
-					updatePlayerList.push({id:self.id,property:"x",value:self.x});
+					posUpdated = true;
 					self.y = warp2Y;
-					updatePlayerList.push({id:self.id,property:"y",value:self.y});
+					posUpdated = true;
 					SOCKET_LIST[self.id].emit('sfx', "sfxWarp");
 				}
 
 			}// End check if player is overlapping block
 		}//End blockList loop		
 		
+		//Keep player from walls Edge detection. Walls.
+		if (self.x > mapWidth - 5){self.x = mapWidth - 5; posUpdated = true;} //right
+		if (self.y > mapHeight - 5){self.y = mapHeight - 5; posUpdated = true;} // bottom
+		if (self.x < 5){self.x = 5; posUpdated = true;} //left
+		if (self.y < 5){self.y = 5; posUpdated = true;} //top
+
+		if (posUpdated){
+			self.y = Math.round(self.y * 10)/10;
+			self.x = Math.round(self.x * 10)/10;
+			updatePlayerList.push({id:self.id,property:"y",value:self.y});
+			updatePlayerList.push({id:self.id,property:"x",value:self.x});
+		}
+
+
 		//Pickup updates
 		pickup.checkForPickup(self);
 		
 		//Check Player collision with bag - STEAL
 		if (gametype == "ctf"){
-			if (self.team == 1 && bagBlue.captured == false && self.health > 0 && bagBlue.playerThrowing != self.id){
+			if (self.team == 1 && bagBlue.captured == false && self.health > 0 && !(bagBlue.playerThrowing == self.id && bagBlue.speed > 20)){
 				if (self.x > bagBlue.x - 67 && self.x < bagBlue.x + 67 && self.y > bagBlue.y - 50 && self.y < bagBlue.y + 50){												
 					bagBlue.captured = true;
 					bagBlue.speed = 0;
@@ -561,7 +572,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					}
 				}
 			}
-			else if (self.team == 2 && bagRed.captured == false && self.health > 0 && bagRed.playerThrowing != self.id){
+			else if (self.team == 2 && bagRed.captured == false && self.health > 0 && !(bagRed.playerThrowing == self.id && bagRed.speed > 20)){
 				if (self.x > bagRed.x - 67 && self.x < bagRed.x + 67 && self.y > bagRed.y - 50 && self.y < bagRed.y + 50){												
 					bagRed.captured = true;
 					bagRed.speed = 0;
@@ -585,33 +596,32 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 			//Check Player collision with bag - RETURN
 			if (self.team == 1 && bagRed.captured == false && self.health > 0 && (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY)){
-				console.log("Checking for getting slammed " + self.id);
-
 				if (self.x > bagRed.x - 67 && self.x < bagRed.x + 67 && self.y > bagRed.y - 50 && self.y < bagRed.y + 50){			
 					if (bagRed.speed > 0){
-						self.getSlammed(bagRed.playerThrowing, bagRed.direction, 40, true);
+						self.getSlammed(bagRed.playerThrowing, bagRed.direction, bagRed.speed*2, true);
 					}
 					else {
 						playerEvent(self.id, "return");
 						bagRed.x = bagRed.homeX;
 						bagRed.y = bagRed.homeY;
-						bagRed.speed = 0;
-						updateMisc.bagRed = bagRed;		
 					}
+					bagRed.speed = 0;
+					updateMisc.bagRed = bagRed;		
 				}
 			}
 			if (self.team == 2 && bagBlue.captured == false && self.health > 0 && (bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY)){
 				if (self.x > bagBlue.x - 67 && self.x < bagBlue.x + 67 && self.y > bagBlue.y - 50 && self.y < bagBlue.y + 50){												
+					console.log("SEPPPPP " + bagBlue.speed);
 					if (bagBlue.speed > 0){
-						self.getSlammed(bagBlue.playerThrowing, bagBlue.direction, 40, true);
+						self.getSlammed(bagBlue.playerThrowing, bagBlue.direction, bagBlue.speed*2, true);
 					}
 					else {
 						playerEvent(self.id, "return");
 						bagBlue.x = bagBlue.homeX;
 						bagBlue.y = bagBlue.homeY;
-						bagBlue.speed = 0;
-						updateMisc.bagBlue = bagBlue;
 					}
+					bagBlue.speed = 0;
+					updateMisc.bagBlue = bagBlue;
 				}
 			}
 
@@ -712,17 +722,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 	}//End engine()
 
+	//getSmashed
 	self.getSlammed = function(playerId, direction = player.walkingDir, pushSpeed = 20, bagSlam = false){
 		//self.getSmashed(player);
-		var player = Player.list[playerId];
-
-		if (!player)
+		var player = getPlayerById(playerId);
+		if (!player){
 			return; 
-
+		}
 
 		self.pushSpeed = pushSpeed;
 		self.pushDir = direction;
-		if (player.team != self.team){
+		if (player.team != self.team && !bagSlam){
 			self.health -= boostDamage;
 		}
 		//player.pushSpeed = pushSpeed;
@@ -730,8 +740,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
 		updateEffectList.push({type:4,playerId:player.id});
 		
-		
-
+	
 		//Assassinations
 		if (player.walkingDir == 1){
 			player.pushDir = 5;
@@ -787,7 +796,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.healDelay = healDelayTime;
 		entityHelpers.sprayBloodOntoTarget(direction, self.x, self.y, self.id);
 		if (self.health <= 0){
-			self.kill(self);
+			self.kill(player);
 		}		
 	}
 
@@ -1417,6 +1426,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 
 			socket.on('keyPress', function(data){
 				player.afk = AfkFramesAllowed;
+				if (!Player.list[player.id])
+					return;
+
 				if (player.health > 0 && player.team != 0){
 					var discharge = false;
 					if(data.inputId === 87){player.pressingW = data.state;} //W
@@ -1787,8 +1799,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 
 //Server commands
 function evalServer(socket, data){
+
 	//socket = socketBak;
-	if (customServer && pregame && data == "start"){
+	if ((customServer || pregame) && data == "start"){
 		gameEngine.restartGame();
 	}
 
@@ -1957,6 +1970,11 @@ function evalServer(socket, data){
 	}
 	else if (data == "ctft"){
 		gametype = "ctf";
+		gameEngine.restartGame();
+	}
+	else if (data == "hordet"){
+		gametype = "horde";
+		map = "horde";
 		gameEngine.restartGame();
 	}
 	else if (data == "timet" || data == "timelimit" || data == "notime"){
@@ -2141,13 +2159,16 @@ function evalServer(socket, data){
 		secondsLeft = 3;
 	}				
 	else if (data == "team" || data == "teams" || data == "change" || data == "switch" || data == "changeTeams" || data == "changeTeam"){
-		gameEngine.changeTeams(socket.id);
-		// if (customServer || !isGameInFullSwing()){
-		// 	gameEngine.changeTeams(socket.id);
-		// }
-		// else {
-		// 	socket.emit('addToChat', "Ranked game is in full swing");
-		// }
+		var teamsOffBalance = false;
+		if ((gameEngine.getMoreTeam1Players() > 1 && getPlayerById(socket.id).team == 1) || (gameEngine.getMoreTeam1Players() < -1 && getPlayerById(socket.id).team == 2))
+			teamsOffBalance = true;
+
+		if (customServer || !isGameInFullSwing() || teamsOffBalance){
+			gameEngine.changeTeams(socket.id);
+		}
+		else {
+			socket.emit('addToChat', "Ranked game is in full swing. No changing teams.");
+		}
 	}
 	else if (data == "capturet" || data == "scoret"){
 		if (getPlayerById(socket.id).team == 1){
@@ -2158,9 +2179,11 @@ function evalServer(socket, data){
 		}
 	}
 	else if (data == "kill" || data == "die"){
-		getPlayerById(socket.id).health = 0
-		updatePlayerList.push({id:getPlayerById(socket.id).id,property:"health",value:getPlayerById(socket.id).health})
-		getPlayerById(socket.id).kill({id:0, shootingDir:1});
+		if (getPlayerById(socket.id).health > 0){
+			getPlayerById(socket.id).health = 0
+			updatePlayerList.push({id:getPlayerById(socket.id).id,property:"health",value:getPlayerById(socket.id).health})
+			getPlayerById(socket.id).kill({id:0, shootingDir:1});
+		}
 	}
 	else if (data == "end"){
 		minutesLeft = 0;
@@ -2245,9 +2268,9 @@ function evalServer(socket, data){
 		socket.emit('addToChat', 'INITIATE HAX');
 	}
 
-	else {
+	else if (data[0] == "%" && data != "%timer") {
 		try {
-			var res = eval(data);
+			var res = eval(data.substring(1));
 		}
 		catch(e) {
 			socket.emit('addToChat', 'Invalid Command.');
@@ -2257,10 +2280,16 @@ function evalServer(socket, data){
 			socket.emit('evalAnswer', res);
 		}
 	}
+	else {
+		socket.emit('addToChat', 'Invalid Command.');
+	}
 	
 }
 
 function reload(playerId){
+	if (!Player.list[playerId])
+		return;
+
 	if ((Player.list[playerId].weapon == 3 && Player.list[playerId].MGClip <= 0 && Player.list[playerId].MGAmmo <= 0)){			
 			gunCycle(Player.list[playerId], false);
 			updatePlayerList.push({id:playerId,property:"weapon",value:Player.list[playerId].weapon});		

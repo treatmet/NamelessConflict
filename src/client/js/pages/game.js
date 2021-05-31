@@ -801,6 +801,14 @@ sfxMenuMove.volume(.5);
 var sfxWhoosh = new Howl({src: ['/src/client/sfx/whoosh.mp3']});
 sfxWhoosh.volume(.25);
 var sfxPunch = new Howl({src: ['/src/client/sfx/punch.mp3']});
+var sfxWarning = new Howl({src: ['/src/client/sfx/warning.mp3']});
+sfxWarning.on('fade', function(){
+	sfxWarning.stop();
+});
+var sfxWarning2 = new Howl({src: ['/src/client/sfx/warning2.mp3']});
+sfxWarning2.on('fade', function(){
+	sfxWarning2.stop();
+});
 var sfxCharge = new Howl({src: ['/src/client/sfx/recharge-high-pitch.mp3']});
 sfxCharge.volume(.3);
 sfxCharge.on('fade', function(){
@@ -1220,20 +1228,33 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			shop.active = false;
 		}
 
-
-		
+		var warningVol = 0.15
 		//Play Charging/Decharge sounds
 		if (playerDataPack[i].id == myPlayer.id && !mute){
 			if (playerDataPack[i].property == "energy" && playerDataPack[i].value == 0){
 				sfxDecharge.play();
 				sfxCharge.fade(.3, 0, 100);
+
+				sfxWarning.fade(warningVol, 0, 100);
+				sfxWarning2.volume(warningVol);
+				sfxWarning2.play();
 			}
 			else if (playerDataPack[i].property == "energy" && playerDataPack[i].value > Player.list[playerDataPack[i].id].energy && !sfxCharge.playing()){
 				sfxCharge.volume(.3);
 				sfxCharge.play();
+				sfxWarning2.fade(warningVol, 0, 100);
 			}
 			else if (playerDataPack[i].property == "energy" && (playerDataPack[i].value % 100 == 0 || playerDataPack[i].value == 1 || playerDataPack[i].value < Player.list[playerDataPack[i].id].energy) && sfxCharge.playing()){
 				sfxCharge.fade(.3, 0, 100);
+			}
+			//Warning sounds			
+			if (playerDataPack[i].property == "energy" && playerDataPack[i].value <= 25 && playerDataPack[i].value < Player.list[playerDataPack[i].id].energy && !sfxWarning.playing()){
+				sfxWarning.volume(warningVol);
+				sfxWarning.play();
+			}
+			else if (playerDataPack[i].property == "energy" && playerDataPack[i].value > 25 && sfxWarning.playing()){
+				sfxWarning.fade(warningVol, 0, 100);
+				//sfxWarning.stop();
 			}
 		}
 								
@@ -3377,7 +3398,7 @@ function drawShop(){
 		else if (shop.selection == 2){
 			drawImage(Img.shopSG2, 192 + teamBlackMarketXOffset, 250 + inventoryYoffset);
 			ownerText1 = "Pump action Shotgun. Devastating at close range.";
-			ownerText2 = "24 shells for $" + shop.price2 + ".";
+			ownerText2 = "24 s                s for $" + shop.price2 + ".";
 			if (shop.purchaseEffectTimer > 0){
 				ctx.globalAlpha = .8;
 				if (shop.uniqueText != "Heh heh heh heh... Thank you.")
@@ -3569,7 +3590,8 @@ function drawInformation(){
 		fillText("ping:" + ping, 5, 35);
 		if (showStatOverlay == true){
 			fillText("Version:" + version, 5, 55); //debug
-			
+			fillText("y: " + Player.list[myPlayer.id].y, 5, 75); //debug info
+			fillText("x: " + Player.list[myPlayer.id].x, 5, 95); //debug info
 			//fillText("boosting: " + Player.list[myPlayer.id].boosting, 5, 55); //debug info
 			//fillText("speedX: " + Player.list[myPlayer.id].speedX, 5, 75); //debug
 			//fillText("speedY: " + Player.list[myPlayer.id].speedY, 5, 95); //debug

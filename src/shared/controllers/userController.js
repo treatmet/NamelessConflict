@@ -132,7 +132,6 @@ router.post('/requestResponse', async function (req, res) {
 
 router.post('/leaveParty', async function (req, res) {
 	log("LEAVE PARTY ENDPOINT CALLED WITH:");
-	console.log("--BODY");
 	console.log(req.body);
 
 	if (req.body.partyId == req.body.cognitoSub){ //Leaving a party that user is the leader of (disband ALL party members' partyId)
@@ -232,8 +231,7 @@ router.post('/getParty', async function (req, res) {
 });
 
 router.post('/getRequests', async function (req, res) {
-	//log("Get requests endpoint called with:");
-	console.log("--BODY");
+	log("Get requests endpoint called with:");
 	console.log(req.body);
 	
 	var response = {
@@ -409,6 +407,13 @@ router.post('/getLeaderboard', async function (req, res) {
 	dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}]}, {sort:{experience: -1},limit:100}, async function(err, dbRes){
 		if (dbRes && dbRes[0]){
 			for (var i = 0; i < dbRes.length; i++){
+				if (dbRes[i].USERNAME == "RTPM35"){
+					console.log(dbRes[i].USERNAME + "!!!!!!!!!!!!" );
+					dataAccess.dbUpdateAwait("RW_USER", "inc", {}, {cash: 7}, async function(err, obj){
+						console.log("UPDATED!!!!!!!!!!!!" );
+					});
+				}
+
 				if (dbRes[i].USERNAME){
 					leaderboard.push({cognitoSub:dbRes[i].cognitoSub, username:dbRes[i].USERNAME.substring(0, 15), rating:dbRes[i].rating, kills:dbRes[i].kills, captures:dbRes[i].captures, gamesWon:dbRes[i].gamesWon, experience:dbRes[i].experience});
 				}

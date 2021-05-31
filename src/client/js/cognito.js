@@ -3,7 +3,6 @@ console.log("cognito.js loading");
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 
-
 (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -98,7 +97,9 @@ function getTokenFromUrlParameterAndLogin(){
 
 		if (data && data.username && isLoggedIn()){
 			//Login Success
-			userCash = data.cash ?? 0;
+			if (data.cash)
+				userCash = data.cash;
+
 			updateCashHeaderDisplay(userCash);		
 			
 			federatedUser = data.federatedUser;
@@ -705,8 +706,10 @@ setInterval(
 			if (headerRefreshTicker < 1){
 				//logg("Refreshing header");
 				getRequests();
-				if (!waitingOnRequest)
+				if (!waitingOnRequest){
 					getOnlineFriendsAndParty();
+					getServerList();
+				}
 				waitingOnRequest = true;
 				if (page == "profile"){
 					checkViewedProfileIsFriendOrParty();

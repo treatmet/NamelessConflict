@@ -185,9 +185,32 @@ function calculateTeamAvgRating(team){
 	return enemyTeamAvgRating;
 }
 
+
+function compare(a,b) {
+	if (a.cashEarnedThisGame < b.cashEarnedThisGame)
+	  return 1;
+	if (a.cashEarnedThisGame > b.cashEarnedThisGame)
+	  return -1;
+	return 0;
+  }
+
 function calculateEndgameStats(){
 	logg("---CALCULATING ENDGAME STATS!---");
-	console.log(player.getPlayerList());
+	var playerList = player.getPlayerList();
+	var team1Sorted = [];
+	var team2Sorted = [];
+	for (var a in playerList){
+		if (playerList[a].team == 1){
+			team1Sorted.push(playerList[a]);
+		}
+		else if (playerList[a].team == 2){
+			team2Sorted.push(playerList[a]);
+		}
+	}
+
+	team1Sorted.sort(compare);
+	team2Sorted.sort(compare);
+
 	getAllPlayersFromDB(function(mongoRes){
 		//Get CURRENT player rating and experience from mongo (before any stats from this game are added)
 		updatePlayersRatingAndExpWithMongoRes(mongoRes);		
@@ -202,7 +225,6 @@ function calculateEndgameStats(){
 		
 				
 		//Calculate progress made, and send to client (and then update user's DB stats)
-		var playerList = player.getPlayerList();
 		for (var p in playerList){
 			if (playerList[p].team == 0)
 				continue;
@@ -232,11 +254,16 @@ function calculateEndgameStats(){
 				logg(playerList[p].name + " had " + playerList[p].rating + " pts, and lost to a team with " + enemyAverageRating + " pts. He lost " + ptsGained);
 				playerList[p].cashEarnedThisGame+=loseCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
 			}
+			//MVP
+			if (team1Sorted[0])
+				if (playerList[p].id == team1Sorted[0].id){ptsGained += 10;}
+			if (team2Sorted[0])
+				if (playerList[p].id == team2Sorted[0].id){ptsGained += 10;}
+
 			//Prevent player from having sub zero ranking
 			if (playerList[p].rating + ptsGained < 0){
 				ptsGained += Math.abs(playerList[p].rating + ptsGained);
 			}
-
 			//Eligible for rank up/down this game?
 			log("playerList[p].eligibleForRank: " + playerList[p].eligibleForRank);
 			if (!playerList[p].eligibleForRank || customServer){
@@ -491,9 +518,6 @@ function moveBags(){
 			bagRed.y -= bagRed.speed * (2/3);
 			bagRed.x -= bagRed.speed * (2/3);
 		}
-		if (bagRed.speed <= 20){//To allow catching up to the thrown bag via boosting and catching it (usually cant grab a bag thrown by yourself)
-			bagRed.playerThrowing = 0;			
-		}
 		updateMisc.bagRed = bagRed;
 		bagRed.speed--;
 	}
@@ -531,9 +555,6 @@ function moveBags(){
 		else if (bagBlue.direction == 8){
 			bagBlue.y -= bagBlue.speed * (2/3);
 			bagBlue.x -= bagBlue.speed * (2/3);
-		}
-		if (bagBlue.speed <= 20){ //To allow catching up to the thrown bag via boosting and catching it (usually cant grab a bag thrown by yourself)
-			bagBlue.playerThrowing = 0;			
 		}
 		updateMisc.bagBlue = bagBlue;
 		bagBlue.speed--;
@@ -715,11 +736,8 @@ var killScore = function(team){
 
 var assignSpectatorsToTeam = function(assignEvenIfFull){
 	//First, get the current team sizes
-	var moreWhitePlayers = 0; 
-	for (var p in playerList){
-		if (playerList[p].team == 1){moreWhitePlayers++;}
-		else if (playerList[p].team == 2){moreWhitePlayers--;}
-	}
+	var playerList = player.getPlayerList();
+	var moreWhitePlayers = getMoreTeam1Players(); 
 	
 	//Then get the parties, ordered by party size
 	var parties = [];	
@@ -740,7 +758,6 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 
 	]
 	*/	
-	var playerList = player.getPlayerList();
 	for (var l in playerList){
 		if (playerList[l].team != 0){ //only process spectators
 			continue;
@@ -829,6 +846,16 @@ function tabulateVotes(){
 	crikVotes = 0;
 	voteMapIds = [];
 	voteGametypeIds = [];	
+}
+
+var getMoreTeam1Players = function(){
+	var moreWhitePlayers = 0;
+	var playerList = player.getPlayerList();
+	for (var p in playerList){
+		if (playerList[p].team == 1){moreWhitePlayers++;}
+		else if (playerList[p].team == 2){moreWhitePlayers--;}
+	}
+	return moreWhitePlayers;
 }
 
 function rebalanceTeams(){
@@ -1125,6 +1152,7 @@ var getAllPlayersFromDB = function(cb){
 	var searchParams = { cognitoSub: { $in: cognitoSubsInGame } };	
 	dataAccess.dbFindAwait("RW_USER", searchParams, async function(err, res){
 		if (res && res[0]){
+
 			cb(res);
 		}
 		else {
@@ -1586,6 +1614,7 @@ var updateRequestedSettings = function(settings, cb){
 
 
 
+module.exports.getMoreTeam1Players = getMoreTeam1Players;
 module.exports.changeTeams = changeTeams;
 module.exports.spawnSafely = spawnSafely;
 module.exports.getEntityById = getEntityById;

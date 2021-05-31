@@ -81,7 +81,7 @@ global.bootOnAfk = true;
 global.AfkFramesAllowed = 120 * 60; //seconds (translated to frames) //timeout
 
 //Player config
-global.boostAmount = 18;
+global.boostAmount = 19;
 global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
 global.diagMovementScale = (2/3);
@@ -263,3 +263,8 @@ global.updateEffectList = [];
 global.updateMisc = {};
 
 global.SOCKET_LIST = [];
+
+map = "horde";
+gametype = "ctf";
+playerMaxSpeed = 15;
+spawnOpposingThug = false; //Whether or not to spawn an opposing thug for each player who enters the game
