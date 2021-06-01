@@ -6,7 +6,6 @@ const express = require('express');
 const router = express.Router();
 const path = require("path");
 const  totemize = require('totemize');
-
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
 router.get('/getSharedCode', function(req, res) {

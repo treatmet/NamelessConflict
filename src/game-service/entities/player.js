@@ -108,52 +108,54 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		
 		//If currently holding an arrow key, be aiming in that direction 
-		if (self.aiming < 45 && self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === false){				
-			if (self.shootingDir != 1){
-				self.shootingDir = 1;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+		if (self.aiming < framesOfAiming - 10){
+			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === false){				
+				if (self.shootingDir != 1){
+					self.shootingDir = 1;
+					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+				}
 			}
-		}
-		if (self.aiming < 45 && self.pressingUp === true && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
-			if (self.shootingDir != 2){
-				self.shootingDir = 2;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			if (self.pressingUp === true && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
+				if (self.shootingDir != 2){
+					self.shootingDir = 2;
+					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+				}
 			}
-		}
-		if (self.aiming < 45 && self.pressingUp === false && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
-			if (self.shootingDir != 3){
-				self.shootingDir = 3;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
+				if (self.shootingDir != 3){
+					self.shootingDir = 3;
+					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+				}
 			}
-		}
-		if (self.aiming < 45 && self.pressingUp === false && self.pressingRight === true && self.pressingDown === true && self.pressingLeft === false){				
-			if (self.shootingDir != 4){
-				self.shootingDir = 4;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === true && self.pressingLeft === false){				
+				if (self.shootingDir != 4){
+					self.shootingDir = 4;
+					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+				}
 			}
-		}
-		if (self.aiming < 45 && self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === false){				
-			if (self.shootingDir != 5){
-				self.shootingDir = 5;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === false){				
+				if (self.shootingDir != 5){
+					self.shootingDir = 5;
+					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+				}
 			}
-		}
-		if (self.aiming < 45 && self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === true){				
-			if (self.shootingDir != 6){
-				self.shootingDir = 6;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === true){				
+				if (self.shootingDir != 6){
+					self.shootingDir = 6;
+					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+				}
 			}
-		}
-		if (self.aiming < 45 && self.pressingUp === false && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
-			if (self.shootingDir != 7){
-				self.shootingDir = 7;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
+				if (self.shootingDir != 7){
+					self.shootingDir = 7;
+					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+				}
 			}
-		}
-		if (self.aiming < 45 && self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
-			if (self.shootingDir != 8){
-				self.shootingDir = 8;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
+				if (self.shootingDir != 8){
+					self.shootingDir = 8;
+					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+				}
 			}
 		}
 		
@@ -711,7 +713,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (typeof self.afk === 'undefined'){
 		 self.afk = AfkFramesAllowed;
 		}
-		else if (self.afk >= 0 && self.team != 0){
+		else if (self.afk >= 0 && self.team != 0 && !pregame && !gameOver){
 			self.afk--;
 		}
 		else if (self.afk <= 0 && bootOnAfk) { //Boot em
@@ -1646,7 +1648,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 					}
 
 					if (discharge){
-						player.aiming = 60;
+						player.aiming = framesOfAiming;
 						Discharge(player);				
 					}
 						
@@ -1758,6 +1760,21 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 					else if (vote == "crik"){
 						crikVotes++;
 						voteMapIds.push(socketId);
+					}
+				}	
+				else if (voteType == "rebalance" && voteRebalance){
+					for (var i = 0; i < voteRebalanceTeamsIds.length; i++){
+						if (voteRebalanceTeamsIds[i] == socketId){ //Player has already voted
+							return;
+						}				
+					}			
+					if (vote == "yes"){
+						voteRebalanceTeamsYes++;
+						voteRebalanceTeamsIds.push(socketId);
+					}
+					else if (vote == "no"){
+						voteRebalanceTeamsNo++;
+						voteRebalanceTeamsIds.push(socketId);
 					}
 				}	
 			});
@@ -2129,13 +2146,13 @@ function evalServer(socket, data){
 	else if (data == "sThugWhite"){		
 		logg("Server command: Spawn Thug (White)");
 		var coords = gameEngine.getSafeCoordinates(1);
-		thug.createThug(Math.random(), 1, coords.x, coords.y);
+		thug.createThug(1, coords.x, coords.y);
 		socket.emit('addToChat', 'White thug spawned.');	
 	}
 	else if (data == "sThugBlack"){
 		logg("Server command: Spawn Thug (Black)");
 		var coords = gameEngine.getSafeCoordinates(2);
-		thug.createThug(Math.random(), 2, coords.x, coords.y);
+		thug.createThug(2, coords.x, coords.y);
 		socket.emit('addToChat', 'Black thug spawned.');	
 	}
 	else if (data == "5sec"){
@@ -2439,6 +2456,7 @@ function Discharge(player){
 
 Player.onDisconnect = function(id){
 	if (Player.list[id]){
+		abandoningCognitoSubs.push(Player.list[id].cognitoSub);
 		logg(Player.list[id].name + " disconnected.");
 		if (Player.list[id].holdingBag == true){
 			if (Player.list[id].team == 1){
@@ -2620,6 +2638,9 @@ function playerEvent(playerId, event){
 
 
 var connect = function(socket, cognitoSub, username, team, partyId){
+	if (gametype == "horde" || (pregame && pregameIsHorde)){
+		team = 2;
+	}
 	Player.onConnect(socket, cognitoSub, username, team, partyId);
 }
 

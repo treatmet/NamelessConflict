@@ -3,15 +3,15 @@ var block = require('./block.js');
 var entityHelpers = require('./_entityHelpers.js');
 var player = require('./player.js');
 
-var Thug = function(id, team, x, y){
+var Thug = function(team, x, y){
 	var self = {
-		id:id,
+		id: Math.random(),
 		team:team,
 		x:x,
 		y:y,
 		width:94,
 		height:94,
-		health:thugHealth,
+		health: (gametype == "horde" || (pregame && pregameIsHorde)) ? hordeThugHealth : thugHealth,
 		legHeight:47,
 		legSwingForward:true,
 		rotation:0,
@@ -22,8 +22,9 @@ var Thug = function(id, team, x, y){
 		attacking:0,
 		pushDir:0,
 		pushSpeed:0,
+		respawn: (gametype == "horde" || (pregame && pregameIsHorde)) ? false : true
 	};
-	Thug.list[id] = self;	
+	Thug.list[self.id] = self;
 	
 	//Send to client
 	updateThugList.push({id:self.id,property:"team",value:self.team});
@@ -115,7 +116,7 @@ var Thug = function(id, team, x, y){
 		}
 
 		self.rotation = Math.atan2((self.y - target.y),(self.x - target.x)) + 4.71239;
-		updateThugList.push({id:self.id,property:"rotation",value:self.rotation});
+		//updateThugList.push({id:self.id,property:"rotation",value:self.rotation});
 	}
 	
 	self.evaluateTarget = function(){
@@ -163,7 +164,7 @@ var Thug = function(id, team, x, y){
 
 			entityHelpers.sprayBloodOntoTarget(bloodDir, target.x, target.y, target.id);				
 			self.legHeight = -94;
-			updateThugList.push({id:self.id,property:"legHeight",value:self.legHeight});				
+			//updateThugList.push({id:self.id,property:"legHeight",value:self.legHeight});				
 		}					
 	}
 	
@@ -220,34 +221,35 @@ var Thug = function(id, team, x, y){
 	}
 
 	self.swingLegs = function(){
-		if (self.targetId != 0 && self.attacking == 0){
-			if (self.legSwingForward == true){
-				self.legHeight += 7 * 1.3;
-				updateThugList.push({id:self.id,property:"legHeight",value:self.legHeight});
-				if (self.legHeight > 94){
-					self.legSwingForward = false;
-					updateThugList.push({id:self.id,property:"legSwingForward",value:self.legSwingForward});
-				}
-			}
-			else if (self.legSwingForward == false){
-				self.legHeight -= 7 * 1.3;
-				updateThugList.push({id:self.id,property:"legHeight",value:self.legHeight});
-				if (self.legHeight < -94){
-					self.legSwingForward = true;
-					updateThugList.push({id:self.id,property:"legSwingForward",value:self.legSwingForward});
-				}
-			}
-		}
+	// 	if (self.targetId != 0 && self.attacking == 0){
+	// 		if (self.legSwingForward == true){
+	// 			self.legHeight += 7 * 1.3;
+	// 			updateThugList.push({id:self.id,property:"legHeight",value:self.legHeight});
+	// 			if (self.legHeight > 94){
+	// 				self.legSwingForward = false;
+	// 				updateThugList.push({id:self.id,property:"legSwingForward",value:self.legSwingForward});
+	// 			}
+	// 		}
+	// 		else if (self.legSwingForward == false){
+	// 			self.legHeight -= 7 * 1.3;
+	// 			updateThugList.push({id:self.id,property:"legHeight",value:self.legHeight});
+	// 			if (self.legHeight < -94){
+	// 				self.legSwingForward = true;
+	// 				updateThugList.push({id:self.id,property:"legSwingForward",value:self.legSwingForward});
+	// 			}
+	// 		}
+	// 	}
 	}//End self.swinglegs
+	
 	self.standThereAwkwardly = function(){
-		if (self.legHeight != 45){
-			self.legHeight = 45;
-			updateThugList.push({id:self.id,property:"legHeight",value:self.legHeight});
-		}
+	// 	if (self.legHeight != 45){
+	// 		self.legHeight = 45;
+	// 		updateThugList.push({id:self.id,property:"legHeight",value:self.legHeight});
+	// 	}
 	}
 	
 	self.checkForDeathAndRespawn = function(){
-		if (self.health <= 0){		
+		if (self.health <= 0 && self.respawn){		
 			if (self.respawnTimer <= 0){
 				respawnThug(self);
 			}
@@ -302,8 +304,8 @@ var Thug = function(id, team, x, y){
 		self.pushSpeed += damageInflicted/8 * damagePushScale;
 		self.pushDir = player.getPlayerById(shooter.id).shootingDir;			
 		
-		updateThugList.push({id:self.id,property:"pushSpeed",value:self.pushSpeed});		
-		updateThugList.push({id:self.id,property:"pushDir",value:self.pushDir});
+		// updateThugList.push({id:self.id,property:"pushSpeed",value:self.pushSpeed});		
+		// updateThugList.push({id:self.id,property:"pushDir",value:self.pushDir});
 	
 		if (self.health <= 0){
 			self.kill(shooter);
@@ -311,25 +313,34 @@ var Thug = function(id, team, x, y){
 	}
 
 	self.kill = function(shooter){
-	if (shooter.id != 0){
+		if (shooter.id != 0){
 			if (self.team != shooter.team || (self.lastEnemyToHit && self.lastEnemyToHit != 0)){
 				//shooter.triggerPlayerEvent("killThug");
 			}
 			else { //Killed by own team or self AND no last enemy to hit
-				shooter.triggerPlayerEvent("benedict");
+				//shooter.triggerPlayerEvent("benedict");
 			}
 		}
 		
 		//Create Body
 		if (self.pushSpeed > pushMaxSpeed){ self.pushSpeed = pushMaxSpeed; }
-		
 		updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, playerId:self.id});
+
+		if (gametype == "horde" || (pregame && pregameIsHorde)){
+			for(var i in SOCKET_LIST){
+				SOCKET_LIST[i].emit('removeThug', self.id);
+			}	
+			delete Thug.list[self.id];
+		}
 	}
 
 }//End Thug		
 Thug.list = [];
 
 function checkIfClosestToThug(thug, target){
+	if (gametype == "horde" || (pregame && pregameIsHorde)){thugSightDistance = 2000;}
+	else {thugSightDistance = 600;}
+	
 	if (target.id != thug.id && target.team != thug.team){
 		var dist1 = getDistance(thug, target);
 		if (dist1 < thug.closestTargetDist && dist1 < thugSightDistance && target.health > 0){
@@ -340,6 +351,8 @@ function checkIfClosestToThug(thug, target){
 		}
 	}
 }
+
+
 
 function respawnThug(thug){
 	thug.attacking = 0;
@@ -366,8 +379,17 @@ var getThugById = function(id){
     return Thug.list[id];
 }
 
-var createThug = function(id, team, x, y){
-	Thug(id, team, x, y);
+var createThug = function(team, x, y){
+	if (getThugListLength() < 50)
+		Thug(team, x, y);
+}
+
+var getThugListLength = function(){
+	var length = 0;
+	for (var t in Thug.list){
+		length++;
+	}
+	return length;
 }
 
 var clearThugList = function(){

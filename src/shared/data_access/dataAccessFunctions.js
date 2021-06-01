@@ -8,6 +8,29 @@ const defaultCustomizationOptions = require("./defaultCustomizationOptions.json"
 //const defaultCustomizationOptions = fullShopList.map(item => item.id); //ALL customizations unlocked
 
 const defaultSettings = require("./defaultSettings.json");
+const  totemize = require('totemize');
+
+
+
+//////////////////////////////////////////////
+function generateTempName(prefix){
+	let name;
+	
+	var x = 100;
+	while (x > 0){
+		name = totemize();
+		var index = name.indexOf(" ");
+		name = name.substring(index);
+		name = prefix + name;		
+		name = name.replace(/\s/g, '');
+		if (name.length <= 15){
+			break;
+		}
+		x--;
+	}
+	return name;
+	//return "tempName";
+}
 
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
 var getUserFromDB = function(cognitoSub,cb){
@@ -182,6 +205,14 @@ var addUser = function(cognitoSub, username, cb){
 	}
 	var today = new Date();
 	var date = today.getUTCFullYear()+'-'+(today.getUTCMonth()+1)+'-'+today.getUTCDate();
+
+	if (username.indexOf("Facebook_") > -1){
+		username = generateTempName("Facebook_");
+	}
+	
+	if (username.indexOf("Google_") > -1){
+		username = generateTempName("Google_");
+	}
 
 	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:myUrl};
 
@@ -1028,6 +1059,9 @@ var dbGameServerUpdate = function() {
 	}
 	else if (gametype == "slayer"){
 		serverSubName += " Deathmatch]";
+	}
+	else if (gametype == "horde"){
+		serverSubName += " Invasion]";
 	}
 	
 	

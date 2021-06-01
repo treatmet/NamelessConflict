@@ -26,7 +26,8 @@ function initializePage(){
 function loginSuccess(){
 	checkViewedProfileIsFriendOrParty();
 	showAuthorizedLoginButtons();            
-	getRequests();    
+    getRequests();  
+      
 }
 
 function loginFail(){
@@ -149,6 +150,10 @@ function showSelfProfileOptions(){
 
                     if (getUrlParam("view") == "shop"){
                         toggleEquipBuy('buyTab');
+                    }   
+                    else if (getUrlParam("view") == "username"){
+                        toggleStatsSettings('settingsTab');
+                        showEditUserForm();
                     }        
                     showContent("hat");
                 }

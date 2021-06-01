@@ -15,6 +15,13 @@ var initializePickups = function(map){
 	
 	if (map == "empty"){
 	}
+	else if (gametype == "horde" || (pregame && pregameIsHorde)){
+		pickup.createPickup(Math.random(), 15, 15, 5, 75, 45); //Body Armor
+		pickup.createPickup(Math.random(), 15, 16, 3, MGClipSize*2, 45); //MG
+		pickup.createPickup(Math.random(), 16, 15, 3, MGClipSize*2, 45); //MG
+		pickup.createPickup(Math.random(), 16, 16, 3, MGClipSize*2, 45); //MG
+
+	}	
 	else if (map == "loadTest"){
 		for (var i = 0; i <= 60; i+=10){
 			pickup.createPickup(Math.random(), mapWidth/2 + i, mapHeight/2 - 90, 5, 75, 60); //Body Armor
@@ -78,8 +85,6 @@ var initializePickups = function(map){
 		pickup.createPickup(Math.random(), 36, 21, 2, DPClipSize*2, 25); //DP		
 		pickup.createPickup(Math.random(), 26.5, 13.5, 4, SGClipSize*2, 40); //SG
 	}	
-	else if (map == "horde"){
-	}	
 	else if (map == "close"){
 		bagRed.homeX = 5*75;
 		bagRed.homeY = 17*75;
@@ -113,6 +118,31 @@ var initializeBlocks = function(map){
 	
 	if (map == "empty"){
 	}
+	else if (gametype == "horde" || (pregame && pregameIsHorde)){
+		mapWidth = 30*75;
+		mapHeight = 30*75;
+		
+		//Spawn areas
+		spawnXminBlack = mapWidth/2 - 500;
+		spawnXmaxBlack = mapWidth/2 + 500;
+		spawnYminBlack = mapHeight/2 - 500;
+		spawnYmaxBlack = mapHeight/2 + 500;
+		spawnXminWhite = mapWidth/2 - 500;
+		spawnXmaxWhite = mapWidth/2 + 500;
+		spawnYminWhite = mapHeight/2 - 500;
+		spawnYmaxWhite = mapHeight/2 + 500;		
+
+		var hordeHoleWidth = 4;
+		var hordeHoleXDistFromEdge = 10;
+		block.createBlock(-1/2, mapHeight/75, (mapWidth/75) - hordeHoleXDistFromEdge + 1/2, 1/2, "normal"); //Bottom Left
+		block.createBlock(-1/2, -1/2, 1/2, (mapHeight/75) - hordeHoleXDistFromEdge + 1/2, "normal"); //Left Top
+		block.createBlock(mapWidth/75, -1/2, 1/2, hordeHoleXDistFromEdge-2 + 1/2, "normal"); //Right Top
+		block.createBlock(-1/2, -1/2, hordeHoleXDistFromEdge-2 + 1/2, 1/2, "normal");	//Top Left
+		block.createBlock((mapWidth/75) - hordeHoleXDistFromEdge + hordeHoleWidth, mapHeight/75, hordeHoleXDistFromEdge - hordeHoleWidth, 1/2, "normal"); //Bottom Right
+		block.createBlock(-1/2, (mapHeight/75) - hordeHoleXDistFromEdge + hordeHoleWidth, 1/2, hordeHoleXDistFromEdge - hordeHoleWidth, "normal"); //Left Bottom
+		block.createBlock(mapWidth/75, hordeHoleXDistFromEdge-2 + hordeHoleWidth, 1/2, (mapHeight/75) - (hordeHoleXDistFromEdge-2 + hordeHoleWidth) + 1/2, "normal"); //Right Bottom
+		block.createBlock(hordeHoleXDistFromEdge-2 + hordeHoleWidth, -1/2, (mapWidth/75) - (hordeHoleXDistFromEdge-2 + hordeHoleWidth) + 1/2, 1/2, "normal");	//Top Right
+	}	
 	else if (map == "loadTest"){
 		for (var i = 0; i <= 60; i+=10){
 			block.createBlock(450 + i, 200, 400, 75, "normal");
@@ -313,31 +343,6 @@ var initializeBlocks = function(map){
 		block.createBlock(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
 		block.createBlock(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
 		block.createBlock(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
-	}	
-	else if (map == "horde"){
-		mapWidth = 30*75;
-		mapHeight = 30*75;
-		
-		//Spawn areas
-		spawnXminBlack = mapWidth/2 - 500;
-		spawnXmaxBlack = mapWidth/2 + 500;
-		spawnYminBlack = mapHeight/2 - 500;
-		spawnYmaxBlack = mapHeight/2 + 500;
-		spawnXminWhite = mapWidth/2 - 500;
-		spawnXmaxWhite = mapWidth/2 + 500;
-		spawnYminWhite = mapHeight/2 - 500;
-		spawnYmaxWhite = mapHeight/2 + 500;		
-
-		var hordeHoleWidth = 4;
-		var hordeHoleXDistFromEdge = 10;
-		block.createBlock(-1/2, mapHeight/75, (mapWidth/75) - hordeHoleXDistFromEdge + 1/2, 1/2, "normal"); //Bottom Left
-		block.createBlock(-1/2, -1/2, 1/2, (mapHeight/75) - hordeHoleXDistFromEdge + 1/2, "normal"); //Left Top
-		block.createBlock(mapWidth/75, -1/2, 1/2, hordeHoleXDistFromEdge + 1/2, "normal"); //Right Top
-		block.createBlock(-1/2, -1/2, hordeHoleXDistFromEdge + 1/2, 1/2, "normal");	//Top Left
-		block.createBlock((mapWidth/75) - hordeHoleXDistFromEdge + hordeHoleWidth, mapHeight/75, hordeHoleXDistFromEdge - hordeHoleWidth, 1/2, "normal"); //Bottom Right
-		block.createBlock(-1/2, (mapHeight/75) - hordeHoleXDistFromEdge + hordeHoleWidth, 1/2, hordeHoleXDistFromEdge - hordeHoleWidth, "normal"); //Left Bottom
-		block.createBlock(mapWidth/75, hordeHoleXDistFromEdge + hordeHoleWidth, 1/2, (mapHeight/75) - (hordeHoleXDistFromEdge + hordeHoleWidth) + 1/2, "normal"); //Right Bottom
-		block.createBlock(hordeHoleXDistFromEdge + hordeHoleWidth, -1/2, (mapWidth/75) - (hordeHoleXDistFromEdge + hordeHoleWidth) + 1/2, 1/2, "normal");	//Top Right
 	}	
 	else if (map == "close"){
 		mapWidth = 8*75;

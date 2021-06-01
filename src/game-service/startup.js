@@ -118,7 +118,7 @@ function processArgs(){
 		maxPlayers = 14;
 	}
 	else if (port == "3004"){
-		gametype = "slayer";
+		gametype = "horde";
 		maxPlayers = 8;
 	}
 }

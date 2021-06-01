@@ -102,11 +102,12 @@ pushStrength = 15; //Push block strength
 
 console.log("I'm setting " + port + " customServer to false");
 customServer = false;
+pregameIsHorde = true;
 serverName = "Ranked " + port.substring(2,4);
 bannedCognitoSubs = [];
 dataAccessFunctions.dbGameServerUpdate();
 }
-
+var abandoningCognitoSubs
 var changeTeams = function(playerId){
 	var playerList = player.getPlayerList();
  	console.log("change teams: " + playerList[playerId]);
@@ -254,6 +255,8 @@ function calculateEndgameStats(){
 				logg(playerList[p].name + " had " + playerList[p].rating + " pts, and lost to a team with " + enemyAverageRating + " pts. He lost " + ptsGained);
 				playerList[p].cashEarnedThisGame+=loseCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
 			}
+			updatePlayerList.push({id:playerList[p].id,property:"cashEarnedThisGame",value:playerList[p].cashEarnedThisGame});
+
 			//MVP
 			if (team1Sorted[0])
 				if (playerList[p].id == team1Sorted[0].id){ptsGained += 10;}
@@ -484,7 +487,8 @@ function endGame(){
 	updateMisc.gameOver = {
 		gameIsOver: true,
 		voteMap:voteMap,
-		voteGametype:voteGametype
+		voteGametype:voteGametype,
+		voteRebalance:voteRebalance
 	};
 }
 
@@ -813,7 +817,6 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 function restartGame(){
 	tabulateVotes();
 	assignSpectatorsToTeam(true);
-	rebalanceTeams();
 	initializeNewGame();
 	dataAccessFunctions.dbGameServerUpdate();		
 }
@@ -839,13 +842,23 @@ function tabulateVotes(){
 		map = "crik";
 	}
 	
+	if (voteRebalanceTeamsYes > voteRebalanceTeamsNo){
+		rebalanceTeams(true);
+	}
+	else {
+		rebalanceTeams(false);
+	}
+	
 	ctfVotes = 0;
 	slayerVotes = 0;
 	thePitVotes = 0;
 	longestVotes = 0;
 	crikVotes = 0;
+	voteRebalanceTeamsYes = 0;
+	voteRebalanceTeamsNo = 0;
 	voteMapIds = [];
 	voteGametypeIds = [];	
+	voteRebalanceTeamsIds = [];
 }
 
 var getMoreTeam1Players = function(){
@@ -858,9 +871,27 @@ var getMoreTeam1Players = function(){
 	return moreWhitePlayers;
 }
 
-function rebalanceTeams(){
+function rebalanceTeams(rebalanceOnScore = false){
 	var playerList = player.getPlayerList();
 	var moreWhitePlayers = 0; 
+
+	console.log("REBALANCING ON SCORE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + rebalanceOnScore);
+	if (rebalanceOnScore){
+		playerList.sort(compare);
+		var lastTeam = 2;
+		for (var p in playerList){ //Reset all players to team = 1 so that current teams are annihilated 
+			if (lastTeam == 2){
+				playerList[p].team = 1;
+				lastTeam = 1;
+			}
+			else {
+				playerList[p].team = 2;
+				lastTeam = 2;
+			}
+		}
+	}
+
+
 	for (var p in playerList){
 		if (playerList[p].team == 1){moreWhitePlayers++;}
 		else if (playerList[p].team == 2){moreWhitePlayers--;}
@@ -973,6 +1004,7 @@ function initializeNewGame(){
 	gameOver = false;
 	pregame = false;
 	bannedCognitoSubs = [];
+	abandoningCognitoSubs = [];
 
 	whiteScore = 0;
 	blackScore = 0;
@@ -1012,7 +1044,6 @@ function initializeNewGame(){
 	updateMisc.mapWidth = mapWidth;
 	updateMisc.mapHeight = mapHeight;
 	updateMisc.variant = {};
-	updateMisc.variant.map = map;
 	updateMisc.variant.gametype = gametype;
 	updateMisc.variant.scoreToWin = scoreToWin;
 	if (gameMinutesLength > 0 || gameSecondsLength > 0){
@@ -1130,12 +1161,12 @@ function ensureCorrectThugCount(){
 
 	while (whiteThugs < expectedWhiteThugs){
 		var coords = getSafeCoordinates(1);
-		thug.createThug(Math.random(), 1, coords.x, coords.y);	
+		thug.createThug(1, coords.x, coords.y);	
 		whiteThugs++;
 	}
 	while (blackThugs < expectedBlackThugs){
 		var coords = getSafeCoordinates(2);
-		thug.createThug(Math.random(), 2, coords.x, coords.y);			
+		thug.createThug(2, coords.x, coords.y);			
 		blackThugs++;
 	}
 
@@ -1178,8 +1209,37 @@ var joinGame = function(cognitoSub, username, team, partyId){
 	socket.partyId = partyId;
 	log("!!!!Player signing into game server - socketID: " + socket.id + " cognitoSub: " + cognitoSub + " username: " + username + " team: " + team + " partyId: " + partyId);
 	player.connect(socket, cognitoSub, username, team, partyId);
+
 	dataAccessFunctions.dbGameServerUpdate();
 	socket.emit('signInResponse',{success:true,id:socket.id, mapWidth:mapWidth, mapHeight:mapHeight, whiteScore:whiteScore, blackScore:blackScore});
+}
+
+function spawnHordeThugs(){
+	var randy = randomInt(1,4);
+	var spawnX = 0;
+	var spawnY = 0;
+	if (randy == 1){
+			spawnX = 10 * 75;
+			spawnY = 5;
+	}
+	else if (randy == 2){
+			spawnX = mapWidth - 5;
+			spawnY = 10 * 75;
+	}
+	else if (randy == 3){
+			spawnX = mapWidth - 8 * 75;
+			spawnY = mapHeight - 5;
+	}
+	else if (randy == 4){
+			spawnX = 5;
+			spawnY = mapHeight - 8 * 75;
+	}
+	else {
+	}
+	var rand2 = randomInt(1,4);
+	if (rand2 <= 4 && (gametype == "horde" || (pregame && pregameIsHorde))){
+		thug.createThug(1, spawnX, spawnY);		
+	}
 }
 
 
@@ -1291,7 +1351,6 @@ const secondLengthMs = 1000;
 var previousSecond = Date.now();
 var nextSecond = Date.now() + secondLengthMs;
 var sloppyTimerWindowMs = 16;
-
 secondIntervalLoop();
 function secondIntervalLoop(){
 	var now = Date.now();
@@ -1340,6 +1399,8 @@ var secondIntervalFunction = function(){
 				thePitVotes:thePitVotes,
 				longestVotes:longestVotes, 
 				crikVotes:crikVotes,
+				voteRebalanceTeamsYes:voteRebalanceTeamsYes,
+				voteRebalanceTeamsNo:voteRebalanceTeamsNo,
 			};
 			
 			socket.emit('votesUpdate',votesData);
@@ -1375,6 +1436,9 @@ var secondIntervalFunction = function(){
 			socket.emit('sendClock',secondsLeftPlusZero, minutesLeft);
 		}
 	}
+
+	//Horde Thugs
+	spawnHordeThugs();
 	
 	//Pickup timer stuff
 	pickup.clockTick();
@@ -1484,7 +1548,9 @@ var sendFullGameStatus = function(socketId){
 	miscPack.shopEnabled = shopEnabled;
 	
 	miscPack.variant = {};
-	miscPack.variant.map = map;
+	var mapToSend = (gametype == "horde" || (pregame && pregameIsHorde)) ? "horde" : map;
+	miscPack.variant.map = mapToSend;
+	console.log("SENT MAP IS " + mapToSend);
 	miscPack.variant.gametype = gametype;
 	miscPack.variant.scoreToWin = scoreToWin;
 	miscPack.mapWidth = mapWidth;
@@ -1607,6 +1673,7 @@ var updateRequestedSettings = function(settings, cb){
 		}
 	}
 	customServer = true;
+	pregameIsHorde = false;
 	pregame = true;
 	log(port + " And of course, setting customServer to " + customServer);
 	cb("done");

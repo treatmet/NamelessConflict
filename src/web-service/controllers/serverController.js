@@ -117,7 +117,7 @@ var getJoinableServer = function(options, cb){
 		params = {url:options.server, privateServer:false};
 		options.matchmaking = false;
 	}
-	else if (options.server.indexOf('any') > -1) { //Server IP provided //contains
+	else if (options.server.indexOf('any') > -1) { //Any server //Contains
 		//params = {privateServer:false};
 		params = {privateServer:false};
 		if (isLocal){
@@ -144,14 +144,20 @@ var getJoinableServer = function(options, cb){
 					//Server full dis-qualifier
 					if (getCurrentPlayersFromUsers(serv[i].currentUsers).length + options.party.length > serv[i].maxPlayers){						
 						console.log("SHOULD BE SPECTATING TEAM!1" + allowFullGameSpectating);
+						logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");
 						if (!allowFullGameSpectating){
-							logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");
 							if (options.server.indexOf(':') > -1)
 								cb("Server full", false);
 							continue;
 						}
-						else {
+						else if (options.server.indexOf(':') > -1){
 							team = 0;
+						}
+						else if (options.server.indexOf('any') > -1){
+							continue;
+						}
+						else {
+							continue;
 						}
 					}
 
@@ -205,6 +211,10 @@ var getJoinableServer = function(options, cb){
 					if (!isGameInFullSwing(serv[i].currentTimeLeft, serv[i].matchTime, serv[i].currentHighestScore, serv[i].scoreToWin) && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 8){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
 						team = 0;
 					}
+
+					if (serv[i].gametype == "horde"){
+						team = 2;
+					}
 					
 					//Set DB incoming Users
 					for (var p = 0; p < options.party.length; p++){
@@ -219,6 +229,8 @@ var getJoinableServer = function(options, cb){
 					var selectedServer = i;
 					dataAccess.dbUpdateAwait("RW_SERV", "set", {url: serv[selectedServer].url}, obj, async function(err2, res){
 						if (!err2){
+							
+							
 							logg("DB: UPDATING incomingUsers: " + serv[selectedServer].url + " with: " + JSON.stringify(obj));
 							var targetUrl = serverHomePage + "game/" + serv[selectedServer].queryString;
 							if (isLocal)
@@ -229,7 +241,7 @@ var getJoinableServer = function(options, cb){
 							cb("FAILED TO UPDATE INCOMING USERS", false);
 						}
 					});	
-					if (options.server.indexOf('any') > -1)
+					if (options.server.indexOf('any') > -1) //WHAT?
 						break;
 				}				
 			}

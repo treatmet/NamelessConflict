@@ -59,18 +59,30 @@ global.shop = {
 };
 global.startingCash = 0;
 
-
+//Post game Voting
+global.ctfVotes = 0;
+global.slayerVotes = 0;
+global.thePitVotes = 0;
+global.longestVotes = 0;
+global.crikVotes = 0;
+global.voteRebalanceTeamsYes = 0;
+global.voteRebalanceTeamsNo = 0;
+global.voteRebalanceTeamsIds = [];
+global.voteMapIds = [];
+global.voteGametypeIds = [];
 
 // Changeble Settings 
 //-------------------------------------------------------------------------------------
 global.voteGametype = true;
 global.voteMap = true;
+global.voteRebalance = true;
+global.pregameIsHorde = true;
 
 global.minutesLeft = 9;
 global.secondsLeft = 99;
 global.scoreToWin = 0;
 global.nextGameTimer = 20;
-global.timeBeforeNextGame = 45; //newGameTimer
+global.timeBeforeNextGame = 10; //newGameTimer
 global.gameMinutesLength = 5;
 global.gameSecondsLength = 0;
 global.map = "longest";
@@ -78,9 +90,10 @@ global.gametype = "ctf";
 global.freeForAll = false;
 global.maxPlayers = 14;
 global.bootOnAfk = true;
-global.AfkFramesAllowed = 120 * 60; //seconds (translated to frames) //timeout
+global.AfkFramesAllowed = 60 * 60; //seconds (translated to frames) //timeout
 
 //Player config
+global.framesOfAiming = 60;
 global.boostAmount = 19;
 global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
@@ -163,8 +176,9 @@ global.allowBagWeapons = false;
 global.spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
 global.thugSightDistance = 600;
 global.thugHealth = 80;
+global.hordeThugHealth = 15;
 global.thugDamage = 50;
-global.thugSpeed = 4;
+global.thugSpeed = 3;
 global.thugAttackDelay = 30;
 global.thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are wiped off map (for performance concerns)
 
@@ -196,16 +210,11 @@ global.privateServer = false;
 global.customServer = false;
 global.serverName = "Ranked";
 global.createdByCognitoSub = "";
-global.ctfVotes = 0;
-global.slayerVotes = 0;
-global.thePitVotes = 0;
-global.longestVotes = 0;
-global.crikVotes = 0;
-global.voteMapIds = [];
-global.voteGametypeIds = [];
+
 
 global.bannedCognitoSubs = [];
 global.allowedCognitoSubs = [];
+global.abandoningCognitoSubs = [];
 
 global.bagRed = {
 	homeX:0,
@@ -264,7 +273,7 @@ global.updateMisc = {};
 
 global.SOCKET_LIST = [];
 
-map = "horde";
-gametype = "ctf";
-playerMaxSpeed = 15;
-spawnOpposingThug = false; //Whether or not to spawn an opposing thug for each player who enters the game
+// map = "horde";
+// gametype = "horde";
+// playerMaxSpeed = 15;
+// spawnOpposingThug = false; //Whether or not to spawn an opposing thug for each player who enters the game

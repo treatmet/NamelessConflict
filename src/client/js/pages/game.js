@@ -38,6 +38,10 @@ function voteEndgame(voteType, voteSelection){
 		document.getElementById("voteCrik").disabled = true;
 		document.getElementById("voteThePit").disabled = true;		
 	}
+	else if (voteType == "rebalance"){
+		document.getElementById("voteRebalanceYes").disabled = true;
+		document.getElementById("voteRebalanceNo").disabled = true;
+	}
 	socket.emit("voteEndgame", myPlayer.id, voteType, voteSelection);
 }
 
@@ -47,6 +51,8 @@ socket.on('votesUpdate', function(votesData){
 	document.getElementById("voteLongest").innerHTML = "Long Hallway - [" + votesData.longestVotes + "]";
 	document.getElementById("voteThePit").innerHTML = "Open Warehouse - [" + votesData.thePitVotes + "]";	
 	document.getElementById("voteCrik").innerHTML = "Bunkers - [" + votesData.crikVotes + "]";
+	document.getElementById("voteRebalanceYes").innerHTML = "Yes - [" + votesData.voteRebalanceTeamsYes + "]";
+	document.getElementById("voteRebalanceNo").innerHTML = "No - [" + votesData.voteRebalanceTeamsNo + "]";
 });
 
 socket.on('betrayalKick', function(){
@@ -1078,6 +1084,7 @@ socket.on('gameStart', function(){
 	sfxVictoryMusic.stop();
 	sfxDefeatMusic.stop();
 	sfxProgressBar.stop();
+	Body.list = [];
 	drawMapElementsOnMapCanvas();
 	drawBlocksOnBlockCanvas();
 	resetPostGameProgressVars();
@@ -1565,12 +1572,19 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			else {
 				hide("voteGametypeTable");
 			}
+			if (miscPack.gameOver.voteRebalance)
+				showUnset("voteRebalanceTable");
+			else {
+				hide("voteRebalanceTable");
+			}
 
 			document.getElementById("voteCTF").disabled = false;
 			document.getElementById("voteDeathmatch").disabled = false;	
 			document.getElementById("voteLongest").disabled = false;
 			document.getElementById("voteCrik").disabled = false;
 			document.getElementById("voteThePit").disabled = false;				
+			document.getElementById("voteRebalanceYes").disabled = false;				
+			document.getElementById("voteRebalanceNo").disabled = false;				
 		}
 		else if (miscPack.gameOver.gameIsOver == false){
 			document.getElementById("voteMenu").style.display = 'none';
@@ -1997,7 +2011,8 @@ function drawMapElementsOnMapCanvas(){
 	mCtx.clearRect(0,0,m_canvas.width,m_canvas.height); //Clears previous frame
 
 	var tile = Img.tile;
-	
+	console.log("MAP: " + map);
+
 	for (var y = 0; y < mapHeight * zoom; y+=tile.height * zoom){
 		for (var x = 0; x < mapWidth * zoom; x+=tile.width * zoom){
 			if (x + tile.width * zoom > mapWidth * zoom){
@@ -2037,6 +2052,23 @@ function drawMapElementsOnMapCanvas(){
 				}
 				else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (tile.width * 1) * zoom && x <= (tile.width * 3) * zoom){
 					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				}
+				else {
+					drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+				}				
+			}
+			else if (map == "horde"){
+				if (y >= (mapHeight - tile.height*3) * zoom && y < (mapHeight - tile.height*3) && x <= 0){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				}
+				else if (y >= (tile.height*2) * zoom && y <= (tile.height*2) && x >= mapWidth - tile.width*3){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				}
+				else if (x >= (mapWidth - tile.width*3) * zoom && x < (mapWidth - tile.width*3) && y >= mapHeight - tile.height*3){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				}
+				else if (x >= (tile.width*2) * zoom && x <= (tile.width*2) && y <= 0){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
 				}
 				else {
 					drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
@@ -2086,7 +2118,7 @@ function drawBodies(){
 		body.age++;
 		if (body.age > BODY_AGE){
 			 delete Blood.list[body.id];
-			 delete Body.list[body.id];
+			 delete Body.list.splice(b, 1);
 			 continue;
 		}
 		
@@ -3175,11 +3207,14 @@ var reallyLowGraphicsMode = false;
 function reallyLowGraphicsToggle(){
 	if (reallyLowGraphicsMode){
 		reallyLowGraphicsMode = false;
+		bodyLimit = 16;
 		document.getElementById("lowGraphcsModeButton").innerHTML = 'Low Graphics Mode [OFF]';
 		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#818181";
 	}
 	else {
 		reallyLowGraphicsMode = true;
+		bodyLimit = 2;
+		Body.list = [];
 		document.getElementById("lowGraphcsModeButton").innerHTML = 'Low Graphics Mode [ON]';
 		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#529eec";
 	}
@@ -4361,7 +4396,19 @@ function drawGameEventText(){
 		ctx.font = '118px Electrolize';
 		ctx.lineWidth=16;
 		ctx.fillStyle="#FFFFFF";
-		strokeAndFillText("PREGAME",canvasWidth - 10,750);	
+		var pregameText= "PREGAME";
+		var players = 0;
+		for (var p in Player.list){
+			players++;
+		}
+		if (gametype == "horde"){
+			pregameText = "Waiting for players to join...";
+			ctx.font = '70px Electrolize';
+		}
+		else if (players >= 4){
+			pregameText = "GAME STARTING!";
+		}
+		strokeAndFillText(pregameText,canvasWidth - 10,750);	
 		noShadow();
 	}
 	else {
@@ -4921,7 +4968,7 @@ socket.on('endGameProgressResults', function(endGameProgressResults){
 function endGameProgressResultsFunction(endGameProgressResults){
 	log("endGameProgressResults");
 	console.log(endGameProgressResults);
-	Player.list[myPlayer.id].cashEarnedThisGame = endGameProgressResults.expDif;
+	//Player.list[myPlayer.id].cashEarnedThisGame = endGameProgressResults.expDif;
 	postGameProgressInfo.originalRating = endGameProgressResults.originalRating;
 	postGameProgressInfo.ratingDif = endGameProgressResults.ratingDif;
 	postGameProgressInfo.rank = getFullRankName(endGameProgressResults.rank);
@@ -5131,9 +5178,11 @@ Shot.list = [];
 
 // ---------------------------------- CREATE BODY -----------------------------
 function createBody(targetX, targetY, pushSpeed, shootingDir, playerId){
-	if (Object.size(Body.list) < bodyLimit){
-		Body(targetX, targetY, shootingDir, playerId, pushSpeed);	
+	if (Body.list.length >= bodyLimit){
+		Body.list.splice(0, 1);
 	}	
+	Body(targetX, targetY, shootingDir, playerId, pushSpeed);	
+
 	if (!mute){
 		var dx1 = myPlayer.x - targetX;
 		var dy1 = myPlayer.y - targetY;
@@ -5166,9 +5215,9 @@ var Body = function(x, y, direction, playerId, speed){
 		poolHeight: Math.floor((Math.random() * 50) + 1),
 		poolHeightMax: Math.floor((Math.random() * 100) + 80),
 	}	
-	Body.list[self.id] = self;		
+	Body.list.push(self);		
 }
-Body.list = {};
+Body.list = [];
 
 
 
