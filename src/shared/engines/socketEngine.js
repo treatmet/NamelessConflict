@@ -43,8 +43,18 @@ io.sockets.on('connection', function(socket){
 	});
 
 	socket.on('disconnect', function(){
-		logg("Socket " + socket.id + " disconnected. cognitoSub=" + SOCKET_LIST[socket.id].cognitoSub);
-		delete SOCKET_LIST[socket.id];		
+		var socketCognitoSub = "";
+		var socketId = "";
+		if (SOCKET_LIST[socket.id] && SOCKET_LIST[socket.id].cognitoSub){
+			socketCognitoSub = SOCKET_LIST[socket.id].cognitoSub;
+			logg("Socket " + socket.id + " disconnected. cognitoSub=" + socketCognitoSub);
+			delete SOCKET_LIST[socket.id];		
+		}
+		else {
+			if (socket && socket.id)
+				socketId = socket.id;
+			logg("Socket disconnected:" + socketId);
+		}
 	});
 }); //END socket.on(connection)
 

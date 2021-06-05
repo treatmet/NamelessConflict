@@ -87,7 +87,7 @@ function processArgs(){
 			getInstanceIdAndAddProcessesToLoadBalancer();
     });
 		if (!isTest){
-			serverHomePage = "https://ss.treatmetcalf.com/";
+			serverHomePage = "https://socketshot.io/";
 		}
 		else {
 			serverHomePage = "https://sstest.treatmetcalf.com/";

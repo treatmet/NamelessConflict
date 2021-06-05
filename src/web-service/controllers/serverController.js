@@ -106,8 +106,9 @@ var getJoinableServer = function(options, cb){
 
 	var joinableServer = "";
 	var unfavorableServers = [];
-	var params = {privateServer:false};
-	
+
+	//Set server search params
+	var params = {privateServer:false};	
 	if (options.server == "ctf" || options.server == "slayer"){ //Specific gametype
 		params = {gametype:options.server, privateServer:false};
 		cb("ERROR - Matchmaking not yet implemented", false);
@@ -117,7 +118,7 @@ var getJoinableServer = function(options, cb){
 		params = {url:options.server, privateServer:false};
 		options.matchmaking = false;
 	}
-	else if (options.server.indexOf('any') > -1) { //Server IP provided //contains
+	else if (options.server.indexOf('any') > -1) { //Any server //Contains
 		//params = {privateServer:false};
 		params = {privateServer:false};
 		if (isLocal){
@@ -126,6 +127,7 @@ var getJoinableServer = function(options, cb){
 		else {
 			params.instanceId = { $not: /local/ };
 		}
+		params.gametype = { $not: /horde/ };
 		options.matchmaking = false;
 	}
 	
@@ -133,9 +135,10 @@ var getJoinableServer = function(options, cb){
 		var serv = serverResult.sort(compareCurrentPlayerSize);
 		
 		if (typeof serv != 'undefined' && typeof serv[0] != 'undefined'){	
-			console.log("FOUND " + serv.length + " POSSIBLE SERVERS");
+			log("FOUND " + serv.length + " POSSIBLE SERVERS");
 			for (var i = 0; i < serv.length; i++){			
-				console.log("CHECKING OUT SERVER:" + serv[i].url + "");
+				log("CHECKING OUT SERVER:" + serv[i].url + "");
+				console.log(serv[i]);
 				if (!options.matchmaking){
 				
 					////////////////////RULES////////////////////////////////
@@ -144,14 +147,20 @@ var getJoinableServer = function(options, cb){
 					//Server full dis-qualifier
 					if (getCurrentPlayersFromUsers(serv[i].currentUsers).length + options.party.length > serv[i].maxPlayers){						
 						console.log("SHOULD BE SPECTATING TEAM!1" + allowFullGameSpectating);
+						logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");
 						if (!allowFullGameSpectating){
-							logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");
 							if (options.server.indexOf(':') > -1)
 								cb("Server full", false);
 							continue;
 						}
-						else {
+						else if (options.server.indexOf(':') > -1){
 							team = 0;
+						}
+						else if (options.server.indexOf('any') > -1){
+							continue;
+						}
+						else {
+							continue;
 						}
 					}
 
@@ -194,16 +203,21 @@ var getJoinableServer = function(options, cb){
 							team = 2;
 						}
 					}
+					log("DECIDED TO SEND PLAYER TO TEAM " + team + " (unless it's horde)");
 					
 					var matchRemaining = (serv[i].currentTimeLeft / serv[i].matchTime);
 					var possibleTeamDifference = Math.abs(Math.abs(moreWhitePlayers) - options.party.length);					
-					console.log("(REMAINING TIME) IS " + matchRemaining + " LESS THAN " + joinActiveGameThreshold);
-					console.log("(isGameInFullSwing) " + isGameInFullSwing(serv[i].currentTimeLeft, serv[i].matchTime, serv[i].currentHighestScore, serv[i].scoreToWin));
-					console.log("(CURRENT PLAYERS) IS " + getCurrentPlayersFromUsers(serv[i].currentUsers).length + " GREATER THAN OR EQUAL TO 8?");
-					console.log("(POSSIBLE TEAM DIFF) IS " + possibleTeamDifference + " GREATER THAN OR EQUAL TO " + Math.abs(moreWhitePlayers));
+					log("(REMAINING TIME) IS " + matchRemaining + " LESS THAN " + joinActiveGameThreshold);
+					log("(isGameInFullSwing) " + isGameInFullSwing(serv[i].currentTimeLeft, serv[i].matchTime, serv[i].currentHighestScore, serv[i].scoreToWin));
+					log("(CURRENT PLAYERS) IS " + getCurrentPlayersFromUsers(serv[i].currentUsers).length + " GREATER THAN OR EQUAL TO 8?");
+					log("(POSSIBLE TEAM DIFF) IS " + possibleTeamDifference + " GREATER THAN OR EQUAL TO " + Math.abs(moreWhitePlayers));
 					
 					if (!isGameInFullSwing(serv[i].currentTimeLeft, serv[i].matchTime, serv[i].currentHighestScore, serv[i].scoreToWin) && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 8){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
 						team = 0;
+					}
+
+					if (serv[i].gametype == "horde"){
+						team = 2;
 					}
 					
 					//Set DB incoming Users
@@ -219,6 +233,8 @@ var getJoinableServer = function(options, cb){
 					var selectedServer = i;
 					dataAccess.dbUpdateAwait("RW_SERV", "set", {url: serv[selectedServer].url}, obj, async function(err2, res){
 						if (!err2){
+							
+							
 							logg("DB: UPDATING incomingUsers: " + serv[selectedServer].url + " with: " + JSON.stringify(obj));
 							var targetUrl = serverHomePage + "game/" + serv[selectedServer].queryString;
 							if (isLocal)
@@ -229,7 +245,7 @@ var getJoinableServer = function(options, cb){
 							cb("FAILED TO UPDATE INCOMING USERS", false);
 						}
 					});	
-					if (options.server.indexOf('any') > -1)
+					if (options.server.indexOf('any') > -1) //WHAT?
 						break;
 				}				
 			}
@@ -293,7 +309,7 @@ var customSettingsList = [
 	{name:"gameMinutesLength", desc:"Game Length in Minutes [0 is no time limit]", type:2, default:5, standard:true},
 	{name:"scoreToWin", desc:"Score to win [0 is no score limit]", type:2, default:0, standard:true},
 	{name:"map", desc:"Map [1=hall, 2=warehouse, 3=bunkers]", type:2, default:1, standard:true},
-	{name:"gametype", desc:"Gametype [1=capture, 2=deathmatch]", type:2, default:1, standard:true},
+	{name:"gametype", desc:"Gametype [1=capture, 2=deathmatch, 3=invasion]", type:2, default:1, standard:true},
 	{name:"maxPlayers", desc:"Max Team Size", type:2, default:7, standard:true},
 	{name:"voteGametype", desc:"Allow voting for gametype after match", type:1, default:true, standard:true},
 	{name:"voteMap", desc:"Allow voting for map after match", type:1, default:true, standard:true},
@@ -302,7 +318,7 @@ var customSettingsList = [
 	{name:"cloakingEnabled", desc:"Cloaking Enabled", type:1, default:true},
 	{name:"boostAmount", desc:"Boost Power", type:2, default:19},
 	{name:"playerMaxSpeed", desc:"Max Player Speed", type:2, default:5},
-	{name:"healRate", desc:"Heal Rate", type:2, default:10},
+	{name:"healRate", desc:"Heal Delay [lower number is faster heal]", type:2, default:10},
 	{name:"bagDrag", desc:"Player speed ratio while carying bag", type:2, default:0.85},
 	{name:"damageScale", desc:"Global Damage Multiplier", type:2, default:1},
 	{name:"spawnOpposingThug", desc:"Bots Enabled", type:1, default:true},
@@ -364,15 +380,14 @@ router.post('/getCustomServerHTML', async function (req, res) {
 
 router.post('/sendUpdateRequestToGameServer', async function (req, res) {
 	log("HIT SEND REQUEST TO GAME SERVER ENDPOINT:");
-
+	console.log(req.body);
 	req.body.settings = processCustomGameServerUpdateRequest(req.body.settings);
-
 
 	dataAccessFunctions.getEmptyServersFromDB(function(emptyServers){
 		if (!emptyServers[0]){
 			var err = "No empty servers to customize currently. Autoscaling should be creating more. Please wait a few minutes and try again.";
 			logg(err);
-			res.send({msg:err, success:false});
+			res.send({msg:{message:err}, success:false});
 			return;
 		}
 		var selectedServerUrl = emptyServers[0].url;
@@ -445,6 +460,9 @@ function processCustomGameServerUpdateRequest(settings){
 					break;
 				case "2":
 					settings[s].value = "'slayer'";
+					break;
+				case "3":
+					settings[s].value = "'horde'";
 					break;
 				default:								
 					settings[s].value = "'ctf'";

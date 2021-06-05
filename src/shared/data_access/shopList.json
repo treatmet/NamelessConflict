@@ -1241,6 +1241,28 @@
 		"canvasValue":"smile"
 	},	
 	{
+		"id":"moneyIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"$",
+		"text":"For becoming a millionaire!",
+		"price": 5000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"money"
+	},	
+	{
+		"id":"wtfIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"WTF",
+		"text":"Some things just defy explanation",
+		"price": 5000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"wtf"
+	},	
+	{
 		"id":"bugIcon",
 		"category":"icon",
 		"subCategory":"type",

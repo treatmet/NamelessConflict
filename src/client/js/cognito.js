@@ -48,7 +48,7 @@ var partyId = "";
 var userCash = 0;
 var federatedUser = false;
 var pcMode = 1;
-var serverHomePage = "https://ss.treatmetcalf.com/";
+var serverHomePage = "https://socketshot.io/";
 var isLocal = false;
 var defaultCustomizations = {red:{}, blue:{}};
 var tempCognitoSub = "";
@@ -140,14 +140,19 @@ function updateCashHeaderDisplay(cash){
 function updateProfileLink(){
 	if (document.getElementById("menuRightLink")){
 		var link = serverHomePage + "user/" + cognitoSub;
-		document.getElementById("menuRightLink").innerHTML = '<a href="' + link + '" style="" class="elecText" id="profileLink">' + "Profile" + '&gt;</a>';
+		var unsetUsernameHtml = "";
+		if (username.indexOf("Facebook_") > -1 || username.indexOf("Google_") > -1){
+			unsetUsernameHtml = "<span style='color:red'> [Click here to set Username] </span>";
+			link += "/?view=username";
+		}
+		document.getElementById("menuRightLink").innerHTML = '<a href="' + link + '" style="" class="elecText" id="profileLink">' + unsetUsernameHtml + " Profile" + '&gt;</a>';
 	}
 }
 
 function setPcModeAndIsLocalElements(data){
 	pcMode = data.pcMode;
 	var redirectUri = serverHomePage;
-	if (data.isLocal == true || serverHomePage != "https://ss.treatmetcalf.com/"){
+	if (data.isLocal == true || serverHomePage != "https://socketshot.io/"){
 		redirectUri = "https://rw2.treatmetcalf.com/";
 	}	
 	
@@ -586,9 +591,6 @@ function showAuthorizedLoginButtons(){
     document.getElementById("logOutH").style.display = "";
     if (document.getElementById('userWelcomeText')){
         var printedUsername = username.substring(0,15);
-        if (printedUsername.includes("Facebook_") || printedUsername.includes("Google_") && !getUrl().includes(cognitoSub)){
-            printedUsername += " - (click here to update username)"
-        }
         document.getElementById('userWelcomeText').style.display = "inline-block";
 		document.getElementById('userWelcomeText').innerHTML = getUserWelcomeHTML(printedUsername);	
 	}
@@ -596,7 +598,13 @@ function showAuthorizedLoginButtons(){
 
 function getUserWelcomeHTML(printedUsername){
 	var HTML = "";
-	HTML += "<span>Logged in as </span>" + "<a href='/user/" + cognitoSub + "'>" + printedUsername + "</a>";
+	var linky = "/user/" + cognitoSub;
+
+	if (printedUsername.includes("Facebook_") || printedUsername.includes("Google_") && !getUrl().includes(cognitoSub)){
+		printedUsername += " - <span style='color:red; text-decoration-color: red;'>[click here to update username]</span>"
+		linky += "/?view=username";
+	}
+	HTML += "<span>Logged in as </span>" + "<a href='" + linky + "'>" + printedUsername + "</a>";
 	return HTML;
 }
 
@@ -708,7 +716,8 @@ setInterval(
 				getRequests();
 				if (!waitingOnRequest){
 					getOnlineFriendsAndParty();
-					getServerList();
+					if (page == "home")
+						getServerList();
 				}
 				waitingOnRequest = true;
 				if (page == "profile"){
