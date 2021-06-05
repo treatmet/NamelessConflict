@@ -69,7 +69,7 @@ var localGame = false;
 
 
 //-----------------Config----------------------
-var version = "v 0.4.6"; //Scalable + customizations
+var version = "v 0.5.0"; //Scalable + customizations
 
 const spectateMoveSpeed = 10;
 var screenShakeScale = 0.5;
@@ -80,7 +80,7 @@ var noPlayerBorders = false;
 var camOffSet = 350;//Offset is how many pixels away from the center the camera will go when aiming, greater value means player closer to edge of screen
 var diagCamOffSet = 200;
 var camMaxSpeed = 300;
-var camAccelerationMultiplier = 2;
+var camAccelerationMultiplier = 1.9;
 var shiftCamOffSet = 450;
 var shiftDiagCamOffSet = 325;
 const spectateZoom = 0.5;
@@ -95,6 +95,10 @@ var shopEnabled = false;
 
 //Player Config
 var SGTriggerTapLimitTimer = 50;
+var hordeKills = 0;
+var hordeGlobalBest = 0;
+var hordePersonalBest = 0;
+var hordeGlobalBestNames = "RTPM3";
 
 var legSwingSpeed = 1;
 var maxLegHeight = 116;
@@ -112,6 +116,8 @@ var hideChatTimer = 800;
 //Document Variables and Initialization
 var ctx = document.getElementById("ctx").getContext("2d", { alpha: false });
 var canvas = document.getElementById("ctx");
+
+
 
 ctx.font = 'bold 11px Electrolize';
 ctx.textAlign="center";
@@ -140,6 +146,7 @@ var map = "map2";
 var gametype = "ctf";
 var scoreToWin = 0;
 var timeLimit = true; //true for time limit victory condition, false if score limit victory condition.
+var customServer = false;
 var minutesLeft = "9";
 var secondsLeft = "99";
 var nextGameTimer = 0;
@@ -399,6 +406,7 @@ var pickupFlash = 1.0;
 
 var gameOver = false;
 var pregame = true;
+var pregameIsHorde = true;
 var suddenDeath = false;
 
 var healthFlashTimer = 100;
@@ -793,7 +801,7 @@ sfxLaserCharging.volume(0.6);
 var sfxLaserDischarge = new Howl({src: ['/src/client/sfx/laserDischarge.mp3']});
 
 var sfxClick = new Howl({src: ['/src/client/sfx/click.mp3']});
-sfxClick.volume(0.8);
+sfxClick.volume(0.6);
 var sfxHealthPackGrab = new Howl({src: ['/src/client/sfx/healthPackGrab.mp3']});
 sfxHealthPackGrab.volume(.5);
 var sfxWeaponDrop = new Howl({src: ['/src/client/sfx/weaponDrop2.mp3']});
@@ -956,7 +964,7 @@ socket.on('removePlayer', function(id){
 var Thug = function(id){
 	var self = {
 		id:id,
-		team:"black",
+		team:1,
 		x:0,
 		y:0,	
 		health:100,
@@ -965,13 +973,67 @@ var Thug = function(id){
 		rotation:0,
 		height:94,
 		width:94,
+		moving:5,
+		target:{x:0,y:0},
+		attacking:0
 	}
+
+	self.engine = function (){
+		if (self.attacking > 0){
+			self.attacking--;
+		}
+		self.swingLegs();
+		if (self.target)
+			self.rotation = Math.atan2((self.y - self.target.y),(self.x - self.target.x)) + 4.71239;
+
+	}
+
+	self.attack = function(){
+		self.legHeight = -94;
+	}
+
+	self.swingLegs = function(){
+		if (self.attacking > 0){
+			self.legHeight = -94;
+		}
+		else if ((self.moving > 0 || gametype == "horde") && self.attacking <= 0){
+			if (self.legSwingForward == true){
+				self.legHeight += 7 * 1.3;
+				if (self.legHeight > 94){
+					self.legSwingForward = false;
+				}
+			}
+			else if (self.legSwingForward == false){
+				self.legHeight -= 7 * 1.3;
+				if (self.legHeight < -94){
+					self.legSwingForward = true;
+				}
+			}
+		}
+		else if (self.moving <= 0 && self.attacking <= 0){
+			self.standThereAwkwardly();
+		}
+	}
+
+	self.standThereAwkwardly = function(){
+		if (self.legHeight != 45){
+			self.legHeight = 45;
+		}
+	}
+
+
+
+
+
 	Thug.list[id] = self;
 }
 Thug.list = {};
 
 socket.on('removeThug', function(id){
-	if (Thug.list[id]){
+	if (id == "all"){
+		Thug.list = [];
+	}
+	else if (Thug.list[id]){
 		delete Thug.list[id];
 	}
 });
@@ -1445,6 +1507,9 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			Thug(thugDataPack[i].id);
 			Thug.list[thugDataPack[i].id][thugDataPack[i].property] = thugDataPack[i].value;
 		}
+		if (thugDataPack.property == "x" || thugDataPack.property == "y"){
+			Thug.list[thugDataPack[i].id].moving == 5;
+		}
 	}	
 	
 	for (var i = 0; i < notificationPack.length; i++) {
@@ -1607,6 +1672,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		gametype = miscPack.variant.gametype;
 		scoreToWin = miscPack.variant.scoreToWin;
 		timeLimit = miscPack.variant.timeLimit;
+		customServer = miscPack.variant.customServer;
 	}
 	if (miscPack.mapWidth){
 		mapWidth = miscPack.mapWidth;
@@ -1623,8 +1689,26 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 	if (miscPack.pcMode){
 		pcMode = miscPack.pcMode;
 	}
+	if (miscPack.hordeKills === 0 || miscPack.hordeKills){
+		hordeKills = miscPack.hordeKills;
+	}
+	if (miscPack.hordeGlobalBestNames){
+		hordeGlobalBestNames = miscPack.hordeGlobalBestNames;
+	}
+	if (miscPack.hordeGlobalBest){
+		hordeGlobalBest = miscPack.hordeGlobalBest;
+	}
+	if (miscPack.playerDied){
+		playerDied = miscPack.playerDied;
+		playerDiedTimer = playerDiedTimerMax;
+		console.log("Got player who died: " + playerDied );
+	}
+
 	drawEverything();
 }
+var playerDied = "";
+var playerDiedTimer = 0;
+var playerDiedTimerMax = 300;
 
 //Goes to only a single player init initialize 
 socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockPack, miscPack){
@@ -1716,6 +1800,7 @@ function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack,
 		gametype = miscPack.variant.gametype;
 		scoreToWin = miscPack.variant.scoreToWin;
 		timeLimit = miscPack.variant.timeLimit;
+		customServer = miscPack.variant.customServer;
 	}
 	gameOver = miscPack.gameOver.gameIsOver;
 	pregame = miscPack.pregame;
@@ -1729,11 +1814,20 @@ function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack,
 	if (miscPack.shopEnabled){
 		shopEnabled = miscPack.shopEnabled;
 	}
+	if (miscPack.hordeKills){
+		hordeKills = miscPack.hordeKills;
+	}
 	
 	if (numPlayers != miscPack.numPlayers) {
 		logg(miscPack.numPlayers + ' players here.');			
 		numPlayers = miscPack.numPlayers;
 	}	
+	if (miscPack.hordeGlobalBestNames){
+		hordeGlobalBestNames = miscPack.hordeGlobalBestNames;
+	}
+	if (miscPack.hordeGlobalBest){
+		hordeGlobalBest = miscPack.hordeGlobalBest;
+	}
 	logg("Server URL: " + miscPack.ip+":"+miscPack.port);
 	
 	BoostBlast.list = [];	
@@ -2573,7 +2667,7 @@ function drawPickups(){
 
 function drawBags(){
 	normalShadow();
-	if (gametype == "ctf"){
+	if (gametype == "ctf" && !(gametype == "horde" || (pregame && pregameIsHorde))){
 		if (bagRed.captured == false){
 			if (centerX - myPlayer.x * zoom + bagRed.x * zoom - Img.bagRed.width/2 * zoom > -Img.bagRed.width * zoom - drawDistance && centerX - myPlayer.x * zoom + bagRed.x * zoom - Img.bagRed.width/2 * zoom < canvasWidth + drawDistance && centerY - myPlayer.y * zoom + bagRed.y * zoom - Img.bagRed.height/2 * zoom > -Img.bagRed.height * zoom - drawDistance && centerY - myPlayer.y * zoom + bagRed.y * zoom - Img.bagRed.height/2 * zoom < canvasHeight + drawDistance){
 				drawImage(Img.bagRed, centerX - myPlayer.x * zoom + bagRed.x * zoom - Img.bagRed.width/2 * zoom, centerY - myPlayer.y * zoom + bagRed.y * zoom - Img.bagRed.height/2 * zoom, Img.bagRed.width * zoom, Img.bagRed.height * zoom);
@@ -2785,15 +2879,27 @@ function drawTorsos(){
 	} //End player for loop
 }
 
+function getThugLength(){
+	length = 0;
+	for (var i in Thug.list){
+		length++;
+	}
+	return length;
+}
+
 function drawThugs(){
 	for (var i in Thug.list){
 		if (Thug.list[i].health > 0){
+			if (Thug.list[i].engine)
+				Thug.list[i].engine();
+			// console.log("Thug.list[i].legHeight" + Thug.list[i].legHeight + " id:" + Thug.list[i].id); 
+			// console.log("Thug.list[i].x" + Thug.list[i].x + " Thug.list[i].y" + Thug.list[i].y); 
 			if (Thug.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Thug.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Thug.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Thug.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){				
 				ctx.save();
                 ctx.translate(centerX + Thug.list[i].x * zoom - myPlayer.x * zoom, centerY + Thug.list[i].y * zoom - myPlayer.y * zoom); //Center camera on controlled player
 				ctx.rotate(Thug.list[i].rotation);
 					
-					var thugImg = Img.blackThugTorso;
+					var thugImg = Img.whiteThugTorso;
 					var legs = Img.whiteThugLegs;
 					if (Thug.list[i].team == 2){
 						legs = Img.blackThugLegs;
@@ -2816,6 +2922,9 @@ function drawThugs(){
 
                 ctx.restore();
 			}
+		} 
+		else {
+			delete Thug.list[i];
 		}
 	}
 }
@@ -2939,6 +3048,110 @@ function drawLaser(){
 			}
         ctx.restore();
 	}
+}
+
+function drawBlockLasers(){
+	var laserCenterX = 0;
+	var laserCenterY = 0;
+
+	var startX = 0;
+	var startY = 0;
+	var endX = 0;
+	var endY = 0;
+	ctx.strokeStyle = "blue";
+	ctx.lineWidth  = 1;
+
+	for (var b in Block.list){
+		for (var s = 1; s <= 4; s++){
+			switch(s){
+				case 1:
+					laserCenterX = -cameraX + (Block.list[b].x) * zoom;
+					laserCenterY = -cameraY + (Block.list[b].y) * zoom;
+					break;
+				case 2:
+					laserCenterX = -cameraX + (Block.list[b].x + Block.list[b].width) * zoom;
+					laserCenterY = -cameraY + (Block.list[b].y) * zoom;
+					break;
+				case 3:
+					laserCenterX = -cameraX + (Block.list[b].x + Block.list[b].width) * zoom;
+					laserCenterY = -cameraY + (Block.list[b].y + Block.list[b].height) * zoom;
+					break;
+				case 4:
+					laserCenterX = -cameraX + (Block.list[b].x) * zoom;
+					laserCenterY = -cameraY + (Block.list[b].y + Block.list[b].height) * zoom;
+					break;
+				default:
+					break;
+			}
+
+			switch(myPlayer.shootingDir){
+				case 1:
+					if (s != 3 && s != 4) {laserCenterX = 0; laserCenterY = 0;}
+					startX = laserCenterX;
+					startY = 0;
+					endX = laserCenterX;
+					endY = canvasHeight;
+					break;
+				case 2:
+					if (s != 1 && s != 3) {laserCenterX = 0; laserCenterY = 0;}
+					startX = laserCenterX + laserCenterY;
+					startY = 0;
+					endX = -canvasHeight + (laserCenterX + laserCenterY);
+					endY = canvasHeight;
+					break;
+				case 3:
+					if (s != 1 && s != 4) {laserCenterX = 0; laserCenterY = 0;}
+					startX = 0;
+					startY = laserCenterY;
+					endX = canvasWidth;
+					endY = laserCenterY;
+					break;
+				case 4:
+					if (s != 2 && s != 4) {laserCenterX = 0; laserCenterY = 0;}
+					startX = laserCenterX - laserCenterY;
+					startY = 0;
+					endX = canvasHeight + laserCenterX - laserCenterY;
+					endY = canvasHeight;
+					break;
+				case 5:
+					if (s != 1 && s != 2) {laserCenterX = 0; laserCenterY = 0;}
+					startX = laserCenterX;
+					startY = 0;
+					endX = laserCenterX;
+					endY = canvasHeight;
+					break;
+				case 6:
+					if (s != 1 && s != 3) {laserCenterX = 0; laserCenterY = 0;}
+					startX = laserCenterX + laserCenterY;
+					startY = 0;
+					endX = -canvasHeight + (laserCenterX + laserCenterY);
+					endY = canvasHeight;
+					break;
+				case 7:
+					if (s != 2 && s != 3) {laserCenterX = 0; laserCenterY = 0;}
+					startX = 0;
+					startY = laserCenterY;
+					endX = canvasWidth;
+					endY = laserCenterY;
+					break;
+				case 8:
+					if (s != 2 && s != 4) {laserCenterX = 0; laserCenterY = 0;}
+					startX = laserCenterX - laserCenterY;
+					startY = 0;
+					endX = canvasHeight + laserCenterX - laserCenterY;
+					endY = canvasHeight;
+					break;
+				}
+
+			if (laserCenterY == 0 && laserCenterX == 0){continue;}
+			ctx.beginPath();
+			ctx.moveTo(startX, startY);
+			ctx.lineTo(endX, endY);
+			ctx.stroke();
+		}
+	}
+
+
 }
 
 var personalInstructions = [
@@ -3625,8 +3838,8 @@ function drawInformation(){
 		fillText("ping:" + ping, 5, 35);
 		if (showStatOverlay == true){
 			fillText("Version:" + version, 5, 55); //debug
-			fillText("y: " + Player.list[myPlayer.id].y, 5, 75); //debug info
-			fillText("x: " + Player.list[myPlayer.id].x, 5, 95); //debug info
+			// fillText("y: " + Player.list[myPlayer.id].y, 5, 75); //debug info
+			// fillText("x: " + Player.list[myPlayer.id].x, 5, 95); //debug info
 			//fillText("boosting: " + Player.list[myPlayer.id].boosting, 5, 55); //debug info
 			//fillText("speedX: " + Player.list[myPlayer.id].speedX, 5, 75); //debug
 			//fillText("speedY: " + Player.list[myPlayer.id].speedY, 5, 95); //debug
@@ -3830,91 +4043,93 @@ function drawChat(){
 //Top Scoreboard top scoreboard topscoreboard	
 function drawTopScoreboard(){
 	noShadow();
-	if (!gameOver){
-		ctx.textAlign="center";
-		ctx.globalAlpha = 0.50;
-		if (pcMode == 2){
-			ctx.fillStyle="#2e3192"; //blue
-		}
-		else {
-			ctx.fillStyle="#000000";
-		}
-		ctx.fillStyle="#2e3192"; //blue
-		ctx.fillRect((canvasWidth/2 - 25) + 70,0,50,50);
-		if (pcMode == 2){
-			ctx.fillStyle="#9e0b0f"; //red
-		}
-		else {
-			ctx.fillStyle="#FFFFFF";
-		}
-		ctx.fillStyle="#9e0b0f"; //red
-		ctx.fillRect((canvasWidth/2 - 25) - 70,0,50,50);
-		ctx.globalAlpha = 1.0;
-			
-		ctx.fillStyle="#FFFFFF";
-		ctx.font = '28px Electrolize';
-		ctx.lineWidth=4;
-		
-		if (clockHeight >= 30){clockHeight -= 5;}
-		if (clockHeight < 30){clockHeight = 30;}
-
-		if (timeLimit == false){
-			ctx.font = 16 + 'px Electrolize';	
-			var smallText = getGametypeSymbol();
-			if (scoreToWin > 0){
-				smallText = "First to " + scoreToWin + getGametypeSymbol();
-			}
-			strokeAndFillText(smallText, canvasWidth/2, 23);
-		}
-		else if (timeLimit == true){
-			ctx.font = 16 + 'px Electrolize';
-			if (gameOver == false && secondsLeft == 0 && minutesLeft == 0){
-				ctx.fillStyle="#FF0000";
-				strokeAndFillText("SD" + getGametypeSymbol(), canvasWidth/2, 53);
+	if (!(gametype == "horde" || (pregame && pregameIsHorde))){
+		if (!gameOver){
+			ctx.textAlign="center";
+			ctx.globalAlpha = 0.50;
+			if (pcMode == 2){
+				ctx.fillStyle="#2e3192"; //blue
 			}
 			else {
+				ctx.fillStyle="#000000";
+			}
+			ctx.fillStyle="#2e3192"; //blue
+			ctx.fillRect((canvasWidth/2 - 25) + 70,0,50,50);
+			if (pcMode == 2){
+				ctx.fillStyle="#9e0b0f"; //red
+			}
+			else {
+				ctx.fillStyle="#FFFFFF";
+			}
+			ctx.fillStyle="#9e0b0f"; //red
+			ctx.fillRect((canvasWidth/2 - 25) - 70,0,50,50);
+			ctx.globalAlpha = 1.0;
+				
+			ctx.fillStyle="#FFFFFF";
+			ctx.font = '28px Electrolize';
+			ctx.lineWidth=4;
+			
+			if (clockHeight >= 30){clockHeight -= 5;}
+			if (clockHeight < 30){clockHeight = 30;}
+
+			if (timeLimit == false){
+				ctx.font = 16 + 'px Electrolize';	
 				var smallText = getGametypeSymbol();
 				if (scoreToWin > 0){
 					smallText = "First to " + scoreToWin + getGametypeSymbol();
 				}
-				strokeAndFillText(smallText, canvasWidth/2, 53);
+				strokeAndFillText(smallText, canvasWidth/2, 23);
 			}
-			if (parseInt(minutesLeft)*60 + parseInt(secondsLeft) <= 60 && timeLimit){
-				ctx.fillStyle="#FF0000";
+			else if (timeLimit == true){
+				ctx.font = 16 + 'px Electrolize';
+				if (gameOver == false && secondsLeft == 0 && minutesLeft == 0){
+					ctx.fillStyle="#FF0000";
+					strokeAndFillText("SD" + getGametypeSymbol(), canvasWidth/2, 53);
+				}
+				else {
+					var smallText = getGametypeSymbol();
+					if (scoreToWin > 0){
+						smallText = "First to " + scoreToWin + getGametypeSymbol();
+					}
+					strokeAndFillText(smallText, canvasWidth/2, 53);
+				}
+				if (parseInt(minutesLeft)*60 + parseInt(secondsLeft) <= 60 && timeLimit){
+					ctx.fillStyle="#FF0000";
+				}
+				ctx.lineWidth=5;
+				ctx.font = clockHeight + 'px Electrolize';	
+				strokeAndFillText(minutesLeft + ":" + secondsLeft, canvasWidth/2, (clockHeight + (clockHeight/2 + 16))/2);
 			}
-			ctx.lineWidth=5;
-			ctx.font = clockHeight + 'px Electrolize';	
-			strokeAndFillText(minutesLeft + ":" + secondsLeft, canvasWidth/2, (clockHeight + (clockHeight/2 + 16))/2);
 		}
-	}
-	
-	//Top scoreboard Score Numbers
-	ctx.fillStyle="#FFFFFF";
-	ctx.lineWidth=6;
-	ctx.font = '36px Electrolize';
-	if (whiteScoreHeight >= 36){whiteScoreHeight -= 7;}
-	if (whiteScoreHeight < 36){whiteScoreHeight = 36;}
-	ctx.font = whiteScoreHeight + 'px Electrolize';
+		
+		//Top scoreboard Score Numbers
+		ctx.fillStyle="#FFFFFF";
+		ctx.lineWidth=6;
+		ctx.font = '36px Electrolize';
+		if (whiteScoreHeight >= 36){whiteScoreHeight -= 7;}
+		if (whiteScoreHeight < 36){whiteScoreHeight = 36;}
+		ctx.font = whiteScoreHeight + 'px Electrolize';
 
-	var whiteScoreX = canvasWidth/2 - 70;
-	var whiteScoreY = (whiteScoreHeight + (whiteScoreHeight/2 + 16))/2;	
-	if (gameOver){
-		whiteScoreX = 375;
-		whiteScoreY = 200;
-	}
-	strokeAndFillText(whiteScore,whiteScoreX,whiteScoreY);
-	
-	if (blackScoreHeight >= 36){blackScoreHeight -= 7;}
-	if (blackScoreHeight < 36){blackScoreHeight = 36;}
-	ctx.font = blackScoreHeight + 'px Electrolize';		
+		var whiteScoreX = canvasWidth/2 - 70;
+		var whiteScoreY = (whiteScoreHeight + (whiteScoreHeight/2 + 16))/2;	
+		if (gameOver){
+			whiteScoreX = 375;
+			whiteScoreY = 200;
+		}
+		strokeAndFillText(whiteScore,whiteScoreX,whiteScoreY);
+		
+		if (blackScoreHeight >= 36){blackScoreHeight -= 7;}
+		if (blackScoreHeight < 36){blackScoreHeight = 36;}
+		ctx.font = blackScoreHeight + 'px Electrolize';		
 
-	var blackScoreX = canvasWidth/2 + 70;
-	var blackScoreY = (blackScoreHeight + (blackScoreHeight/2 + 16))/2;	
-	if (gameOver){
-		blackScoreX = 375;
-		blackScoreY = 445;
+		var blackScoreX = canvasWidth/2 + 70;
+		var blackScoreY = (blackScoreHeight + (blackScoreHeight/2 + 16))/2;	
+		if (gameOver){
+			blackScoreX = 375;
+			blackScoreY = 445;
+		}
+		strokeAndFillText(blackScore,blackScoreX,blackScoreY);
 	}
-	strokeAndFillText(blackScore,blackScoreX,blackScoreY);
 }
 
 function getGametypeSymbol(){
@@ -4381,35 +4596,108 @@ function getFullRankName(rank){
 }
 
 function getGameStartText(){
-	var text = "DEATHMATCH!";
+	var text = "GAME START!";
 	if (gametype == "ctf"){
 		text = "CAPTURE THE BAG!"
+	}
+	if (gametype == "slayer"){
+		text = "DEATHMATCH!"
+	}
+	if (gametype == "horde"){
+		text = "INVASION!"
 	}
 	return text;
 }
 
+function allPlayersAreDead(){	
+	for (var p in Player.list){
+		if (Player.list[p].health > 0 ){
+			return false;
+		}
+	}
+	return true;
+}
+
 //GAME STATUS UPDATES: END GAME/PREGAME/SUDDEN DEATH/TEAM WINS
 function drawGameEventText(){
-	if (pregame == true && showStatOverlay == false){
-		heavyCenterShadow();
-		ctx.textAlign="right";
-		ctx.font = '118px Electrolize';
+	if (!myPlayer.hordeKills){myPlayer.hordeKills = 0;}
+	if (playerDiedTimer > 0){playerDiedTimer--;}
+	if (playerDiedTimer <= 0){playerDied = "";}
+	if (gametype == "horde" || (pregame && pregameIsHorde)){
+		if (Player.list[myPlayer.id].health <= 0){
+			ctx.textAlign="center";
+			ctx.font = '70px Electrolize';
+			ctx.lineWidth=10;
+			ctx.fillStyle="#FFFFFF";
+			var killsText= "YOU ARE DEAD";
+			strokeAndFillText(killsText,canvasWidth/2,canvasHeight/2 - 100);
+			ctx.font = '50px Electrolize';
+			ctx.lineWidth=7;
+			killsText= "Kills: " + myPlayer.hordeKills;
+			if (myPlayer.hordeKills >= myPlayer.hordePersonalBest) {killsText += " - NEW RECORD!!!"; ctx.fillStyle="yellow";}			
+			strokeAndFillText(killsText,canvasWidth/2,canvasHeight/2);
+			ctx.font = '30px Electrolize';
+			ctx.fillStyle="#FFFFFF";
+			killsText= "Press [Space] to reset kills and respawn";
+			ctx.lineWidth=5;
+			strokeAndFillText(killsText,canvasWidth/2,canvasHeight/2 + 50);
+		}
+		else {
+			ctx.textAlign="center";
+			ctx.font = '40px Electrolize';
+			ctx.lineWidth=7;
+			ctx.fillStyle="#FFFFFF";
+			var killsText= "Kills since last respawn: " + myPlayer.hordeKills;
+			strokeAndFillText(killsText,canvasWidth/2,45);
+			ctx.font = '20px Electrolize';
+			ctx.lineWidth=4;
+			killsText= "Personal best: " + myPlayer.hordePersonalBest;
+			strokeAndFillText(killsText,canvasWidth/2,70);
+			ctx.font = '20px Electrolize';
+			ctx.lineWidth=4;
+			killsText= "Global best: " + hordeGlobalBest + " by " + hordeGlobalBestNames;
+			strokeAndFillText(killsText,canvasWidth/2,95);
+		}
+	}
+	if (customServer && pregame){
+		noShadow();
 		ctx.lineWidth=16;
 		ctx.fillStyle="#FFFFFF";
+		ctx.font = '70px Electrolize';
+		ctx.textAlign="right";
+		strokeAndFillText("Chat: './start' to start game",canvasWidth - 10,750);
+	}
+	else if (showStatOverlay == false && (gametype == "horde" || (pregame && pregameIsHorde))){
+		noShadow();
+		ctx.font = '118px Electrolize';
 		var pregameText= "PREGAME";
 		var players = 0;
 		for (var p in Player.list){
 			players++;
+		}		
+		if (pregame && players >= 4){
+			pregameText = "MATCH STARTING!";
 		}
-		if (gametype == "horde"){
-			pregameText = "Waiting for players to join...";
+		else if (gametype == "horde" || (pregame && pregameIsHorde)){
 			ctx.font = '70px Electrolize';
+			if (playerDiedTimer > 0 && playerDied){				
+				ctx.lineWidth=8;
+				pregameText = playerDied + " DIED!!";
+				ctx.textAlign="center";
+				ctx.fillStyle="red";
+				strokeAndFillText(pregameText,canvasWidth/2,canvasHeight/2 + 100);	
+			}
+			if (Player.list[myPlayer.id].health > 0 && gametype != "horde" && pregame){
+				pregameText = "Waiting for players to join...";
+			}
+			else {
+				pregameText = "";
+			}
 		}
-		else if (players >= 4){
-			pregameText = "GAME STARTING!";
-		}
-		strokeAndFillText(pregameText,canvasWidth - 10,750);	
-		noShadow();
+		ctx.lineWidth=16;
+		ctx.fillStyle="#FFFFFF";
+		ctx.textAlign="right";
+		strokeAndFillText(pregameText,canvasWidth - 10,750);			
 	}
 	else {
 		if (gameStartAlpha > 0){
@@ -4747,6 +5035,7 @@ function drawEverything(){
 	drawBodies();	
 	drawLegs();
 	drawLaser();
+	//drawBlockLasers();
 	drawBlockCanvas();	
 	drawLaserCanonLaser();
 	drawWallBodies();
@@ -4887,7 +5176,7 @@ setInterval(
 		if (countdownToRedrawGraphics != -1){
 			countdownToRedrawGraphics++;
 		}
-		if (countdownToRedrawGraphics >= 10){
+		if (countdownToRedrawGraphics >= 5){
 			countdownToRedrawGraphics = -1;
 			logg("Redrawing map and blocks on timer");
 			drawMapElementsOnMapCanvas();
@@ -5118,21 +5407,21 @@ function shootUpdateFunction(shotData){
 		if (Player.list[shotData.playerId].weapon == 3){
 			sfxMG.volume(vol * .35);
 			sfxMG.play();
-			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].MGClip <= 7){
+			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].MGClip <= 7 && !mute){
 				sfxClick.play();
 			}
 		}
-		else if (Player.list[shotData.playerId].weapon == 2) {
+		else if (Player.list[shotData.playerId].weapon == 2 && !mute) {
 			sfxDP.volume(vol);
 			sfxDP.play();
-			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].DPClip <= 5){
+			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].DPClip <= 5 && !mute){
 				sfxClick.play();
 			}
 		}
 		else if (Player.list[shotData.playerId].weapon == 1) {
 			sfxPistol.volume(vol);
 			sfxPistol.play();
-			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].PClip <= 5){
+			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].PClip <= 5 && !mute){
 				sfxClick.play();
 			}
 		}
@@ -5147,7 +5436,7 @@ function shootUpdateFunction(shotData){
 		else if (Player.list[shotData.playerId].weapon == 4) {
 			sfxSG.volume(vol);
 			sfxSG.play();
-			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].SGClip <= 3){
+			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].SGClip <= 3 && !mute){
 				sfxClick.play();
 			}
 			Player.list[shotData.playerId].triggerTapLimitTimer = SGTriggerTapLimitTimer;
@@ -5187,7 +5476,7 @@ function createBody(targetX, targetY, pushSpeed, shootingDir, playerId){
 		var dx1 = myPlayer.x - targetX;
 		var dy1 = myPlayer.y - targetY;
 		var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-		var vol = (Math.round((1 - (dist1 / 1000)) * 100)/100) + .3;
+		var vol = (Math.round((1 - (dist1 / 1000)) * 100)/100) + .0; //Boost vol with this last num
 		if (vol > 1)
 			vol = 1;
 		else if (vol < 0 && vol >= -.1)
@@ -5635,7 +5924,7 @@ var tips = [
 ];
 
 function getNewTip(){
-	if (document.getElementById("tipContent")){
+	if (!gameOver && document.getElementById("tipContent")){
 		var newTip = tips[randomInt(0, tips.length-1)];
 		document.getElementById("tipContent").innerHTML = newTip;
 	}
@@ -5801,7 +6090,7 @@ function disconnect(){
 }
 var forceToLeave = false;
 window.onbeforeunload = function(){
-	if (!gameOver && !pregame && !forceToLeave) {
+	if (!gameOver && !pregame && !forceToLeave && !customServer) {
 		return 'Are you sure you want to leave?'; //Leave site? unsaved changes
 	}
 	return;

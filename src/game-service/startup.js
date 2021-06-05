@@ -98,7 +98,7 @@ function processArgs(){
 	else {
 		getAwsIp();
 		if (!isTest){
-			serverHomePage = "https://ss.treatmetcalf.com/";
+			serverHomePage = "https://socketshot.io/";
 		}
 		else {
 			serverHomePage = "https://sstest.treatmetcalf.com/";
@@ -118,7 +118,7 @@ function processArgs(){
 		maxPlayers = 14;
 	}
 	else if (port == "3004"){
-		gametype = "horde";
+		gametype = "slayer";
 		maxPlayers = 8;
 	}
 }

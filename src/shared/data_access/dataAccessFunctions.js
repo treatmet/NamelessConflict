@@ -1045,8 +1045,12 @@ var dbGameServerUpdate = function() {
 	if (isWebServer == true)
 		return;
 
-	if (!customServer)
+	if (gametype == "horde"){
+		serverName = "Invasion " + port.substring(2,4);
+	}
+		else if (!customServer){
 		serverName = "Ranked " + port.substring(2,4);
+	}
 
 	var serverSubName = "";
 	if (maxPlayers%2 != 0)
@@ -1061,7 +1065,7 @@ var dbGameServerUpdate = function() {
 		serverSubName += " Deathmatch]";
 	}
 	else if (gametype == "horde"){
-		serverSubName += " Invasion]";
+		serverSubName = "[" + maxPlayers + " Players]";
 	}
 	
 	
@@ -1098,6 +1102,50 @@ var dbGameServerUpdate = function() {
 		//logg("dbGameServerUpdate DB: Set: " + myUrl + " with: ");
 		//console.log(obj);
 	});		
+}
+var setHordePersonalBest = function(cognitoSub, kills){
+	if (cognitoSub.substring(0,2) == "0."){return;}
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {hordePersonalBest: kills}, async function(err, obj){
+		console.log("Successfully set user personal best");
+	});		
+}
+
+var setHordeGlobalBest = function(names, kills){
+	dataAccess.dbUpdateAwait("RW_USER", "set", {USERNAME:"scorekeeper"}, {hordeGlobalBest: kills, hordeGlobalBestNames: names}, async function(err, obj){
+	});		
+}
+
+var getHordePersonalBest = function(cognitoSub, cb){
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+		if (res && res[0]){
+			if (typeof res[0].hordePersonalBest === 'undefined'){
+				dbUserUpdate("set", cognitoSub, {hordePersonalBest:0});
+				cb(0);
+			}
+			else {
+				cb(res[0].hordePersonalBest);
+			}
+		}
+		else {
+			cb(0);
+		}
+	});
+}
+
+var getHordeGlobalBest = function(cb){
+	dataAccess.dbFindAwait("RW_USER", {USERNAME:"scorekeeper"}, function(err,res){
+		if (res && res[0]){
+			if (typeof res[0].hordeGlobalBest === 'undefined'){
+				cb({kills:0, names:"RTPM3"});
+			}
+			else {
+				cb({kills:res[0].hordeGlobalBest, names:res[0].hordeGlobalBestNames});
+			}
+		}
+		else {
+			cb({kills:0, names:"RTPM3"});
+		}
+	});
 }
 
 var syncGameServerWithDatabase = function(){	
@@ -1221,3 +1269,7 @@ module.exports.dbGameServerUpdate = dbGameServerUpdate;
 module.exports.syncGameServerWithDatabase = syncGameServerWithDatabase;
 module.exports.checkForUnhealthyServers = checkForUnhealthyServers;
 module.exports.addUser = addUser;
+module.exports.setHordePersonalBest = setHordePersonalBest;
+module.exports.setHordeGlobalBest = setHordeGlobalBest;
+module.exports.getHordePersonalBest = getHordePersonalBest;
+module.exports.getHordeGlobalBest = getHordeGlobalBest;

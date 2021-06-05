@@ -265,7 +265,8 @@ function getShortenedValue(val){
 
 router.post('/validateToken', async function (req, res) {
 	var code = req.body.code;
-	logg("VALIDATE TOKEN ENDPOINT -- code:" + getShortenedValue(code) + " cookies: cog_a=" + getShortenedValue(req.cookies["cog_a"]) + " cog_r=" + getShortenedValue(req.cookies["cog_r"]) + " body: cog_a=" + req.body.cog_a + " cog_r=" + req.body.cog_r);
+	logg("VALIDATE TOKEN ENDPOINT");
+	//logg("VALIDATE TOKEN ENDPOINT -- code:" + getShortenedValue(code) + " cookies: cog_a=" + getShortenedValue(req.cookies["cog_a"]) + " cog_r=" + getShortenedValue(req.cookies["cog_r"]) + " body: cog_a=" + req.body.cog_a + " cog_r=" + req.body.cog_r);
 
 	//console.log("--BODY");
 	//console.log(req.body);

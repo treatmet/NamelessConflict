@@ -212,6 +212,14 @@ var getPickupList = function(){
     return pickupList;
 }
 
+var getPickupListLength = function(){
+	var pickupListCount = 0;
+	for (var p in Pickup.list){
+		pickupListCount++;
+	}
+    return pickupListCount;
+}
+
 var getPickupById = function(id){
     return Pickup.list[id];
 }
@@ -248,6 +256,7 @@ var checkForPickup = function(player){
 
 module.exports.pickupPickup = pickupPickup;
 module.exports.getPickupList = getPickupList;
+module.exports.getPickupListLength = getPickupListLength;
 module.exports.getPickupById = getPickupById;
 module.exports.createPickup = createPickup;
 module.exports.clearPickupList = clearPickupList;

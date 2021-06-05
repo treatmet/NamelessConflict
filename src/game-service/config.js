@@ -78,11 +78,17 @@ global.voteMap = true;
 global.voteRebalance = true;
 global.pregameIsHorde = true;
 
+//Horde settings
+global.hordeKills = 0;
+global.hordeGlobalBest = 0;
+global.hordeGlobalBestNames = "RTPM3";
+global.personalHordeMode = true;
+
 global.minutesLeft = 9;
 global.secondsLeft = 99;
 global.scoreToWin = 0;
 global.nextGameTimer = 20;
-global.timeBeforeNextGame = 10; //newGameTimer
+global.timeBeforeNextGame = 45; //newGameTimer
 global.gameMinutesLength = 5;
 global.gameSecondsLength = 0;
 global.map = "longest";

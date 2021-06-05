@@ -48,7 +48,7 @@ var partyId = "";
 var userCash = 0;
 var federatedUser = false;
 var pcMode = 1;
-var serverHomePage = "https://ss.treatmetcalf.com/";
+var serverHomePage = "https://socketshot.io/";
 var isLocal = false;
 var defaultCustomizations = {red:{}, blue:{}};
 var tempCognitoSub = "";
@@ -152,7 +152,7 @@ function updateProfileLink(){
 function setPcModeAndIsLocalElements(data){
 	pcMode = data.pcMode;
 	var redirectUri = serverHomePage;
-	if (data.isLocal == true || serverHomePage != "https://ss.treatmetcalf.com/"){
+	if (data.isLocal == true || serverHomePage != "https://socketshot.io/"){
 		redirectUri = "https://rw2.treatmetcalf.com/";
 	}	
 	
@@ -716,7 +716,8 @@ setInterval(
 				getRequests();
 				if (!waitingOnRequest){
 					getOnlineFriendsAndParty();
-					getServerList();
+					if (page == "home")
+						getServerList();
 				}
 				waitingOnRequest = true;
 				if (page == "profile"){

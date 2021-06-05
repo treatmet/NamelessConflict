@@ -55,6 +55,9 @@ function getServerList(){
 			}
 			if ((data[j].instanceId == "local" && isLocal) || (data[j].instanceId != "local" && !isLocal)){
 				var buttonClassName = "serverSelectButton";
+				if (data[j].gametype == "horde"){
+					buttonClassName = "hordeServerSelectButton"
+				}
 				if (data[j].customServer){
 					buttonClassName = "customServerSelectButton"
 				}
@@ -80,6 +83,7 @@ function getAndShowCustomServerHTML(){
 function createServerClick(){
 	var params = {settings:[]};
 	var settings = document.getElementsByClassName("customServerSettingInput");
+	params.createdByCognitoSub = cognitoSub;
 
 	for (var s in settings){
 		let pushMe;
@@ -119,7 +123,7 @@ function createServerClick(){
 		if (data.server)
 			getJoinableServer({server:data.server});
 		else 
-			alert(data.msg);
+			alert(data.msg.message);
     });
 }
 

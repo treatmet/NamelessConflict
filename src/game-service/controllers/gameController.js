@@ -71,7 +71,13 @@ router.post('/playNow', async function (req, res) {
 					logg("res.send: " + "Server " + myUrl + " welcomes you!");
 					res.send({msg:"Server " + myUrl + " welcomes you!", success:true});
 					var cognitoSub = req.body.tempCognito ? req.body.tempCognito : authorizedUser.cognitoSub;
-					gameEngine.joinGame(cognitoSub, incomingUsers[u].username, incomingUsers[u].team, incomingUsers[u].partyId); //Join game
+
+					var team = incomingUsers[u].team;
+					if (gametype == "horde" || (pregame && pregameIsHorde)){
+						team = 2;
+					}
+				
+					gameEngine.joinGame(cognitoSub, incomingUsers[u].username, team, incomingUsers[u].partyId); //Join game
 					break;
 				}
 			}
@@ -92,6 +98,9 @@ router.post('/updateGameServer', async function (req, res) {
 		res.send({msg:"Url for current server not set", success:false});
 		return;
 	}	
+	createdByCognitoSub = req.body.createdByCognitoSub;
+	log(port + " createdByCognitoSub " + createdByCognitoSub);
+
 	gameEngine.updateRequestedSettings(req.body.settings, function(result){
 		res.send({result:result});
 	});    	

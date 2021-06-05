@@ -16,10 +16,6 @@ var initializePickups = function(map){
 	if (map == "empty"){
 	}
 	else if (gametype == "horde" || (pregame && pregameIsHorde)){
-		pickup.createPickup(Math.random(), 15, 15, 5, 75, 45); //Body Armor
-		pickup.createPickup(Math.random(), 15, 16, 3, MGClipSize*2, 45); //MG
-		pickup.createPickup(Math.random(), 16, 15, 3, MGClipSize*2, 45); //MG
-		pickup.createPickup(Math.random(), 16, 16, 3, MGClipSize*2, 45); //MG
 
 	}	
 	else if (map == "loadTest"){
@@ -114,6 +110,9 @@ var initializePickups = function(map){
 }
 
 var initializeBlocks = function(map){
+	log("RESETTING MAP");
+	console.log("Pretty sure pregameishorde is " + pregameIsHorde);
+
 	block.clearBlockList();
 	
 	if (map == "empty"){
@@ -122,6 +121,12 @@ var initializeBlocks = function(map){
 		mapWidth = 30*75;
 		mapHeight = 30*75;
 		
+		for (var x = 0; x < 15; x++){
+			var rngX = randomInt(0, Math.round((mapWidth/75)-1));
+			var rngY = randomInt(0, Math.round((mapHeight/75)-1));
+			block.createBlock(rngX,rngY, 1, 1, "normal"); //Bottom Left
+		}
+
 		//Spawn areas
 		spawnXminBlack = mapWidth/2 - 500;
 		spawnXmaxBlack = mapWidth/2 + 500;

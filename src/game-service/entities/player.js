@@ -89,8 +89,13 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.holdingBag = false;
 			updatePlayerList.push({id:self.id,property:"holdingBag",value:self.holdingBag});
 		}
+
 		if (self.health <= 0 && self.respawnTimer < respawnTimeLimit){self.respawnTimer++;}
-		if (self.respawnTimer >= respawnTimeLimit && self.health <= 0){self.respawn();}
+		if (!(gametype == "horde" || (pregame && pregameIsHorde))){
+			if (self.respawnTimer >= respawnTimeLimit && self.health <= 0){self.respawn();}
+		}
+		
+		
 		if (self.health <= 0){return false;}
 
 		
@@ -108,7 +113,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		
 		//If currently holding an arrow key, be aiming in that direction 
-		if (self.aiming < framesOfAiming - 10){
+		if (self.aiming < framesOfAiming - 5){
 			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === false){				
 				if (self.shootingDir != 1){
 					self.shootingDir = 1;
@@ -552,7 +557,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		pickup.checkForPickup(self);
 		
 		//Check Player collision with bag - STEAL
-		if (gametype == "ctf"){
+		if (gametype == "ctf" && !(gametype == "horde" || (pregame && pregameIsHorde))){
 			if (self.team == 1 && bagBlue.captured == false && self.health > 0 && !(bagBlue.playerThrowing == self.id && bagBlue.speed > 20)){
 				if (self.x > bagBlue.x - 67 && self.x < bagBlue.x + 67 && self.y > bagBlue.y - 50 && self.y < bagBlue.y + 50){												
 					bagBlue.captured = true;
@@ -1127,6 +1132,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.kill = function(shooter){
+		if (gametype == "horde" || (pregame && pregameIsHorde)){
+			gameEngine.upsertHordeRecords(false);
+		}
 
 		if (shooter.id != 0){
 			if (self.team != shooter.team || (self.lastEnemyToHit && self.lastEnemyToHit != 0)){
@@ -1242,7 +1250,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 		self.firing = 0; //0-3; 0 = not firing
 		self.aiming = 0;
-		self.respawnTimer = 0;
 		self.holdingBag = false;
 		updatePlayerList.push({id:self.id,property:"holdingBag",value:self.holdingBag});
 		self.updatePropAndSend("health", 100);
@@ -1313,6 +1320,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	
 	gameEngine.sendFullGameStatus(self.id);
 	self.respawn();
+
+	if (gametype == "horde" || (pregame && pregameIsHorde)){
+		dataAccessFunctions.getHordePersonalBest(self.cognitoSub, function(personalBest){
+			console.log("GOT PERSONAL BEST:" + personalBest);
+			self.hordePersonalBest = personalBest;
+			updatePlayerList.push({id:self.id,property:"hordePersonalBest",value:self.hordePersonalBest});		//send only to player!!!
+		});
+		if (getPlayerListLength() == 1){
+			gameEngine.resetHordeMode();
+		}
+	}
 	
 	return self;
 } //End Player function
@@ -1652,7 +1670,11 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						Discharge(player);				
 					}
 						
-				}//End health > 0 check for allowing input		
+				}//End health > 0 check for allowing input	
+				else if(data.inputId === 32 && player.health <= 0 && (gametype == "horde" || (pregame && pregameIsHorde))){ //SPACE
+					if (player.respawnTimer >= respawnTimeLimit * 0.75)
+						gameEngine.resetHordeMode(player.id);
+				}	
 			}); //End Socket on Keypress
 			
 			
@@ -1816,9 +1838,14 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 
 //Server commands
 function evalServer(socket, data){
+	logg("SERVER COMMAND:" + data);
+	logg("Created:" + createdByCognitoSub);
+
+	if (!getPlayerById(socket.id))
+		return;
 
 	//socket = socketBak;
-	if ((customServer || pregame) && data == "start"){
+	if (data == "start" && (customServer && (pregame || getPlayerById(socket.id).cognitoSub == createdByCognitoSub))){
 		gameEngine.restartGame();
 	}
 
@@ -1826,11 +1853,12 @@ function evalServer(socket, data){
 		if (data == "QWOPcmd"){
 			socket.emit('addToChat', "Server commands enabled");
 			allowServerCommands = true;
-		}			
-		return;
+		}		
+		if (data != "team" && getPlayerById(socket.id).cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){
+			return;
+		}
 	}
 	
-	logg("SERVER COMMAND:" + data);
 	if (data == "QWOPcmd"){
 		socket.emit('addToChat', "Server commands disabled");
 		allowServerCommands = false;
@@ -1890,6 +1918,26 @@ function evalServer(socket, data){
 				delete SOCKET_LIST[id];
 				socket.emit('addToChat', 'Kicked ' + name + ' from game.');
 				break;
+			}
+		}
+	}
+	else if (data == "team" || data == "teams" || data == "change" || data == "switch" || data == "changeTeams" || data == "changeTeam"){
+		if (gametype == "horde" || (pregame && pregameIsHorde)){
+			var playerList = getPlayerList();
+			for (var p in playerList){
+				playerList[p].team = 2;
+			}
+		}
+		else {
+			var teamsOffBalance = false;
+			if ((gameEngine.getMoreTeam1Players() > 1 && getPlayerById(socket.id).team == 1) || (gameEngine.getMoreTeam1Players() < -1 && getPlayerById(socket.id).team == 2))
+				teamsOffBalance = true;
+
+			if (customServer || !isGameInFullSwing() || teamsOffBalance){
+				gameEngine.changeTeams(socket.id);
+			}
+			else {
+				socket.emit('addToChat', "Ranked game is in full swing. No changing teams.");
 			}
 		}
 	}
@@ -2115,13 +2163,6 @@ function evalServer(socket, data){
 			logg("Server command: Thugs Disabled");
 			socket.emit('addToChat', "Server command: Thugs Disabled");
 			spawnOpposingThug = false;
-
-			var thugList = thug.getThugList();
-			for (var t in thugList){
-				for(var i in SOCKET_LIST){
-					SOCKET_LIST[i].emit('removeThug', thugList[t].id);
-				}			
-			}
 			thug.clearThugList();
 		}
 		else {
@@ -2175,18 +2216,6 @@ function evalServer(socket, data){
 		minutesLeft = 1;
 		secondsLeft = 3;
 	}				
-	else if (data == "team" || data == "teams" || data == "change" || data == "switch" || data == "changeTeams" || data == "changeTeam"){
-		var teamsOffBalance = false;
-		if ((gameEngine.getMoreTeam1Players() > 1 && getPlayerById(socket.id).team == 1) || (gameEngine.getMoreTeam1Players() < -1 && getPlayerById(socket.id).team == 2))
-			teamsOffBalance = true;
-
-		if (customServer || !isGameInFullSwing() || teamsOffBalance){
-			gameEngine.changeTeams(socket.id);
-		}
-		else {
-			socket.emit('addToChat', "Ranked game is in full swing. No changing teams.");
-		}
-	}
 	else if (data == "capturet" || data == "scoret"){
 		if (getPlayerById(socket.id).team == 1){
 			gameEngine.capture(1);
@@ -2265,10 +2294,10 @@ function evalServer(socket, data){
 		minutesLeft = 0;
 		secondsLeft = 0;
 	}
-	else if (data == "crasht"){
+	else if (data == "crasht" && (isLocal || getPlayerById(socket.id).cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea")){
 		crash();
 	}
-	else if (data == "godt" || data == "haxt"){
+	else if ((data == "godt" || data == "haxt") && (isLocal || getPlayerById(socket.id).cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea")){
 		getPlayerById(socket.id).SGClip = 99;
 		getPlayerById(socket.id).MGClip = 999;
 		getPlayerById(socket.id).DPClip = 999;
@@ -2285,7 +2314,7 @@ function evalServer(socket, data){
 		socket.emit('addToChat', 'INITIATE HAX');
 	}
 
-	else if (data[0] == "%" && data != "%timer") {
+	else if (data[0] == "%" && data != "%timer" && (isLocal || getPlayerById(socket.id).cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea")){
 		try {
 			var res = eval(data.substring(1));
 		}
@@ -2638,9 +2667,6 @@ function playerEvent(playerId, event){
 
 
 var connect = function(socket, cognitoSub, username, team, partyId){
-	if (gametype == "horde" || (pregame && pregameIsHorde)){
-		team = 2;
-	}
 	Player.onConnect(socket, cognitoSub, username, team, partyId);
 }
 
@@ -2667,7 +2693,23 @@ function runPlayerEngines(){
 		if (Player.list[i].team != 0)
 		Player.list[i].engine();
 	}		
-	
+}
+
+var getPlayerListLength = function(){
+	var length = 0;
+	for (var i in Player.list){
+		length++;
+	}		
+	return length;	
+}
+
+var getHighestPlayerHordeKills = function(){
+	var highestKills = 0;
+	for (var i in Player.list){
+		if (Player.list[i].hordeKills > highestKills)
+			highestKills = Player.list[i].hordeKills;
+	}		
+	return highestKills;	
 }
 
 var isSafeCoords = function(potentialX, potentialY, team){
@@ -2725,4 +2767,6 @@ module.exports.getPlayerList = getPlayerList;
 module.exports.playerDisconnect = playerDisconnect; //onDisconnect
 module.exports.getPlayerById = getPlayerById;
 module.exports.runPlayerEngines = runPlayerEngines;
+module.exports.getPlayerListLength = getPlayerListLength;
 module.exports.isSafeCoords = isSafeCoords;
+module.exports.getHighestPlayerHordeKills = getHighestPlayerHordeKills;

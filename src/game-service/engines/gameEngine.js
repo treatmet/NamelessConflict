@@ -8,106 +8,112 @@ var mapEngine = require('./mapEngine.js');
 
 var secondsSinceLastServerSync = syncServerWithDbInterval - 2;
 
-var resetGameSettingsToStandard = function(){
-boostAmount = 18;
-playerMaxSpeed = 5;
-playerAcceleration = 1;
-diagMovementScale = (2/3);
-voteGametype = true;
-voteMap = true;
-minutesLeft = 9;
-secondsLeft = 99;
-scoreToWin = 0;
-nextGameTimer = 20;
-timeBeforeNextGame = 45; //newGameTimer
-gameMinutesLength = 5;
-gameSecondsLength = 0;
-map = "longest";
-gametype = "ctf";
-freeForAll = false;
-maxPlayers = 14;
-maxEnergyMultiplier = 1;
-rechargeDelayTime = 120; //Double for breaking under zero energy
-healDelayTime = 300;
-healRate = 7; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal)
-respawnTimeLimit = 3 * 60;
-slayerRespawnTimeLimit = 3 * 60; //seconds (translated to frames)
-ctfRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
-bagDrag = 0.85;
-cloakingEnabled = true;
-cloakDrainSpeed = 0.12;
-cloakDrag = 0.5; //Walking speed multiplier when cloaked
-cloakInitializeSpeed = 0.02;
-cloakDeinitializeSpeed = 0.1;
-playerMaxHealth = 175;
-bootOnAfk = true;
-AfkFramesAllowed = 120 * 60; //seconds (translated to frames) //timeout
-damageScale = 1;
-pistolDamage = 10;
-pistolSideDamage = 6; //Stacks on above
-pistolBackDamage = 10; //Stacks AGAIN on above
-DPDamage = 12;
-DPSideDamage = DPDamage/2; //Stacks on above
-DPBackDamage = DPDamage/2; //Stacks AGAIN on above
-mgDamage = 9; 
-mgSideDamage = mgDamage/2; //Stacks on above
-mgBackDamage = mgDamage/2; //Stacks AGAIN on above
-SGDamage = 30;
-SGSideDamage = SGDamage/2;
-SGBackDamage = SGDamage/2;
-LaserDamage = 250;
-friendlyFireDamageScale = 0.5;
-boostDamage = 50;
-cloakBonusDamage = 20;
-startingWeapon = 1;
-bulletRange = 19 * 75;
-laserRange = 19 * 75;
-SGRange = 310;
-SGCloseRangeDamageScale = 4;
-SGPushSpeed = 12;
-laserPushSpeed = 36;
-laserOffsetX = 9;
-MGPushSpeed = 2;
-speedCap = 45;
-pistolFireRateLimiter = true;	
-pistolFireRate = 12;
-DPFireRate = 12;
-MGFireRate = 5;
-SGFireRate = 50;
-laserFireRate = 50;
-laserMaxCharge = 150;
-DPClipSize = 15;
-MGClipSize = 60;
-SGClipSize = 6;
-laserClipSize = 5;
-maxSGAmmo = SGClipSize*3;
-maxDPAmmo = DPClipSize*3;
-maxMGAmmo = MGClipSize*2;
-maxLaserAmmo = 10;
-infiniteAmmo = false;
-staggerScale = 0.60;
-staggerTime = 20;
-damagePushScale = 2;
-pushMaxSpeed = 35;
-allowBagWeapons = false;
-spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
-thugSightDistance = 600;
-thugHealth = 80;
-thugDamage = 50;
-thugSpeed = 4;
-thugAttackDelay = 30;
-thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are wiped off map (for performance concerns)
-threatSpawnRange = 500;
-pushStrength = 15; //Push block strength
+dataAccessFunctions.getHordeGlobalBest(function(best){
+	hordeGlobalBest = best.kills;
+	hordeGlobalBestNames = best.names;
+});;
 
-console.log("I'm setting " + port + " customServer to false");
-customServer = false;
-pregameIsHorde = true;
-serverName = "Ranked " + port.substring(2,4);
-bannedCognitoSubs = [];
-dataAccessFunctions.dbGameServerUpdate();
+var resetGameSettingsToStandard = function(){
+	boostAmount = 18;
+	playerMaxSpeed = 5;
+	playerAcceleration = 1;
+	diagMovementScale = (2/3);
+	voteGametype = true;
+	voteMap = true;
+	minutesLeft = 9;
+	secondsLeft = 99;
+	scoreToWin = 0;
+	nextGameTimer = 20;
+	timeBeforeNextGame = 45; //newGameTimer
+	gameMinutesLength = 5;
+	gameSecondsLength = 0;
+	map = "longest";
+	gametype = "ctf";
+	freeForAll = false;
+	maxPlayers = 14;
+	maxEnergyMultiplier = 1;
+	rechargeDelayTime = 120; //Double for breaking under zero energy
+	healDelayTime = 300;
+	healRate = 7; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal)
+	respawnTimeLimit = 3 * 60;
+	slayerRespawnTimeLimit = 3 * 60; //seconds (translated to frames)
+	ctfRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
+	bagDrag = 0.85;
+	cloakingEnabled = true;
+	cloakDrainSpeed = 0.12;
+	cloakDrag = 0.5; //Walking speed multiplier when cloaked
+	cloakInitializeSpeed = 0.02;
+	cloakDeinitializeSpeed = 0.1;
+	playerMaxHealth = 175;
+	bootOnAfk = true;
+	AfkFramesAllowed = 120 * 60; //seconds (translated to frames) //timeout
+	damageScale = 1;
+	pistolDamage = 10;
+	pistolSideDamage = 6; //Stacks on above
+	pistolBackDamage = 10; //Stacks AGAIN on above
+	DPDamage = 12;
+	DPSideDamage = DPDamage/2; //Stacks on above
+	DPBackDamage = DPDamage/2; //Stacks AGAIN on above
+	mgDamage = 9; 
+	mgSideDamage = mgDamage/2; //Stacks on above
+	mgBackDamage = mgDamage/2; //Stacks AGAIN on above
+	SGDamage = 30;
+	SGSideDamage = SGDamage/2;
+	SGBackDamage = SGDamage/2;
+	LaserDamage = 250;
+	friendlyFireDamageScale = 0.5;
+	boostDamage = 50;
+	cloakBonusDamage = 20;
+	startingWeapon = 1;
+	bulletRange = 19 * 75;
+	laserRange = 19 * 75;
+	SGRange = 310;
+	SGCloseRangeDamageScale = 4;
+	SGPushSpeed = 12;
+	laserPushSpeed = 36;
+	laserOffsetX = 9;
+	MGPushSpeed = 2;
+	speedCap = 45;
+	pistolFireRateLimiter = true;	
+	pistolFireRate = 12;
+	DPFireRate = 12;
+	MGFireRate = 5;
+	SGFireRate = 50;
+	laserFireRate = 50;
+	laserMaxCharge = 150;
+	DPClipSize = 15;
+	MGClipSize = 60;
+	SGClipSize = 6;
+	laserClipSize = 5;
+	maxSGAmmo = SGClipSize*3;
+	maxDPAmmo = DPClipSize*3;
+	maxMGAmmo = MGClipSize*2;
+	maxLaserAmmo = 10;
+	infiniteAmmo = false;
+	staggerScale = 0.60;
+	staggerTime = 20;
+	damagePushScale = 2;
+	pushMaxSpeed = 35;
+	allowBagWeapons = false;
+	spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
+	thugSightDistance = 600;
+	thugHealth = 80;
+	thugDamage = 50;
+	thugSpeed = 4;
+	thugAttackDelay = 30;
+	thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are wiped off map (for performance concerns)
+	threatSpawnRange = 500;
+	pushStrength = 15; //Push block strength
+
+	console.log("I'm setting " + port + " customServer to false");
+	customServer = false;
+	pregameIsHorde = true;
+	serverName = "Ranked " + port.substring(2,4);
+	bannedCognitoSubs = [];
+	createdByCognitoSub = "";
+	dataAccessFunctions.dbGameServerUpdate();
 }
-var abandoningCognitoSubs
+
 var changeTeams = function(playerId){
 	var playerList = player.getPlayerList();
  	console.log("change teams: " + playerList[playerId]);
@@ -242,7 +248,7 @@ function calculateEndgameStats(){
 				gamesWonInc++;
 				ptsGained = Math.round(matchWinLossRatingBonus + (enemyAverageRating - playerList[p].rating)/enemySkillDifferenceDivider);
 				if (ptsGained < 3){ptsGained = 3;}		
-				if (ptsGained > 50){ptsGained = 50;} //Gain cap		
+				if (ptsGained > 20){ptsGained = 20;} //Gain cap		
 				logg(playerList[p].name + " had " + playerList[p].rating + " pts, and beat a team with " + enemyAverageRating + " pts. He gained " + ptsGained);
 				playerList[p].cashEarnedThisGame+=winCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
 			}
@@ -259,9 +265,9 @@ function calculateEndgameStats(){
 
 			//MVP
 			if (team1Sorted[0])
-				if (playerList[p].id == team1Sorted[0].id){ptsGained += 10;}
+				if (playerList[p].id == team1Sorted[0].id && team1Sorted.length >= 2){ptsGained += 10;}
 			if (team2Sorted[0])
-				if (playerList[p].id == team2Sorted[0].id){ptsGained += 10;}
+				if (playerList[p].id == team2Sorted[0].id && team2Sorted.length >= 2){ptsGained += 10;}
 
 			//Prevent player from having sub zero ranking
 			if (playerList[p].rating + ptsGained < 0){
@@ -815,9 +821,17 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 
 
 function restartGame(){
+	if (gametype == "horde" || (pregame && pregameIsHorde)){upsertHordeRecords(false);}
 	tabulateVotes();
 	assignSpectatorsToTeam(true);
 	initializeNewGame();
+	var listy = player.getPlayerList();
+	var team = "";
+	for (var p in listy){
+		console.log("One guy is on team " + listy[p].team);
+		team = listy[p].team;
+	}
+	console.log("About to send update and I'm claiming that I'm on team " + team);
 	dataAccessFunctions.dbGameServerUpdate();		
 }
 
@@ -875,7 +889,7 @@ function rebalanceTeams(rebalanceOnScore = false){
 	var playerList = player.getPlayerList();
 	var moreWhitePlayers = 0; 
 
-	console.log("REBALANCING ON SCORE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + rebalanceOnScore);
+	console.log("REBALANCING " + player.getPlayerListLength() + " PEEPS ON SCORE!" + rebalanceOnScore);
 	if (rebalanceOnScore){
 		playerList.sort(compare);
 		var lastTeam = 2;
@@ -1044,6 +1058,10 @@ function initializeNewGame(){
 	updateMisc.mapWidth = mapWidth;
 	updateMisc.mapHeight = mapHeight;
 	updateMisc.variant = {};
+	var mapToSend = (gametype == "horde" || (pregame && pregameIsHorde)) ? "horde" : map;
+	updateMisc.variant.map = mapToSend;
+	updateMisc.variant.customServer = customServer;
+	console.log("SENDING " + mapToSend + " pregameisHorde:" + pregameIsHorde);
 	updateMisc.variant.gametype = gametype;
 	updateMisc.variant.scoreToWin = scoreToWin;
 	if (gameMinutesLength > 0 || gameSecondsLength > 0){
@@ -1215,32 +1233,146 @@ var joinGame = function(cognitoSub, username, team, partyId){
 }
 
 function spawnHordeThugs(){
-	var randy = randomInt(1,4);
-	var spawnX = 0;
-	var spawnY = 0;
-	if (randy == 1){
-			spawnX = 10 * 75;
-			spawnY = 5;
-	}
-	else if (randy == 2){
-			spawnX = mapWidth - 5;
-			spawnY = 10 * 75;
-	}
-	else if (randy == 3){
-			spawnX = mapWidth - 8 * 75;
-			spawnY = mapHeight - 5;
-	}
-	else if (randy == 4){
-			spawnX = 5;
-			spawnY = mapHeight - 8 * 75;
-	}
-	else {
-	}
-	var rand2 = randomInt(1,4);
-	if (rand2 <= 4 && (gametype == "horde" || (pregame && pregameIsHorde))){
-		thug.createThug(1, spawnX, spawnY);		
+		if (personalHordeMode){
+			hordeKills = player.getHighestPlayerHordeKills();
+		}
+		var randy = randomInt(1,4);
+		var spawnX = 0;
+		var spawnY = 0;
+		if (randy == 1){
+				spawnX = 10 * 75;
+				spawnY = 5;
+		}
+		else if (randy == 2){
+				spawnX = mapWidth - 5;
+				spawnY = 10 * 75;
+		}
+		else if (randy == 3){
+				spawnX = mapWidth - 8 * 75;
+				spawnY = mapHeight - 5;
+		}
+		else if (randy == 4){
+				spawnX = 5;
+				spawnY = mapHeight - 8 * 75;
+		}
+
+		var killsScaling = Math.round((500 - hordeKills)/100); //5
+		if (killsScaling < 1){killsScaling = 1;}
+		
+
+
+		var spawnFrequenceyRng = randomInt(1,killsScaling);
+		
+		var rand3 = randomInt(1,4);
+		if (spawnFrequenceyRng <= 1){
+			for (var x = 0; x < rand3; x++){
+				thug.createThug(1, spawnX, spawnY);		
+			}
+		}
+}
+
+function spawnHordePickup(){
+	if (pickup.getPickupListLength() < 10){
+		var spawnFromEdge = 400;
+		var spawnX = randomInt(spawnFromEdge, mapWidth - spawnFromEdge);
+		var spawnY = randomInt(spawnFromEdge, mapWidth - spawnFromEdge);
+
+		var randy = randomInt(1,15);
+		if (randy <= 1){
+			var rand2 = randomInt(2,6);
+			var ammoAmount = 0;
+			if (rand2 == 2){
+				ammoAmount = DPClipSize * 3;
+			}
+			else if (rand2 == 3){
+				ammoAmount = MGClipSize * 2;
+			}
+			else if (rand2 == 4){
+				ammoAmount = SGClipSize * 2;
+			}
+			else if (rand2 == 5){
+				ammoAmount = 75;
+			}
+			else if (rand2 == 6){
+				ammoAmount = laserClipSize;
+			}
+	
+			pickup.createPickup(Math.random(), spawnX, spawnY, rand2, ammoAmount, -1);
+		}
 	}
 }
+
+//Game start
+//Disconnect
+//Die
+//10 seconds since last record
+
+var upsertHordeRecords = function(resetHordeModeCondition, playerId = false){
+
+	var everyoneDead = true;
+	var playerList = player.getPlayerList();
+	//Set personal best
+	for (var p in playerList){ 
+		if (playerList[p].health > 0){everyoneDead = false;}
+
+		console.log("playerList[p].hordePersonalBest:" + playerList[p].hordePersonalBest);
+		var calcHordeKills = hordeKills;
+		if (personalHordeMode){calcHordeKills = playerList[p].hordeKills;}
+
+		if (calcHordeKills > playerList[p].hordePersonalBest && playerList[p].hordePersonalBest.typeOf != "undefined"){
+			playerList[p].hordePersonalBest = calcHordeKills;
+			console.log("SETTING NEW PERSONAL BEST!");
+			dataAccessFunctions.setHordePersonalBest(playerList[p].cognitoSub, calcHordeKills);
+		}		
+		updatePlayerList.push({id:playerList[p].id,property:"hordePersonalBest",value:playerList[p].hordePersonalBest});		//send only to player!!!
+	}
+
+	//Get then Set global best
+	dataAccessFunctions.getHordeGlobalBest(function(best){
+		hordeGlobalBest = best.kills;
+		hordeGlobalBestNames = best.names;
+		console.log("Is kills[" + hordeKills + "[ greater than global:" + hordeGlobalBest);
+		if (hordeKills > hordeGlobalBest){
+			console.log("SETTING NEW HORDE RECORD");
+			hordeGlobalBest = hordeKills;
+			var names = "";
+			for (var p in playerList){
+				if (names.length > 0){names += ",";}
+				names += playerList[p].name;
+			}
+			dataAccessFunctions.setHordeGlobalBest(names, hordeKills);
+			hordeGlobalBestNames = names;
+			updateMisc.hordeGlobalBestNames = hordeGlobalBestNames;
+		}
+		if (resetHordeModeCondition){
+			thug.clearThugList();
+			pickup.clearPickupList();
+			hordeKills = 0;
+			updateMisc.hordeKills = hordeKills;
+			if (playerId){
+				updateMisc.playerDied = playerList[playerId].name;	
+			}
+			for (var p in playerList){
+				if (personalHordeMode && playerList[p].id == playerId){
+					playerList[p].hordeKills = 0;
+					updatePlayerList.push({id:playerList[p].id,property:"hordeKills",value:playerList[p].hordeKills});
+					playerList[p].respawn();
+				}
+				else if (!personalHordeMode){
+					playerList[p].hordeKills = 0;
+					updatePlayerList.push({id:playerList[p].id,property:"hordeKills",value:playerList[p].hordeKills});
+					playerList[p].respawn();
+				}
+			}	
+		}
+		if (everyoneDead){hordeKills = 0;}
+	});
+}
+
+var resetHordeMode = function(playerId = false){
+	upsertHordeRecords(true, playerId);
+}
+
 
 
 //TIMER1 - EVERY FRAME timer1 tiemer1 tiemr1
@@ -1262,7 +1394,7 @@ var gameLoop = function(){
 	}
 
 	if (customServer){
-		var playerListLength = player.getPlayerList().length;
+		var playerListLength = player.getPlayerListLength();
 		if (staleCustomGameThresholdTimer < staleCustomGameThreshold && playerListLength <= 0){
 			staleCustomGameThresholdTimer++;
 		}
@@ -1274,7 +1406,6 @@ var gameLoop = function(){
 			staleCustomGameThresholdTimer = 0;
 		}
 	}
-
 	for (var i in SOCKET_LIST){			
 		var socket = SOCKET_LIST[i];			
 		const teamFilteredUpdateEffectList = updateEffectList.filter(function(effect){
@@ -1437,9 +1568,26 @@ var secondIntervalFunction = function(){
 		}
 	}
 
-	//Horde Thugs
-	spawnHordeThugs();
-	
+	//Horde Stuff
+	if (gametype == "horde" || (pregame && pregameIsHorde)){
+		if (player.getPlayerListLength() > 0){
+			spawnHordeThugs();
+			spawnHordeThugs();
+			spawnHordePickup();
+		}
+		else if (thug.getThugListLength() > 0 || pickup.getPickupListLength() > 0){
+			resetHordeMode();
+		}
+
+	} 
+	else if (!pregame && player.getPlayerListLength() <= 0){
+		console.log("SETTING BACK TO PREGAME!!!! Because there are " + player.getPlayerListLength() + " players");
+		pregame = true;
+		mapEngine.initializeBlocks(map);
+		mapEngine.initializePickups(map);
+		resetHordeMode();
+	}
+
 	//Pickup timer stuff
 	pickup.clockTick();
 	
@@ -1460,8 +1608,15 @@ var secondIntervalFunction = function(){
 	if (secondsSinceLastServerSync > syncServerWithDbInterval){
 		dataAccessFunctions.syncGameServerWithDatabase();
 		secondsSinceLastServerSync = 0;
-		if (pregame == true && getNumPlayersInGame() >= 4){
-			restartGame();
+		if (pregame == true){
+			if ((gametype == "ctf" || gametype == "slayer") && getNumPlayersInGame() >= 4){
+				console.log("Restarting because gametype is " + gametype + " and there are " + getNumPlayersInGame() + " players (need 4)");
+				restartGame();
+			}
+			else if (gametype == "horde" && getNumPlayersInGame() >= 1){
+				console.log("Restarting because gametype is " + gametype + " and there are " + getNumPlayersInGame() + " players (need 1)");
+				restartGame();
+			}
 		}
 	}
 }
@@ -1544,13 +1699,17 @@ var sendFullGameStatus = function(socketId){
 		voteGametype:voteGametype
 	};
 
+	miscPack.hordeGlobalBestNames = hordeGlobalBestNames;
+	miscPack.hordeGlobalBest = hordeGlobalBest;	
+
 	miscPack.pregame = pregame;		
+	miscPack.pregameIsHorde = pregameIsHorde;		
 	miscPack.shopEnabled = shopEnabled;
 	
 	miscPack.variant = {};
 	var mapToSend = (gametype == "horde" || (pregame && pregameIsHorde)) ? "horde" : map;
 	miscPack.variant.map = mapToSend;
-	console.log("SENT MAP IS " + mapToSend);
+	miscPack.variant.customServer = customServer;
 	miscPack.variant.gametype = gametype;
 	miscPack.variant.scoreToWin = scoreToWin;
 	miscPack.mapWidth = mapWidth;
@@ -1676,6 +1835,8 @@ var updateRequestedSettings = function(settings, cb){
 	pregameIsHorde = false;
 	pregame = true;
 	log(port + " And of course, setting customServer to " + customServer);
+	mapEngine.initializeBlocks(map);
+	mapEngine.initializePickups(map);
 	cb("done");
 }
 
@@ -1697,3 +1858,5 @@ module.exports.assignSpectatorsToTeam = assignSpectatorsToTeam;
 module.exports.joinGame = joinGame;
 module.exports.sendFullGameStatus = sendFullGameStatus;
 module.exports.updateRequestedSettings = updateRequestedSettings;
+module.exports.resetHordeMode = resetHordeMode;
+module.exports.upsertHordeRecords = upsertHordeRecords;
