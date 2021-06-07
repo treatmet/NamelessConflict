@@ -26,6 +26,12 @@ function loginFail(){
 
 function loginAlways(){
 	updateProfileLink();
+	document.getElementById('performanceInstructions').innerHTML = getPerformanceInstrucitons();
+}
+
+function showPerformanceInstructionsGame(){
+	
+	show('performanceInstructions');
 }
 
 function voteEndgame(voteType, voteSelection){
@@ -150,7 +156,7 @@ var customServer = false;
 var minutesLeft = "9";
 var secondsLeft = "99";
 var nextGameTimer = 0;
-var	ping = 999;
+var	ping = 0;
 
 var lowGraphicsMode = true;
 var noShadows = false;
@@ -335,7 +341,18 @@ var laserMaxCharge = 150;
 
 socket.on('pingResponse', function (socketId){
 	if (Player.list[socketId]){
+		var previousPing = ping;
 		ping = stopStopwatch();
+		if (ping >= 999 && previousPing >= 999 && !isLocal){
+			logg("PERFORMANCE ERROR: ping:" + ping + " previousPing:" + previousPing + ". Disconnecting and triggering performance tips.");
+			show("unplayableHeader");
+
+			document.getElementById("closePerfInstructions").innerHTML = '<a href="' + serverHomePage + '" style="font-size: 16px;">I verify I have followed these instructions, and am ready to reload the game.</a>'
+
+			show("performanceInstructions");
+			disconnect();
+		}
+
 		waitingOnPing = false;
 	}		
 });
@@ -764,8 +781,11 @@ var mute = false;
 
 var sfx = {};
 var sfxPistol = new Howl({src: ['/src/client/sfx/pistol.mp3']});
+var sfxPistolMine = new Howl({src: ['/src/client/sfx/pistol.mp3']});
 var sfxMG = new Howl({src: ['/src/client/sfx/mgShot.mp3']});
+var sfxMGMine = new Howl({src: ['/src/client/sfx/mgShot.mp3']});
 var sfxDP = new Howl({src: ['/src/client/sfx/double_pistolsLoud.mp3']});
+var sfxDPMine = new Howl({src: ['/src/client/sfx/double_pistolsLoud.mp3']});
 var sfxSG = new Howl({src: ['/src/client/sfx/shotgun.mp3']});
 var sfxCapture = new Howl({src: ['/src/client/sfx/capture1.mp3']});
 var sfxHit1 = new Howl({src: ['/src/client/sfx/hit1.mp3']});
@@ -1098,6 +1118,13 @@ socket.on('signInResponse', function(data){
 	if(data.success){
 		///////////////////////// INITIALIZE ////////////////////////		
 		log("Sign into server successful - INITIALIZING GRAPHICS");
+		if (getCookie("lowGraphics") == "true"){
+			console.log("Setting low graphics to true from cookie");
+			reallyLowGraphicsMode = true;
+		} else {
+			reallyLowGraphicsMode = false;
+		}
+
 		myPlayer.id = data.id;
 		mapWidth = data.mapWidth;
 		mapHeight = data.mapHeight;
@@ -2385,6 +2412,8 @@ function drawWallBodies(){
 }
 
 function drawMissingBags(){
+	if (gametype != "ctf")
+		return;
 	if (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY){
 		if (centerX - myPlayer.x * zoom + bagRed.homeX * zoom - Img.bagMissing.width/2 * zoom > -Img.bagMissing.width * zoom - drawDistance && centerX - myPlayer.x * zoom + bagRed.homeX * zoom - Img.bagMissing.width/2 * zoom < canvasWidth + drawDistance && centerY - myPlayer.y * zoom + bagRed.homeY * zoom - Img.bagMissing.height/2 * zoom > -Img.bagMissing.height * zoom - drawDistance && centerY - myPlayer.y * zoom + bagRed.homeY * zoom - Img.bagMissing.height/2 * zoom < canvasHeight + drawDistance){
 			drawImage(Img.bagMissing, centerX - myPlayer.x * zoom + bagRed.homeX * zoom - Img.bagMissing.width/2 * zoom, centerY - myPlayer.y * zoom + bagRed.homeY * zoom - Img.bagMissing.height/2 * zoom, Img.bagMissing.width * zoom, Img.bagMissing.height * zoom);
@@ -3415,23 +3444,13 @@ function drawBoosts(){
 }
 
 
-
 var reallyLowGraphicsMode = false;
-function reallyLowGraphicsToggle(){
-	if (reallyLowGraphicsMode){
-		reallyLowGraphicsMode = false;
-		bodyLimit = 16;
-		document.getElementById("lowGraphcsModeButton").innerHTML = 'Low Graphics Mode [OFF]';
-		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#818181";
-	}
-	else {
-		reallyLowGraphicsMode = true;
-		bodyLimit = 2;
-		Body.list = [];
-		document.getElementById("lowGraphcsModeButton").innerHTML = 'Low Graphics Mode [ON]';
-		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#529eec";
-	}
+if (gpu.tier == 0){
+	bodyLimit = 2;
+	console.log("Setting low graphics to true");
+	reallyLowGraphicsMode = true;
 }
+
 
 
 
@@ -5167,7 +5186,7 @@ var clientTimeoutSeconds = 45 * 1000;
 var clientTimeoutTicker = clientTimeoutSeconds;
 var newTipSeconds = 45;
 var newTipTicker = newTipSeconds;
-var reloadOnServerTimeout = false; //Afk
+var reloadOnServerTimeout = false; //Server Afk
 var countdownToRedrawGraphics = 0;
 
 //EVERY 1 SECOND
@@ -5181,6 +5200,8 @@ setInterval(
 			logg("Redrawing map and blocks on timer");
 			drawMapElementsOnMapCanvas();
 			drawBlocksOnBlockCanvas();
+			if (!customServer && !pregame)
+				Thug.list = [];
 		}
 		if (myPlayer.team == 0 && zoom != spectateZoom){
 			zoom = spectateZoom;
@@ -5193,18 +5214,21 @@ setInterval(
 			drawBlocksOnBlockCanvas();
 		}
 
-		clientTimeoutTicker--;
 		fpsInLastSecond = fpsCounter;
 		fpsCounter = 0;
-		if (clientTimeoutTicker < clientTimeoutSeconds - 5){
-			logg("No server messages detected, " + clientTimeoutTicker + " until timeout");
-		}
-		if (clientTimeoutTicker < 1 && reloadOnServerTimeout){
-			forceToLeave = true;
-			logg("ERROR: Server Timeout. Reloading page...");
-			disconnect();
-			location.reload();
-			clientTimeoutTicker = clientTimeoutSeconds;
+
+		if (reloadOnServerTimeout){
+			clientTimeoutTicker--;
+			if (clientTimeoutTicker < clientTimeoutSeconds - 5){
+				logg("No server messages detected, " + clientTimeoutTicker + " until timeout");
+			}
+			if (clientTimeoutTicker < 1){
+				forceToLeave = true;
+				logg("ERROR: Server Timeout. Reloading page...");
+				disconnect();
+				location.reload();
+				clientTimeoutTicker = clientTimeoutSeconds;
+			}
 		}
 		
 		if (document.getElementById("leftMenu") && document.getElementById("leftMenu").style.display != 'none'){
@@ -5405,33 +5429,51 @@ function shootUpdateFunction(shotData){
 
 	if (newShot == true){
 		if (Player.list[shotData.playerId].weapon == 3){
-			sfxMG.volume(vol * .35);
-			sfxMG.play();
-			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].MGClip <= 7 && !mute){
-				sfxClick.play();
+			if (shotData.playerId == myPlayer.id){
+				sfxMGMine.volume(vol * .35);
+				sfxMGMine.play();
+				if (Player.list[shotData.playerId].MGClip <= 7){
+					sfxClick.play();
+				}
+			}
+			else {
+				sfxMG.volume(vol * .35);
+				sfxMG.play();	
 			}
 		}
 		else if (Player.list[shotData.playerId].weapon == 2 && !mute) {
-			sfxDP.volume(vol);
-			sfxDP.play();
-			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].DPClip <= 5 && !mute){
-				sfxClick.play();
+			if (shotData.playerId == myPlayer.id){
+				sfxDPMine.volume(vol);
+				sfxDPMine.play();	
+
+				if (Player.list[shotData.playerId].DPClip <= 4){
+					sfxClick.play();
+				}
+			}
+			else {
+				sfxDP.volume(vol);
+				sfxDP.play();	
 			}
 		}
 		else if (Player.list[shotData.playerId].weapon == 1) {
-			sfxPistol.volume(vol);
-			sfxPistol.play();
-			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].PClip <= 5 && !mute){
-				sfxClick.play();
+			if (shotData.playerId == myPlayer.id){				
+				sfxPistolMine.volume(vol);
+				sfxPistolMine.play();
+				if (Player.list[shotData.playerId].PClip <= 4){
+					sfxClick.play();
+				}
+			}
+			else {
+				sfxPistol.volume(vol);
+				sfxPistol.play();	
 			}
 		}
 		else if (Player.list[shotData.playerId].weapon == 5) {
 			sfxLaserDischarge.volume(vol);
 			sfxLaserDischarge.play();
 			if (dist1 < 1000){
-				screenShakeCounter = 16;
+				screenShakeCounter = 8;
 			}
-			screenShakeCounter = 8;
 		}
 		else if (Player.list[shotData.playerId].weapon == 4) {
 			sfxSG.volume(vol);

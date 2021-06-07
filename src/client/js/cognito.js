@@ -114,10 +114,17 @@ function getTokenFromUrlParameterAndLogin(){
 		}
 		setPcModeAndIsLocalElements({isLocal:data.isLocal, pcMode:data.pcMode});
 		loginAlways();
+		assessPerformance();
 		if (page != "profile"){
 			//removeUrlParams();
 		}
     });
+}
+
+function assessPerformance(){
+	if (gpu.tier == 0){
+		show("warningBar");
+	}
 }
 
 socket.on('socketInfoUpdated', function(data){
@@ -165,13 +172,7 @@ function setPcModeAndIsLocalElements(data){
 			document.getElementById("logIn").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "'");
 			document.getElementById("createAccount").setAttribute("onclick","window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=" + redirectUri + "';");
 		}
-		
-		if (pcMode == 2){
-			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>SocketShot</a>";
-		}
-		else {
-			document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'>SocketShot</a>";
-		}
+		document.getElementById("titleText").innerHTML = "<a href='" + serverHomePage + "'><img src='/src/client/img/logo-trans.png'></a>";
 	}
 }
 
@@ -189,7 +190,7 @@ socket.on('reloadHomePage', function(){
 });
 
 socket.on('redirect', function(url){
-	window.location.href = url;
+	window.location.href  = url;
 });
 
 socket.on('redirectToGame', function(url){
@@ -467,6 +468,61 @@ function friendAcceptClick(id){
 	});
 }
 
+function getPerformanceInstrucitons(){
+	var isFirefox = typeof InstallTrigger !== 'undefined';
+	var browser = "Chrome";
+	if (isFirefox){
+		browser = "Firefox";
+	}
+
+	var html = "";
+	html += '<div id="unplayableHeader" class="redFlashing">Unplayable conditions detected! Follow these performance instructions!</div><br>';
+	html += '1. Game performs best in Google Chrome or Firefox <span style="font-weight: normal;">[If one doesn’t work, try the other]</span><br><br>';
+	html += '2. Make sure hardware acceleration is enabled in ' + browser + '’s settings:';
+	html += '<div id="hardwareAccelGif">';
+
+	if (isFirefox){
+		html +=  '<div style="position:relative; padding-bottom:calc(56.25% + 44px)"><iframe src="https://gfycat.com/ifr/SillyConsiderateIchidna?hd=1&controls=0" frameborder="0" scrolling="no" width="100%" height="100%" style="position:absolute;top:0;left:0;" allowfullscreen></iframe></div>';
+	}
+	else {
+		html +=  '<div style="position:relative; padding-bottom:calc(56.25% + 44px)"><iframe src="https://gfycat.com/ifr/HopefulWildBuffalo?hd=1&controls=0" frameborder="0" scrolling="no" width="100%" height="100%" style="position:absolute;top:0;left:0;" allowfullscreen></iframe></div>';
+	}
+	
+	html +=  '</div><br><br>';
+	html +=  '3. Close other browser tabs; Close other CPU intensive applications<br><br>';
+	if (page == "game")
+		html +=  '4. Use Low Graphics mode: <button id="lowGraphcsModeButton" style="background-color: #818181;" class="RWButton" onclick="reallyLowGraphicsToggle()">Low Graphics Mode</button><br><br>';
+	html +=  '5. Connect to internet with ethernet cable instead of wifi<br><br>';
+	html +=  '<div id="closePerfInstructions"><a href="#" style="font-size: 16px;" onclick=\'hide("performanceInstructions")\'>Click here to close these instructions</a></div>';
+	return html;
+}
+
+function reallyLowGraphicsToggle(){
+	if (typeof reallyLowGraphicsMode === 'undefined')
+		return;
+		
+	if (reallyLowGraphicsMode){
+		setCookie("lowGraphics", "false");
+		reallyLowGraphicsMode = false;
+		bodyLimit = 16;
+		document.getElementById("lowGraphcsModeButton").innerHTML = 'Low Graphics Mode [OFF]';
+		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#818181";
+	}
+	else {
+		reallyLowGraphicsMode = true;
+		setCookie("lowGraphics", "true");
+		bodyLimit = 2;
+		Body.list = [];
+		document.getElementById("lowGraphcsModeButton").innerHTML = 'Low Graphics Mode [ON]';
+		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#529eec";
+	}
+}
+
+function showPerformanceInstructionsHeader(){
+	document.getElementById('performanceInstructions').innerHTML = getPerformanceInstrucitons();
+	show('performanceInstructions');
+}
+
 function partyAcceptClick(id){
 	const params = {
 		type:"party",
@@ -520,7 +576,7 @@ function isValid(str){
 
 
 //Unused
-function setCookie(cname, cvalue, exdays) {
+function setCookie(cname, cvalue, exdays = 90) {
   var d = new Date();
   d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
   var expires = "expires="+d.toUTCString();

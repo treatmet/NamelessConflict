@@ -1,7 +1,6 @@
 'use strict';
 var gpu = {};
-console.log("gpu INNER");
-console.log(gpu);
+console.log("Detecting gpu...");
 function asyncGeneratorStep(
   gen,
   resolve,

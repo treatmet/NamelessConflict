@@ -210,7 +210,6 @@ global.isWebServer = false;
 global.isLocal = false;
 global.isTest = false; //No need to flip manually
 global.pause = false;
-global.serverNumber = 1;
 
 global.privateServer = false;
 global.customServer = false;

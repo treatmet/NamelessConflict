@@ -111,7 +111,7 @@ var resetGameSettingsToStandard = function(){
 	serverName = "Ranked " + port.substring(2,4);
 	bannedCognitoSubs = [];
 	createdByCognitoSub = "";
-	dataAccessFunctions.dbGameServerUpdate();
+	gameServerSync();
 }
 
 var changeTeams = function(playerId){
@@ -143,7 +143,7 @@ var changeTeams = function(playerId){
 		}
 		SOCKET_LIST[playerId].team = playerList[playerId].team;
 		playerList[playerId].respawn();			
-		dataAccessFunctions.dbGameServerUpdate();
+		gameServerSync();
 		
 		//Abandon party
 		if (playerList[playerId].partyId == playerList[playerId].cognitoSub){ //Leaving a party that user is the leader of (disband ALL party members' partyId)
@@ -825,14 +825,7 @@ function restartGame(){
 	tabulateVotes();
 	assignSpectatorsToTeam(true);
 	initializeNewGame();
-	var listy = player.getPlayerList();
-	var team = "";
-	for (var p in listy){
-		console.log("One guy is on team " + listy[p].team);
-		team = listy[p].team;
-	}
-	console.log("About to send update and I'm claiming that I'm on team " + team);
-	dataAccessFunctions.dbGameServerUpdate();		
+	gameServerSync();		
 }
 
 //Updates gametype, map based on postgame player votes
@@ -1211,6 +1204,7 @@ var getAllPlayersFromDB = function(cb){
 }
 
 var joinGame = function(cognitoSub, username, team, partyId){
+
 	log("Attempting to join game..." + cognitoSub);
 
 	log("Listing all currently connected sockets");
@@ -1227,8 +1221,6 @@ var joinGame = function(cognitoSub, username, team, partyId){
 	socket.partyId = partyId;
 	log("!!!!Player signing into game server - socketID: " + socket.id + " cognitoSub: " + cognitoSub + " username: " + username + " team: " + team + " partyId: " + partyId);
 	player.connect(socket, cognitoSub, username, team, partyId);
-
-	dataAccessFunctions.dbGameServerUpdate();
 	socket.emit('signInResponse',{success:true,id:socket.id, mapWidth:mapWidth, mapHeight:mapHeight, whiteScore:whiteScore, blackScore:blackScore});
 }
 
@@ -1345,10 +1337,12 @@ var upsertHordeRecords = function(resetHordeModeCondition, playerId = false){
 			updateMisc.hordeGlobalBestNames = hordeGlobalBestNames;
 		}
 		if (resetHordeModeCondition){
-			thug.clearThugList();
-			pickup.clearPickupList();
-			hordeKills = 0;
-			updateMisc.hordeKills = hordeKills;
+			if (everyoneDead || !personalHordeMode){
+				thug.clearThugList();
+				pickup.clearPickupList();
+				hordeKills = 0;
+				updateMisc.hordeKills = hordeKills;
+			}
 			if (playerId){
 				updateMisc.playerDied = playerList[playerId].name;	
 			}
@@ -1606,8 +1600,6 @@ var secondIntervalFunction = function(){
 	//Repeating game server DB sync
 	secondsSinceLastServerSync++;
 	if (secondsSinceLastServerSync > syncServerWithDbInterval){
-		dataAccessFunctions.syncGameServerWithDatabase();
-		secondsSinceLastServerSync = 0;
 		if (pregame == true){
 			if ((gametype == "ctf" || gametype == "slayer") && getNumPlayersInGame() >= 4){
 				console.log("Restarting because gametype is " + gametype + " and there are " + getNumPlayersInGame() + " players (need 4)");
@@ -1618,10 +1610,100 @@ var secondIntervalFunction = function(){
 				restartGame();
 			}
 		}
+		gameServerSync();
 	}
 }
 
+function getServerName(){
+	if (gametype == "horde"){
+		serverName = "Invasion " + port.substring(2,4);
+	}
+	else if (!customServer){
+		serverName = "Ranked " + port.substring(2,4);
+	}
+	return serverName;
+}
 
+function getServerSubName(){
+	var serverSubName = "";
+	if (maxPlayers%2 != 0)
+	{
+		maxPlayers++;
+	}
+	serverSubName += "[" + maxPlayers/2 + "v" + maxPlayers/2;
+	if (gametype == "ctf"){
+		serverSubName += " Capture]";
+	}
+	else if (gametype == "slayer"){
+		serverSubName += " Deathmatch]";
+	}
+	else if (gametype == "horde"){
+		serverSubName = "[" + maxPlayers + " Players]";
+	}
+	return serverSubName;
+}
+
+function getCurrentHighestScore(){
+	var currentHighestScore = 0;
+	if (blackScore > whiteScore){
+		currentHighestScore = blackScore;
+	}
+	else {
+		currentHighestScore = whiteScore;
+	}
+	return currentHighestScore;
+}
+
+function getCurrentUsersForDB(){
+	var currentUsers = [];
+	var playerList = player.getPlayerList();
+	for (var p in playerList){
+		if (typeof SOCKET_LIST[playerList[p].id] === 'undefined')
+			continue;
+		if (typeof playerList[p].team === 'undefined' || playerList[p].team === 0)
+			continue;
+
+		currentUsers.push({
+			socketId:playerList[p].id,
+			cognitoSub:playerList[p].cognitoSub,
+			username:playerList[p].name,
+			partyId:playerList[p].partyId,
+			team:playerList[p].team,
+			rating:SOCKET_LIST[playerList[p].id].rating,
+			experience:SOCKET_LIST[playerList[p].id].experience
+		});
+	}
+	return currentUsers;
+}
+
+var gameServerSync = function(cognitoSubToRemoveFromIncoming = false){
+	if ((isLocal && myUrl == "") || (!isLocal && myQueryString.length <= 0)){ //myQueryString is only used in AWS
+		logg("WARNING - Unable to get server IP. Retrying in " + syncServerWithDbInterval + " seconds...");
+		return;
+	}
+
+	var obj = {};
+	obj.serverName = getServerName();
+	obj.serverSubName = getServerSubName();
+	obj.healthCheckTimestamp = new Date();
+	obj.matchTime = (gameMinutesLength * 60) + gameSecondsLength;
+	obj.currentTimeLeft = (minutesLeft * 60) + secondsLeft;
+		if (pregame == true || gameOver == true){obj.currentTimeLeft = obj.matchTime;}
+	obj.currentHighestScore = getCurrentHighestScore();
+	obj.currentUsers = getCurrentUsersForDB();
+	obj.instanceId = instanceId;
+	obj.privateServer = privateServer;
+	obj.customServer = customServer;	
+	obj.gametype = gametype;
+	obj.maxPlayers = maxPlayers;
+	obj.voteGametype = voteGametype;
+	obj.voteMap = voteMap;
+	obj.scoreToWin = scoreToWin;
+	obj.queryString = myQueryString;
+
+	dataAccessFunctions.dbGameServerUpdate(obj, cognitoSubToRemoveFromIncoming);
+	secondsSinceLastServerSync = 0;
+}
 
 var sendFullGameStatus = function(socketId){
 	var playerPack = [];
@@ -1860,3 +1942,4 @@ module.exports.sendFullGameStatus = sendFullGameStatus;
 module.exports.updateRequestedSettings = updateRequestedSettings;
 module.exports.resetHordeMode = resetHordeMode;
 module.exports.upsertHordeRecords = upsertHordeRecords;
+module.exports.gameServerSync = gameServerSync;

@@ -721,7 +721,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		else if (self.afk >= 0 && self.team != 0 && !pregame && !gameOver){
 			self.afk--;
 		}
-		else if (self.afk <= 0 && bootOnAfk) { //Boot em
+		else if (self.afk <= 0 && bootOnAfk && !isLocal) { //Boot em
 			log("Booting on afk: " + self.name);
 			socket.emit('bootAfk');
 			socket.disconnect();
@@ -1440,6 +1440,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 		dataAccessFunctions.getUserSettings(cognitoSub, function(settings){
 			var player = Player(socket.id, cognitoSub, name, team, customizations.result, settings.result, partyId);
 			gameEngine.ensureCorrectThugCount();
+			gameEngine.gameServerSync(cognitoSub); //Needs to remove incoming users
 			
 			socket.emit('addToChat', getObjectiveText(), 0);
 			sendChatToAll("Welcome, " + name + "!");
@@ -1945,6 +1946,15 @@ function evalServer(socket, data){
 		boostAmount += 2;
 		socket.emit('addToChat', 'Boost up to ' + boostAmount);
 	}
+	else if (data == "afk"){
+		if (bootOnAfk){
+			bootOnAfk = false;
+		}
+		else {
+			bootOnAfk = true;
+		}
+		socket.emit('addToChat', 'Boot on AFK set to ' + bootOnAfk);
+	}
 	else if (data == "boostDown" || data == "boostD" || data == "boostd"){
 		boostAmount -= 2;
 		socket.emit('addToChat', 'Boost down to ' + boostAmount);
@@ -2298,6 +2308,7 @@ function evalServer(socket, data){
 		crash();
 	}
 	else if ((data == "godt" || data == "haxt") && (isLocal || getPlayerById(socket.id).cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea")){
+		getPlayerById(socket.id).PClip = 999;
 		getPlayerById(socket.id).SGClip = 99;
 		getPlayerById(socket.id).MGClip = 999;
 		getPlayerById(socket.id).DPClip = 999;
@@ -2505,7 +2516,7 @@ Player.onDisconnect = function(id){
 	}	
 	gameEngine.ensureCorrectThugCount();
 	gameEngine.assignSpectatorsToTeam(false);
-	dataAccessFunctions.dbGameServerUpdate();
+	gameEngine.gameServerSync();
 }
 
 function getPlayerFromCognitoSub(searchingCognitoSub){

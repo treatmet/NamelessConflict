@@ -36,7 +36,6 @@ io.sockets.on('connection', function(socket){
 		logg("!!!UNHANDLED SOCKET ERROR");
 		logg(util.format(error));
 		logg("!!!SOCKET DISCONNECTED!");
-		dataAccessFunctions.dbGameServerUpdate();
 	});
 	
 	socket.on('test', function(data){

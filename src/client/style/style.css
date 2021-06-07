@@ -44,9 +44,14 @@ a:hover {
 }
 
 div#titleText a {
+    /* font-family: 'Vermin'; */
     color: white;
 	/*underline*/
     text-decoration: none;
+}
+
+#titleText img {
+    height: 44px;
 }
 
 #topBar span {
@@ -150,12 +155,39 @@ div#partyUpMessage {
     margin-left: 5px;
 }
 
+div#warningBar {
+    color: red;
+    background-color: #490000;
+    text-align: center;
+    width: 100%;
+    display: none;
+}
+
+div#warningBar a{
+    color: red;
+    text-align: center;
+    text-decoration: none;
+}
+div#warningBar a:hover{
+    color: rgb(255, 86, 86);
+    text-align: center;
+    text-decoration: none;
+}
+
+.centeringDiv {
+    text-align: center;
+}
+
   .rainbow {
     animation: colorRotate 4s linear 0s infinite;
   }
 
   .rainbow2 {
     animation: colorRotate 2s linear 0s infinite;
+  }
+
+  .redFlashing {
+    animation: redFlashingRotate 1s linear 0s infinite;
   }
   
   @keyframes colorRotate {
@@ -173,6 +205,18 @@ div#partyUpMessage {
     }
     100% {
       color: #6666ff;
+    }
+  }
+
+  @keyframes redFlashingRotate {
+    from {
+      background-color: #490000;
+    }
+    50% {
+        background-color: #620000;
+    }
+    100% {
+        background-color: #490000;
     }
   }
 
@@ -982,14 +1026,29 @@ div#serversHiddenMsg {
     background-color: #0000ff00;
 }
 
+td#performanceClickHereBox{
+    border: 1px solid red;
+    margin: 5px;
+}
+
 /*Performance tips*/
 div#performanceInstructions {
-    font-size: 25px;
+    font-size: 20px;
     font-weight: bold;
     text-align: center;
     margin: 20px;
     margin-bottom: 500px;
     display: none;
+}
+
+div#closePerfInstructions {
+}
+
+div#unplayableHeader {
+    display: none;
+    color: red;
+    width: 100%;
+    margin-bottom:10px;
 }
 
 div#hardwareAccelGif {
@@ -1222,6 +1281,16 @@ table.keybindingConfigTable td.keybindingUnclickableCell {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+@redKeyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* @font-face {
+    font-family: "Vermin";
+    src: url("/src/client/style/vermin_vibes.ttf");
+} */
 
 div#chat-window {
     text-align: left;

@@ -1,4 +1,5 @@
 <head>
+	<title>SocketShot</title>
 	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-25330054-2"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -25,7 +26,6 @@
 </head>
 
 <body style="margin: 0px;overflow-y: hidden;overflow-x: hidden;">
-	<div id="root"></div>
 	<script src="https://cdn.jsdelivr.net/npm/babel-regenerator-runtime@6.5.0/runtime.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.js"></script>
@@ -43,7 +43,7 @@
 <table class="leftMenu" id="leftMenu" style="display:none;">
 	<tbody>
 		<tr>
-			<td class="menuLeftLink"><a href="/" style="" class="elecText" id="homeLink">&lt;Back</a></td>		  
+			<td class="menuLeftLink"><a href="/" style="" class="elecText" id="homeLink">&lt;Home</a></td>		  
 		</tr>
 
 		<tr>
@@ -51,7 +51,7 @@
 		</tr>
 
 		<tr>
-			<td style="border: 1px solid red;margin: 5px;"><a href="#" onclick="show('performanceInstructions')" style="font-size: 20px;">Having performance issues? Click here for instructions.</a></td>
+			<td id="performanceClickHereBox"><a href="#" onclick="showPerformanceInstructionsGame()" style="font-size: 20px;">Having performance issues? Click here for instructions.</a></td>
 		</tr>
 
 		
@@ -160,20 +160,6 @@
 <!--CANVAS-->
 <div id="canvasDiv">	
 	<div id="performanceInstructions">
-			1. Game performs best in Google Chrome<br><br>
-			2. Make sure hardware acceleration is enabled in Chrome’s settings:
-				<div id="hardwareAccelGif">
-					<div style='position:relative; padding-bottom:calc(56.25% + 44px)'><iframe src='https://gfycat.com/ifr/HopefulWildBuffalo' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>
-				</div>				<br><br>
-			3. Close other browser tabs; Close other CPU intensive applications<br><br>
-			4. Use Low Graphics mode: <button id="lowGraphcsModeButton" style="background-color: #818181;" class="RWButton" onclick="reallyLowGraphicsToggle()">Low Graphics Mode [OFF]</button><br><br>
-			5. Connect to internet with ethernet cable instead of wifi<br><br>
-			<a href="#" style="font-size: 16px;"onclick="hide('performanceInstructions')">Click here to close these instructions</a>
-		
-
-
-
-
 	</div>
 
 	<canvas id="ctx" width="1100" height="900"></canvas>
