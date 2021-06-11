@@ -201,7 +201,7 @@ function compare(a,b) {
 	return 0;
   }
 
-function calculateEndgameStats(){
+function calculateEndgameStats(){ //calculate endgame
 	logg("---CALCULATING ENDGAME STATS!---");
 	var playerList = player.getPlayerList();
 	var team1Sorted = [];
@@ -307,8 +307,10 @@ function calculateEndgameStats(){
 			SOCKET_LIST[p].emit('sendLog', "endGameResults:");
 			SOCKET_LIST[p].emit('sendLog', endGameProgressResults);
 
+			console.log("playerList[p].assists");
+			console.log(playerList[p].assists);
 			//update user's DB stats
-			dataAccessFunctions.dbUserUpdate("inc", playerList[p].cognitoSub, {kills:playerList[p].kills, deaths:playerList[p].deaths, captures:playerList[p].captures, steals:playerList[p].steals, returns:playerList[p].returns, cash: playerList[p].cashEarnedThisGame, experience: playerList[p].cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained});
+			dataAccessFunctions.dbUserUpdate("inc", playerList[p].cognitoSub, {kills:playerList[p].kills, assists:playerList[p].assists, deaths:playerList[p].deaths, captures:playerList[p].captures, steals:playerList[p].steals, returns:playerList[p].returns, cash: playerList[p].cashEarnedThisGame, experience: playerList[p].cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained});
 		}
 	});
 }
@@ -456,17 +458,26 @@ function processEntityPush(entity){
 		}
 	}
 }
-//checkIfIsGameOver
+
+var isBagHome = function (bag){
+	if (bag.x != bag.homeX || bag.y != bag.homeY){
+		return false;
+	}
+	return true;
+}
+
+//checkIfIsGameOver //checkIfGameOver
+var lastChanceToCapture = false;
 function checkForGameOver(){
 	//GAME IS OVER, GAME END, ENDGAME GAMEOVER GAME OVER	
 	if (gameOver == false){	
 		//End by time
 		if ((secondsLeft <= 0 && minutesLeft <= 0) && (gameSecondsLength > 0 || gameMinutesLength > 0) && whiteScore != blackScore){ 
 			if (gametype == "ctf"){
-				if (whiteScore == blackScore - 1 && (bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY)){
+				if (whiteScore == blackScore - 1 && !isBagHome(bagBlue) && lastChanceToCapture){
 					//Chance for last capture, don't end game
 				}
-				else if (blackScore == whiteScore - 1 && (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY)){
+				else if (blackScore == whiteScore - 1 && !isBagHome(bagRed) && lastChanceToCapture){
 					//Chance for last capture, dont end game
 				}
 				else {
@@ -878,31 +889,49 @@ var getMoreTeam1Players = function(){
 	return moreWhitePlayers;
 }
 
-function rebalanceTeams(rebalanceOnScore = false){
-	var playerList = player.getPlayerList();
-	var moreWhitePlayers = 0; 
-
-	console.log("REBALANCING " + player.getPlayerListLength() + " PEEPS ON SCORE!" + rebalanceOnScore);
-	if (rebalanceOnScore){
-		playerList.sort(compare);
-		var lastTeam = 2;
-		for (var p in playerList){ //Reset all players to team = 1 so that current teams are annihilated 
+function rebalanceTeamsOnScore(playerList){
+	var lastTeam = 2;
+	var x = 100;
+	while (x > 0){
+		var highestScore = 0;
+		var highestScorer = "";
+		for (var p in playerList){ //Get highest score that hasn't been reassigned
+			if (playerList[p].cashEarnedThisGame > highestScore && !playerList[p].reassigned){
+				highestScore = playerList[p].cashEarnedThisGame;
+				highestScorer = playerList[p].id;
+			}
+		}
+		if (highestScorer != "" && typeof playerList[highestScorer] != 'undefined'){
 			if (lastTeam == 2){
-				playerList[p].team = 1;
+				playerList[highestScorer].team = 1;
 				lastTeam = 1;
 			}
 			else {
-				playerList[p].team = 2;
+				playerList[highestScorer].team = 2;
 				lastTeam = 2;
 			}
+			playerList[highestScorer].reassigned = true;
 		}
+		else {
+			break;
+		}
+		x--;
 	}
+	for (var p in playerList){ //reset reassigned
+		playerList[p].reassigned = false;
+	}	
+}
+
+function rebalanceTeams(rebalanceOnScore = false){
+	var playerList = player.getPlayerList();
 
 
-	for (var p in playerList){
-		if (playerList[p].team == 1){moreWhitePlayers++;}
-		else if (playerList[p].team == 2){moreWhitePlayers--;}
+	console.log("REBALANCING " + player.getPlayerListLength() + " PEEPS ON SCORE? " + rebalanceOnScore);
+	if (rebalanceOnScore){
+		rebalanceTeamsOnScore(playerList);
 	}
+
+	var moreWhitePlayers = getMoreTeam1Players(); 
 
 	logg("REBALANCING TEAMS1: Teams are off by " + Math.abs(moreWhitePlayers));
 	
@@ -1054,6 +1083,8 @@ function initializeNewGame(){
 	var mapToSend = (gametype == "horde" || (pregame && pregameIsHorde)) ? "horde" : map;
 	updateMisc.variant.map = mapToSend;
 	updateMisc.variant.customServer = customServer;
+	updateMisc.pregameIsHorde = pregameIsHorde;	
+	
 	console.log("SENDING " + mapToSend + " pregameisHorde:" + pregameIsHorde);
 	updateMisc.variant.gametype = gametype;
 	updateMisc.variant.scoreToWin = scoreToWin;
@@ -1069,7 +1100,7 @@ function initializeNewGame(){
 		playerList[i].cash = startingCash;
 		playerList[i].cashEarnedThisGame = 0;
 		playerList[i].kills = 0;
-		playerList[i].benedicts = 0;
+		playerList[i].assists = 0;
 		playerList[i].benedicts = 0;
 		playerList[i].deaths = 0;
 		playerList[i].steals = 0;
@@ -1079,6 +1110,7 @@ function initializeNewGame(){
 		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
 		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
 		updatePlayerList.push({id:playerList[i].id,property:"kills",value:playerList[i].kills});
+		updatePlayerList.push({id:playerList[i].id,property:"assists",value:playerList[i].assists});
 		updatePlayerList.push({id:playerList[i].id,property:"deaths",value:playerList[i].deaths});
 		updatePlayerList.push({id:playerList[i].id,property:"steals",value:playerList[i].steals});
 		updatePlayerList.push({id:playerList[i].id,property:"returns",value:playerList[i].returns});
@@ -1204,6 +1236,7 @@ var getAllPlayersFromDB = function(cb){
 }
 
 var joinGame = function(cognitoSub, username, team, partyId){
+	//dataAccessFunctions.giveUsersItemsByTimestamp();
 
 	log("Attempting to join game..." + cognitoSub);
 
@@ -1251,11 +1284,11 @@ function spawnHordeThugs(){
 		var killsScaling = Math.round((500 - hordeKills)/100); //5
 		if (killsScaling < 1){killsScaling = 1;}
 		
-
-
 		var spawnFrequenceyRng = randomInt(1,killsScaling);
+
+		var spawnAmountRng = Math.ceil((hordeKills + 1)/100);
 		
-		var rand3 = randomInt(1,4);
+		var rand3 = randomInt(1,spawnAmountRng);
 		if (spawnFrequenceyRng <= 1){
 			for (var x = 0; x < rand3; x++){
 				thug.createThug(1, spawnX, spawnY);		
@@ -1299,14 +1332,21 @@ function spawnHordePickup(){
 //Die
 //10 seconds since last record
 
-var upsertHordeRecords = function(resetHordeModeCondition, playerId = false){
-
+function isEveryoneDead(){
 	var everyoneDead = true;
+	var playerList = player.getPlayerList();
+	for (var p in playerList){ 
+		if (playerList[p].health > 0){everyoneDead = false;}
+	}
+	return everyoneDead;
+
+}
+
+var upsertHordeRecords = function(resetHordeModeCondition, playerId = false){
+	var everyoneDead = isEveryoneDead();
 	var playerList = player.getPlayerList();
 	//Set personal best
 	for (var p in playerList){ 
-		if (playerList[p].health > 0){everyoneDead = false;}
-
 		console.log("playerList[p].hordePersonalBest:" + playerList[p].hordePersonalBest);
 		var calcHordeKills = hordeKills;
 		if (personalHordeMode){calcHordeKills = playerList[p].hordeKills;}
@@ -1565,9 +1605,12 @@ var secondIntervalFunction = function(){
 	//Horde Stuff
 	if (gametype == "horde" || (pregame && pregameIsHorde)){
 		if (player.getPlayerListLength() > 0){
-			spawnHordeThugs();
-			spawnHordeThugs();
-			spawnHordePickup();
+			if (!isEveryoneDead()){
+				spawnHordeThugs();
+				if (hordeKills > 5)
+					spawnHordeThugs();
+				spawnHordePickup();
+			}
 		}
 		else if (thug.getThugListLength() > 0 || pickup.getPickupListLength() > 0){
 			resetHordeMode();
@@ -1914,6 +1957,7 @@ var updateRequestedSettings = function(settings, cb){
 		}
 	}
 	customServer = true;
+	bootOnAfk = false;
 	pregameIsHorde = false;
 	pregame = true;
 	log(port + " And of course, setting customServer to " + customServer);
@@ -1943,3 +1987,4 @@ module.exports.updateRequestedSettings = updateRequestedSettings;
 module.exports.resetHordeMode = resetHordeMode;
 module.exports.upsertHordeRecords = upsertHordeRecords;
 module.exports.gameServerSync = gameServerSync;
+module.exports.isBagHome = isBagHome;

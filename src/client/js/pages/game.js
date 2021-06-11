@@ -1831,6 +1831,7 @@ function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack,
 	}
 	gameOver = miscPack.gameOver.gameIsOver;
 	pregame = miscPack.pregame;
+	pregameIsHorde = miscPack.pregameIsHorde;
 	if (miscPack.mapWidth){
 		mapWidth = miscPack.mapWidth;
 	}
@@ -3188,7 +3189,7 @@ var personalInstructions = [
 ];
 function drawPersonalInstructions(){
 	for (var i in personalInstructions){
-		if (personalInstructions[i].name == "laser" && personalInstructions[i].life > 0 && myPlayer.weapon == 5){
+		if (personalInstructions[i].name == "laser" && personalInstructions[i].life > 0 && myPlayer.weapon == 5 && myPlayer.health > 0){
 			ctx.save();
 			ctx.translate(centerX - myPlayer.x * zoom + Player.list[myPlayer.id].x * zoom, centerY - myPlayer.y * zoom + Player.list[myPlayer.id].y * zoom); //Center camera on controlled player
 				drawImage(Img.pressShiftInstructions, -(Img.pressShiftInstructions.width * zoom)/2, -100, Img.pressShiftInstructions.width * zoom, Img.pressShiftInstructions.height * zoom);
@@ -3856,8 +3857,8 @@ function drawInformation(){
 		fillText("Health:" + Player.list[myPlayer.id].health, 5, 15); //debug
 		fillText("ping:" + ping, 5, 35);
 		if (showStatOverlay == true){
-			fillText("Version:" + version, 5, 55); //debug
-			// fillText("y: " + Player.list[myPlayer.id].y, 5, 75); //debug info
+			fillText("" + version, 5, 55); //debug
+			fillText("RIP Panther", 5, 75); //debug info
 			// fillText("x: " + Player.list[myPlayer.id].x, 5, 95); //debug info
 			//fillText("boosting: " + Player.list[myPlayer.id].boosting, 5, 55); //debug info
 			//fillText("speedX: " + Player.list[myPlayer.id].speedX, 5, 75); //debug
@@ -4662,20 +4663,20 @@ function drawGameEventText(){
 			strokeAndFillText(killsText,canvasWidth/2,canvasHeight/2 + 50);
 		}
 		else {
-			ctx.textAlign="center";
-			ctx.font = '40px Electrolize';
-			ctx.lineWidth=7;
+			ctx.textAlign="right";
+			ctx.font = '30px Electrolize';
+			ctx.lineWidth=0;
 			ctx.fillStyle="#FFFFFF";
 			var killsText= "Kills since last respawn: " + myPlayer.hordeKills;
-			strokeAndFillText(killsText,canvasWidth/2,45);
+			strokeAndFillText(killsText,canvasWidth - 10,30);
 			ctx.font = '20px Electrolize';
-			ctx.lineWidth=4;
+			ctx.lineWidth=0;
 			killsText= "Personal best: " + myPlayer.hordePersonalBest;
-			strokeAndFillText(killsText,canvasWidth/2,70);
+			strokeAndFillText(killsText,canvasWidth - 10,55);
 			ctx.font = '20px Electrolize';
-			ctx.lineWidth=4;
+			ctx.lineWidth=0;
 			killsText= "Global best: " + hordeGlobalBest + " by " + hordeGlobalBestNames;
-			strokeAndFillText(killsText,canvasWidth/2,95);
+			strokeAndFillText(killsText,canvasWidth - 10,80);
 		}
 	}
 	if (customServer && pregame){
@@ -4698,9 +4699,9 @@ function drawGameEventText(){
 			pregameText = "MATCH STARTING!";
 		}
 		else if (gametype == "horde" || (pregame && pregameIsHorde)){
-			ctx.font = '70px Electrolize';
+			ctx.font = '40px Electrolize';
 			if (playerDiedTimer > 0 && playerDied){				
-				ctx.lineWidth=8;
+				ctx.lineWidth=4;
 				pregameText = playerDied + " DIED!!";
 				ctx.textAlign="center";
 				ctx.fillStyle="red";
@@ -4713,7 +4714,7 @@ function drawGameEventText(){
 				pregameText = "";
 			}
 		}
-		ctx.lineWidth=16;
+		ctx.lineWidth=4;
 		ctx.fillStyle="#FFFFFF";
 		ctx.textAlign="right";
 		strokeAndFillText(pregameText,canvasWidth - 10,750);			

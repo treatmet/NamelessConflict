@@ -36,6 +36,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		cash:startingCash,
 		cashEarnedThisGame:0,
 		kills:0,
+		assists:0,
 		benedicts:0,
 		deaths:0,
 		steals:0,
@@ -50,6 +51,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	updatePlayerList.push({id:self.id,property:"cash",value:self.cash});
 	updatePlayerList.push({id:self.id,property:"cashEarnedThisGame",value:self.cashEarnedThisGame});
 	updatePlayerList.push({id:self.id,property:"kills",value:self.kills});
+	updatePlayerList.push({id:self.id,property:"assists",value:self.assists});
 	updatePlayerList.push({id:self.id,property:"deaths",value:self.deaths});
 	updatePlayerList.push({id:self.id,property:"steals",value:self.steals});
 	updatePlayerList.push({id:self.id,property:"returns",value:self.returns});
@@ -58,6 +60,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	updatePlayerList.push({id:self.id,property:"customizations",value:customizations});
 	
 	var socket = SOCKET_LIST[id];
+	if (!socket){return;}
 
 	self.shotList = [];
 
@@ -307,6 +310,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		if (self.health >= 100){
 			self.lastEnemyToHit = 0;
+			self.damageDealers = [];
 		}
 		if (self.healDelay > 0){self.healDelay--;}
 
@@ -397,7 +401,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				var ax1 = dx1/dist1;
 				var ay1 = dy1/dist1;
 				if (dist1 < 40){				
-					if (self.boosting > 0){  //melee boost collision bash
+					if (self.boosting > 0){  //melee boost collision bash smash
 						Player.list[i].getSlammed(self.id, self.walkingDir);
 					}					
 					self.x += ax1 / (dist1 / 70); //Higher number is greater push
@@ -420,7 +424,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				var ay1 = dy1/dist1;
 				if (dist1 < 40){		
 
-					if (self.boosting > 0){ //melee boost collision bash
+					if (self.boosting > 0){
 						self.pushSpeed = 20;
 						self.boosting = 0;
 						updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
@@ -602,10 +606,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 
 			//Check Player collision with bag - RETURN
-			if (self.team == 1 && bagRed.captured == false && self.health > 0 && (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY)){
+			if (self.team == 1 && bagRed.captured == false && self.health > 0 && !gameEngine.isBagHome(bagRed)){
 				if (self.x > bagRed.x - 67 && self.x < bagRed.x + 67 && self.y > bagRed.y - 50 && self.y < bagRed.y + 50){			
-					if (bagRed.speed > 0){
-						self.getSlammed(bagRed.playerThrowing, bagRed.direction, bagRed.speed*2, true);
+					if (bagRed.speed > 10){
+						self.getSlammed(bagRed.playerThrowing, bagRed.direction, bagRed.speed*2, true); //bagHit bag hit bag slam
 					}
 					else {
 						playerEvent(self.id, "return");
@@ -616,10 +620,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					updateMisc.bagRed = bagRed;		
 				}
 			}
-			if (self.team == 2 && bagBlue.captured == false && self.health > 0 && (bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY)){
+			if (self.team == 2 && bagBlue.captured == false && self.health > 0 && !gameEngine.isBagHome(bagBlue)){
 				if (self.x > bagBlue.x - 67 && self.x < bagBlue.x + 67 && self.y > bagBlue.y - 50 && self.y < bagBlue.y + 50){												
 					console.log("SEPPPPP " + bagBlue.speed);
-					if (bagBlue.speed > 0){
+					if (bagBlue.speed > 10){
 						self.getSlammed(bagBlue.playerThrowing, bagBlue.direction, bagBlue.speed*2, true);
 					}
 					else {
@@ -723,8 +727,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		else if (self.afk <= 0 && bootOnAfk && !isLocal) { //Boot em
 			log("Booting on afk: " + self.name);
-			socket.emit('bootAfk');
-			socket.disconnect();
+			if (SOCKET_LIST[self.id]){
+				SOCKET_LIST[self.id].emit('bootAfk');
+				SOCKET_LIST[self.id].disconnect();
+			}
 		}
 		
 	}//End engine()
@@ -1112,10 +1118,25 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}			
 		else if (self.team == shooter.team){
 			damageInflicted *= friendlyFireDamageScale;
-			if (shooter.weapon == 5){damageInflicted *= friendlyFireDamageScale;}
+			if (shooter.weapon == 5){damageInflicted *= friendlyFireDamageScale;} //Again
+			if (gametype == "horde" || (pregame && pregameIsHorde)){damageInflicted = 0;}
 		}
 		
 		damageInflicted = damageInflicted * damageScale; //Scale damage
+
+		//Calculate Assists
+		if (self.team != shooter.team){
+			if (!self.damageDealers){
+				self.damageDealers = [];
+			}
+			if (self.damageDealers.find(dealer => dealer.id == shooter.id)){
+				self.damageDealers.find(dealer => dealer.id == shooter.id).damage += damageInflicted;
+			}
+			else {
+				self.damageDealers.push({id:shooter.id, damage:damageInflicted});
+			}
+		}
+
 		self.health -= Math.floor(damageInflicted);
 
 		updatePlayerList.push({id:self.id,property:"health",value:self.health});
@@ -1145,26 +1166,38 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				if (gametype == "slayer" && gameOver == false){
 					gameEngine.killScore(shooter.team);
 				}
-				playerEvent(shooter.id, "kill");
-				
+				playerEvent(shooter.id, "kill");				
 				shooter.spree++;
 				shooter.multikill++;
 				shooter.multikillTimer = multikillTimer;
-				if (self.chargingLaser > 0){
-					self.chargingLaser = 0;
-					updatePlayerList.push({id:self.id,property:"chargingLaser",value:self.chargingLaser});
-				}
 				if (shooter.multikill >= 2){
 					playerEvent(shooter.id, "multikill");
 				}
 				if (shooter.spree == 5 || shooter.spree == 10 || shooter.spree == 15 || shooter.spree == 20){
 					playerEvent(shooter.id, "spree");
 				}
+
+				//Assists
+				if (!self.damageDealers){self.damageDealers = [];}
+				var highestNonKillerDamageDealer = {id:"", damage:0};
+				for (var d in self.damageDealers){
+					if (self.damageDealers[d].damage > highestNonKillerDamageDealer.damage && self.damageDealers[d].id != shooter.id)
+						highestNonKillerDamageDealer = self.damageDealers[d];
+				}
+				if (highestNonKillerDamageDealer.damage >= assistDamageThreshold){
+					playerEvent(highestNonKillerDamageDealer.id, "assist");
+				}
+
 			}
 			else { //Killed by own team or self AND no last enemy to hit
 				playerEvent(shooter.id, "benedict");
 			}
 		}
+		if (self.chargingLaser > 0){
+			self.chargingLaser = 0;
+			updatePlayerList.push({id:self.id,property:"chargingLaser",value:self.chargingLaser});
+		}
+
 		playerEvent(self.id, "death");
 		
 		
@@ -1673,7 +1706,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						
 				}//End health > 0 check for allowing input	
 				else if(data.inputId === 32 && player.health <= 0 && (gametype == "horde" || (pregame && pregameIsHorde))){ //SPACE
-					if (player.respawnTimer >= respawnTimeLimit * 0.75)
+					if (player.respawnTimer >= respawnTimeLimit * 0.5)
 						gameEngine.resetHordeMode(player.id);
 				}	
 			}); //End Socket on Keypress
@@ -1840,7 +1873,6 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 //Server commands
 function evalServer(socket, data){
 	logg("SERVER COMMAND:" + data);
-	logg("Created:" + createdByCognitoSub);
 
 	if (!getPlayerById(socket.id))
 		return;
@@ -1854,6 +1886,7 @@ function evalServer(socket, data){
 		if (data == "QWOPcmd"){
 			socket.emit('addToChat', "Server commands enabled");
 			allowServerCommands = true;
+			return;
 		}		
 		if (data != "team" && getPlayerById(socket.id).cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){
 			return;
@@ -2546,6 +2579,15 @@ function playerEvent(playerId, event){
 			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
 			updateNotificationList.push({text:"+$" + killCash + " - Enemy Killed",playerId:playerId});
 		}
+		else if (event == "assist"){
+			Player.list[playerId].assists++;			
+			Player.list[playerId].cash+=assistCash;
+			Player.list[playerId].cashEarnedThisGame+=assistCash;
+			updatePlayerList.push({id:playerId,property:"assists",value:Player.list[playerId].assists});
+			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
+			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
+			updateNotificationList.push({text:"+$" + assistCash + " - Assist",playerId:playerId});
+		}
 		else if (event == "multikill"){
 			if (Player.list[playerId].multikill == 2){
 				Player.list[playerId].cash+=doubleKillCash;
@@ -2559,28 +2601,28 @@ function playerEvent(playerId, event){
 				Player.list[playerId].cashEarnedThisGame+=tripleKillCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**TRIPLE KILL!!!**",playerId:playerId});				
+				updateNotificationList.push({text:"***TRIPLE KILL!!!***",playerId:playerId});				
 			}
 			else if (Player.list[playerId].multikill == 4){
 				Player.list[playerId].cash+=quadKillCash;
 				Player.list[playerId].cashEarnedThisGame+=quadKillCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**OVERKILL!!!!**",playerId:playerId});				
+				updateNotificationList.push({text:"****OVERKILL!!!!****",playerId:playerId});				
 			}
 			else if (Player.list[playerId].multikill == 5){
 				Player.list[playerId].cash+=quadKillCash;
 				Player.list[playerId].cashEarnedThisGame+=quadKillCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**KILLCEPTION!!!!**",playerId:playerId});				
+				updateNotificationList.push({text:"*****KILLCEPTION!!!!*****",playerId:playerId});				
 			}
 			else if (Player.list[playerId].multikill >= 6){
 				Player.list[playerId].cash+=quadKillCash;
 				Player.list[playerId].cashEarnedThisGame+=quadKillCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**YO DAWG I HEARD YOU LIKE KILLS SO I PUT KILLS IN YOUR KILLS!!!!**",playerId:playerId});				
+				updateNotificationList.push({text:"******YO DAWG I HEARD YOU LIKE KILLS SO I PUT KILLS IN YOUR KILLS!!!!******",playerId:playerId});				
 			}
 		}
 		else if (event == "spree"){
@@ -2596,21 +2638,21 @@ function playerEvent(playerId, event){
 				Player.list[playerId].cashEarnedThisGame+=frenzyCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**MASSACRE!!**",playerId:playerId});				
+				updateNotificationList.push({text:"****MASSACRE!!***",playerId:playerId});				
 			}		
 			else if (Player.list[playerId].spree == 15){
 				Player.list[playerId].cash+=rampageCash;
 				Player.list[playerId].cashEarnedThisGame+=rampageCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**GENOCIDE!!**",playerId:playerId});				
+				updateNotificationList.push({text:"****GENOCIDE!!****",playerId:playerId});				
 			}		
 			else if (Player.list[playerId].spree == 20){
 				Player.list[playerId].cash+=unbelievableCash;
 				Player.list[playerId].cashEarnedThisGame+=unbelievableCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**ANNIHILATION!!**",playerId:playerId});				
+				updateNotificationList.push({text:"*****ANNIHILATION!!*****",playerId:playerId});				
 			}		
 		}
 		else if (event == "killThug"){
@@ -2717,7 +2759,7 @@ var getPlayerListLength = function(){
 var getHighestPlayerHordeKills = function(){
 	var highestKills = 0;
 	for (var i in Player.list){
-		if (Player.list[i].hordeKills > highestKills)
+		if (Player.list[i].hordeKills > highestKills && Player.list[i].health > 0)
 			highestKills = Player.list[i].hordeKills;
 	}		
 	return highestKills;	

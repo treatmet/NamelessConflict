@@ -198,7 +198,7 @@ var searchUserFromDB = function(searchText,cb){
 	});
 }
 
-var addUser = function(cognitoSub, username, cb){
+var addUser = function(cognitoSub, username, cb){ //createUser create User add mongo user addMongoUser createMongo User
 	if (!cognitoSub || !username){
 		cb({});
 		return;
@@ -214,7 +214,7 @@ var addUser = function(cognitoSub, username, cb){
 		username = generateTempName("Google_");
 	}
 
-	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:myUrl};
+	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, assists:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:myUrl};
 
 	dataAccess.dbUpdateAwait("RW_USER", "ups", {cognitoSub:cognitoSub}, obj, async function(err, res){
 		if (err){
@@ -250,7 +250,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){
-	var thresholdDate = new Date("June 3, 2021 12:00:00");
+	var thresholdDate = new Date("June 3, 2019 12:00:00");
 
 	dataAccess.dbFindAwait("RW_USER",{onlineTimestamp:{ $gt: thresholdDate }}, async function(err, resy){
 		if (resy && resy[0]){ 
@@ -262,13 +262,16 @@ var giveUsersItemsByTimestamp = function(){
     
 				console.log("-----------------------------------customizations");
 				console.log(customizations);
-				customizations["1"].mgColor = "#ffcc00"; //CONFIGURATION
-				customizations["2"].mgColor = "#ffcc00"; //CONFIGURATION
+				if (!customizations)
+					continue;
+				customizations["1"].pistolColor = "#ffcc00"; //CONFIGURATION
+				customizations["2"].pistolColor = "#ffcc00"; //CONFIGURATION
+				var obj = {assists: 0};
 
-				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
-				// 	continue;
+				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
+					continue;
 
-				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: customizations}, async function(err, res){
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});					
 			}				
 		}
