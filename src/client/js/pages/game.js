@@ -26,6 +26,12 @@ function loginFail(){
 
 function loginAlways(){
 	updateProfileLink();
+	document.getElementById('performanceInstructions').innerHTML = getPerformanceInstrucitons();
+}
+
+function showPerformanceInstructionsGame(){
+	
+	show('performanceInstructions');
 }
 
 function voteEndgame(voteType, voteSelection){
@@ -47,10 +53,10 @@ function voteEndgame(voteType, voteSelection){
 
 socket.on('votesUpdate', function(votesData){
 	document.getElementById("voteCTF").innerHTML = "CTF - [" + votesData.ctfVotes + "]";
-	document.getElementById("voteDeathmatch").innerHTML = "Deathmatch - [" + votesData.slayerVotes + "]";	
-	document.getElementById("voteLongest").innerHTML = "Long Hallway - [" + votesData.longestVotes + "]";
-	document.getElementById("voteThePit").innerHTML = "Open Warehouse - [" + votesData.thePitVotes + "]";	
-	document.getElementById("voteCrik").innerHTML = "Bunkers - [" + votesData.crikVotes + "]";
+	document.getElementById("voteDeathmatch").innerHTML = "Killfest - [" + votesData.slayerVotes + "]";	
+	document.getElementById("voteLongest").innerHTML = "<span style='color: #408fe0;font-size: 13px;'>Longer </span>Hallway - [" + votesData.longestVotes + "]";
+	document.getElementById("voteThePit").innerHTML = "<span style='color: #408fe0;font-size: 13px;'>ThePitiful </span>Warehouse - [" + votesData.thePitVotes + "]";	
+	document.getElementById("voteCrik").innerHTML = "<span style='color: #408fe0;font-size: 13px;'>Babble Creek </span>Bunkers - [" + votesData.crikVotes + "]";
 	document.getElementById("voteRebalanceYes").innerHTML = "Yes - [" + votesData.voteRebalanceTeamsYes + "]";
 	document.getElementById("voteRebalanceNo").innerHTML = "No - [" + votesData.voteRebalanceTeamsNo + "]";
 });
@@ -150,7 +156,7 @@ var customServer = false;
 var minutesLeft = "9";
 var secondsLeft = "99";
 var nextGameTimer = 0;
-var	ping = 999;
+var	ping = 0;
 
 var lowGraphicsMode = true;
 var noShadows = false;
@@ -335,7 +341,18 @@ var laserMaxCharge = 150;
 
 socket.on('pingResponse', function (socketId){
 	if (Player.list[socketId]){
+		var previousPing = ping;
 		ping = stopStopwatch();
+		if (ping >= 999 && previousPing >= 999 && !isLocal){
+			logg("PERFORMANCE ERROR: ping:" + ping + " previousPing:" + previousPing + ". Disconnecting and triggering performance tips.");
+			show("unplayableHeader");
+
+			document.getElementById("closePerfInstructions").innerHTML = '<a href="' + serverHomePage + '" style="font-size: 16px;">I verify I have followed these instructions, and am ready to reload the game.</a>'
+
+			show("performanceInstructions");
+			disconnect();
+		}
+
 		waitingOnPing = false;
 	}		
 });
@@ -613,6 +630,24 @@ Img.weapon4Key = new Image();
 Img.weapon4Key.src = "/src/client/img/4sg.png";
 Img.weapon5Key = new Image();
 Img.weapon5Key.src = "/src/client/img/5lz.png";
+Img.energyIcon = new Image();
+Img.energyIcon.src = "/src/client/img/energyIcon.png";
+Img.energyBoostIcon = new Image();
+Img.energyBoostIcon.src = "/src/client/img/energyBoostIcon.png";
+Img.energyEyeIcon = new Image();
+Img.energyEyeIcon.src = "/src/client/img/energyEyeIcon.png";
+Img.energyIconRed = new Image();
+Img.energyIconRed.src = "/src/client/img/energyIconRed.png";
+Img.energyBoostIconRed = new Image();
+Img.energyBoostIconRed.src = "/src/client/img/energyBoostIconRed.png";
+Img.energyEyeIconRed = new Image();
+Img.energyEyeIconRed.src = "/src/client/img/energyEyeIconRed.png";
+Img.energyIconYellow = new Image();
+Img.energyIconYellow.src = "/src/client/img/energyIconYellow.png";
+Img.energyBoostIconYellow = new Image();
+Img.energyBoostIconYellow.src = "/src/client/img/energyBoostIconYellow.png";
+Img.energyEyeIconYellow = new Image();
+Img.energyEyeIconYellow.src = "/src/client/img/energyEyeIconYellow.png";
 
 
 Img.pickupDP = new Image();
@@ -764,8 +799,11 @@ var mute = false;
 
 var sfx = {};
 var sfxPistol = new Howl({src: ['/src/client/sfx/pistol.mp3']});
+var sfxPistolMine = new Howl({src: ['/src/client/sfx/pistol.mp3']});
 var sfxMG = new Howl({src: ['/src/client/sfx/mgShot.mp3']});
+var sfxMGMine = new Howl({src: ['/src/client/sfx/mgShot.mp3']});
 var sfxDP = new Howl({src: ['/src/client/sfx/double_pistolsLoud.mp3']});
+var sfxDPMine = new Howl({src: ['/src/client/sfx/double_pistolsLoud.mp3']});
 var sfxSG = new Howl({src: ['/src/client/sfx/shotgun.mp3']});
 var sfxCapture = new Howl({src: ['/src/client/sfx/capture1.mp3']});
 var sfxHit1 = new Howl({src: ['/src/client/sfx/hit1.mp3']});
@@ -1098,6 +1136,13 @@ socket.on('signInResponse', function(data){
 	if(data.success){
 		///////////////////////// INITIALIZE ////////////////////////		
 		log("Sign into server successful - INITIALIZING GRAPHICS");
+		if (getCookie("lowGraphics") == "true"){
+			console.log("Setting low graphics to true from cookie");
+			reallyLowGraphicsMode = true;
+		} else {
+			reallyLowGraphicsMode = false;
+		}
+
 		myPlayer.id = data.id;
 		mapWidth = data.mapWidth;
 		mapHeight = data.mapHeight;
@@ -1316,6 +1361,13 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			else if (playerDataPack[i].property == "energy" && (playerDataPack[i].value % 100 == 0 || playerDataPack[i].value == 1 || playerDataPack[i].value < Player.list[playerDataPack[i].id].energy) && sfxCharge.playing()){
 				sfxCharge.fade(.3, 0, 100);
 			}
+
+			//Using Energy flag
+			if (playerDataPack[i].property == "energy" && playerDataPack[i].id == myPlayer.id && playerDataPack[i].value < myPlayer.energy){
+				usingEnergy = 10;
+			}
+
+			
 			//Warning sounds			
 			if (playerDataPack[i].property == "energy" && playerDataPack[i].value <= 25 && playerDataPack[i].value < Player.list[playerDataPack[i].id].energy && !sfxWarning.playing()){
 				sfxWarning.volume(warningVol);
@@ -1432,7 +1484,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			var dx1 = myPlayer.x - Player.list[playerDataPack[i].id].x;
 			var dy1 = myPlayer.y - Player.list[playerDataPack[i].id].y;
 			var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-			var vol = (Math.round((1 - (dist1 / 1000)) * 100)/100) - .3; // -.x is the Volume offset
+			var vol = (Math.round((1 - (dist1 / 1000)) * 100)/100) - .6; // -.x is the Volume offset
 			if (vol > 1)
 				vol = 1;
 			else if (vol < 0 && vol >= -.1)
@@ -1804,6 +1856,7 @@ function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack,
 	}
 	gameOver = miscPack.gameOver.gameIsOver;
 	pregame = miscPack.pregame;
+	pregameIsHorde = miscPack.pregameIsHorde;
 	if (miscPack.mapWidth){
 		mapWidth = miscPack.mapWidth;
 	}
@@ -2385,6 +2438,8 @@ function drawWallBodies(){
 }
 
 function drawMissingBags(){
+	if (gametype != "ctf")
+		return;
 	if (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY){
 		if (centerX - myPlayer.x * zoom + bagRed.homeX * zoom - Img.bagMissing.width/2 * zoom > -Img.bagMissing.width * zoom - drawDistance && centerX - myPlayer.x * zoom + bagRed.homeX * zoom - Img.bagMissing.width/2 * zoom < canvasWidth + drawDistance && centerY - myPlayer.y * zoom + bagRed.homeY * zoom - Img.bagMissing.height/2 * zoom > -Img.bagMissing.height * zoom - drawDistance && centerY - myPlayer.y * zoom + bagRed.homeY * zoom - Img.bagMissing.height/2 * zoom < canvasHeight + drawDistance){
 			drawImage(Img.bagMissing, centerX - myPlayer.x * zoom + bagRed.homeX * zoom - Img.bagMissing.width/2 * zoom, centerY - myPlayer.y * zoom + bagRed.homeY * zoom - Img.bagMissing.height/2 * zoom, Img.bagMissing.width * zoom, Img.bagMissing.height * zoom);
@@ -3159,7 +3214,7 @@ var personalInstructions = [
 ];
 function drawPersonalInstructions(){
 	for (var i in personalInstructions){
-		if (personalInstructions[i].name == "laser" && personalInstructions[i].life > 0 && myPlayer.weapon == 5){
+		if (personalInstructions[i].name == "laser" && personalInstructions[i].life > 0 && myPlayer.weapon == 5 && myPlayer.health > 0){
 			ctx.save();
 			ctx.translate(centerX - myPlayer.x * zoom + Player.list[myPlayer.id].x * zoom, centerY - myPlayer.y * zoom + Player.list[myPlayer.id].y * zoom); //Center camera on controlled player
 				drawImage(Img.pressShiftInstructions, -(Img.pressShiftInstructions.width * zoom)/2, -100, Img.pressShiftInstructions.width * zoom, Img.pressShiftInstructions.height * zoom);
@@ -3415,23 +3470,13 @@ function drawBoosts(){
 }
 
 
-
 var reallyLowGraphicsMode = false;
-function reallyLowGraphicsToggle(){
-	if (reallyLowGraphicsMode){
-		reallyLowGraphicsMode = false;
-		bodyLimit = 16;
-		document.getElementById("lowGraphcsModeButton").innerHTML = 'Low Graphics Mode [OFF]';
-		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#818181";
-	}
-	else {
-		reallyLowGraphicsMode = true;
-		bodyLimit = 2;
-		Body.list = [];
-		document.getElementById("lowGraphcsModeButton").innerHTML = 'Low Graphics Mode [ON]';
-		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#529eec";
-	}
+if (gpu.tier == 0){
+	bodyLimit = 2;
+	console.log("Setting low graphics to true");
+	reallyLowGraphicsMode = true;
 }
+
 
 
 
@@ -3837,8 +3882,8 @@ function drawInformation(){
 		fillText("Health:" + Player.list[myPlayer.id].health, 5, 15); //debug
 		fillText("ping:" + ping, 5, 35);
 		if (showStatOverlay == true){
-			fillText("Version:" + version, 5, 55); //debug
-			// fillText("y: " + Player.list[myPlayer.id].y, 5, 75); //debug info
+			fillText("" + version, 5, 55); //debug
+			fillText("RIP Panther", 5, 75); //debug info
 			// fillText("x: " + Player.list[myPlayer.id].x, 5, 95); //debug info
 			//fillText("boosting: " + Player.list[myPlayer.id].boosting, 5, 55); //debug info
 			//fillText("speedX: " + Player.list[myPlayer.id].speedX, 5, 75); //debug
@@ -3880,69 +3925,44 @@ function drawBloodyBorder(){
 }
 
 //Ammo HUD ammohud
+var usingEnergy = 0;
 function drawHUD(){
 	if (!gameOver){
-		var liftBottomHUD = 6;
+		var liftBottomHUD = 8;
 		smallCenterShadow();
 		
 		//Weapon selection (1,2,3,4) HUD//////////////
+		var iconWidth = Img.energyIcon.width + 4;
 		if (!gameOver){
 		
 			//Weapon selected highlight
 			ctx.globalAlpha = 0.3;
 			ctx.fillStyle="#FFFFFF";						
-			if (Player.list[myPlayer.id].weapon == 1){ ctx.fillRect(canvasWidth - 248, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75 - 10, Img.weapon1Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 2){ ctx.fillRect(canvasWidth - 203,canvasHeight - 130 - liftBottomHUD,Img.weapon2Key.width*0.75 - 10,Img.weapon2Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 3){ ctx.fillRect(canvasWidth - 161, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 4){ ctx.fillRect(canvasWidth - 108, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 5){ ctx.fillRect(canvasWidth - 55, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
+			if (Player.list[myPlayer.id].weapon == 1){ ctx.fillRect(canvasWidth - 248 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75 - 10, Img.weapon1Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 2){ ctx.fillRect(canvasWidth - 203 - iconWidth,canvasHeight - 130 - liftBottomHUD,Img.weapon2Key.width*0.75 - 10,Img.weapon2Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 3){ ctx.fillRect(canvasWidth - 161 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 4){ ctx.fillRect(canvasWidth - 108 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 5){ ctx.fillRect(canvasWidth - 55 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
 			ctx.globalAlpha = 1.0;
 
-
-			drawImage(Img.weapon1Key, canvasWidth - 254, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75, Img.weapon1Key.height*0.75);			
+			//Weapon keys
+			drawImage(Img.weapon1Key, canvasWidth - 254 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75, Img.weapon1Key.height*0.75);			
 			if (myPlayer.DPAmmo > 0 || myPlayer.DPClip > 0){
 
-				drawImage(Img.weapon2Key, canvasWidth - 208, canvasHeight - 130 - liftBottomHUD, Img.weapon2Key.width*0.75, Img.weapon2Key.height*0.75);
+				drawImage(Img.weapon2Key, canvasWidth - 208 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon2Key.width*0.75, Img.weapon2Key.height*0.75);
 			}
 			if (myPlayer.MGAmmo > 0 || myPlayer.MGClip > 0){
-				drawImage(Img.weapon3Key, canvasWidth - 161, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75);
+				drawImage(Img.weapon3Key, canvasWidth - 161 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75);
 			}
 			if (myPlayer.SGAmmo > 0 || myPlayer.SGClip > 0){
-				drawImage(Img.weapon4Key, canvasWidth - 108, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75);
+				drawImage(Img.weapon4Key, canvasWidth - 108 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75);
 			}
 			if (myPlayer.laserClip > 0){
-				drawImage(Img.weapon5Key, canvasWidth - 55, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75);
+				drawImage(Img.weapon5Key, canvasWidth - 55 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75);
 			}
 		}
 
-		//Energy HUD
-		if (myPlayer.drawnEnergy == undefined || myPlayer.energy <= 1 || myPlayer.drawnEnergy < myPlayer.energy || myPlayer.energy == 0){
-			myPlayer.drawnEnergy = myPlayer.energy;
-		}
-		else if (myPlayer.drawnEnergy > myPlayer.energy){
-			myPlayer.drawnEnergy -= 4;
-			if (myPlayer.drawnEnergy <= myPlayer.energy + 4 && myPlayer.drawnEnergy >= myPlayer.energy - 4){
-				myPlayer.drawnEnergy = myPlayer.energy;
-			}
-		}	
-		if (myPlayer.drawnEnergy == 100 || myPlayer.drawnEnergy >= 200){
-			drawImage(Img.white, canvasWidth - (canvasWidth * (myPlayer.drawnEnergy / 200)), canvasHeight - 4 - liftBottomHUD, canvasWidth * (myPlayer.drawnEnergy / 200), 6);
 
-		}
-		else if (myPlayer.drawnEnergy <= 25 && myPlayer.drawnEnergy > 0){
-			drawImage(Img.red, canvasWidth - (canvasWidth * (myPlayer.drawnEnergy / 200)), canvasHeight - 4 - liftBottomHUD, canvasWidth * (myPlayer.drawnEnergy / 200), 6);
-		}
-		else if (myPlayer.drawnEnergy > 0){
-			drawImage(Img.yellow, canvasWidth - (canvasWidth * (myPlayer.drawnEnergy / 200)), canvasHeight - 4 - liftBottomHUD, canvasWidth * (myPlayer.drawnEnergy / 200), 6);
-		}
-		if (myPlayer.energy <= 25) {
-			if (energyRedAlpha <= 0)
-				energyRedAlpha = 0.7;
-			ctx.globalAlpha = energyRedAlpha;
-			
-			drawImage(Img.energyRed, canvasWidth - Img.energyRed.width * 2, canvasHeight - Img.energyRed.height * 2, Img.energyRed.width * 2, Img.energyRed.height * 2);
-			energyRedAlpha -= .1;
-		}
 		ctx.globalAlpha = 1;
 
 		var clipCount = "0";
@@ -3978,14 +3998,14 @@ function drawHUD(){
 			ammoWidth = (Player.list[myPlayer.id].laserClip * 52); //Final number is bullet width
 			img = Img.ammoLZ;
 		}
- 		ctx.drawImage(img, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
+ 		ctx.drawImage(img, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205 - iconWidth, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
 		
 		//Draw separating line
 		ctx.strokeStyle = "#FFF";
 		ctx.lineWidth  = 1;
 		ctx.beginPath();
-		ctx.moveTo(canvasWidth - 202, canvasHeight - 54);
-		ctx.lineTo(canvasWidth - 202, canvasHeight - 14);
+		ctx.moveTo(canvasWidth - 202 - iconWidth, canvasHeight - 54);
+		ctx.lineTo(canvasWidth - 202 - iconWidth, canvasHeight - 14);
 		ctx.stroke();
 				
 		//Draw Ammmo Count
@@ -3993,18 +4013,98 @@ function drawHUD(){
 		ctx.fillStyle="#FFFFFF";
 		ctx.lineWidth=4;
 		ctx.textAlign="right";
-		fillText(clipCount, canvasWidth - 99, canvasHeight - 9 - liftBottomHUD);
+		fillText(clipCount, canvasWidth - 99 - iconWidth, canvasHeight - 9 - liftBottomHUD);
 		ctx.font = '63px Electrolize';
-		fillText("/", canvasWidth - 63, canvasHeight - 15 - liftBottomHUD);
+		fillText("/", canvasWidth - 63 - iconWidth, canvasHeight - 15 - liftBottomHUD);
 		if (Player.list[myPlayer.id].weapon == 1){
-			drawImage(Img.infinity, canvasWidth - 77, canvasHeight - 42 - liftBottomHUD);		
+			drawImage(Img.infinity, canvasWidth - 82 - iconWidth, canvasHeight - 42 - liftBottomHUD);		
 		}
 		else {
 			ctx.font = '38px Electrolize';
 			ctx.textAlign="left";
-			fillText(ammoCount,canvasWidth - 70, canvasHeight - 9 - liftBottomHUD);
+			fillText(ammoCount,canvasWidth - 74 - iconWidth, canvasHeight - 9 - liftBottomHUD);
 		}
 
+
+		//Energy HUD
+		if (myPlayer.drawnEnergy == undefined || myPlayer.energy <= 1 || myPlayer.drawnEnergy < myPlayer.energy || myPlayer.energy == 0){
+			myPlayer.drawnEnergy = myPlayer.energy;
+		}
+		else if (myPlayer.drawnEnergy > myPlayer.energy){
+			myPlayer.drawnEnergy -= 4;
+			if (myPlayer.drawnEnergy <= myPlayer.energy + 4 && myPlayer.drawnEnergy >= myPlayer.energy - 4){
+				myPlayer.drawnEnergy = myPlayer.energy;
+			}
+		}
+
+		var energyLineThickness = 8;
+		var iconDistFromRight = 4;
+		var liftEnergyBarY = 4;
+		var scaledCanvasWidth = canvasWidth - (energyLineThickness*6) - Img.energyIcon.width;
+
+		var energyStartingX = (canvasWidth - Img.energyIcon.width - (energyLineThickness*3) - 1.5) - (scaledCanvasWidth * (myPlayer.drawnEnergy / 200));
+		var energyStartingY = canvasHeight - liftBottomHUD + liftEnergyBarY;
+		var energyWidth = scaledCanvasWidth * (myPlayer.drawnEnergy / 200);
+
+		var imgEnergyIcon = Img.energyIcon;
+		var imgEnergyBoostIcon = Img.energyBoostIcon;
+		var imgEnergyEyeIcon = Img.energyEyeIcon;
+		console.log("myPlayer.drawnEnergy");
+		var hund = myPlayer.drawnEnergy < 100;
+		var hund2 = myPlayer.drawnEnergy >= 200;
+
+		if (usingEnergy > 0){usingEnergy--;}
+		
+		if (myPlayer.drawnEnergy <= 25){
+			ctx.fillStyle = 'red';
+			imgEnergyIcon = Img.energyIconRed;
+			imgEnergyBoostIcon = Img.energyBoostIconRed;
+			imgEnergyEyeIcon = Img.energyEyeIconRed;	
+		}
+		else if (usingEnergy > 0){
+			console.log(myPlayer.drawnEnergy + " " + hund + " " + hund2);
+			ctx.fillStyle = 'yellow';
+			imgEnergyIcon = Img.energyIconYellow;
+			imgEnergyBoostIcon = Img.energyBoostIconYellow;
+			imgEnergyEyeIcon = Img.energyEyeIconYellow;	
+		}
+		else {
+			ctx.fillStyle = 'white';
+			
+		}
+
+		if (myPlayer.drawnEnergy > 0){
+			ctx.beginPath();
+			ctx.moveTo(energyStartingX, energyStartingY); //bottom left
+			ctx.lineTo(energyStartingX + energyLineThickness, energyStartingY - energyLineThickness); //Top left (diag up right)
+			ctx.lineTo(energyStartingX + energyLineThickness + energyWidth, energyStartingY - energyLineThickness); //To base of energy action icon
+			ctx.lineTo(energyStartingX + (energyLineThickness*3) + energyWidth, energyStartingY - (energyLineThickness*3)); //Up to energy action icon
+			ctx.lineTo(energyStartingX + (energyLineThickness*6) + energyWidth, energyStartingY); //Down to energy action icon base
+			ctx.lineTo(energyStartingX, energyStartingY); //Back to start (bottom left)
+			ctx.fill();
+		}
+
+		noShadow();		
+		drawImage(imgEnergyIcon, canvasWidth - Img.energyIcon.width - iconDistFromRight, canvasHeight - Img.energyIcon.height + liftEnergyBarY - liftBottomHUD);
+		if ((myPlayer.pressingW || myPlayer.pressingD || myPlayer.pressingS || myPlayer.pressingA) && !myPlayer.cloakEngaged){
+			drawImage(imgEnergyBoostIcon, canvasWidth - Img.energyIcon.width - iconDistFromRight, canvasHeight - Img.energyIcon.height + liftEnergyBarY - liftBottomHUD);
+		}
+		else {
+			drawImage(imgEnergyEyeIcon, canvasWidth - Img.energyIcon.width - iconDistFromRight, canvasHeight - Img.energyIcon.height + liftEnergyBarY - liftBottomHUD);
+		}
+
+		//Energy Flashing
+		if (myPlayer.energy <= 25) {
+			if (energyRedAlpha <= 0)
+				energyRedAlpha = 0.7;
+			ctx.globalAlpha = energyRedAlpha;
+			
+			drawImage(Img.energyRed, canvasWidth - Img.energyRed.width * 2, canvasHeight - Img.energyRed.height * 2, Img.energyRed.width * 2, Img.energyRed.height * 2);
+			energyRedAlpha -= .1;
+		}
+
+
+		ctx.globalAlpha = 1;
 		ctx.strokeStyle = "#000";
 		ctx.lineWidth  = 3;
 		
@@ -4601,7 +4701,7 @@ function getGameStartText(){
 		text = "CAPTURE THE BAG!"
 	}
 	if (gametype == "slayer"){
-		text = "DEATHMATCH!"
+		text = "KILLFEST!"
 	}
 	if (gametype == "horde"){
 		text = "INVASION!"
@@ -4643,20 +4743,20 @@ function drawGameEventText(){
 			strokeAndFillText(killsText,canvasWidth/2,canvasHeight/2 + 50);
 		}
 		else {
-			ctx.textAlign="center";
-			ctx.font = '40px Electrolize';
-			ctx.lineWidth=7;
+			ctx.textAlign="right";
+			ctx.font = '30px Electrolize';
+			ctx.lineWidth=0;
 			ctx.fillStyle="#FFFFFF";
 			var killsText= "Kills since last respawn: " + myPlayer.hordeKills;
-			strokeAndFillText(killsText,canvasWidth/2,45);
+			strokeAndFillText(killsText,canvasWidth - 10,30);
 			ctx.font = '20px Electrolize';
-			ctx.lineWidth=4;
+			ctx.lineWidth=0;
 			killsText= "Personal best: " + myPlayer.hordePersonalBest;
-			strokeAndFillText(killsText,canvasWidth/2,70);
+			strokeAndFillText(killsText,canvasWidth - 10,55);
 			ctx.font = '20px Electrolize';
-			ctx.lineWidth=4;
+			ctx.lineWidth=0;
 			killsText= "Global best: " + hordeGlobalBest + " by " + hordeGlobalBestNames;
-			strokeAndFillText(killsText,canvasWidth/2,95);
+			strokeAndFillText(killsText,canvasWidth - 10,80);
 		}
 	}
 	if (customServer && pregame){
@@ -4679,9 +4779,9 @@ function drawGameEventText(){
 			pregameText = "MATCH STARTING!";
 		}
 		else if (gametype == "horde" || (pregame && pregameIsHorde)){
-			ctx.font = '70px Electrolize';
+			ctx.font = '40px Electrolize';
 			if (playerDiedTimer > 0 && playerDied){				
-				ctx.lineWidth=8;
+				ctx.lineWidth=4;
 				pregameText = playerDied + " DIED!!";
 				ctx.textAlign="center";
 				ctx.fillStyle="red";
@@ -4694,7 +4794,7 @@ function drawGameEventText(){
 				pregameText = "";
 			}
 		}
-		ctx.lineWidth=16;
+		ctx.lineWidth=4;
 		ctx.fillStyle="#FFFFFF";
 		ctx.textAlign="right";
 		strokeAndFillText(pregameText,canvasWidth - 10,750);			
@@ -5167,7 +5267,7 @@ var clientTimeoutSeconds = 45 * 1000;
 var clientTimeoutTicker = clientTimeoutSeconds;
 var newTipSeconds = 45;
 var newTipTicker = newTipSeconds;
-var reloadOnServerTimeout = false; //Afk
+var reloadOnServerTimeout = false; //Server Afk
 var countdownToRedrawGraphics = 0;
 
 //EVERY 1 SECOND
@@ -5181,6 +5281,8 @@ setInterval(
 			logg("Redrawing map and blocks on timer");
 			drawMapElementsOnMapCanvas();
 			drawBlocksOnBlockCanvas();
+			if (!customServer && !pregame)
+				Thug.list = [];
 		}
 		if (myPlayer.team == 0 && zoom != spectateZoom){
 			zoom = spectateZoom;
@@ -5193,18 +5295,21 @@ setInterval(
 			drawBlocksOnBlockCanvas();
 		}
 
-		clientTimeoutTicker--;
 		fpsInLastSecond = fpsCounter;
 		fpsCounter = 0;
-		if (clientTimeoutTicker < clientTimeoutSeconds - 5){
-			logg("No server messages detected, " + clientTimeoutTicker + " until timeout");
-		}
-		if (clientTimeoutTicker < 1 && reloadOnServerTimeout){
-			forceToLeave = true;
-			logg("ERROR: Server Timeout. Reloading page...");
-			disconnect();
-			location.reload();
-			clientTimeoutTicker = clientTimeoutSeconds;
+
+		if (reloadOnServerTimeout){
+			clientTimeoutTicker--;
+			if (clientTimeoutTicker < clientTimeoutSeconds - 5){
+				logg("No server messages detected, " + clientTimeoutTicker + " until timeout");
+			}
+			if (clientTimeoutTicker < 1){
+				forceToLeave = true;
+				logg("ERROR: Server Timeout. Reloading page...");
+				disconnect();
+				location.reload();
+				clientTimeoutTicker = clientTimeoutSeconds;
+			}
 		}
 		
 		if (document.getElementById("leftMenu") && document.getElementById("leftMenu").style.display != 'none'){
@@ -5405,33 +5510,51 @@ function shootUpdateFunction(shotData){
 
 	if (newShot == true){
 		if (Player.list[shotData.playerId].weapon == 3){
-			sfxMG.volume(vol * .35);
-			sfxMG.play();
-			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].MGClip <= 7 && !mute){
-				sfxClick.play();
+			if (shotData.playerId == myPlayer.id){
+				sfxMGMine.volume(vol * .35);
+				sfxMGMine.play();
+				if (Player.list[shotData.playerId].MGClip <= 7){
+					sfxClick.play();
+				}
+			}
+			else {
+				sfxMG.volume(vol * .35);
+				sfxMG.play();	
 			}
 		}
 		else if (Player.list[shotData.playerId].weapon == 2 && !mute) {
-			sfxDP.volume(vol);
-			sfxDP.play();
-			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].DPClip <= 5 && !mute){
-				sfxClick.play();
+			if (shotData.playerId == myPlayer.id){
+				sfxDPMine.volume(vol);
+				sfxDPMine.play();	
+
+				if (Player.list[shotData.playerId].DPClip <= 4){
+					sfxClick.play();
+				}
+			}
+			else {
+				sfxDP.volume(vol);
+				sfxDP.play();	
 			}
 		}
 		else if (Player.list[shotData.playerId].weapon == 1) {
-			sfxPistol.volume(vol);
-			sfxPistol.play();
-			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].PClip <= 5 && !mute){
-				sfxClick.play();
+			if (shotData.playerId == myPlayer.id){				
+				sfxPistolMine.volume(vol);
+				sfxPistolMine.play();
+				if (Player.list[shotData.playerId].PClip <= 4){
+					sfxClick.play();
+				}
+			}
+			else {
+				sfxPistol.volume(vol);
+				sfxPistol.play();	
 			}
 		}
 		else if (Player.list[shotData.playerId].weapon == 5) {
 			sfxLaserDischarge.volume(vol);
 			sfxLaserDischarge.play();
 			if (dist1 < 1000){
-				screenShakeCounter = 16;
+				screenShakeCounter = 8;
 			}
-			screenShakeCounter = 8;
 		}
 		else if (Player.list[shotData.playerId].weapon == 4) {
 			sfxSG.volume(vol);
