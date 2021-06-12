@@ -1362,7 +1362,10 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				sfxCharge.fade(.3, 0, 100);
 			}
 
-
+			//Using Energy flag
+			if (playerDataPack[i].property == "energy" && playerDataPack[i].id == myPlayer.id && playerDataPack[i].value < myPlayer.energy){
+				usingEnergy = 15;
+			}
 			
 			//Warning sounds			
 			if (playerDataPack[i].property == "energy" && playerDataPack[i].value <= 25 && playerDataPack[i].value < Player.list[playerDataPack[i].id].energy && !sfxWarning.playing()){
@@ -3921,6 +3924,7 @@ function drawBloodyBorder(){
 }
 
 //Ammo HUD ammohud
+var usingEnergy = 0;
 function drawHUD(){
 	if (!gameOver){
 		var liftBottomHUD = 8;
@@ -4048,15 +4052,15 @@ function drawHUD(){
 		var hund = myPlayer.drawnEnergy < 100;
 		var hund2 = myPlayer.drawnEnergy >= 200;
 
+		if (usingEnergy > 0){usingEnergy--;}
 
-		
-		if (myPlayer.drawnEnergy <= 25){
+    if (myPlayer.drawnEnergy <= 25){
 			ctx.fillStyle = 'red';
 			imgEnergyIcon = Img.energyIconRed;
 			imgEnergyBoostIcon = Img.energyBoostIconRed;
 			imgEnergyEyeIcon = Img.energyEyeIconRed;	
 		}
-		else if (myPlayer.drawnEnergy != 100 && myPlayer.drawnEnergy >= 200 == false){
+		else if (usingEnergy > 0){
 			console.log(myPlayer.drawnEnergy + " " + hund + " " + hund2);
 			ctx.fillStyle = 'yellow';
 			imgEnergyIcon = Img.energyIconYellow;
