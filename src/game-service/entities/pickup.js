@@ -191,7 +191,7 @@ var pickupPickup = function(playerId, pickupId){
 			playerPickingUp.health = playerMaxHealth;
 		}
 		updatePlayerList.push({id:playerId,property:"health",value:playerPickingUp.health});											
-		
+		sfx = "sfxBagGrab";
 		removePickup(pickupId);
 	}
 	

@@ -250,7 +250,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){
-	var thresholdDate = new Date("June 3, 2019 12:00:00");
+	var thresholdDate = new Date("June 10, 2019 20:00:00");
 
 	dataAccess.dbFindAwait("RW_USER",{onlineTimestamp:{ $gt: thresholdDate }}, async function(err, resy){
 		if (resy && resy[0]){ 
@@ -262,15 +262,17 @@ var giveUsersItemsByTimestamp = function(){
     
 				console.log("-----------------------------------customizations");
 				console.log(customizations);
-				if (!customizations)
+				
+				if (!customizations || !customizations["1"] || !customizations["2"] )
 					continue;
+
 				customizations["1"].pistolColor = "#ffcc00"; //CONFIGURATION
 				customizations["2"].pistolColor = "#ffcc00"; //CONFIGURATION
-				var obj = {assists: 0};
 
-				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
-					continue;
+				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
+				// 	continue;
 
+				var obj = {customizations: customizations};
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});					
 			}				
