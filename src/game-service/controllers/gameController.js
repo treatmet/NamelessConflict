@@ -60,7 +60,7 @@ router.post('/playNow', async function (req, res) {
 	var params = {url:myUrl, privateServer:false};
 	var approvedToJoinServer = false;
 	
-	dataAccess.dbFindOptionsAwait("RW_SERV", params, {sort:{serverNumber: 1}}, async function(err, serv){	
+	dataAccess.dbFindAwait("RW_SERV", params, async function(err, serv){	
 		if (serv && serv[0]){
 			var incomingUsers = serv[0].incomingUsers || "[]";
 			for (var u = 0; u < incomingUsers.length; u++){

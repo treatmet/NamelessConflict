@@ -100,7 +100,6 @@ router.post('/getJoinableServer', async function (req, res) {
 
 //This will be overhauled greatly with matchmaking, don't fret too much over its current state
 var getJoinableServer = function(options, cb){
-
 	logg("getJoinableServer called with:");
 	console.log(options);
 
@@ -131,7 +130,7 @@ var getJoinableServer = function(options, cb){
 		options.matchmaking = false;
 	}
 	
-	dataAccess.dbFindOptionsAwait("RW_SERV", params, {sort:{serverNumber: 1}}, async function(err, serverResult){	
+	dataAccess.dbFindAwait("RW_SERV", params, async function(err, serverResult){	
 		var serv = serverResult.sort(compareCurrentPlayerSize);
 		
 		if (typeof serv != 'undefined' && typeof serv[0] != 'undefined'){	

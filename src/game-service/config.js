@@ -30,6 +30,7 @@ global.spreeCash = 250;
 global.frenzyCash = 500;
 global.rampageCash = 750;
 global.unbelievableCash = 1000;
+global.assistCash = 50;
 global.thugCash = 25;
 global.assassinationCash = 150;
 global.stealCash = 50;
@@ -113,6 +114,7 @@ global.slayerRespawnTimeLimit = 3 * 60; //seconds (translated to frames)
 global.ctfRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
 global.bagDrag = 0.85;
 global.playerMaxHealth = 175;
+global.assistDamageThreshold = 30;
 
 //Cloaking config
 global.cloakingEnabled = true;
@@ -210,7 +212,6 @@ global.isWebServer = false;
 global.isLocal = false;
 global.isTest = false; //No need to flip manually
 global.pause = false;
-global.serverNumber = 1;
 
 global.privateServer = false;
 global.customServer = false;

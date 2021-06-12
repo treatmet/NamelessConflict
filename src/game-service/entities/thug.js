@@ -10,6 +10,7 @@ var Thug = function(team, x, y){
 		myThugSpeed = thugSpeed - 1 + Math.round(hordeKills/30)/10;
 		if (myThugSpeed > 4) {myThugSpeed = 4;}
 		var speedVariance = 2 - randomInt(1,3);
+		if (speedVariance > 0 && hordeKills < 50){speedVariance = 0;}
 		if (myThugSpeed < 1.5) {myThugSpeed = 1.5;}
 		myThugSpeed += speedVariance; 
 	} 
@@ -314,7 +315,6 @@ var Thug = function(team, x, y){
 						if (!shooter.hordeKills){shooter.hordeKills = 0;}
 						shooter.hordeKills++;
 						updatePlayerList.push({id:shooter.id,property:"hordeKills",value:shooter.hordeKills});
-
 					}
 					else {
 						hordeKills++;
