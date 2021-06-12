@@ -638,6 +638,8 @@ Img.energyEyeIcon = new Image();
 Img.energyEyeIcon.src = "/src/client/img/energyEyeIcon.png";
 Img.energyIconRed = new Image();
 Img.energyIconRed.src = "/src/client/img/energyIconRed.png";
+Img.energyIconX = new Image();
+Img.energyIconX.src = "/src/client/img/energyIconX.png";
 Img.energyBoostIconRed = new Image();
 Img.energyBoostIconRed.src = "/src/client/img/energyBoostIconRed.png";
 Img.energyEyeIconRed = new Image();
@@ -670,13 +672,15 @@ Img.pickupLaser = new Image();
 Img.pickupLaser.src = "/src/client/img/LaserAmmo.png";
 Img.pickupLaser2 = new Image();
 Img.pickupLaser2.src = "/src/client/img/LaserAmmo2.png";
-Img.pressShiftInstructions = new Image();
-Img.pressShiftInstructions.src = "/src/client/img/pressShiftInstructions.png";
 Img.pickupMD = new Image();
 Img.pickupMD.src = "/src/client/img/MDammo.png";
 Img.pickupMD2 = new Image();
 Img.pickupMD2.src = "/src/client/img/MDammo2.png";
 
+Img.pressShiftInstructions = new Image();
+Img.pressShiftInstructions.src = "/src/client/img/pressShiftInstructions.png";
+Img.space = new Image();
+Img.space.src = "/src/client/img/space.png";
 
 Img.blackPlayerLegs = new Image();
 Img.blackPlayerLegs.src = "/src/client/img/blackPlayerLegs.png";
@@ -1364,7 +1368,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 
 			//Using Energy flag
 			if (playerDataPack[i].property == "energy" && playerDataPack[i].id == myPlayer.id && playerDataPack[i].value < myPlayer.energy){
-				usingEnergy = 15;
+				usingEnergy = 20;
 			}
 			
 			//Warning sounds			
@@ -3209,6 +3213,10 @@ function drawBlockLasers(){
 }
 
 var personalInstructions = [
+	{name:"move", life:400},
+	{name:"shoot", life:400},
+	{name:"cloak", life:400},
+	{name:"boost", life:400},
 	{name:"laser", life:400}
 ];
 function drawPersonalInstructions(){
@@ -3221,7 +3229,7 @@ function drawPersonalInstructions(){
 			if (personalInstructions[i].life < 400)
 				personalInstructions[i].life--;
 			break;
-			}
+		}
 	}
 
 }
@@ -3882,7 +3890,6 @@ function drawInformation(){
 		fillText("ping:" + ping, 5, 35);
 		if (showStatOverlay == true){
 			fillText("" + version, 5, 55); //debug
-			fillText("RIP Panther", 5, 75); //debug info
 			// fillText("x: " + Player.list[myPlayer.id].x, 5, 95); //debug info
 			//fillText("boosting: " + Player.list[myPlayer.id].boosting, 5, 55); //debug info
 			//fillText("speedX: " + Player.list[myPlayer.id].speedX, 5, 75); //debug
@@ -4024,7 +4031,6 @@ function drawHUD(){
 			fillText(ammoCount,canvasWidth - 74 - iconWidth, canvasHeight - 9 - liftBottomHUD);
 		}
 
-
 		//Energy HUD
 		if (myPlayer.drawnEnergy == undefined || myPlayer.energy <= 1 || myPlayer.drawnEnergy < myPlayer.energy || myPlayer.energy == 0){
 			myPlayer.drawnEnergy = myPlayer.energy;
@@ -4048,20 +4054,23 @@ function drawHUD(){
 		var imgEnergyIcon = Img.energyIcon;
 		var imgEnergyBoostIcon = Img.energyBoostIcon;
 		var imgEnergyEyeIcon = Img.energyEyeIcon;
-		console.log("myPlayer.drawnEnergy");
-		var hund = myPlayer.drawnEnergy < 100;
-		var hund2 = myPlayer.drawnEnergy >= 200;
 
 		if (usingEnergy > 0){usingEnergy--;}
 
-    if (myPlayer.drawnEnergy <= 25){
-			ctx.fillStyle = 'red';
-			imgEnergyIcon = Img.energyIconRed;
-			imgEnergyBoostIcon = Img.energyBoostIconRed;
-			imgEnergyEyeIcon = Img.energyEyeIconRed;	
+   		if (myPlayer.drawnEnergy <= 25){
+			if (myPlayer.drawnEnergy <= 0){
+				imgEnergyIcon = Img.energyIconX;
+				imgEnergyBoostIcon = "";
+				imgEnergyEyeIcon = "";
+			}
+			else {
+				ctx.fillStyle = 'red';			
+				imgEnergyIcon = Img.energyIconRed;
+				imgEnergyBoostIcon = Img.energyBoostIconRed;
+				imgEnergyEyeIcon = Img.energyEyeIconRed;	
+			}
 		}
 		else if (usingEnergy > 0){
-			console.log(myPlayer.drawnEnergy + " " + hund + " " + hund2);
 			ctx.fillStyle = 'yellow';
 			imgEnergyIcon = Img.energyIconYellow;
 			imgEnergyBoostIcon = Img.energyBoostIconYellow;
@@ -4082,14 +4091,19 @@ function drawHUD(){
 			ctx.lineTo(energyStartingX, energyStartingY); //Back to start (bottom left)
 			ctx.fill();
 		}
+		else {
+		}
 
 		noShadow();		
 		drawImage(imgEnergyIcon, canvasWidth - Img.energyIcon.width - iconDistFromRight, canvasHeight - Img.energyIcon.height + liftEnergyBarY - liftBottomHUD);
-		if ((myPlayer.pressingW || myPlayer.pressingD || myPlayer.pressingS || myPlayer.pressingA) && !myPlayer.cloakEngaged){
+		if ((myPlayer.pressingW || myPlayer.pressingD || myPlayer.pressingS || myPlayer.pressingA) && !myPlayer.cloakEngaged && imgEnergyBoostIcon){
 			drawImage(imgEnergyBoostIcon, canvasWidth - Img.energyIcon.width - iconDistFromRight, canvasHeight - Img.energyIcon.height + liftEnergyBarY - liftBottomHUD);
 		}
-		else {
+		else if (imgEnergyEyeIcon){
 			drawImage(imgEnergyEyeIcon, canvasWidth - Img.energyIcon.width - iconDistFromRight, canvasHeight - Img.energyIcon.height + liftEnergyBarY - liftBottomHUD);
+		}
+		if (myPlayer.energy > 0){
+			//drawImage(Img.space, canvasWidth - Img.energyIcon.width - iconDistFromRight, canvasHeight - Img.energyIcon.height + liftEnergyBarY - liftBottomHUD - 42, 76, 40);
 		}
 
 		//Energy Flashing
