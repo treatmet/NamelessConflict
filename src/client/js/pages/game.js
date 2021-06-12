@@ -1364,9 +1364,8 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 
 			//Using Energy flag
 			if (playerDataPack[i].property == "energy" && playerDataPack[i].id == myPlayer.id && playerDataPack[i].value < myPlayer.energy){
-				usingEnergy = 10;
+				usingEnergy = 15;
 			}
-
 			
 			//Warning sounds			
 			if (playerDataPack[i].property == "energy" && playerDataPack[i].value <= 25 && playerDataPack[i].value < Player.list[playerDataPack[i].id].energy && !sfxWarning.playing()){
@@ -4054,8 +4053,8 @@ function drawHUD(){
 		var hund2 = myPlayer.drawnEnergy >= 200;
 
 		if (usingEnergy > 0){usingEnergy--;}
-		
-		if (myPlayer.drawnEnergy <= 25){
+
+    if (myPlayer.drawnEnergy <= 25){
 			ctx.fillStyle = 'red';
 			imgEnergyIcon = Img.energyIconRed;
 			imgEnergyBoostIcon = Img.energyBoostIconRed;

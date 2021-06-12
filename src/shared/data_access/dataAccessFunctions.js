@@ -198,7 +198,7 @@ var searchUserFromDB = function(searchText,cb){
 	});
 }
 
-var addUser = function(cognitoSub, username, cb){
+var addUser = function(cognitoSub, username, cb){ //createUser create User add mongo user addMongoUser createMongo User
 	if (!cognitoSub || !username){
 		cb({});
 		return;
@@ -214,7 +214,7 @@ var addUser = function(cognitoSub, username, cb){
 		username = generateTempName("Google_");
 	}
 
-	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:myUrl};
+	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, assists:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:myUrl};
 
 	dataAccess.dbUpdateAwait("RW_USER", "ups", {cognitoSub:cognitoSub}, obj, async function(err, res){
 		if (err){
@@ -245,6 +245,41 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 		}	
 		//logg("Updated player[" + cognitoSub + "] onlineTimestamp to " + newDate);
 	});		
+}
+
+
+
+var giveUsersItemsByTimestamp = function(){
+	var thresholdDate = new Date("June 10, 2019 20:00:00");
+
+	dataAccess.dbFindAwait("RW_USER",{onlineTimestamp:{ $gt: thresholdDate }}, async function(err, resy){
+		if (resy && resy[0]){ 
+			for (let k = 0; k < resy.length; k++) {
+				var cognitoSub = resy[k].cognitoSub;
+				var customizations = resy[k].customizations;
+				if (!customizations)
+					continue;
+    
+				console.log("-----------------------------------customizations");
+				console.log(customizations);
+				
+				if (!customizations || !customizations["1"] || !customizations["2"] )
+					continue;
+
+				customizations["1"].pistolColor = "#ffcc00"; //CONFIGURATION
+				customizations["2"].pistolColor = "#ffcc00"; //CONFIGURATION
+
+				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
+				// 	continue;
+
+				var obj = {customizations: customizations};
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
+				});					
+			}				
+		}
+	});
+
+
 }
 
 var setPartyIdIfEmpty = function(cognitoSub) {
@@ -1028,81 +1063,33 @@ var getEmptyServersFromDB = function(cb){
 	});
 }
 
-var dbGameServerRemoveAndAdd = function(){
-	dataAccess.dbUpdateAwait("RW_SERV", "rem", {url: myUrl}, {}, async function(err, obj){
-		if (!err){
-			dbGameServerUpdate();
+var dbGameServerUpdate = function(obj, cognitoSubToRemoveFromIncoming = false) {
+	dataAccess.dbFindAwait("RW_SERV", {url:myUrl}, async function(err, res){ //!!! Sort by timestamp
+		var serverParam = {url:myUrl};
+		if (res && res[0]){
+			serverParam = {"_id": ObjectId(res[0]._id)}; //Update only based on MongoId to avoid the off-chance that there are duplicate urls in DB. (any duplicate will get deleted from lack of healthy timestamp updates)
+			var healthyTimestamp = new Date();
+				
+			//Check for stale incoming users
+			var incomingUsers = res[0].incomingUsers || [];
+			var usersToRemove = [];
+			var miliInterval = (staleOnlineTimestampThreshold /4 * 1000); //Stale incoming player threshold is a quarter of online timestamp threshold
+			var thresholdDate = new Date(Date.now() - miliInterval);
+			for (var u = 0; u < incomingUsers.length; u++){
+				if (incomingUsers[u].timestamp < thresholdDate || incomingUsers[u].cognitoSub == cognitoSubToRemoveFromIncoming){
+					usersToRemove.push(u);
+				}
+			}
+			incomingUsers = removeIndexesFromArray(incomingUsers, usersToRemove);	
+			obj.incomingUsers = incomingUsers;			
 		}
-	});
+
+		dataAccess.dbUpdateAwait("RW_SERV", "ups", serverParam, obj, async function(err, res){
+			//logg("DB: Set: " + myUrl + " with: " + obj);
+		});	
+	});	
 }
 
-//!!!This function references variables in the gameServer scope (whiteScore, etc)
-var dbGameServerUpdate = function() {
-	if ((!myUrl || myUrl == "") || (!isLocal && myQueryString.length <= 0)){
-		logg("ERROR - NO SERVER URL - NOT READY TO SYNC WITH DB");
-		return;
-	}
-	if (isWebServer == true)
-		return;
-
-	if (gametype == "horde"){
-		serverName = "Invasion " + port.substring(2,4);
-	}
-		else if (!customServer){
-		serverName = "Ranked " + port.substring(2,4);
-	}
-
-	var serverSubName = "";
-	if (maxPlayers%2 != 0)
-	{
-		maxPlayers++;
-	}
-	serverSubName += "[" + maxPlayers/2 + "v" + maxPlayers/2;
-	if (gametype == "ctf"){
-		serverSubName += " Capture]";
-	}
-	else if (gametype == "slayer"){
-		serverSubName += " Deathmatch]";
-	}
-	else if (gametype == "horde"){
-		serverSubName = "[" + maxPlayers + " Players]";
-	}
-	
-	
-	var healthCheckTimestamp = new Date();
-	var matchTime = (gameMinutesLength * 60) + gameSecondsLength;
-	var currentTimeLeft = (minutesLeft * 60) + secondsLeft;
-	if (pregame == true || gameOver == true){currentTimeLeft = matchTime;}
-	var currentHighestScore = 0;
-	if (blackScore > whiteScore){
-		currentHighestScore = blackScore;
-	}
-	else {
-		currentHighestScore = whiteScore;
-	}
-
-	var currentUsers = [];
-	for (var s in SOCKET_LIST){
-		if (typeof SOCKET_LIST[s].team === 'undefined' || SOCKET_LIST[s].team === 0)
-			continue;
-
-		currentUsers.push({
-			socketId:SOCKET_LIST[s].id,
-			cognitoSub:SOCKET_LIST[s].cognitoSub,
-			username:SOCKET_LIST[s].username,
-			partyId:SOCKET_LIST[s].partyId,
-			rating:SOCKET_LIST[s].rating,
-			experience:SOCKET_LIST[s].experience,
-			team:SOCKET_LIST[s].team
-		});
-	}
-	
-	var obj = {instanceId:instanceId, serverNumber:serverNumber, serverName:serverName, serverSubName:serverSubName,  privateServer:privateServer, customServer:customServer, healthCheckTimestamp:healthCheckTimestamp, gametype:gametype, maxPlayers:maxPlayers, voteGametype:voteGametype, voteMap:voteMap, matchTime:matchTime, currentTimeLeft:currentTimeLeft, scoreToWin:scoreToWin, currentHighestScore:currentHighestScore, currentUsers:currentUsers, queryString:myQueryString};
-	dataAccess.dbUpdateAwait("RW_SERV", "ups", {url: myUrl}, obj, async function(err, res){
-		//logg("dbGameServerUpdate DB: Set: " + myUrl + " with: ");
-		//console.log(obj);
-	});		
-}
 var setHordePersonalBest = function(cognitoSub, kills){
 	if (cognitoSub.substring(0,2) == "0."){return;}
 	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {hordePersonalBest: kills}, async function(err, obj){
@@ -1148,63 +1135,9 @@ var getHordeGlobalBest = function(cb){
 	});
 }
 
-var syncGameServerWithDatabase = function(){	
-	if (myUrl == "" && (isLocal || (!isLocal && myQueryString.length > 0))){
-		logg("WARNING - Unable to get server IP. Retrying in " + syncServerWithDbInterval + " seconds...");
-		return;
-	}
-	//logg("Syncing server with Database...");
-	
-	dataAccess.dbFindAwait("RW_SERV", {url:myUrl}, async function(err, res){
-		if (res && res[0]){
-			serverNumber = res[0].serverNumber;
-						
-			var healthyTimestamp = new Date();
-			if (res[1]){ //More than one entry found for this URL. Remove all, and add just one.				
-				dbGameServerRemoveAndAdd();
-			}	
-			else {
-				dbGameServerUpdate();
-				
-				//Check for stale incoming users
-				var incomingUsers = res[0].incomingUsers || [];
-				var usersToRemove = [];
-				var miliInterval = (staleOnlineTimestampThreshold /4 * 1000); //Stale incoming player threshold is a quarter of online timestamp threshold
-				var thresholdDate = new Date(Date.now() - miliInterval);
-				for (var u = 0; u < incomingUsers.length; u++){
-					if (incomingUsers[u].timestamp < thresholdDate){
-						usersToRemove.push(u);
-					}
-				}
-				incomingUsers = removeIndexesFromArray(incomingUsers, usersToRemove);	
-			
-				dataAccess.dbUpdateAwait("RW_SERV", "set", {url: myUrl}, {incomingUsers:incomingUsers}, async function(err, res){
-					//logg("DB: Set: " + myUrl + " with: " + obj);
-				});	
-			}			
-		}
-		else {
-			//Server url does not exist
-			logg('Server does not exist');
-			dataAccess.dbFindOptionsAwait("RW_SERV", {}, {sort:{serverNumber: -1}}, async function(err, res){		
-				if (res && res[0]){
-					serverNumber = res[0].serverNumber;
-					serverNumber++;						
-				}
-				else {
-					logg('There are no servers live');
-				}
-
-				log("ADDING SERVER WITH NO PARAMS");
-				dbGameServerUpdate();			
-			});
-		}	
-	});	
-}
-
 function checkForUnhealthyServers(){
 	//logg("Checking for dead servers on server DB...");	
-	dataAccess.dbFindOptionsAwait("RW_SERV", {}, {sort:{serverNumber: 1}}, async function(err, res){
+	dataAccess.dbFindAwait("RW_SERV", {}, async function(err, res){
 		if (res && res[0]){
 			for (var i = 0; i < res.length; i++){
 				var serverLastHealthCheck = new Date(res[i].healthCheckTimestamp);
@@ -1264,12 +1197,11 @@ module.exports.upsertFriend = upsertFriend;
 module.exports.removeFriend = removeFriend;
 module.exports.getPublicServersFromDB = getPublicServersFromDB;
 module.exports.getEmptyServersFromDB = getEmptyServersFromDB;
-module.exports.dbGameServerRemoveAndAdd = dbGameServerRemoveAndAdd;
 module.exports.dbGameServerUpdate = dbGameServerUpdate;
-module.exports.syncGameServerWithDatabase = syncGameServerWithDatabase;
 module.exports.checkForUnhealthyServers = checkForUnhealthyServers;
 module.exports.addUser = addUser;
 module.exports.setHordePersonalBest = setHordePersonalBest;
 module.exports.setHordeGlobalBest = setHordeGlobalBest;
 module.exports.getHordePersonalBest = getHordePersonalBest;
 module.exports.getHordeGlobalBest = getHordeGlobalBest;
+module.exports.giveUsersItemsByTimestamp = giveUsersItemsByTimestamp;
