@@ -90,7 +90,7 @@ var camAccelerationMultiplier = 1.9;
 var shiftCamOffSet = 450;
 var shiftDiagCamOffSet = 325;
 const spectateZoom = 0.5;
-const defaultZoom = 0.75;
+var defaultZoom = 0.75;
 var zoom = defaultZoom;
 
 const maxCloakStrength = 0.98; //minCloak
@@ -865,8 +865,8 @@ var sfxWarning2 = new Howl({src: ['/src/client/sfx/warning2.mp3']});
 sfxWarning2.on('fade', function(){
 	sfxWarning2.stop();
 });
-var sfxCharge = new Howl({src: ['/src/client/sfx/recharge-high-pitch.mp3']});
-sfxCharge.volume(.3);
+var sfxCharge = new Howl({src: ['/src/client/sfx/charging3.mp3']});
+//sfxCharge.volume(.9);
 sfxCharge.on('fade', function(){
 	sfxCharge.stop();
 });
@@ -3212,13 +3212,13 @@ function drawBlockLasers(){
 
 }
 
-var personalInstructions = [
-	{name:"move", life:400},
+var personalInstructions = {
+	move:{life:400, img:Img.pressShiftInstructions},
 	{name:"shoot", life:400},
 	{name:"cloak", life:400},
 	{name:"boost", life:400},
 	{name:"laser", life:400}
-];
+};
 function drawPersonalInstructions(){
 	for (var i in personalInstructions){
 		if (personalInstructions[i].name == "laser" && personalInstructions[i].life > 0 && myPlayer.weapon == 5 && myPlayer.health > 0){
@@ -3589,6 +3589,7 @@ function drawNotifications(){
 
 //draw usernames drawNames
 function drawPlayerTags(){
+	if (zoom == 1){return;}
 	ctx.textAlign="center";
 	ctx.font = 'bold 12px Electrolize';
 	for (var i in Player.list){
@@ -5876,11 +5877,11 @@ document.onkeydown = function(event){
 					}
 				}
 				else if (chatInput.value == './zoom' || chatInput.value == './zoom1'){
-					if (zoom == 1){
-						zoom = defaultZoom;
+					if (defaultZoom == 1){
+						defaultZoom = 0.75;
 					}
 					else {
-						zoom = 1;
+						defaultZoom = 1;
 					}
 					drawMapElementsOnMapCanvas();
 					drawBlocksOnBlockCanvas();

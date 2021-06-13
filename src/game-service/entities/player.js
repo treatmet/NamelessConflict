@@ -2274,6 +2274,13 @@ function evalServer(socket, data){
 			getPlayerById(socket.id).kill({id:0, shootingDir:1});
 		}
 	}
+	else if (data == "hurt"){
+		if (getPlayerById(socket.id).health > 0){
+			getPlayerById(socket.id).health -= 20;
+			getPlayerById(socket.id).healDelay = 500;
+			updatePlayerList.push({id:getPlayerById(socket.id).id,property:"health",value:getPlayerById(socket.id).health})
+		}
+	}
 	else if (data == "end"){
 		minutesLeft = 0;
 		secondsLeft = 0;
