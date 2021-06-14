@@ -600,6 +600,34 @@ var setUserSettings = function(request, cb){
 	});
 }
 
+var setUserSetting = function(cognitoSub, section, key, value){
+	getUserSettings(cognitoSub, function(getSettingsResult){
+		if (!getSettingsResult.result){return;}
+
+		var settings = getSettingsResult.result;
+		if (!settings[section]){
+			settings[section] = [];
+		}
+		if (!settings[section].find(setting => setting.key == key)){
+			settings[section].push({key:key, value:value});
+		}
+		else {
+			var foundIndex = settings[section].findIndex(setting => setting.key == key); //LINQ + Update
+			settings[section][foundIndex] = {key:key, value:value};
+		}
+
+		dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {settings:settings}, async function(err, obj){
+			if (err)
+				logg("Error updating Setting: " + key + " to " + value);
+			else
+				logg("Successfully updated setting: " + key + " to " + value);
+		});
+	
+
+	})
+
+}
+
 function getNewUserShopList(shopSlotsUnlocked){
 	var newShopList = [];
 
@@ -1178,6 +1206,7 @@ module.exports.getUserCustomizations = getUserCustomizations;
 module.exports.getUserCustomizationOptions = getUserCustomizationOptions;
 module.exports.getUserSettings = getUserSettings;
 module.exports.setUserSettings = setUserSettings;
+module.exports.setUserSetting = setUserSetting;
 module.exports.defaultCustomizations = defaultCustomizations;
 module.exports.getShopItem = getShopItem;
 module.exports.getUserShopList = getUserShopList;

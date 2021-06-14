@@ -438,6 +438,10 @@ a.socialLink:hover {
     border: solid 1px white;
 }
 
+.bannerImage {
+    width:100%;
+}
+
 div#communityAnnouncement {
     font-weight: bold;
     background-color: #3a3a3a;

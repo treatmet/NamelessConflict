@@ -95,6 +95,10 @@
 		{
 			"key": "forceTeamNameColors",
 			"value": true
+		},
+		{
+			"key": "tutorialCompleted",
+			"value": false
 		}
 	],
 	"quickChat": [

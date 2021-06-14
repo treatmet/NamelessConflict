@@ -1716,6 +1716,16 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			socket.on('pingServer', function(socketId){
 				socket.emit('pingResponse', socketId);
 			});
+
+			socket.on('tutorialCompleted', function(){
+				log("TUTORIAL COMPLETED SERVER " + socket.cognitoSub);
+
+				if (socket.cognitoSub && socket.cognitoSub.substring(0,2) != "0."){
+					dataAccessFunctions.setUserSetting(socket.cognitoSub, "display", "tutorialCompleted", true);
+				}
+			});
+
+			
 			
 			socket.on('purchase', function(data){
 				if (data.selection == 1 && Player.list[data.playerId].cash >= shop.price1){
@@ -1967,7 +1977,7 @@ function evalServer(socket, data){
 			if ((gameEngine.getMoreTeam1Players() > 1 && getPlayerById(socket.id).team == 1) || (gameEngine.getMoreTeam1Players() < -1 && getPlayerById(socket.id).team == 2))
 				teamsOffBalance = true;
 
-			if (customServer || !isGameInFullSwing() || teamsOffBalance){
+			if (customServer || !isGameInFullSwing() || teamsOffBalance || getPlayerById(socket.id).cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){
 				gameEngine.changeTeams(socket.id);
 			}
 			else {

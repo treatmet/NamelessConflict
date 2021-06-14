@@ -497,7 +497,7 @@ function checkForGameOver(){
 
 function endGame(){
 	gameOver = true;
-	logg("GAME OVER! team1:" + whiteScore + " team2:" + blackScore);
+	logg(serverName + " GAME OVER! team1:" + whiteScore + " team2:" + blackScore);
 	calculateEndgameStats();
 	nextGameTimer = timeBeforeNextGame;			
 	updateMisc.nextGameTimer = nextGameTimer;

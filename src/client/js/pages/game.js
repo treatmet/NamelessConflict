@@ -679,8 +679,18 @@ Img.pickupMD2.src = "/src/client/img/MDammo2.png";
 
 Img.pressShiftInstructions = new Image();
 Img.pressShiftInstructions.src = "/src/client/img/pressShiftInstructions.png";
-Img.space = new Image();
-Img.space.src = "/src/client/img/space.png";
+Img.wasdInstructions = new Image();
+Img.wasdInstructions.src = "/src/client/img/wasdInstructions.png";
+Img.arrowInstructions = new Image();
+Img.arrowInstructions.src = "/src/client/img/arrowInstructions.png";
+Img.cloakInstructions = new Image();
+Img.cloakInstructions.src = "/src/client/img/cloakInstructions.png";
+Img.boostInstructions = new Image();
+Img.boostInstructions.src = "/src/client/img/boostInstructions.png";
+Img.teamInstructions = new Image();
+Img.teamInstructions.src = "/src/client/img/teamInstructions.png";
+
+
 
 Img.blackPlayerLegs = new Image();
 Img.blackPlayerLegs.src = "/src/client/img/blackPlayerLegs.png";
@@ -3213,25 +3223,66 @@ function drawBlockLasers(){
 }
 
 var personalInstructions = {
-	move:{life:400, img:Img.pressShiftInstructions},
-	{name:"shoot", life:400},
-	{name:"cloak", life:400},
-	{name:"boost", life:400},
-	{name:"laser", life:400}
+	laser:{image:Img.pressShiftInstructions, life:400},
+	move:{life:400, image:Img.wasdInstructions},
+	shoot:{life:400, image:Img.arrowInstructions},
+	cloak:{life:400, image:Img.cloakInstructions},
+	boost:{life:400, image:Img.boostInstructions},
+	team:{life:600, image:Img.teamInstructions}
 };
+
+//DrawInstructions
 function drawPersonalInstructions(){
-	for (var i in personalInstructions){
-		if (personalInstructions[i].name == "laser" && personalInstructions[i].life > 0 && myPlayer.weapon == 5 && myPlayer.health > 0){
-			ctx.save();
-			ctx.translate(centerX - myPlayer.x * zoom + Player.list[myPlayer.id].x * zoom, centerY - myPlayer.y * zoom + Player.list[myPlayer.id].y * zoom); //Center camera on controlled player
-				drawImage(Img.pressShiftInstructions, -(Img.pressShiftInstructions.width * zoom)/2, -100, Img.pressShiftInstructions.width * zoom, Img.pressShiftInstructions.height * zoom);
-			ctx.restore();
-			if (personalInstructions[i].life < 400)
-				personalInstructions[i].life--;
-			break;
-		}
+	if (personalInstructions.team.life > 0 && myPlayer.settings && myPlayer.settings.display && myPlayer.settings.display.find(setting => setting.key == "tutorialCompleted") && myPlayer.settings.display.find(setting => setting.key == "tutorialCompleted").value == true){
+		personalInstructions.move.life = -1;
+		personalInstructions.shoot.life = -1;
+		personalInstructions.cloak.life = -1;
+		personalInstructions.boost.life = -1;
+		personalInstructions.team.life = -1;
 	}
 
+	var instructionName = "";
+	if (personalInstructions["laser"].life > 0 && myPlayer.weapon == 5 && myPlayer.health > 0){
+		instructionName = "laser";
+	}
+	else if (personalInstructions["move"].life > 0 && myPlayer.health > 0){
+		instructionName = "move";
+		if (myPlayer.pressingW || myPlayer.pressingA || myPlayer.pressingS || myPlayer.pressingD){personalInstructions[instructionName].life--;}
+	}
+	else if (personalInstructions["shoot"].life > 0 && myPlayer.health > 0){
+		instructionName = "shoot";
+		if (myPlayer.pressingUp || myPlayer.pressingLeft || myPlayer.pressingDown || myPlayer.pressingRight){personalInstructions[instructionName].life--;}
+	}
+	else if (personalInstructions["cloak"].life > 0 && myPlayer.health > 0){
+		instructionName = "cloak";
+		if (myPlayer.cloakEngaged){personalInstructions[instructionName].life--;}
+	}
+	else if (personalInstructions["boost"].life > 0 && myPlayer.health > 0){
+		instructionName = "boost";
+		if (myPlayer.boosting){personalInstructions[instructionName].life--;}
+	}
+	else if (personalInstructions["team"].life > 0 && myPlayer.health > 0){
+		instructionName = "team";
+		personalInstructions[instructionName].life--;
+	}
+
+	if (instructionName){
+		if (personalInstructions[instructionName].life < 400){
+			personalInstructions[instructionName].life--;
+		}
+
+		ctx.save();
+		ctx.translate(centerX - myPlayer.x * zoom + Player.list[myPlayer.id].x * zoom, centerY - myPlayer.y * zoom + Player.list[myPlayer.id].y * zoom); //Center camera on controlled player
+			drawImage(personalInstructions[instructionName].image, -(personalInstructions[instructionName].image.width * zoom)/2, -((personalInstructions[instructionName].image.height + 50) * zoom), personalInstructions[instructionName].image.width * zoom, personalInstructions[instructionName].image.height * zoom);
+		ctx.restore();
+	}
+
+	if (personalInstructions["team"].life == 0){
+		//TUTORIAL COMPLETED
+		personalInstructions["team"].life = -1;
+		log("TUTORIAL COMPLETED");
+		socket.emit("tutorialCompleted");
+	}
 }
 
 
@@ -3243,7 +3294,7 @@ function drawLaserCanonLaser(){
 		for (var i in Player.list) {
 			if (Player.list[i].chargingLaser && Player.list[i].weapon == 5){
 				if (Player.list[i].id == myPlayer.id)
-					personalInstructions[0].life--;
+					personalInstructions["laser"].life--;
 				var laser = {};
 				if (laserCanonBlink <= 1 || typeof Player.list[i].laserDistance === 'undefined'){
 					Player.list[i].laserDistance = getLaserDistance(Player.list[i]);
@@ -3596,6 +3647,7 @@ function drawPlayerTags(){
 		if (Player.list[i].chat && Player.list[i].chatDecay > 0){
 			Player.list[i].chatDecay--;
 		}
+		if (Player.list[i].id == myPlayer.id && personalInstructions.team.life > 0){continue;}
 		if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){
 			var playerUsername = Player.list[i].name.substring(0, 15);
 			ctx.save();
