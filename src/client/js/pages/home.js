@@ -63,7 +63,7 @@ function getServerList(){
 				if (data[j].customServer){
 					buttonClassName = "customServerSelectButton"
 				}
-				serversHTML += '<div class="' + buttonClassName + ' RWButton" onclick="getJoinableServer({server:\'' + data[j].url + '\'})">' + serverNameHtml + data[j].serverSubName + '<br><span style="font-size: 12;text-shadow: none;">' + data[j].currentPlayers + '/' + data[j].maxPlayers + ' Players</span></div>';
+				serversHTML += '<div class="' + buttonClassName + ' RWButton" onclick="getJoinableServer({server:\'' + data[j].url + '\', privateServer:' + data[j].privateServer + '})">' + serverNameHtml + data[j].serverSubName + '<br><span style="font-size: 12;text-shadow: none;">' + data[j].currentPlayers + '/' + data[j].maxPlayers + ' Players</span></div>';
 			}
 		}		
 		document.getElementById("serverList").innerHTML = serversHTML;

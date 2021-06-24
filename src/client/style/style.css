@@ -1043,9 +1043,25 @@ div#performanceInstructions {
     margin: 20px;
     margin-bottom: 500px;
     display: none;
+    width: 90%;
+}
+
+.perfCloseIcon {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    opacity: 50%;
+}
+
+.perfCloseIcon:hover {
+    opacity: 100%;
 }
 
 div#closePerfInstructions {
+    background-color: #393939;
 }
 
 div#unplayableHeader {
@@ -1298,6 +1314,10 @@ table.keybindingConfigTable td.keybindingUnclickableCell {
 
 div#chat-window {
     text-align: left;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
 }
 
 .chatElement{
@@ -1608,7 +1628,7 @@ div#appearanceOptions {
 .shopText {
     float: left;
     font-size: 14px;
-    max-width: 200px;
+    max-width: 210px;
     text-align: left;
     margin-right: 5px;
 }

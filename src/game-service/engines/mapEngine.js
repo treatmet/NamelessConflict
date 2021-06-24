@@ -109,6 +109,7 @@ var initializePickups = function(map){
 	bagRed.y = bagRed.homeY;	
 }
 
+///////////////////// INITIALIZE BLOCKS //////////////////////////////////////////////
 var initializeBlocks = function(map){
 	log("RESETTING MAP");
 	console.log("Pretty sure pregameishorde is " + pregameIsHorde);

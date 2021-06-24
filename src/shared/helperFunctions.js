@@ -392,6 +392,8 @@ global.getObjectiveText = function(){
 		objectiveText = "Type ./start to start the match!";
 	else if (gametype == "ctf")
 		objectiveText = "Capture the enemy's bag to win!";
+	else if (gametype == "elim")
+		objectiveText = "Eliminate the other team to win!";
 	return objectiveText;
 }
 

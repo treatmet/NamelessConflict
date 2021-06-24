@@ -44,7 +44,7 @@ global.hitCash = 5;
 global.multikillTimer = 4.5 * 60;
 
 //Shop config
-global.shopEnabled = false;
+global.shopEnabled = true;
 global.invincibleInShop = false;
 global.shop = {
 	active:false,
@@ -63,6 +63,7 @@ global.startingCash = 0;
 //Post game Voting
 global.ctfVotes = 0;
 global.slayerVotes = 0;
+global.elimVotes = 0;
 global.thePitVotes = 0;
 global.longestVotes = 0;
 global.crikVotes = 0;
@@ -87,13 +88,13 @@ global.personalHordeMode = true;
 
 global.minutesLeft = 9;
 global.secondsLeft = 99;
-global.scoreToWin = 0;
+global.scoreToWin = 3;
 global.nextGameTimer = 20;
 global.timeBeforeNextGame = 45; //newGameTimer
 global.gameMinutesLength = 5;
 global.gameSecondsLength = 0;
 global.map = "longest";
-global.gametype = "ctf";
+global.gametype = "elim";
 global.freeForAll = false;
 global.maxPlayers = 14;
 global.bootOnAfk = true;
@@ -106,7 +107,7 @@ global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
 global.diagMovementScale = (2/3);
 global.maxEnergyMultiplier = 1;
-global.rechargeDelayTime = 120; //Double for breaking under zero energy
+global.rechargeDelayTime = 130; //Double for breaking under zero energy
 global.healDelayTime = 300;
 global.healRate = 10; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal)
 global.respawnTimeLimit = 3 * 60;
@@ -140,12 +141,13 @@ global.damageScale = 1;
 	global.SGBackDamage = SGDamage/2;
 	global.LaserDamage = 250;
 	global.friendlyFireDamageScale = 0.5;
-	global.boostDamage = 50;
+	global.boostDamage = 34;
 	global.cloakBonusDamage = 20;
 	
 global.startingWeapon = 1;
 global.bulletRange = 19 * 75;
-global.laserRange = 19 * 75;
+global.laserRange = 22 * 75;
+global.laserSecondShotTimer = 10; //In frames
 global.SGRange = 310;
 global.SGCloseRangeDamageScale = 4;
 global.SGPushSpeed = 12;
@@ -216,6 +218,7 @@ global.pause = false;
 global.privateServer = false;
 global.customServer = false;
 global.serverName = "Ranked";
+global.serverPassword = "";
 global.createdByCognitoSub = "";
 
 

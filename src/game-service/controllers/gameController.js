@@ -57,7 +57,7 @@ router.post('/playNow', async function (req, res) {
     }
 
 	//Check if server is expecting this incoming user
-	var params = {url:myUrl, privateServer:false};
+	var params = {url:myUrl};
 	var approvedToJoinServer = false;
 	
 	dataAccess.dbFindAwait("RW_SERV", params, async function(err, serv){	

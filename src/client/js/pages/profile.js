@@ -343,8 +343,10 @@ function charToKeyCode(){
 
 
 function drawProfileCustomizations(){
-    drawCustomizations(currentCustomizations, 0, function(frames, id){
-        displayAppearanceFrame(frames[displayTeam][displayAnimation], 1, frames[displayTeam]["legs"]);
+    drawCustomization(currentCustomizations[displayTeam], displayAnimation, displayTeam, 0, function(drawnFrameTorso, id){
+        drawCustomization(currentCustomizations[displayTeam], "legs", displayTeam, 0, function(drawnFrameLegs, id){
+            displayAppearanceFrame(drawnFrameTorso, 1, drawnFrameLegs);
+        });
     });
 }
 

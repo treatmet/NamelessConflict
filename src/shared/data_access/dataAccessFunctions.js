@@ -249,30 +249,48 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 
-var giveUsersItemsByTimestamp = function(){
+var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 	var thresholdDate = new Date("June 10, 2019 20:00:00");
+	//var params = {onlineTimestamp:{ $gt: thresholdDate }};
+	var params = { USERNAME: { $in: [ "Runswithwood","ceaseless","corboner","Frog","Zeno","Farplepuff","kdizzle","hax","Matt","Lintemurion","JuanJuanson","Zmannifresh","coolnoah1p","Bren","matt-io","blick","NBAclementine", "RTPM3"] } };
 
-	dataAccess.dbFindAwait("RW_USER",{onlineTimestamp:{ $gt: thresholdDate }}, async function(err, resy){
+
+
+	dataAccess.dbFindAwait("RW_USER", params, async function(err, resy){
 		if (resy && resy[0]){ 
 			for (let k = 0; k < resy.length; k++) {
 				var cognitoSub = resy[k].cognitoSub;
 				var customizations = resy[k].customizations;
-				if (!customizations)
-					continue;
-    
-				console.log("-----------------------------------customizations");
-				console.log(customizations);
-				
-				if (!customizations || !customizations["1"] || !customizations["2"] )
-					continue;
-
-				customizations["1"].pistolColor = "#ffcc00"; //CONFIGURATION
-				customizations["2"].pistolColor = "#ffcc00"; //CONFIGURATION
-
+				var customizationOptions = resy[k].customizationOptions; 
 				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
+				//  	continue;
+
+				if (!customizations || !customizationOptions)
+					continue;
+				// if (!customizations || !customizations["1"] || !customizations["2"] )
 				// 	continue;
 
-				var obj = {customizations: customizations};
+    
+				console.log("-----------------------------------customizations");
+				console.log(customizationOptions);
+				
+				// if (!customizations || !customizations["1"] || !customizations["2"] )
+				// 	continue;
+
+				// customizations["1"].pistolColor = "#ffcc00"; //CONFIGURATION
+				// customizations["2"].pistolColor = "#ffcc00"; //CONFIGURATION
+
+				if (resy[k].USERNAME == "Flarplepuff" || resy[k].USERNAME == "Frog" || resy[k].USERNAME == "Zeno" || resy[k].USERNAME == "RTPM3"){
+					customizationOptions.push("champIcon");
+				}
+				if (resy[k].USERNAME == "Matt" || resy[k].USERNAME == "hax" || resy[k].USERNAME == "RTPM3"){
+					customizationOptions.push("finalistIcon");
+				}
+				customizationOptions.push("tourney0Icon");
+
+
+
+				var obj = {customizationOptions: customizationOptions};
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});					
 			}				
@@ -1073,6 +1091,31 @@ var getPublicServersFromDB = function(cb){
 	});
 }
 
+var getAllServersFromDB = function(cb){
+	var servers = [];
+	dataAccess.dbFindAwait("RW_SERV", {}, function(err,res){
+		if (res && res[0]){
+				
+			for (var i = 0; i < res.length; i++){
+
+				if (res[i].gametype == "ctf"){
+					res[i].gametype = "CTF";
+				}
+				else if (res[i].gametype == "slayer"){
+					res[i].gametype = "Deathmatch";
+				}
+
+				servers.push(res[i]);
+			}		
+			
+			cb(servers);
+		}
+		else {
+			cb(servers);
+		}
+	});
+}
+
 var getEmptyServersFromDB = function(cb){
 	var servers = [];
 
@@ -1091,6 +1134,7 @@ var getEmptyServersFromDB = function(cb){
 	});
 }
 
+//sync gameServerSync gameSync
 var dbGameServerUpdate = function(obj, cognitoSubToRemoveFromIncoming = false) {
 	dataAccess.dbFindAwait("RW_SERV", {url:myUrl}, async function(err, res){ //!!! Sort by timestamp
 		var serverParam = {url:myUrl};
@@ -1225,6 +1269,7 @@ module.exports.getPlayerRelationshipFromDB = getPlayerRelationshipFromDB;
 module.exports.upsertFriend = upsertFriend;
 module.exports.removeFriend = removeFriend;
 module.exports.getPublicServersFromDB = getPublicServersFromDB;
+module.exports.getAllServersFromDB = getAllServersFromDB;
 module.exports.getEmptyServersFromDB = getEmptyServersFromDB;
 module.exports.dbGameServerUpdate = dbGameServerUpdate;
 module.exports.checkForUnhealthyServers = checkForUnhealthyServers;

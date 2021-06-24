@@ -1285,6 +1285,39 @@
 		"canvasValue":"frog"
 	},	
 	{
+		"id":"tourney0Icon",
+		"category":"icon",
+		"subCategory":"type",
+		"title":"Tourney Zero Trophy",
+		"text":"For participating in the 'Season Zero' beta tournament",
+		"price": 5000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"tourney0"
+	},	
+	{
+		"id":"champIcon",
+		"category":"icon",
+		"subCategory":"type",
+		"title":"Champion's Trophy",
+		"text":"For rising above all others in an official SocketShot Tournament!",
+		"price": 5000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"champ"
+	},	
+	{
+		"id":"finalistIcon",
+		"category":"icon",
+		"subCategory":"type",
+		"title":"Finalist Trophy",
+		"text":"For being an official SocketShot tournament Finalist!",
+		"price": 5000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"finalist"
+	},	
+	{
 		"id":"alertIcon",
         "category":"icon",
 		"subCategory":"type",

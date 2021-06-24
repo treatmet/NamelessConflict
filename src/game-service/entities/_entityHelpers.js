@@ -9,6 +9,7 @@ var sprayBloodOntoTarget = function(shootingDir, targetX, targetY, targetId) {
 	}
 }
 
+var organicDiagLeniency = 13;
 var checkIfInLineOfShot = function(shooter, target, shot){
 	var distFromDiag = 0;
 	//&& target.team != shooter.team //Take off friendly fire
@@ -22,6 +23,7 @@ var checkIfInLineOfShot = function(shooter, target, shot){
 	var range = bulletRange;
 	if (shot.weapon == 4) {range = SGRange;}
 	if (shot.weapon == 5) {range = laserRange;}
+	//if (shot.weapon == 2) {organicDiagLeniency = 11;}
 
 	if (shotType == 1){
 		if (target.team){
@@ -41,7 +43,7 @@ var checkIfInLineOfShot = function(shooter, target, shot){
 					//distFromDiag = -shooter.x + target.x - shooter.y + target.y; //forwardslash diag (/). Negative means target's x is left of shooter's diag.
 					distFromDiag = (target.x - (shooter.x + shot.x * 1.5)) + (target.y - shooter.y); //forwardslash diag (/). Negative means target's x is left of shooter's diag.
 					if (Math.abs(distFromDiag) < (allowableMargin * 1.5) && target.y < shooter.y && target.y > shooter.y - range * 1.5){
-						return {target:target,dist:(shooter.y - target.y),distFromDiag:distFromDiag};
+						return {target:target,dist:(shooter.y - target.y) - organicDiagLeniency,distFromDiag:distFromDiag};
 					}
 				}
 				else if (shooter.shootingDir == 3){
@@ -56,7 +58,7 @@ var checkIfInLineOfShot = function(shooter, target, shot){
 					//distFromDiag = -shooter.x + target.x + shooter.y - target.y; //backslash diag (\). Negative means target's x is left of shooter's diag.
 					distFromDiag = (target.x - (shooter.x - shot.x * 1.5)) + (shooter.y - target.y); //backslash diag (\). Negative means target's x is left of shooter's diag.
 					if (Math.abs(distFromDiag) < (allowableMargin * 1.5) && target.y > shooter.y && target.y < shooter.y + range * 1.5){
-						return {target:target,dist:(target.x - shooter.x),distFromDiag:distFromDiag};
+						return {target:target,dist:(target.x - shooter.x) - organicDiagLeniency,distFromDiag:distFromDiag};
 					}
 				}
 				else if (shooter.shootingDir == 5){
@@ -71,7 +73,7 @@ var checkIfInLineOfShot = function(shooter, target, shot){
 					//distFromDiag = -shooter.x + target.x - shooter.y + target.y;
 					distFromDiag = (target.x - (shooter.x - shot.x * 1.5)) + (target.y - shooter.y); //forwardslash diag (/). Negative means target's x is left of shooter's diag.
 					if (Math.abs(distFromDiag) < (allowableMargin * 1.5) && target.y > shooter.y && target.y < shooter.y + range * 1.5){
-						return {target:target,dist:(target.y - shooter.y),distFromDiag:distFromDiag};
+						return {target:target,dist:(target.y - shooter.y) - organicDiagLeniency,distFromDiag:distFromDiag};
 					}
 				}
 				else if (shooter.shootingDir == 7){
@@ -86,7 +88,7 @@ var checkIfInLineOfShot = function(shooter, target, shot){
 					//distFromDiag = -shooter.x + target.x + shooter.y - target.y; //backslash diag (\). Negative means target's x is left of shooter's diag.
 					distFromDiag = (target.x - (shooter.x + shot.x * 1.5)) + (shooter.y - target.y); //backslash diag (\). Negative means target's x is left of shooter's diag.
 					if (Math.abs(distFromDiag) < (allowableMargin * 1.5) && target.y < shooter.y && target.y > shooter.y - range * 1.5){
-						return {target:target,dist:(shooter.x - target.x),distFromDiag:distFromDiag};
+						return {target:target,dist:(shooter.x - target.x) - organicDiagLeniency,distFromDiag:distFromDiag};
 					}
 				}	
 			} // End check if target.id != shooter.id
@@ -325,6 +327,22 @@ var getHitTarget = function(hitTargets){
 	return hitTarget;		
 }
 
+var getDirDif = function(shootingDirA, shootingDirB){
+	var shootingDirAPlus = shootingDirA + 8;
+	var shootingDirAMinus = shootingDirA - 8;
+
+	if (Math.abs(shootingDirA - shootingDirB) <= Math.abs(shootingDirAPlus - shootingDirB) && Math.abs(shootingDirA - shootingDirB) <= Math.abs(shootingDirAMinus - shootingDirB)){
+		return Math.abs(shootingDirA - shootingDirB);
+	}
+	else if (Math.abs(shootingDirAPlus - shootingDirB) <= Math.abs(shootingDirA - shootingDirB) && Math.abs(shootingDirAPlus - shootingDirB) <= Math.abs(shootingDirAMinus - shootingDirB)){
+		return Math.abs(shootingDirAPlus - shootingDirB);
+	}
+	else {
+		return Math.abs(shootingDirAMinus - shootingDirB);
+	}
+}
+
 module.exports.sprayBloodOntoTarget = sprayBloodOntoTarget;
 module.exports.checkIfInLineOfShot = checkIfInLineOfShot;
 module.exports.getHitTarget = getHitTarget;
+module.exports.getDirDif = getDirDif;
