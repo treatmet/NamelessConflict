@@ -118,8 +118,13 @@ global.compareCurrentPlayerSize = function(a,b) { //order
 	var aCurrentPlayers = getCurrentPlayersFromUsers(a.currentUsers).length;
 	var bCurrentPlayers = getCurrentPlayersFromUsers(b.currentUsers).length;
 	
-	var aPort = a.url.substring(a.url.length - 4);
-	var bPort = b.url.substring(b.url.length - 4);
+	var aPort = "";
+	var bPort = "";
+	
+	if (a.url && b.url){
+		var aPort = a.url.substring(a.url.length - 4);
+		var bPort = b.url.substring(b.url.length - 4);
+	}
 	
 	var aIsCustom = a.customServer;
 	var bIsCustom = b.customServer;
