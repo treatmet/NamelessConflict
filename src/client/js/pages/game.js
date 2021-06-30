@@ -38,6 +38,7 @@ function showPerformanceInstructionsGame(){
 function voteEndgame(voteType, voteSelection){
 	if (voteType == "gametype"){
 		document.getElementById("voteCTF").disabled = true;
+		document.getElementById("voteElimination").disabled = true;
 		document.getElementById("voteDeathmatch").disabled = true;		
 	}
 	else if (voteType == "map"){
@@ -55,6 +56,7 @@ function voteEndgame(voteType, voteSelection){
 socket.on('votesUpdate', function(votesData){
 	document.getElementById("voteCTF").innerHTML = "CTF - [" + votesData.ctfVotes + "]";
 	document.getElementById("voteDeathmatch").innerHTML = "Killfest - [" + votesData.slayerVotes + "]";	
+	document.getElementById("voteElimination").innerHTML = "Elimination - [" + votesData.elimVotes + "]";	
 	document.getElementById("voteLongest").innerHTML = "<span style='color: #408fe0;font-size: 13px;'>Longer </span>Hallway - [" + votesData.longestVotes + "]";
 	document.getElementById("voteThePit").innerHTML = "<span style='color: #408fe0;font-size: 13px;'>ThePitiful </span>Warehouse - [" + votesData.thePitVotes + "]";	
 	document.getElementById("voteCrik").innerHTML = "<span style='color: #408fe0;font-size: 13px;'>Babble Creek </span>Bunkers - [" + votesData.crikVotes + "]";
@@ -411,10 +413,12 @@ var shop = {
 
 var arrowsGoingOut = true;
 var leftArrowX = 77;
-var rightArrowX = 480;
+var rightArrowX = 549;
 var pickupFlash = 1.0;
 
 var gameOver = false;
+var roundOver = false;
+var roundVictor = 1;
 var pregame = true;
 var pregameIsHorde = true;
 var suddenDeath = false;
@@ -770,6 +774,8 @@ Img.shopSG2 = new Image();
 Img.shopSG2.src = "/src/client/img/shop-sg2.png";
 Img.shopMG2 = new Image();
 Img.shopMG2.src = "/src/client/img/shop-mg2.png";
+Img.shopLZ2 = new Image();
+Img.shopLZ2.src = "/src/client/img/shop-lz2.png";
 Img.downArrow = new Image();
 Img.downArrow.src = "/src/client/img/down-arrow-small.png";
 Img.rightArrow = new Image();
@@ -1187,7 +1193,13 @@ socket.on('killScore', function(team, dataWhiteScore, dataBlackScore){
 	blackScore = dataBlackScore;
 });
 
-socket.on('capture', function(team, dataWhiteCaptures, dataBlackCaptures){
+socket.on('score', function(team, dataWhiteCaptures, dataBlackCaptures){
+	if (gametype == "elim"){
+		roundOver = true;
+		roundVictor = team;
+	}
+
+
 	whiteScore = dataWhiteCaptures;
 	blackScore = dataBlackCaptures;
 	if (team == 1){
@@ -1206,6 +1218,10 @@ socket.on('capture', function(team, dataWhiteCaptures, dataBlackCaptures){
 
 socket.on('gameStart', function(){
 	gameOver = false;
+	if (gametype == "elim"){
+		roundOver = false;
+		shop.active = false;
+	}
 	pregame = false;
 	suddenDeath = false;
 	gameStartAlpha = 1.0;
@@ -1229,6 +1245,8 @@ socket.on('gameStart', function(){
 	}
 	*/
 });
+
+
 
 
 
@@ -1425,7 +1443,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				Player.list[playerDataPack[i].id].laserChargeGraphic = laserMaxCharge - 40;
 			}
 		}
-		
+	
 		//Update player list. This has to be last because of previous code comparisons between Pack and player.list[i] values
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if (!Player.list[playerDataPack[i].id]){
@@ -1437,10 +1455,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 
 		//Draw customizations
 		if (playerDataPack[i].property == "customizations"){	
-			getCustStart = new Date();
 			drawCustomizations(Player.list[playerDataPack[i].id].customizations, playerDataPack[i].id, async function(playerAnimations, id){
-				var elaps = new Date() - getCustStart;
-				console.log("Got customizations in " + elaps);
 				if (Player.list[id]){
 					Player.list[id].images = playerAnimations;
 					for (var t in teams){
@@ -1450,8 +1465,6 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 					}
 				}
 			});
-			var elap = new Date() - getCustStart;
-			console.log("Passed customizations in " + elap);
 		}
 ////////////Put future client updates after this line /////////////////
 		//Play bagGrab SFX if holdingBag switched to true for someone OR their "returns" count increased
@@ -1689,7 +1702,18 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			Player.list[id].chatDecay = 300;
 		} 				
 	}
-	
+	if (miscPack.roundOver === true){
+		shop.active = true;
+		roundOver = true;
+	}
+	else if (miscPack.roundOver === false){
+		myPlayer.eliminationSpectate = false;
+		myPlayer.willHaveBA = false;
+		shop.active = false;
+		setZoom(defaultZoom);
+		roundOver = false;
+	}
+
 	if (miscPack.bagRed){
 		bagRed = miscPack.bagRed;
 		if (debugUpdates){
@@ -1725,6 +1749,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 
 			document.getElementById("voteCTF").disabled = false;
 			document.getElementById("voteDeathmatch").disabled = false;	
+			document.getElementById("voteElimination").disabled = false;	
 			document.getElementById("voteLongest").disabled = false;
 			document.getElementById("voteCrik").disabled = false;
 			document.getElementById("voteThePit").disabled = false;				
@@ -1920,7 +1945,15 @@ function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack,
 	drawBlocksOnBlockCanvas();
 }
 
+socket.on('showShop', function(){
+	//Elimination mode Show Shop on player death, or spwan in middle of round
+	console.log("SHOP");
+	myPlayer.eliminationSpectate = true;
+	shop.active = true;
+});
+
 function endGame(){
+	shop.active = false;
 	if (!mute){
 		sfxStealGood.play();		
 		//Conditional win sfx
@@ -1939,6 +1972,7 @@ function endGame(){
 
 function calculateShopMechanics(){
 	if (shopEnabled){
+
 		// if (myPlayer.team == 1 && myPlayer.pressingA && myPlayer.x <= 0 && myPlayer.y <= 235 && shop.active == false && !gameOver){
 		// 	if (!myPlayer.pressingS && !myPlayer.pressingD && !myPlayer.pressingW && !myPlayer.pressingUp && !myPlayer.pressingRight && !myPlayer.pressingDown && !myPlayer.pressingLeft){
 		// 		socket.emit('keyPress',{inputId:65,state:false});
@@ -2003,13 +2037,6 @@ function purchase(){
 			sfxError.play();
 		return;
 	}
-	else if (shop.selection == 4 && Player.list[myPlayer.id].health >= 200){
-		shop.uniqueText = "You're already wearing body armor, mate.";
-		shop.uniqueTextTimer = 90;
-		if (!mute)
-			sfxError.play();
-		return;
-	}
 	else if (shop.selection == 5 && Player.list[myPlayer.id].cash < shop.price5){
 		shop.uniqueText = "Not enough cash, stranger!";
 		shop.uniqueTextTimer = 90;
@@ -2017,6 +2044,56 @@ function purchase(){
 			sfxError.play();
 		return;
 	}
+	else if (shop.selection == 6 && Player.list[myPlayer.id].cash < shop.price6){
+		shop.uniqueText = "Not enough cash, stranger!";
+		shop.uniqueTextTimer = 90;
+		if (!mute)
+			sfxError.play();
+		return;
+	}
+	else if (shop.selection == 5 && (myPlayer.health >= 175 || myPlayer.willHaveBA)){
+		shop.uniqueText = "You're already wearing body armor, mate.";
+		shop.uniqueTextTimer = 90;
+		if (!mute)
+			sfxError.play();
+		return;
+	}
+	else if (shop.selection == 6 && myPlayer.energy > 100){
+		shop.uniqueText = "You're already overcharged ya greedy bast!";
+		shop.uniqueTextTimer = 90;
+		if (!mute)
+			sfxError.play();
+		return;
+	}
+	else if (shop.selection == 1 && myPlayer.MGAmmo >= 120){
+		shop.uniqueText = "You can't carry any more!";
+		shop.uniqueTextTimer = 90;
+		if (!mute)
+			sfxError.play();
+		return;
+	}
+	else if (shop.selection == 2 && myPlayer.SGAmmo >= 18){
+		shop.uniqueText = "You can't carry any more!";
+		shop.uniqueTextTimer = 90;
+		if (!mute)
+			sfxError.play();
+		return;
+	}
+	else if (shop.selection == 3 && myPlayer.DPAmmo >= 45){
+		shop.uniqueText = "You can't carry any more!";
+		shop.uniqueTextTimer = 90;
+		if (!mute)
+			sfxError.play();
+		return;
+	}
+	else if (shop.selection == 4 && myPlayer.laserClip >= 10){
+		shop.uniqueText = "You can't carry any more!";
+		shop.uniqueTextTimer = 90;
+		if (!mute)
+			sfxError.play();
+		return;
+	}
+
 	if (shop.selection == 1 && Player.list[myPlayer.id].cash >= shop.price1){
 	}
 	else if (shop.selection == 2 && Player.list[myPlayer.id].cash >= shop.price2){
@@ -2026,6 +2103,8 @@ function purchase(){
 	else if (shop.selection == 4 && Player.list[myPlayer.id].cash >= shop.price4){
 	}
 	else if (shop.selection == 5 && Player.list[myPlayer.id].cash >= shop.price5){
+	}
+	else if (shop.selection == 6 && Player.list[myPlayer.id].cash >= shop.price6){
 	}
 	else {
 		return;
@@ -2052,7 +2131,7 @@ function updateCamera(){
 	if(myPlayer.shootingDir == 8){targetCenterX = canvasWidth/2 + (diagCamOffSet + 50); targetCenterY = canvasHeight/2 + diagCamOffSet;}
 	if(myPlayer.health <= 0){targetCenterX = canvasWidth/2; targetCenterY = canvasHeight/2} //If ded
 	
-	if ((!myPlayer.pressingShift && !shop.active) || myPlayer.team == 0){
+	if ((!myPlayer.pressingShift) || myPlayer.team == 0){
 		targetCenterX = canvasWidth/2;
 		targetCenterY = canvasHeight/2;
 	}
@@ -2888,7 +2967,7 @@ function drawTorsos(){
 					//if (Player.list[i].cloak > 0){noShadow();}
 					if (Player.list[i].cloak > maxCloakStrength){ctx.globalAlpha = 1 - maxCloakStrength;}
 					if ((Player.list[myPlayer.id].team == 0 || Player.list[i].team == Player.list[myPlayer.id].team) && Player.list[i].cloak > (1 - maxAlliedCloakOpacity)){ctx.globalAlpha = maxAlliedCloakOpacity;}
-
+					if (myPlayer.eliminationSpectate && Player.list[i].cloak >= 1 && Player.list[i].team != myPlayer.team){ctx.globalAlpha = 0;}
 					
 					var canX = -img.width/2 * zoom;
 					var canY = (-img.height/2 + playerCenterOffset) * zoom;
@@ -3250,6 +3329,7 @@ var personalInstructions = {
 
 //DrawInstructions
 function drawPersonalInstructions(){
+	if (shop.active){return;}
 	if (personalInstructions.team.life > 0 && myPlayer.settings && myPlayer.settings.display && myPlayer.settings.display.find(setting => setting.key == "tutorialCompleted") && myPlayer.settings.display.find(setting => setting.key == "tutorialCompleted").value == true){
 		personalInstructions.move.life = -1;
 		personalInstructions.shoot.life = -1;
@@ -3690,23 +3770,19 @@ function drawPlayerTags(){
 	normalShadow();
 }
 
+function activateShop(active){
+	shop.active = active;
+
+
+}
+
 function drawShop(){
 	calculateShopMechanics();
 	if (shop.active){
-		if (Player.list[myPlayer.id].team == 1){
-			Player.list[myPlayer.id].shootingDir = 7;
-			myPlayer.shootingDir = 7;
-		}
-		else if (Player.list[myPlayer.id].team == 2){
-			Player.list[myPlayer.id].shootingDir = 3;
-			myPlayer.shootingDir = 3;
-		}
 		
-		//Offset to determine whether to print Black Market on right or left of screen
-		var teamBlackMarketXOffset = 100;
-		if (Player.list[myPlayer.id].team ==  2){
-			teamBlackMarketXOffset = 400;
-		}
+		if (showStatOverlay == true){showStatOverlay = false;}
+
+		var teamBlackMarketXOffset = 0;
 			
 		var ownerText1 = "";
 		var ownerText2 = "";
@@ -3735,13 +3811,15 @@ function drawShop(){
 			moveArrow = 69;
 		else if (shop.selection == 5)
 			moveArrow = 138;
+		else if (shop.selection == 6)
+			moveArrow = 207;
 		
 		var inventoryYoffset = 100;
 
-		drawImage(Img.black50, 50 + teamBlackMarketXOffset, 0, 495, canvasHeight);
+		drawImage(Img.black50, 50 + teamBlackMarketXOffset, 0, 564, canvasHeight);
 		drawImage(Img.shopInventory, 124 + teamBlackMarketXOffset, 250 + inventoryYoffset);
 		drawImage(Img.upArrow, 249 + moveArrow + teamBlackMarketXOffset, 175 + inventoryYoffset - shop.purchaseEffectTimer);
-		drawImage(Img.downArrow, 207 + teamBlackMarketXOffset, 370 + inventoryYoffset);
+		drawImage(Img.downArrow, 241.5 + teamBlackMarketXOffset, 370 + inventoryYoffset);
 		drawImage(Img.leftArrow, leftArrowX + teamBlackMarketXOffset, 275 + inventoryYoffset);
 		drawImage(Img.rightArrow, rightArrowX + teamBlackMarketXOffset, 275 + inventoryYoffset);
 
@@ -3754,7 +3832,7 @@ function drawShop(){
 		if (shop.selection == 1){
 			drawImage(Img.shopMG2, 123 + teamBlackMarketXOffset, 250 + inventoryYoffset);
 			ownerText1 = "Fully automatic machine gun.";
-			ownerText2 = "60 rounds for $" + shop.price1 + ".";
+			ownerText2 = shop.amount1 + " rounds for $" + shop.price1 + ".";
 			if (shop.purchaseEffectTimer > 0){
 				ctx.globalAlpha = .8;
 				if (shop.uniqueText != "Heh heh heh heh... Thank you.")
@@ -3766,7 +3844,7 @@ function drawShop(){
 		else if (shop.selection == 2){
 			drawImage(Img.shopSG2, 192 + teamBlackMarketXOffset, 250 + inventoryYoffset);
 			ownerText1 = "Pump action Shotgun. Devastating at close range.";
-			ownerText2 = "24 shells for $" + shop.price2 + ".";
+			ownerText2 = shop.amount2 + " shells for $" + shop.price2 + ".";
 			if (shop.purchaseEffectTimer > 0){
 				ctx.globalAlpha = .8;
 				if (shop.uniqueText != "Heh heh heh heh... Thank you.")
@@ -3778,7 +3856,7 @@ function drawShop(){
 		else if (shop.selection == 3){
 			drawImage(Img.shopDP2, 261 + teamBlackMarketXOffset, 250 + inventoryYoffset);
 			ownerText1 = "Two pistols instead of one. Double your firepower.";
-			ownerText2 = "40 rounds for $" + shop.price3 + ".";
+			ownerText2 = shop.amount3 + " rounds for $" + shop.price3 + ".";
 			if (shop.purchaseEffectTimer > 0){
 				ctx.globalAlpha = .8;
 				if (shop.uniqueText != "Heh heh heh heh... Thank you.")
@@ -3788,9 +3866,9 @@ function drawShop(){
 			}
 		}
 		else if (shop.selection == 4){
-			drawImage(Img.shopBA2, 330 + teamBlackMarketXOffset, 250 + inventoryYoffset);
-			ownerText1 = "Extra damage protection.";
-			ownerText2 = "Temporarily increases HP by 100.";
+			drawImage(Img.shopLZ2, 330 + teamBlackMarketXOffset, 250 + inventoryYoffset);
+			ownerText1 = "Once charged, it obliterates targets in one hit."
+			ownerText2 = shop.amount4 + " charges for $" + shop.price4 + ".";
 			if (shop.purchaseEffectTimer > 0){
 				ctx.globalAlpha = .8;
 				if (shop.uniqueText != "Heh heh heh heh... Thank you.")
@@ -3800,15 +3878,27 @@ function drawShop(){
 			}
 		}
 		else if (shop.selection == 5){
-			drawImage(Img.shopEB2, 399 + teamBlackMarketXOffset, 250 + inventoryYoffset);
-			ownerText1 = "Extends your battery capacity."
-			ownerText2 = "Increases energy by 100%.";
+			drawImage(Img.shopBA2, 399 + teamBlackMarketXOffset, 250 + inventoryYoffset);
+			ownerText1 = "Extra damage protection.";
+			ownerText2 = "Temporarily increases HP by " + shop.amount5 + ".";
 			if (shop.purchaseEffectTimer > 0){
 				ctx.globalAlpha = .8;
 				if (shop.uniqueText != "Heh heh heh heh... Thank you.")
 					drawImage(Img.red,403 + teamBlackMarketXOffset, 254 + inventoryYoffset)
 				else
 					drawImage(Img.white,403 + teamBlackMarketXOffset, 254 + inventoryYoffset)
+			}
+		}
+		else if (shop.selection == 6){
+			drawImage(Img.shopEB2, 468 + teamBlackMarketXOffset, 250 + inventoryYoffset);
+			ownerText1 = "Extends your battery capacity."
+			ownerText2 = "Increases energy by " + shop.amount6 + "%.";
+			if (shop.purchaseEffectTimer > 0){
+				ctx.globalAlpha = .8;
+				if (shop.uniqueText != "Heh heh heh heh... Thank you.")
+					drawImage(Img.red,472 + teamBlackMarketXOffset, 254 + inventoryYoffset)
+				else
+					drawImage(Img.white,472 + teamBlackMarketXOffset, 254 + inventoryYoffset)
 			}
 		}
 		ctx.globalAlpha = 1;
@@ -3823,22 +3913,24 @@ function drawShop(){
 		ctx.fillText("$"+shop.price3, 298 + teamBlackMarketXOffset, 349 + inventoryYoffset);
 		ctx.fillText("$"+shop.price4, 367 + teamBlackMarketXOffset, 349 + inventoryYoffset);
 		ctx.fillText("$"+shop.price5, 436 + teamBlackMarketXOffset, 349 + inventoryYoffset);
+		ctx.fillText("$"+shop.price6, 505 + teamBlackMarketXOffset, 349 + inventoryYoffset);
 		
-		ctx.font = '24px Electrolize';		
-		ctx.fillText("$"+myPlayer.cash, 298 + teamBlackMarketXOffset, 690);		
+		ctx.font = '24px Electrolize';	
+		var textCenteredX = 332.5;
+		ctx.fillText("$"+myPlayer.cash, textCenteredX + teamBlackMarketXOffset, 690);		
 		ctx.fillStyle="#FFFFFF";
-		ctx.fillText("You have:", 298 + teamBlackMarketXOffset, 660);		
+		ctx.fillText("You have:", textCenteredX + teamBlackMarketXOffset, 660);		
 
 		
-		drawImage(Img.spy, 263 + teamBlackMarketXOffset, 75);
+		drawImage(Img.spy, 297.5 + teamBlackMarketXOffset, 75);
 		ctx.font = '20px Electrolize';	
 		if (shop.uniqueTextTimer > 0){
-			ctx.fillText(shop.uniqueText, 298 + teamBlackMarketXOffset, 175);	
+			ctx.fillText(shop.uniqueText, textCenteredX + teamBlackMarketXOffset, 175);	
 			shop.uniqueTextTimer--;
 		}
 		else {
-			ctx.fillText(ownerText1, 298 + teamBlackMarketXOffset, 175);		
-			ctx.fillText(ownerText2, 298 + teamBlackMarketXOffset, 195);		
+			ctx.fillText(ownerText1, textCenteredX + teamBlackMarketXOffset, 175);		
+			ctx.fillText(ownerText2, textCenteredX + teamBlackMarketXOffset, 195);		
 		}	
 		
 		ctx.fillStyle="#000000";		
@@ -3846,13 +3938,16 @@ function drawShop(){
 }
 
 function drawUILayer(){	
-	if (myPlayer.team != 0){		
+	if (myPlayer.team != 0 && myPlayer.eliminationSpectate != true){		
 		drawIndicators();
 		drawBloodyBorder();
 		drawHUD();
 	}
 	else {
 		drawSpectatingInfo();
+		if (myPlayer.eliminationSpectate && shop.active){
+			drawHUD();
+		}
 	}
 	drawInformation();
 	ctx.font = 'bold 11px Electrolize';
@@ -4002,13 +4097,15 @@ function drawSpectatingInfo(){
 			spectatingText = "Spectating Blacks' Bag";
 		}
 	}
+	else if (gametype == "elim" && !(pregameIsHorde && pregame)) {
+		spectatingText = "Spectating. You will join the next round!";
+	}
 	else {
 		spectatingText = "Spectating...";
 	}
-		
 	drawImage(Img.spectatingOverlay, -5, -5, canvasWidth + 10, canvasHeight + 10); 
 	
-	if(!showStatOverlay){
+	if(!showStatOverlay && !shop.active){
 		smallCenterShadow();
 		ctx.fillStyle="#FFFFFF";
 		ctx.font = 'bold 30px Electrolize';
@@ -4017,7 +4114,12 @@ function drawSpectatingInfo(){
 		//strokeAndFillText("Waiting for current game to finish. You will join the next game.",canvasWidth/2,100);		
 		ctx.font = 'bold 15px Electrolize';
 		ctx.lineWidth = 3;
-		strokeAndFillText("Use the arrow keys to switch targets",canvasWidth/2,800);		
+		if (!gametype == "elim" || (pregame && pregameIsHorde)){
+			strokeAndFillText("Use the arrow keys to move camera",canvasWidth/2,800);		
+		}
+		else {
+			strokeAndFillText("[U] To open shop | Use the arrow keys to move camera",canvasWidth/2,800);		
+		}
 	}
 }
 
@@ -4027,14 +4129,17 @@ function updateSpectatingView(){ //updates spectating camera
 		myPlayer.x = mapWidth/2;
 		myPlayer.y = mapHeight/2;
 	}
-	if (myPlayer.pressingDown)
-		myPlayer.y += spectateMoveSpeed;
-	if (myPlayer.pressingUp)
-		myPlayer.y -= spectateMoveSpeed;
-	if (myPlayer.pressingLeft)
-		myPlayer.x -= spectateMoveSpeed;
-	if (myPlayer.pressingRight)
-		myPlayer.x += spectateMoveSpeed;
+
+	if (!shop.active){
+		if (myPlayer.pressingDown)
+			myPlayer.y += spectateMoveSpeed;
+		if (myPlayer.pressingUp)
+			myPlayer.y -= spectateMoveSpeed;
+		if (myPlayer.pressingLeft)
+			myPlayer.x -= spectateMoveSpeed;
+		if (myPlayer.pressingRight)
+			myPlayer.x += spectateMoveSpeed;
+	}
 
 	if (spectatePlayers){
 		updateOrderedPlayerList();
@@ -4086,7 +4191,7 @@ function drawInformation(){
 //Bloody border
 function drawBloodyBorder(){
 	noShadow();
-	if (Player.list[myPlayer.id].health < 100){ 
+	if (Player.list[myPlayer.id].health < 100 && !myPlayer.eliminationSpectate){ 
 		var bloodyScale = Player.list[myPlayer.id].health;
 
 		// if (bloodyScale > 0)
@@ -4972,6 +5077,7 @@ function drawGameEventText(){
 			players++;
 		}		
 		if (pregame && players >= 4){
+			ctx.font = '80px Electrolize';
 			pregameText = "MATCH STARTING!";
 		}
 		else if (gametype == "horde" || (pregame && pregameIsHorde)){
@@ -5010,7 +5116,23 @@ function drawGameEventText(){
 			ctx.globalAlpha = 1;	
 		} else {gameStartAlpha = 0;}
 		
-		if (minutesLeft == 0 && secondsLeft == 0 || gameOver == true){
+		if (!gameOver && roundOver){
+			heavyCenterShadow();
+			ctx.textAlign="right";
+			ctx.font = '40px Electrolize';
+			ctx.lineWidth=6;
+			ctx.fillStyle="#FFFFFF";
+			strokeAndFillText("Next round in: " + nextGameTimer, canvasWidth - 10,748);
+			ctx.font = '90px Electrolize';
+			ctx.lineWidth=12;
+			var endGameText = "ROUND LOST...";
+			if (roundVictor == myPlayer.team){
+				endGameText = "ROUND WON!!!";
+			}
+			strokeAndFillText(endGameText,canvasWidth - 10, 703);
+
+		}
+		else if (minutesLeft == 0 && secondsLeft == 0 || gameOver == true){
 			heavyCenterShadow();
 			ctx.textAlign="right";
 			ctx.font = '40px Electrolize';
@@ -5311,13 +5433,15 @@ var updatesInLastSecond = 0;
 
 //Client timer1 teimer1
 function drawEverything(){
+	// console.log(myPlayer.eliminationSpectate);
+	// console.log(shop.active);
 	if (chatSpam > 0)
 		chatSpam--;
 	//Don't draw anything if the user hasn't entered the game with a player id and name
 	if (myPlayer.name == "" || !Player.list[myPlayer.id] || !clientInitialized)
 		return;
 
-	if (myPlayer.team == 0)
+	if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true)
 		updateSpectatingView();
 
 	updateCamera();	
@@ -5348,8 +5472,8 @@ function drawEverything(){
 	drawNotifications();
 
 	
-	drawShop();	
 	drawPersonalInstructions();
+	drawShop();	
 	drawUILayer();
 	fpsCounter++;
 }
@@ -5457,6 +5581,11 @@ animate();
 
 //--------------------------------END TIMER 1--------------------------------	
 	
+function setZoom(zoomLevel){
+	zoom = zoomLevel;
+	drawMapElementsOnMapCanvas();
+	drawBlocksOnBlockCanvas();
+}
 
 
 var clientTimeoutSeconds = 45 * 1000;
@@ -5472,7 +5601,7 @@ setInterval(
 		if (countdownToRedrawGraphics != -1){
 			countdownToRedrawGraphics++;
 		}
-		if (countdownToRedrawGraphics >= 5){
+		if (countdownToRedrawGraphics >= 7){
 			countdownToRedrawGraphics = -1;
 			logg("Redrawing map and blocks on timer");
 			drawMapElementsOnMapCanvas();
@@ -5480,15 +5609,11 @@ setInterval(
 			if (!customServer && !pregame)
 				Thug.list = [];
 		}
-		if (myPlayer.team == 0 && zoom != spectateZoom){
-			zoom = spectateZoom;
-			drawMapElementsOnMapCanvas();
-			drawBlocksOnBlockCanvas();
+		if ((myPlayer.team == 0 || myPlayer.eliminationSpectate) && zoom != spectateZoom){
+			setZoom(spectateZoom);
 		}
-		else if (myPlayer.team != 0 && zoom != defaultZoom) {
-			zoom = defaultZoom;
-			drawMapElementsOnMapCanvas();
-			drawBlocksOnBlockCanvas();
+		else if (myPlayer.team != 0 && !myPlayer.eliminationSpectate && zoom != defaultZoom) {
+			setZoom(defaultZoom);
 		}
 
 		fpsInLastSecond = fpsCounter;
@@ -5926,7 +6051,7 @@ document.onkeydown = function(event){
 				if (!shop.active){
 					keyPress(39, true);
 				}
-				else if (shop.selection < 5) {
+				else if (shop.selection < 6) {
 					shop.selection++;
 					if (!mute)
 						sfxMenuMove.play();
@@ -5952,9 +6077,6 @@ document.onkeydown = function(event){
 			if (myPlayer.team != 0){
 				if (!shop.active){
 					keyPress(40, true);
-				}
-				else {
-					shop.active = false;
 				}
 			}
 			else {
@@ -6047,10 +6169,10 @@ document.onkeydown = function(event){
 		}
 
 	}		
-	else if(hitKeyCode === 81 && chatInput.style.display == "none" && !shop.active){ //Q
+	else if(hitKeyCode === 81 && chatInput.style.display == "none"){ //Q
 		keyPress(81, true);
 	}	
-	else if(hitKeyCode === 69 && chatInput.style.display == "none" && !shop.active){ //E
+	else if(hitKeyCode === 69 && chatInput.style.display == "none"){ //E
 		keyPress(69, true);
 	}	
 	else if(hitKeyCode === 82 && chatInput.style.display == "none" && !shop.active){ //R
@@ -6125,7 +6247,12 @@ document.onkeydown = function(event){
 			hideChatBox();
 		}
 		else if (chatInput.style.display == "none" && myPlayer.name != ""){
-			showChatBox();
+			if (shop.active){
+				purchase();
+			}
+			else {
+				showChatBox();
+			}
 		}
 	}
 	else if(hitKeyCode === 84){ //T
@@ -6170,7 +6297,7 @@ document.onkeydown = function(event){
 	}
 	
 	else if(hitKeyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing
-		if (isLocal){	
+		if (isLocal || myPlayer.eliminationSpectate || roundOver){	
 			shop.active = true;
 		}
 	}
@@ -6211,27 +6338,19 @@ document.onkeyup = function(event){
 	}		
 	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up
 		myPlayer.pressingUp = false;
-		if (!shop.active){
-			keyPress(38, false);
-		}
+		keyPress(38, false);
 	}
 	else if(hitKeyCode === 39 && chatInput.style.display == "none"){ //Right
 		myPlayer.pressingRight = false;
-		if (!shop.active){
-			keyPress(39, false);
-		}
+		keyPress(39, false);
 	}
 	else if(hitKeyCode === 40 && chatInput.style.display == "none"){ //Down
 		myPlayer.pressingDown = false;
-		if (!shop.active){
-			keyPress(40, false);
-		}
+		keyPress(40, false);
 	}
 	else if(hitKeyCode === 37 && chatInput.style.display == "none"){ //Left
 		myPlayer.pressingLeft = false;
-		if (!shop.active){
-			keyPress(37, false);
-		}
+		keyPress(37, false);
 	}
 	
 	else if(hitKeyCode === 16){ //Shift
@@ -6611,7 +6730,7 @@ function gamepad() {
         navigator.getGamepads()[0].buttons[9].pressed? press(27) : release(27);
 
 
-        if ((navigator.getGamepads()[0].timestamp - gamepad_lastsent) > 1) {
+        if ((navigator.getGamepads()[0].timestamp - gamepad_lastsent) > 500) {
             if (navigator.getGamepads()[0].buttons[12].pressed) {
                 socket.emit('chat',[myPlayer.id,  myPlayer.settings.quickChat[0].value]);
                 gamepad_lastsent = navigator.getGamepads()[0].timestamp;

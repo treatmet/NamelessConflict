@@ -60,6 +60,9 @@ function getServerList(){
 				if (data[j].gametype == "horde"){
 					buttonClassName = "hordeServerSelectButton"
 				}
+				else if (data[j].gametype == "elim"){
+					buttonClassName = "elimServerSelectButton"
+				}
 				if (data[j].customServer){
 					buttonClassName = "customServerSelectButton"
 				}

@@ -110,8 +110,9 @@ function processArgs(){
 		maxPlayers = 14;
 	}
 	else if (port == "3002"){
-		gametype = "ctf";
-		maxPlayers = 8;
+		gametype = "elim";
+		scoreToWin = 7;
+		maxPlayers = 14;
 	}
 	else if (port == "3003"){
 		gametype = "slayer";

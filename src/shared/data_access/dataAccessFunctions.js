@@ -250,9 +250,9 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("June 10, 2019 20:00:00");
-	//var params = {onlineTimestamp:{ $gt: thresholdDate }};
-	var params = { USERNAME: { $in: [ "Runswithwood","ceaseless","corboner","Frog","Zeno","Farplepuff","kdizzle","hax","Matt","Lintemurion","JuanJuanson","Zmannifresh","coolnoah1p","Bren","matt-io","blick","NBAclementine", "RTPM3"] } };
+	var thresholdDate = new Date("June 24, 2021 12:00:00");
+	var params = {onlineTimestamp:{ $gt: thresholdDate }};
+	//var params = { USERNAME: { $in: [ "Runswithwood","ceaseless","corboner","Frog","Zeno","Farplepuff","kdizzle","hax","Matt","Lintemurion","JuanJuanson","Zmannifresh","coolnoah1p","Bren","matt-io","blick","NBAclementine", "RTPM3"] } };
 
 
 
@@ -262,35 +262,33 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				var cognitoSub = resy[k].cognitoSub;
 				var customizations = resy[k].customizations;
 				var customizationOptions = resy[k].customizationOptions; 
-				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
-				//  	continue;
-
-				if (!customizations || !customizationOptions)
+					 
+				 console.log("Updating " + resy[k].USERNAME);
+				//  if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
+				// 	 continue;
+		   
+				if (!customizationOptions){
+					console.log("ERROR - no customizationOptions");
 					continue;
-				// if (!customizations || !customizations["1"] || !customizations["2"] )
-				// 	continue;
+				}
+				if (!customizations || !customizations["1"] || !customizations["2"] ){
+					console.log("ERROR - no customizations");
+					continue;
+				}
 
     
-				console.log("-----------------------------------customizations");
-				console.log(customizationOptions);
+				// console.log("-----------------------------------customizations");
+				// console.log(customizationOptions);
 				
-				// if (!customizations || !customizations["1"] || !customizations["2"] )
-				// 	continue;
 
-				// customizations["1"].pistolColor = "#ffcc00"; //CONFIGURATION
-				// customizations["2"].pistolColor = "#ffcc00"; //CONFIGURATION
+				customizations["1"].sgColor = "#ffcc00"; //CONFIGURATION
+				customizations["2"].sgColor = "#ffcc00"; //CONFIGURATION
 
-				if (resy[k].USERNAME == "Flarplepuff" || resy[k].USERNAME == "Frog" || resy[k].USERNAME == "Zeno" || resy[k].USERNAME == "RTPM3"){
-					customizationOptions.push("champIcon");
-				}
-				if (resy[k].USERNAME == "Matt" || resy[k].USERNAME == "hax" || resy[k].USERNAME == "RTPM3"){
-					customizationOptions.push("finalistIcon");
-				}
-				customizationOptions.push("tourney0Icon");
+			
 
 
 
-				var obj = {customizationOptions: customizationOptions};
+				var obj = {customizations: customizations};
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});					
 			}				

@@ -155,7 +155,7 @@ function getEmptyLayers(){
 	}
 	return layers;
 }
-var getCustStart = 0;
+//var getCustStart = 0;
 //!!! Error handling! What if png does not exist or fails to load? This will crash the client
 async function drawCustomizations(customizations, id, cb){		//!!! We don't need id passed here anymore	
 	// console.log("customizations:");
@@ -188,11 +188,11 @@ async function drawCustomizations(customizations, id, cb){		//!!! We don't need 
 	}	
 
 	//log("Loading images:");
-	var loggy = new Date() - getCustStart;
-	console.log("Before load images " + loggy);
+	//var loggy = new Date() - getCustStart;
+	//console.log("Before load images " + loggy);
 	loadImages(imgSources, async function(invalidSrcPaths){
-		var loggy = new Date() - getCustStart;
-		console.log("After load images " + loggy);
+		//var loggy = new Date() - getCustStart;
+		//console.log("After load images " + loggy);
 		//log("Images loaded");
 		for (var t = 0; t < teams.length; t++){
 			for (var a = 0; a < animations.length; a++){

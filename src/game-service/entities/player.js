@@ -95,11 +95,19 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			updatePlayerList.push({id:self.id,property:"holdingBag",value:self.holdingBag});
 		}
 
+		//if (self.cognitoSub.substring(0,2) == "0."){console.log("health:" + self.health + " respawn:" + self.respawnTimer);}
 		if (self.health <= 0 && self.respawnTimer < respawnTimeLimit){self.respawnTimer++;}
 		if (!(gametype == "horde" || (pregame && pregameIsHorde))){
-			if (self.respawnTimer >= respawnTimeLimit && self.health <= 0){self.respawn();}
+			if (self.respawnTimer == respawnTimeLimit && self.health <= 0){
+				if (gametype == "elim"){ //Elim specate and show shop
+					self.respawnTimer = respawnTimeLimit + 1;
+					socket.emit("showShop");
+				}
+				else {
+					self.respawn();
+				}
+			}
 		}
-		
 		
 		if (self.health <= 0){return false;}
 
@@ -1161,6 +1169,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				if (gametype == "slayer" && gameOver == false){
 					gameEngine.killScore(shooter.team);
 				}
+				
 				playerEvent(shooter.id, "kill");				
 				shooter.spree++;
 				shooter.multikill++;
@@ -1191,6 +1200,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (self.chargingLaser > 0){
 			self.chargingLaser = 0;
 			updatePlayerList.push({id:self.id,property:"chargingLaser",value:self.chargingLaser});
+		}
+		
+		if (gametype == "elim" && gameOver == false){					
+			gameEngine.checkIfRoundOver();
 		}
 
 		playerEvent(self.id, "death");
@@ -1256,7 +1269,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 
-	self.respawn = function(){
+	self.respawn = function(newPlayer = false){
 		updatePlayerList.push({id:self.id,property:"name",value:self.name});
 
 		self.rechargeDelay = 0;
@@ -1268,7 +1281,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.speedY = 0;
 		self.speedX = 0;
 		self.stagger = 0;
-		self.hasBattery = maxEnergyMultiplier;
 		self.respawnTimer = 0;
 		self.pushSpeed = 0;		
 		self.spree = 0;
@@ -1280,36 +1292,51 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.aiming = 0;
 		self.holdingBag = false;
 		updatePlayerList.push({id:self.id,property:"holdingBag",value:self.holdingBag});
-		self.updatePropAndSend("health", 100);
 		self.updatePropAndSend("energy", 100);
 		self.updatePropAndSend("cloak", 0);
 		self.updatePropAndSend("cloakEngaged", false);
 		self.updatePropAndSend("boosting", 0);
-		self.weapon = startingWeapon;
-		updatePlayerList.push({id:self.id,property:"weapon",value:self.weapon});
 		self.PClip = 15;
 		updatePlayerList.push({id:self.id,property:"PClip",value:self.PClip});
-		self.DPClip = 0;
-		if (startingWeapon == 2){self.DPClip = DPClipSize;}
-		updatePlayerList.push({id:self.id,property:"DPClip",value:self.DPClip});
-		self.MGClip = 0;
-		if (startingWeapon == 3){self.MGClip = MGClipSize;}
-		updatePlayerList.push({id:self.id,property:"MGClip",value:self.MGClip});
-		self.SGClip = 0;
-		if (startingWeapon == 4){self.SGClip = SGClipSize;}
-		updatePlayerList.push({id:self.id,property:"SGClip",value:self.SGClip});
-		self.laserClip = 0;
-		if (startingWeapon == 5){self.laserClip = maxLaserAmmo;}
-		updatePlayerList.push({id:self.id,property:"laserClip",value:self.laserClip});
-		self.DPAmmo = 0;
-		if (startingWeapon == 2){self.DPAmmo = DPClipSize;}
-		updatePlayerList.push({id:self.id,property:"DPAmmo",value:self.DPAmmo});
-		self.MGAmmo = 0;
-		if (startingWeapon == 3){self.MGAmmo = MGClipSize;}
-		updatePlayerList.push({id:self.id,property:"MGAmmo",value:self.MGAmmo});
-		self.SGAmmo = 0;		
-		if (startingWeapon == 4){self.SGAmmo = SGClipSize;}
-		updatePlayerList.push({id:self.id,property:"SGAmmo",value:self.SGAmmo});
+
+		if (gametype != "elim" || (pregameIsHorde && pregame) || newPlayer){	
+
+			self.updatePropAndSend("health", 100);
+			self.weapon = startingWeapon;
+			updatePlayerList.push({id:self.id,property:"weapon",value:self.weapon});
+			self.hasBattery = maxEnergyMultiplier;
+			self.DPClip = 0;
+			if (startingWeapon == 2){self.DPClip = DPClipSize;}
+			updatePlayerList.push({id:self.id,property:"DPClip",value:self.DPClip});
+			self.MGClip = 0;
+			if (startingWeapon == 3){self.MGClip = MGClipSize;}
+			updatePlayerList.push({id:self.id,property:"MGClip",value:self.MGClip});
+			self.SGClip = 0;
+			if (startingWeapon == 4){self.SGClip = SGClipSize;}
+			updatePlayerList.push({id:self.id,property:"SGClip",value:self.SGClip});
+			self.laserClip = 0;
+			if (startingWeapon == 5){self.laserClip = maxLaserAmmo;}
+			updatePlayerList.push({id:self.id,property:"laserClip",value:self.laserClip});
+			self.DPAmmo = 0;
+			if (startingWeapon == 2){self.DPAmmo = DPClipSize;}
+			updatePlayerList.push({id:self.id,property:"DPAmmo",value:self.DPAmmo});
+			self.MGAmmo = 0;
+			if (startingWeapon == 3){self.MGAmmo = MGClipSize;}
+			updatePlayerList.push({id:self.id,property:"MGAmmo",value:self.MGAmmo});
+			self.SGAmmo = 0;		
+			if (startingWeapon == 4){self.SGAmmo = SGClipSize;}
+			updatePlayerList.push({id:self.id,property:"SGAmmo",value:self.SGAmmo});
+		}
+		else {
+			var healthAmount = self.health;
+			if (self.health < 100){healthAmount = 100;}
+			if (self.willHaveBA){
+				self.willHaveBA = false;
+				healthAmount = 175;
+			}
+			self.updatePropAndSend("health", healthAmount);
+		}
+
 		self.fireRate = 0;
 		self.triggerTapLimitTimer = 0;
 		self.reloading = 0;
@@ -1347,7 +1374,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	socket.emit('sendPlayerNameToClient', self.name);
 	
 	gameEngine.sendFullGameStatus(self.id);
-	self.respawn();
+	if (gametype == "elim" && !(pregame && pregameIsHorde)){
+		self.respawn(true);
+		if (!pregame && !gameOver && !roundOver && getTeamSize(self.team) > 1){ //Middle of an active round: Spectate
+			self.updatePropAndSend("health", 0);
+			self.respawnTimer = respawnTimeLimit - 1;
+		}
+	}
+	else {
+		self.respawn(true);
+	}
 
 	if (gametype == "horde" || (pregame && pregameIsHorde)){
 		dataAccessFunctions.getHordePersonalBest(self.cognitoSub, function(personalBest){
@@ -1691,64 +1727,35 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 				if (data.selection == 1 && Player.list[data.playerId].cash >= shop.price1){
 					Player.list[data.playerId].cash -= shop.price1;
 					updatePlayerList.push({id:data.playerId,property:"cash",value:Player.list[data.playerId].cash});								
-					Player.list[data.playerId].weapon = 3;
-					updatePlayerList.push({id:data.playerId,property:"weapon",value:Player.list[data.playerId].weapon});								
-					if (Player.list[data.playerId].MGClip <= 0 && Player.list[data.playerId].MGAmmo <= 0){
-						Player.list[data.playerId].MGClip += 30;
-						Player.list[data.playerId].MGAmmo += 30;
-						updatePlayerList.push({id:data.playerId,property:"MGClip",value:Player.list[data.playerId].MGClip});								
-						updatePlayerList.push({id:data.playerId,property:"MGAmmo",value:Player.list[data.playerId].MGAmmo});								
-					}
-					else {
-						Player.list[data.playerId].MGAmmo += 60;
-						updatePlayerList.push({id:data.playerId,property:"MGAmmo",value:Player.list[data.playerId].MGAmmo});								
-					}
+					pickup.pickupPickup(data.playerId, 0, {type:3, amount:shop.amount1});
 				}		
 				else if (data.selection == 2 && Player.list[data.playerId].cash >= shop.price2){
 					Player.list[data.playerId].cash -= shop.price2;
 					updatePlayerList.push({id:data.playerId,property:"cash",value:Player.list[data.playerId].cash});								
-					Player.list[data.playerId].weapon = 4;
-					updatePlayerList.push({id:data.playerId,property:"weapon",value:Player.list[data.playerId].weapon});								
-					if (Player.list[data.playerId].SGClip <= 0 && Player.list[data.playerId].SGAmmo <= 0){
-						Player.list[data.playerId].SGClip += 12;
-						Player.list[data.playerId].SGAmmo += 24;
-						updatePlayerList.push({id:data.playerId,property:"SGClip",value:Player.list[data.playerId].SGClip});								
-						updatePlayerList.push({id:data.playerId,property:"SGAmmo",value:Player.list[data.playerId].SGAmmo});								
-					}
-					else {
-						Player.list[data.playerId].SGAmmo += 36;
-						updatePlayerList.push({id:data.playerId,property:"SGAmmo",value:Player.list[data.playerId].SGAmmo});								
-					}
+					pickup.pickupPickup(data.playerId, 0, {type:4, amount:shop.amount2});
 				}		
 				else if (data.selection == 3 && Player.list[data.playerId].cash >= shop.price3){
 					Player.list[data.playerId].cash -= shop.price3;
 					updatePlayerList.push({id:data.playerId,property:"cash",value:Player.list[data.playerId].cash});								
-					Player.list[data.playerId].weapon = 2;
-					updatePlayerList.push({id:data.playerId,property:"weapon",value:Player.list[data.playerId].weapon});								
-					if (Player.list[data.playerId].DPClip <= 0 && Player.list[data.playerId].DPAmmo <= 0){
-						Player.list[data.playerId].DPClip += 20;
-						Player.list[data.playerId].DPAmmo += 20;
-						updatePlayerList.push({id:data.playerId,property:"DPClip",value:Player.list[data.playerId].DPClip});								
-						updatePlayerList.push({id:data.playerId,property:"DPAmmo",value:Player.list[data.playerId].DPAmmo});								
-					}
-					else {
-						Player.list[data.playerId].DPAmmo += 40;
-						updatePlayerList.push({id:data.playerId,property:"DPAmmo",value:Player.list[data.playerId].DPAmmo});								
-					}
+					pickup.pickupPickup(data.playerId, 0, {type:2, amount:shop.amount3});
 				}		
 				else if (data.selection == 4 && Player.list[data.playerId].cash >= shop.price4){
 					Player.list[data.playerId].cash -= shop.price4;
 					updatePlayerList.push({id:data.playerId,property:"cash",value:Player.list[data.playerId].cash});								
-					Player.list[data.playerId].health += 75;
-					if (Player.list[data.playerId].health > 175){
-						Player.list[data.playerId].health = 175;
-					}
-					updatePlayerList.push({id:data.playerId,property:"health",value:Player.list[data.playerId].health});								
+					pickup.pickupPickup(data.playerId, 0, {type:6, amount:shop.amount4});
 				}		
-				else if (data.selection == 5 && Player.list[data.playerId].cash >= shop.price5 && Player.list[data.playerId].hasBattery < 5){
-					Player.list[data.playerId].cash -= shop.price5;
+				else if (data.selection == 5 && Player.list[data.playerId].cash >= shop.price5 && Player.list[data.playerId].health < 175){
+					if (!Player.list[data.playerId].willHaveBA){
+						Player.list[data.playerId].cash -= shop.price5;
+						Player.list[data.playerId].willHaveBA = true;
+						updatePlayerList.push({id:data.playerId,property:"cash",value:Player.list[data.playerId].cash});	
+						updatePlayerList.push({id:data.playerId,property:"willHaveBA",value:true});	
+					}
+				}		
+				else if (data.selection == 6 && Player.list[data.playerId].cash >= shop.price6 && Player.list[data.playerId].hasBattery < 2){
+					Player.list[data.playerId].cash -= shop.price6;
 					updatePlayerList.push({id:data.playerId,property:"cash",value:Player.list[data.playerId].cash});								
-					Player.list[data.playerId].hasBattery += 1;
+					Player.list[data.playerId].hasBattery += shop.amount6/100;
 				}				
 			});
 
@@ -1968,6 +1975,14 @@ function evalServer(socket, data){
 	else if (data == "boostUp" || data == "boostU" || data == "boostu"){
 		boostAmount += 2;
 		socket.emit('addToChat', 'Boost up to ' + boostAmount);
+	}
+	else if (data == "cash" && isLocal){
+		getPlayerById(socket.id).cash += 10000;
+		getPlayerById(socket.id).cashEarnedThisGame += 10000;
+		updatePlayerList.push({id:socket.id,property:"cash",value:Player.list[socket.id].cash});
+		updatePlayerList.push({id:socket.id,property:"cashEarnedThisGame",value:Player.list[socket.id].cashEarnedThisGame});
+
+		socket.emit('addToChat', 'Cash up ' + Player.list[socket.id].cash);
 	}
 	else if (data == "afk"){
 		if (bootOnAfk){
@@ -2574,8 +2589,12 @@ function getPlayerFromCognitoSub(searchingCognitoSub){
 function playerEvent(playerId, event){
 	if (!gameOver && Player.list[playerId]){
 		if (event == "hit"){
-			Player.list[playerId].cash += hitCash;
-			Player.list[playerId].cashEarnedThisGame += hitCash;
+			var addedHitCash = hitCash;
+			if (gametype == "elim"){
+				addedHitCash = addedHitCash * 2;
+			}
+			Player.list[playerId].cash += addedHitCash;
+			Player.list[playerId].cashEarnedThisGame += addedHitCash;
 			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
 		}
@@ -2765,6 +2784,15 @@ var getPlayerListLength = function(){
 	return length;	
 }
 
+var getTeamSize = function(team){
+	var length = 0;
+	for (var i in Player.list){
+		if (Player.list[i].team == team)
+			length++;
+	}		
+	return length;	
+}
+
 var getHighestPlayerHordeKills = function(){
 	var highestKills = 0;
 	for (var i in Player.list){
@@ -2832,3 +2860,4 @@ module.exports.runPlayerEngines = runPlayerEngines;
 module.exports.getPlayerListLength = getPlayerListLength;
 module.exports.isSafeCoords = isSafeCoords;
 module.exports.getHighestPlayerHordeKills = getHighestPlayerHordeKills;
+module.exports.getTeamSize = getTeamSize;

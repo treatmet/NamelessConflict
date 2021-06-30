@@ -147,13 +147,17 @@ var changeTeams = function(playerId, requestedTeam = false){
 			playerList[playerId].team = 2;
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
-			playerList[playerId].respawn();			
+			if (!(gametype == "elim" && playerList[playerId].health <= 0)){
+				playerList[playerId].respawn(true);			
+			}
 		}
 		else {
 			playerList[playerId].team = 1;
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
-			playerList[playerId].respawn();			
+			if (!(gametype == "elim" && playerList[playerId].health <= 0)){
+				playerList[playerId].respawn(true);			
+			}
 		}
 		SOCKET_LIST[playerId].team = playerList[playerId].team;
 
@@ -516,7 +520,7 @@ function endGame(){
 	nextGameTimer = timeBeforeNextGame;			
 	updateMisc.nextGameTimer = nextGameTimer;
 	updateMisc.gameOver = {
-		gameIsOver: true,
+		gameIsOver: gameOver,
 		voteMap:voteMap,
 		voteGametype:voteGametype,
 		voteRebalance:voteRebalance
@@ -748,25 +752,13 @@ var capture = function(team) {
 	}
 	for (var i in SOCKET_LIST){
 		var socket = SOCKET_LIST[i];	
-		socket.emit('capture', team, whiteScore, blackScore);
+		socket.emit('score', team, whiteScore, blackScore);
 	}
 }
 
-var eliminationRoundWin = function(team) {
-	if (team == 1){
-		whiteScore++;
-	}
-	else if (team == 2){
-		blackScore++;
-	}
-	for (var i in SOCKET_LIST){
-		var socket = SOCKET_LIST[i];	
-		socket.emit('capture', team, whiteScore, blackScore);
-	}
-}
 
 var sendCapturesToClient = function(socket){
-	socket.emit('capture', 'reset', whiteScore, blackScore);
+	socket.emit('score', 'reset', whiteScore, blackScore);
 }
 
 var killScore = function(team){
@@ -776,11 +768,59 @@ var killScore = function(team){
 	else if (team == 2){
 		blackScore++;
 	}
+
+
 	for (var i in SOCKET_LIST){
 		var socket = SOCKET_LIST[i];
 		socket.emit('killScore', team, whiteScore, blackScore);		
 	}
 }
+
+
+var checkIfRoundOver = function() { //isRoundOver //checkForRoundOver
+	if (pregame && pregameIsHorde){return;}
+	if (roundOver == true){return;}
+	if (player.getTeamSize(1) <= 0 || player.getTeamSize(2) <= 0){return;}
+	
+	var playerList = player.getPlayerList();
+
+	var survivingTeam1Players = 0;
+	var survivingTeam2Players = 0;
+	for (var p in playerList){
+		if (playerList[p].health > 0){
+			if (playerList[p].team == 1){
+				survivingTeam1Players++;
+			}
+			if (playerList[p].team == 2){
+				survivingTeam2Players++;
+			}
+		}
+	}
+	if (survivingTeam1Players == 0){
+		eliminationRoundWin(2);
+	}
+	else if (survivingTeam2Players == 0){
+		eliminationRoundWin(1);
+	}
+}
+
+var eliminationRoundWin = function(team) { //endRound //winRound
+	if (team == 1){
+		whiteScore++;
+	}
+	else if (team == 2){
+		blackScore++;
+	}
+	roundOver = true;
+	nextGameTimer = timeBeforeNextRound;
+
+	for (var i in SOCKET_LIST){
+		var socket = SOCKET_LIST[i];	
+		updateMisc.roundOver = roundOver;
+		socket.emit('score', team, whiteScore, blackScore);
+	}
+}
+
 
 var assignSpectatorsToTeam = function(assignEvenIfFull){
 	//First, get the current team sizes
@@ -869,7 +909,25 @@ function restartGame(){
 	tabulateVotes();
 	assignSpectatorsToTeam(false);
 	initializeNewGame();
+	gameServerSync();
+}
+
+function startNewRound(){ //restartRound //initializeRound //startRound //roundStart
+	roundOver = false;
+	updateMisc.roundOver = roundOver;
+	pickup.clearNonMedPickups();
+	assignSpectatorsToTeam(false);
+	respawnAllNonSpectators();
 	gameServerSync();		
+}
+
+function respawnAllNonSpectators(){
+	var playerList = player.getPlayerList();
+	for (var p in playerList){
+		if (playerList[p].team != 0){
+			playerList[p].respawn();
+		}
+	}
 }
 
 //Updates gametype, map based on postgame player votes
@@ -883,7 +941,8 @@ function tabulateVotes(){
 		gametype = "slayer";
 	}
 	else if (elimVotes > ctfVotes && elimVotes > slayerVotes && gametype != "elim"){
-		scoreToWin = 5;
+		scoreToWin = 7;
+		
 		gametype = "elim";
 	}
 	
@@ -1076,14 +1135,13 @@ function rebalanceTeams(rebalanceOnScore = false){
 }
 function initializeNewGame(){
 	gameOver = false;
+	roundOver = false;
 	pregame = false;
 	bannedCognitoSubs = [];
 	abandoningCognitoSubs = [];
 
 	whiteScore = 0;
 	blackScore = 0;
-	minutesLeft = gameMinutesLength;
-	secondsLeft = gameSecondsLength;
 	var secondsLeftPlusZero = secondsLeft.toString();	
 	if (secondsLeft < 10){
 		secondsLeftPlusZero = "0" + secondsLeft.toString();
@@ -1094,6 +1152,14 @@ function initializeNewGame(){
 	else if (gametype == "ctf"){
 		respawnTimeLimit = ctfRespawnTimeLimit;
 	}
+	else if (gametype == "elim"){
+		respawnTimeLimit = elimRespawnTimeLimit;
+		gameMinutesLength = 0;
+		gameSecondsLength = 0;
+	}
+
+	minutesLeft = gameMinutesLength;
+	secondsLeft = gameSecondsLength;
 
 	var thugList = thug.getThugList();
 	for (var t in thugList){
@@ -1112,7 +1178,6 @@ function initializeNewGame(){
 		var socket = SOCKET_LIST[i];
 		sendCapturesToClient(socket);
 	}
-	updateMisc.gameOver = gameOver;	
 	updateMisc.bagRed = bagRed;
 	updateMisc.bagBlue = bagBlue;
 	updateMisc.mapWidth = mapWidth;
@@ -1153,7 +1218,7 @@ function initializeNewGame(){
 		updatePlayerList.push({id:playerList[i].id,property:"steals",value:playerList[i].steals});
 		updatePlayerList.push({id:playerList[i].id,property:"returns",value:playerList[i].returns});
 		updatePlayerList.push({id:playerList[i].id,property:"captures",value:playerList[i].captures});	
-		playerList[i].respawn();
+		playerList[i].respawn(true);
 	}//End player for loop update
 
 
@@ -1488,9 +1553,9 @@ var gameLoop = function(){
 				return effect;
 			}
 		});
-		if (updatePlayerList.length > 0 || updateThugList.length > 0 || updatePickupList.length > 0 || updateNotificationList.length > 0 || Object.keys(updateMisc).length > 0){
+		//if (updatePlayerList.length > 0 || updateThugList.length > 0 || updatePickupList.length > 0 || updateNotificationList.length > 0 || Object.keys(updateMisc).length > 0){
 			socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
-		}
+		//}
 	}
 
 	//console.log("Sent " + msSinceLastTick + "ms after last tick. Emit took " + msSinceEmit + "ms");
@@ -1569,6 +1634,10 @@ function secondIntervalLoop(){
 
 		secondIntervalFunction();
 	}
+
+	if (gametype == "elim" && !(pregame && pregameIsHorde) && !roundOver){
+		checkIfRoundOver();
+	}
 	
 	if (Date.now() - previousSecond < secondLengthMs - sloppyTimerWindowMs){ //if the current time is NOT within a very short time from the NEXT time code should be executed
 		var aFewMsBeforeNextLoopShouldExecute = (nextSecond - Date.now()) - sloppyTimerWindowMs;
@@ -1601,6 +1670,7 @@ var secondIntervalFunction = function(){
 			var votesData = {
 				ctfVotes:ctfVotes,
 				slayerVotes:slayerVotes,
+				elimVotes:elimVotes,
 				thePitVotes:thePitVotes,
 				longestVotes:longestVotes, 
 				crikVotes:crikVotes,
@@ -1668,14 +1738,20 @@ var secondIntervalFunction = function(){
 	//Pickup timer stuff
 	pickup.clockTick();
 	
-	if (gameOver == true){
+	if (gameOver == true || (gametype == "elim" && roundOver == true)){
 		if (nextGameTimer > 0){
 			nextGameTimer--;
 			updateMisc.nextGameTimer = nextGameTimer;
 		}
 		if (nextGameTimer == 0) {
-			restartGame();
-			nextGameTimer = timeBeforeNextGame;
+			if (gametype == "elim" && !gameOver){
+				startNewRound();
+				nextGameTimer = timeBeforeNextRound;
+			}
+			else {
+				restartGame();
+				nextGameTimer = timeBeforeNextGame;
+			}
 			updateMisc.nextGameTimer = nextGameTimer;
 		}
 	}	
@@ -2042,3 +2118,4 @@ module.exports.upsertHordeRecords = upsertHordeRecords;
 module.exports.gameServerSync = gameServerSync;
 module.exports.isBagHome = isBagHome;
 module.exports.eliminationRoundWin = eliminationRoundWin;
+module.exports.checkIfRoundOver = checkIfRoundOver;

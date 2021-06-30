@@ -42,22 +42,6 @@ global.loseCash = 100;
 global.mvpCash = 300;
 global.hitCash = 5;
 global.multikillTimer = 4.5 * 60;
-
-//Shop config
-global.shopEnabled = true;
-global.invincibleInShop = false;
-global.shop = {
-	active:false,
-	selection:3,
-	price1:150,
-	price2:300,
-	price3:200,
-	price4:300,
-	price5:100,	
-	uniqueTextTimer:0,
-	uniqueText:"",
-	purchaseEffectTimer:0,
-};
 global.startingCash = 0;
 
 //Post game Voting
@@ -91,6 +75,7 @@ global.secondsLeft = 99;
 global.scoreToWin = 3;
 global.nextGameTimer = 20;
 global.timeBeforeNextGame = 45; //newGameTimer
+global.timeBeforeNextRound = 20; //roundTimer
 global.gameMinutesLength = 5;
 global.gameSecondsLength = 0;
 global.map = "longest";
@@ -113,6 +98,7 @@ global.healRate = 10; //Milisecond delay between heal tick after player already 
 global.respawnTimeLimit = 3 * 60;
 global.slayerRespawnTimeLimit = 3 * 60; //seconds (translated to frames)
 global.ctfRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
+global.elimRespawnTimeLimit = 2 * 60; //seconds (translated to frames)
 global.bagDrag = 0.85;
 global.playerMaxHealth = 175;
 global.assistDamageThreshold = 30;
@@ -181,6 +167,30 @@ global.damagePushScale = 2;
 global.pushMaxSpeed = 35;
 
 global.allowBagWeapons = false;
+
+//Shop config
+global.shopEnabled = true;
+global.invincibleInShop = false;
+global.shop = {
+	active:false,
+	selection:3,
+	price1:150,
+	price2:100,
+	price3:50,
+	price4:100,
+	price5:150,	
+	price6:150,	
+	amount1:MGClipSize,
+	amount2:SGClipSize,
+	amount3:DPClipSize,
+	amount4:laserClipSize,
+	amount5:75,	
+	amount6:100,	
+	uniqueTextTimer:0,
+	uniqueText:"",
+	purchaseEffectTimer:0,
+};
+
 
 //thug Config
 global.spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
@@ -253,6 +263,7 @@ global.blackScore = 0;
 
 global.pregame = true;
 global.gameOver = false;
+global.roundOver = false;
 
 //Map global variables
 global.mapWidth = 0;
