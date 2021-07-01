@@ -85,6 +85,7 @@ var screenShakeScale = 0.5;
 var drawDistance = 10; 
 var playerCenterOffset = 4;
 var noPlayerBorders = false;
+var timeInGameRankingThresh = 60; //seconds
 
 var camOffSet = 350;//Offset is how many pixels away from the center the camera will go when aiming, greater value means player closer to edge of screen
 var diagCamOffSet = 200;
@@ -1216,8 +1217,9 @@ socket.on('score', function(team, dataWhiteCaptures, dataBlackCaptures){
 		sfxCapture.play();
 });
 
-socket.on('gameStart', function(){
+socket.on('gameStart', function(){ //startGame restartGame
 	gameOver = false;
+	timeInGame = 0;
 	if (gametype == "elim"){
 		roundOver = false;
 		shop.active = false;
@@ -5598,6 +5600,7 @@ var countdownToRedrawGraphics = 0;
 //EVERY 1 SECOND
 setInterval( 
 	function(){
+		if (!gameOver && !pregame && myPlayer.team){timeInGame++;}
 		if (countdownToRedrawGraphics != -1){
 			countdownToRedrawGraphics++;
 		}
@@ -6572,8 +6575,11 @@ function disconnect(){
 	socket.disconnect();
 }
 var forceToLeave = false;
+
+var timeInGame = 0;
 window.onbeforeunload = function(){
-	if (!gameOver && !pregame && !forceToLeave && !customServer) {
+	console.log("Leaving page");
+	if (!gameOver && !pregame && !forceToLeave && !customServer && timeInGame > timeInGameRankingThresh) {
 		return 'Are you sure you want to leave?'; //Leave site? unsaved changes
 	}
 	return;

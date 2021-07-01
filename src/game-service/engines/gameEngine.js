@@ -190,6 +190,10 @@ function calculateTeamAvgRating(team){
 	var enemyTeamAvgRating = 0;
 	var playerList = player.getPlayerList();
 	for (var i in playerList){
+		if (playerList[i].rating < ratingCalcThresh){
+			continue;
+		}
+
 		if (playerList[i].team == 1){
 			whitePlayers++;
 			whiteTotalScore += playerList[i].rating;
@@ -219,7 +223,9 @@ function compare(a,b) {
 	return 0;
   }
 
-function calculateEndgameStats(){ //calculate endgame
+
+  //abandoningCognitoSubs
+function calculateEndgameStats(){ //calculate endgame calculate ranking
 	logg("---CALCULATING ENDGAME STATS!---");
 	var playerList = player.getPlayerList();
 	var team1Sorted = [];
@@ -242,10 +248,16 @@ function calculateEndgameStats(){ //calculate endgame
 		var whiteAverageRating = calculateTeamAvgRating(1);
 		var blackAverageRating = calculateTeamAvgRating(2);
 		
-		if (whiteAverageRating == -1 && blackAverageRating != -1)
+		if (whiteAverageRating == -1 && blackAverageRating != -1){
 			whiteAverageRating = blackAverageRating;
-		if (blackAverageRating == -1 && whiteAverageRating != -1)
+		}
+		else if (blackAverageRating == -1 && whiteAverageRating != -1){
 			blackAverageRating = whiteAverageRating;
+		}
+		else if (blackAverageRating == -1 && whiteAverageRating == -1){
+			blackAverageRating = 0;
+			whiteAverageRating = 0;
+		}
 		
 		
 				
@@ -253,6 +265,7 @@ function calculateEndgameStats(){ //calculate endgame
 		for (var p in playerList){
 			if (playerList[p].team == 0)
 				continue;
+			
 			
 			var gamesLostInc = 0;
 			var gamesWonInc = 0;
@@ -292,8 +305,8 @@ function calculateEndgameStats(){ //calculate endgame
 				ptsGained += Math.abs(playerList[p].rating + ptsGained);
 			}
 			//Eligible for rank up/down this game?
-			log("playerList[p].eligibleForRank: " + playerList[p].eligibleForRank);
-			if (!playerList[p].eligibleForRank || customServer){
+			log("playerList[p].timeInGame: " + playerList[p].timeInGame);
+			if (playerList[p].timeInGame < timeInGameRankingThresh || customServer){
 				logg("Player ineligible for rank influence this game");
 				ptsGained = 0;				
 			}
@@ -352,6 +365,8 @@ function updatePlayersRatingAndExpWithMongoRes(mongoRes){
 				break;
 			}
 		}
+		if (typeof playerList[p].rating === 'undefined'){playerList[p].rating = 0;}
+		if (typeof playerList[p].rating === 'undefined'){playerList[p].experience = 0;}
 	}	
 }
 
@@ -1209,7 +1224,8 @@ function initializeNewGame(){
 		playerList[i].steals = 0;
 		playerList[i].returns = 0;
 		playerList[i].captures = 0;			
-		playerList[i].eligibleForRank = true;	
+		playerList[i].timeInGame = 0;		
+		//playerList[i].eligibleForRank = true;	
 		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
 		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
 		updatePlayerList.push({id:playerList[i].id,property:"kills",value:playerList[i].kills});
@@ -1652,6 +1668,24 @@ function secondIntervalLoop(){
 
 
 var secondIntervalFunction = function(){
+
+	//ranked Eligibility on timeout
+	var playerList = player.getPlayerList();
+	for (var p in playerList){
+		if (!playerList[p].timeInGame){
+			playerList[p].timeInGame = 0;
+		}
+		if (playerList[p].timeInGame < timeInGameRankingThresh){
+			playerList[p].timeInGame++;
+		}
+		else if (playerList[p].timeInGame >= timeInGameRankingThresh){
+
+		}
+	}
+
+
+
+
 	//log("ticksSinceLastSecond:" + ticksSinceLastSecond + " Time:" + Date.now() + " TargetNextSecond:" + nextSecond + " WARNING_COUNT:" + warnCount);
 	warnCount = 0;
 	ticksSinceLastSecond = 0;

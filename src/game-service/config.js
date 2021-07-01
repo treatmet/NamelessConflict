@@ -86,6 +86,7 @@ global.bootOnAfk = true;
 global.AfkFramesAllowed = 60 * 60; //seconds (translated to frames) //timeout
 
 //Player config
+global.timeInGameRankingThresh = 60; //seconds
 global.framesOfAiming = 60;
 global.boostAmount = 19;
 global.playerMaxSpeed = 5;
@@ -102,6 +103,21 @@ global.elimRespawnTimeLimit = 2 * 60; //seconds (translated to frames)
 global.bagDrag = 0.85;
 global.playerMaxHealth = 175;
 global.assistDamageThreshold = 30;
+global.ratingCalcThresh = 200; //Rating threshold for team rating evaluation
+/*
+{rank:"bronze1",rating:0},
+{rank:"bronze2",rating:100},
+{rank:"bronze3",rating:200},
+{rank:"silver1",rating:300},
+{rank:"silver2",rating:500},
+{rank:"silver3",rating:700},
+{rank:"gold1",rating:1000},
+{rank:"gold2",rating:1300},
+{rank:"gold3",rating:1600},
+{rank:"diamond",rating:2000},
+{rank:"diamond2",rating:9999}
+*/
+
 
 //Cloaking config
 global.cloakingEnabled = true;

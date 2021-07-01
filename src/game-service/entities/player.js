@@ -31,7 +31,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		shootingDir:1,
 		customizations: customizations,
 		settings: settings,
-		eligibleForRank:!isGameInFullSwing(),
+		//eligibleForRank:!isGameInFullSwing(),
 
 		cash:startingCash,
 		cashEarnedThisGame:0,
@@ -2553,7 +2553,9 @@ function Discharge(player){
 
 Player.onDisconnect = function(id){
 	if (Player.list[id]){
-		abandoningCognitoSubs.push(Player.list[id].cognitoSub);
+		if (Player.list[id].timeInGame > timeInGameRankingThresh && Player.list[id].team){
+			abandoningCognitoSubs.push({cognitoSub:Player.list[id].cognitoSub, team:Player.list[id].team);
+		}
 		logg(Player.list[id].name + " disconnected.");
 		if (Player.list[id].holdingBag == true){
 			if (Player.list[id].team == 1){
