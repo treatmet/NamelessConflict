@@ -1058,7 +1058,7 @@ div#performanceInstructions {
     font-weight: bold;
     text-align: center;
     margin: 20px;
-    margin-bottom: 500px;
+    margin-bottom: 10px;
     display: none;
     width: 90%;
 }
@@ -1156,6 +1156,10 @@ img.controlsImage {
 #learnToPlayMore {
     display: inline-block;
     margin-top: 30px;
+}
+
+#leaderboardToggle {
+    display: block;
 }
 
 .leaderboard{

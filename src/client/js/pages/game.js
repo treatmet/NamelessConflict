@@ -1939,10 +1939,12 @@ function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack,
 	logg("Server URL: " + miscPack.ip+":"+miscPack.port);
 	
 	BoostBlast.list = [];	
-	if (Player.list[myPlayer.id])
+	
+	if (Player.list[myPlayer.id]){
 		logg("myPlayer:");
+		log(Player.list[myPlayer.id]);
+	}
 
-	log(Player.list[myPlayer.id]);
 	drawMapElementsOnMapCanvas();
 	drawBlocksOnBlockCanvas();
 }
@@ -4690,6 +4692,8 @@ function drawPostGameProgress(){
 		}
 		//6 plus/minus rating number below bar
 		if (postGameProgressRatingBarY == postGameProgressRatingBarTargetY) {
+
+
 			if (postGameProgressRatingGainedSize > 11){
 				postGameProgressRatingGainedSize -= 3;
 			}
@@ -4709,9 +4713,21 @@ function drawPostGameProgress(){
 			ctx.font = 'bold '+postGameProgressRatingGainedSize+'px Electrolize';
 			ctx.lineWidth=2;
 			ctx.fillStyle="#FFFFFF";
-			strokeAndFillText(symbol + postGameProgressInfo.ratingDif,
-			(canvasWidth/2 - postGameBarWidth/2) + (postGameBarWidth * postGameProgressInfo.ratingPercentageToNext) + (postGameBarWidth * getProgressBarPercentage(postGameProgressInfo.rankFloor + postGameProgressRatingTicks, postGameProgressInfo.rankFloor, postGameProgressInfo.rankCeiling)),
-			postGameProgressRatingBarY + postGameProgressRatingGainedSize/2 + 9.5 + postGameProgressY); 
+
+
+			if (timeInGame < timeInGameRankingThresh && isLoggedIn() && !customServer && postGameProgressInfo.ratingDif == 0){ //didn't play long enough
+				ctx.textAlign="left";
+				ctx.font = 'bold 11px Electrolize';
+				ctx.lineWidth=3;
+				ctx.fillStyle="#999";
+				strokeAndFillText("Did not play long enough for rating influence", canvasWidth/2 - postGameBarWidth/2, 80); 
+				postGameProgressRatingGainedSize = 11;				
+			}
+			else {
+				strokeAndFillText(symbol + postGameProgressInfo.ratingDif,
+				(canvasWidth/2 - postGameBarWidth/2) + (postGameBarWidth * postGameProgressInfo.ratingPercentageToNext) + (postGameBarWidth * getProgressBarPercentage(postGameProgressInfo.rankFloor + postGameProgressRatingTicks, postGameProgressInfo.rankFloor, postGameProgressInfo.rankCeiling)),
+				postGameProgressRatingBarY + postGameProgressRatingGainedSize/2 + 9.5 + postGameProgressY); 
+			}
 		}
 		//7 white difference bar on rating
 		if (postGameProgressRatingGainedSize == 11) {
@@ -5604,7 +5620,7 @@ setInterval(
 		if (countdownToRedrawGraphics != -1){
 			countdownToRedrawGraphics++;
 		}
-		if (countdownToRedrawGraphics >= 7){
+		if (countdownToRedrawGraphics >= 8){
 			countdownToRedrawGraphics = -1;
 			logg("Redrawing map and blocks on timer");
 			drawMapElementsOnMapCanvas();

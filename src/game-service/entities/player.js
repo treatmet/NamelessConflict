@@ -671,7 +671,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.team == 2 && bagBlue.captured == false && self.health > 0 && !gameEngine.isBagHome(bagBlue)){
 				if (self.x > bagBlue.x - 67 && self.x < bagBlue.x + 67 && self.y > bagBlue.y - 50 && self.y < bagBlue.y + 50){												
-					console.log("SEPPPPP " + bagBlue.speed);
 					if (bagBlue.speed > 10){
 						self.getSlammed(bagBlue.playerThrowing, bagBlue.direction, bagBlue.speed*2, true);
 					}
@@ -1883,7 +1882,7 @@ function evalServer(socket, data){
 	}
 	else if (data == "me"){
 		logg("BANNED: " + getPlayerById(socket.id).cognitoSub);
-		bannedCognitoSubs.push(getPlayerById(socket.id).cognitoSub);
+		bannedCognitoSubs.push({cognitoSub:getPlayerById(socket.id).cognitoSub, reason:"asking for it"});
 		console.log(bannedCognitoSubs);
 	}
 	else if (data == "team1" || data == "teamsize1"){
@@ -1961,7 +1960,7 @@ function evalServer(socket, data){
 				}
 			}
 			console.log("TEAM TO CHANGE TO:" + teamToChangeTo);
-			if (customServer || !isGameInFullSwing() || changeHelpsBalance || getPlayerById(socket.id).cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){
+			if (customServer || changeHelpsBalance || getPlayerById(socket.id).cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){
 				gameEngine.changeTeams(socket.id, teamToChangeTo);
 			}
 			else {
@@ -2553,8 +2552,21 @@ function Discharge(player){
 
 Player.onDisconnect = function(id){
 	if (Player.list[id]){
-		if (Player.list[id].timeInGame > timeInGameRankingThresh && Player.list[id].team){
-			abandoningCognitoSubs.push({cognitoSub:Player.list[id].cognitoSub, team:Player.list[id].team);
+		console.log("Player.list[id].timeInGame: " + Player.list[id].timeInGame + " greater than " + timeInGameRankingThresh + " and team:" + Player.list[id].team + " ");
+		if (Player.list[id].team && !customServer && !gameOver && !pregame){
+			logg("potential DESERTER!");
+			abandoningCognitoSubs.push({cognitoSub:Player.list[id].cognitoSub, team:Player.list[id].team, name:Player.list[id].name, timeInGame:Player.list[id].timeInGame});
+
+			var timesAbandoned = abandoningCognitoSubs.filter(function(player){ //LINQ
+				if (player.cognitoSub == Player.list[id].cognitoSub){
+					return player;
+				}
+			}).length;
+
+			logg("Player has quit " + timesAbandoned + " times. (Abandon limit" + abandonLimit + ")");
+			if (timesAbandoned >= abandonLimit){
+				bannedCognitoSubs.push({cognitoSub:Player.list[id].cognitoSub, reason:"abandoning too many times"});
+			}
 		}
 		logg(Player.list[id].name + " disconnected.");
 		if (Player.list[id].holdingBag == true){
@@ -2703,7 +2715,7 @@ function playerEvent(playerId, event){
 				Player.list[playerId].benedicts++;
 				dataAccessFunctions.dbUserUpdate("inc", Player.list[playerId].cognitoSub, {benedicts: 1});
 				if (Player.list[playerId].benedicts >= 3 && !customServer){
-					bannedCognitoSubs.push(Player.list[playerId].cognitoSub);
+					bannedCognitoSubs.push({cognitoSub:Player.list[playerId].cognitoSub, reason:"being a Benedict Arnold"});
 					SOCKET_LIST[Player.list[playerId].id].emit("betrayalKick");
 				}
 			}
@@ -2723,7 +2735,7 @@ function playerEvent(playerId, event){
 				updateNotificationList.push({text:"Bag Returned",playerId:playerId});
 				return;
 			}
-			//Player.list[playerId].lastReturnCooldown = 300;
+			Player.list[playerId].lastReturnCooldown = 300; //returnTimer //returnLimiter
 			Player.list[playerId].returns++;
 			Player.list[playerId].cash+=returnCash;
 			Player.list[playerId].cashEarnedThisGame+=returnCash;
@@ -2755,6 +2767,51 @@ var connect = function(socket, cognitoSub, username, team, partyId){
 
 var getPlayerList = function(){ //This is the one function that returns all players/sockets, including spectators
 	return Player.list;
+}
+
+var getTeamPlayerList = function(){ //all team players
+	var teamPlayers = [];
+	for (var i in Player.list){
+		if (Player.list[i].team){
+			teamPlayers.push(Player.list[i]);
+		}
+	}			
+	return teamPlayers;
+}
+
+var getEligiblePlayerList = function(){ //All team playres plus abandoning cognito subs
+	var eligiblePlayers = getTeamPlayerList();
+	for (var a in abandoningCognitoSubs){
+		var abandoningPlayerRejoined = false;
+		for (var i in Player.list){ //Make sure abandoning cognitoSub did not rejoin
+			if (Player.list[i].team && Player.list[i].cognitoSub == abandoningCognitoSubs[a].cognitoSub){
+				Player.list[i].timeInGame += abandoningCognitoSubs[a].timeInGame;
+				abandoningPlayerRejoined = true;
+				logg("The prodigal child has returned to the game!");				
+				break;
+			}
+		}
+		if (abandoningCognitoSubs[a].team && !abandoningPlayerRejoined){
+			abandoningCognitoSubs[a].cashEarnedThisGame = 0;
+			eligiblePlayers.push(abandoningCognitoSubs[a]);
+		}
+	}			
+
+	return eligiblePlayers;
+}
+
+var getAverageTeamPlayersCash = function(){ //This is the one function that returns all players/sockets, including spectators
+	var totalCash = 0;
+	var totalPlayers = 0;
+
+	for (var i in Player.list){
+		if (Player.list[i].team && typeof Player.list[i].cashEarnedThisGame != 'undefined'){
+			totalCash += Player.list[i].cashEarnedThisGame;
+			totalPlayers++;
+		}
+	}			
+
+	return Math.round(totalCash/totalPlayers);
 }
 
 var getPlayerById = function(id){
@@ -2863,3 +2920,6 @@ module.exports.getPlayerListLength = getPlayerListLength;
 module.exports.isSafeCoords = isSafeCoords;
 module.exports.getHighestPlayerHordeKills = getHighestPlayerHordeKills;
 module.exports.getTeamSize = getTeamSize;
+module.exports.getTeamPlayerList = getTeamPlayerList;
+module.exports.getEligiblePlayerList = getEligiblePlayerList;
+module.exports.getAverageTeamPlayersCash = getAverageTeamPlayersCash;

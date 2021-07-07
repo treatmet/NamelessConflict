@@ -1241,6 +1241,28 @@
 		"canvasValue":"smile"
 	},	
 	{
+		"id":"flagUSAIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"USA Flag",
+		"text":"Murica!",
+		"price": 5000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"flagUSA"
+	},	
+	{
+		"id":"flagCANIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Canadian Flag",
+		"text":"Blame Canada!",
+		"price": 5000,
+		"team":0,
+		"rarity":4,
+		"canvasValue":"flagCAN"
+	},	
+	{
 		"id":"moneyIcon",
         "category":"icon",
 		"subCategory":"type",

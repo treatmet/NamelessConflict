@@ -182,17 +182,70 @@ var changeTeams = function(playerId, requestedTeam = false){
 }
 
 
-function calculateTeamAvgRating(team){
+function getEligibleTeamCount(playerList, team){
+	var blackPlayers = 0;
+	var whitePlayers = 0;
+	
+	for (var i in playerList){
+		if (playerList[i].team == 1){
+			whitePlayers++;
+		}
+		else if (playerList[i].team == 2){
+			blackPlayers++;
+		}
+	}
+	
+	if (team == 1){
+		return whitePlayers;
+	}
+	else if (team == 2){
+		return blackPlayers;		
+	}
+	return 0;
+}
+
+function calculateTeamAvgRating(playerList, team){
 	var blackPlayers = 0;
 	var blackTotalScore = 0;
 	var whitePlayers = 0;
 	var whiteTotalScore = 0;
 	var enemyTeamAvgRating = 0;
-	var playerList = player.getPlayerList();
+	
 	for (var i in playerList){
+		if (!playerList[i].rating){playerList[i].rating = 0;}
 		if (playerList[i].rating < ratingCalcThresh){
 			continue;
 		}
+
+		if (playerList[i].team == 1){
+			whitePlayers++;
+			whiteTotalScore += playerList[i].rating;
+		}
+		else if (playerList[i].team == 2){
+			blackPlayers++;
+			blackTotalScore += playerList[i].rating;
+		}
+	}
+	
+	if (team == 1){
+		enemyTeamAvgRating = whiteTotalScore / whitePlayers;
+	}
+	else if (team == 2){
+		enemyTeamAvgRating = blackTotalScore / blackPlayers;		
+	}
+	if (enemyTeamAvgRating == undefined || enemyTeamAvgRating == null || isNaN(enemyTeamAvgRating)){enemyTeamAvgRating = -1;}
+	return enemyTeamAvgRating;
+}
+
+function calculateTeamAvgRatingPlusNoobs(playerList, team){
+	var blackPlayers = 0;
+	var blackTotalScore = 0;
+	var whitePlayers = 0;
+	var whiteTotalScore = 0;
+	var enemyTeamAvgRating = 0;
+	
+	for (var i in playerList){
+		if (!playerList[i].rating){playerList[i].rating = 0;}
 
 		if (playerList[i].team == 1){
 			whitePlayers++;
@@ -227,121 +280,144 @@ function compare(a,b) {
   //abandoningCognitoSubs
 function calculateEndgameStats(){ //calculate endgame calculate ranking
 	logg("---CALCULATING ENDGAME STATS!---");
-	var playerList = player.getPlayerList();
-	var team1Sorted = [];
-	var team2Sorted = [];
-	for (var a in playerList){
-		if (playerList[a].team == 1){
-			team1Sorted.push(playerList[a]);
-		}
-		else if (playerList[a].team == 2){
-			team2Sorted.push(playerList[a]);
-		}
-	}
+	var eligiblePlayerList = player.getEligiblePlayerList();
+	var averageTeamPlayersCash = player.getAverageTeamPlayersCash();
 
-	team1Sorted.sort(compare);
-	team2Sorted.sort(compare);
+	// var team1Sorted = [];
+	// var team2Sorted = [];
+	// for (var a in playerList){
+	// 	if (playerList[a].team == 1){
+	// 		team1Sorted.push(playerList[a]);
+	// 	}
+	// 	else if (playerList[a].team == 2){
+	// 		team2Sorted.push(playerList[a]);
+	// 	}
+	// }
 
-	getAllPlayersFromDB(function(mongoRes){
-		//Get CURRENT player rating and experience from mongo (before any stats from this game are added)
-		updatePlayersRatingAndExpWithMongoRes(mongoRes);		
-		var whiteAverageRating = calculateTeamAvgRating(1);
-		var blackAverageRating = calculateTeamAvgRating(2);
+	// team1Sorted.sort(compare);
+	// team2Sorted.sort(compare);
+
+	updatePlayersRatingAndExpFromDB(eligiblePlayerList, function(eligiblePlayerListUpdated){
+		var team1EligiblePlayerCount = getEligibleTeamCount(eligiblePlayerListUpdated, 1);
+		var team2EligiblePlayerCount = getEligibleTeamCount(eligiblePlayerListUpdated, 2);
 		
-		if (whiteAverageRating == -1 && blackAverageRating != -1){
-			whiteAverageRating = blackAverageRating;
-		}
-		else if (blackAverageRating == -1 && whiteAverageRating != -1){
-			blackAverageRating = whiteAverageRating;
-		}
-		else if (blackAverageRating == -1 && whiteAverageRating == -1){
-			blackAverageRating = 0;
-			whiteAverageRating = 0;
-		}
-		
-		
+		var whiteAverageRating = calculateTeamAvgRating(eligiblePlayerListUpdated, 1);
+		var blackAverageRating = calculateTeamAvgRating(eligiblePlayerListUpdated, 2);
+		var whiteAverageRatingPlusNoobs = calculateTeamAvgRatingPlusNoobs(eligiblePlayerListUpdated, 1);
+		var blackAverageRatingPlusNoobs = calculateTeamAvgRatingPlusNoobs(eligiblePlayerListUpdated, 2);
 				
+		//if playing empty team, zero points awarded
+		//if playing noob team, minimum gain/loss awarded (unless you are a noob)
+
 		//Calculate progress made, and send to client (and then update user's DB stats)
-		for (var p in playerList){
-			if (playerList[p].team == 0)
+		for (var p in eligiblePlayerListUpdated){
+			var player = eligiblePlayerListUpdated[p];
+			var socket = SOCKET_LIST[player.id];
+			logg("Processing " + player.name + "'s results");
+
+			if (player.team == 0)
 				continue;
-			
-			
+						
 			var gamesLostInc = 0;
 			var gamesWonInc = 0;
 			var ptsGained = 0;
-			
-			SOCKET_LIST[p].emit('sendLog', "Player in endgame loop...");
 
-			var enemyAverageRating = playerList[p].team == 1 ? blackAverageRating : whiteAverageRating;
-			if ((playerList[p].team == 1 && whiteScore > blackScore) || (playerList[p].team == 2 && whiteScore < blackScore)){
+			var enemyAverageRating = player.team == 1 ? blackAverageRating : whiteAverageRating;
+			if (player.rating < ratingCalcThresh){
+				enemyAverageRating = player.team == 1 ? blackAverageRatingPlusNoobs : whiteAverageRatingPlusNoobs;
+			}
+
+			//personal performance formula
+			console.log("Calculating personal performance");
+			var subby = player.cashEarnedThisGame - averageTeamPlayersCash;
+			var personalPerformancePoints = (player.cashEarnedThisGame - averageTeamPlayersCash) / 300;
+			if (personalPerformancePoints < 0) {personalPerformancePoints /= 2;}
+			ptsGained += Math.round(personalPerformancePoints);
+			console.log("MyCash:" + player.cashEarnedThisGame + " AVG:" + averageTeamPlayersCash + " subtracted=" + subby + " performance points:" + personalPerformancePoints);
+
+			var teamSkillDifferencePoints = (enemyAverageRating - player.rating)/enemySkillDifferenceDivider;
+			console.log("enemyAverageRating:" + enemyAverageRating + " teamSkillDifferencePoints: " + teamSkillDifferencePoints);
+
+			if ( ((player.team == 1 && whiteScore > blackScore) || (player.team == 2 && whiteScore < blackScore)) && socket){
 				//win
 				gamesWonInc++;
-				ptsGained = Math.round(matchWinLossRatingBonus + (enemyAverageRating - playerList[p].rating)/enemySkillDifferenceDivider);
-				if (ptsGained < 3){ptsGained = 3;}		
-				if (ptsGained > 20){ptsGained = 20;} //Gain cap		
-				logg(playerList[p].name + " had " + playerList[p].rating + " pts, and beat a team with " + enemyAverageRating + " pts. He gained " + ptsGained);
-				playerList[p].cashEarnedThisGame+=winCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
+				console.log("matchWinLossBonus: " + matchWinLossRatingBonus);
+				ptsGained += Math.round(matchWinLossRatingBonus + teamSkillDifferencePoints);
+				if (ptsGained < 3 || enemyAverageRating === -1){console.log("win min(" + ptsGained + ") or enemyAverageRating was -1"); ptsGained = 3;}		
+				if (ptsGained > 20){console.log("win max(" + ptsGained + ")"); ptsGained = 20;} //Gain cap		
+				logg(player.name + " had " + player.rating + " pts, and beat a team with " + enemyAverageRating + " pts. He gained " + ptsGained);
+				player.cashEarnedThisGame+=winCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
 			}
 			else {
 				//loss
 				gamesLostInc++;
-				ptsGained = Math.round(-matchWinLossRatingBonus + (enemyAverageRating - playerList[p].rating)/enemySkillDifferenceDivider);
-				if (ptsGained > -1){ptsGained = -1;}		
-				if (ptsGained < -20){ptsGained = -20;} //Loss cap		
-				logg(playerList[p].name + " had " + playerList[p].rating + " pts, and lost to a team with " + enemyAverageRating + " pts. He lost " + ptsGained);
-				playerList[p].cashEarnedThisGame+=loseCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
+				ptsGained += Math.round(-matchWinLossRatingBonus + teamSkillDifferencePoints);
+				console.log("matchWinLossBonus: -" + matchWinLossRatingBonus);
+				if (ptsGained > -1 || enemyAverageRating === -1){console.log("loss min(" + ptsGained + ") or enemyAverageRating was -1"); ptsGained = -1; }		
+				if (ptsGained < -20){console.log("loss max(" + ptsGained + ")"); ptsGained = -20;} //Loss cap		
+				logg(player.name + " had " + player.rating + " pts, and lost to a team with " + enemyAverageRating + " pts. He lost " + ptsGained);				
+				player.cashEarnedThisGame+=loseCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
 			}
-			updatePlayerList.push({id:playerList[p].id,property:"cashEarnedThisGame",value:playerList[p].cashEarnedThisGame});
-
-			//MVP
-			if (team1Sorted[0])
-				if (playerList[p].id == team1Sorted[0].id && team1Sorted.length >= 2){ptsGained += 10;}
-			if (team2Sorted[0])
-				if (playerList[p].id == team2Sorted[0].id && team2Sorted.length >= 2){ptsGained += 10;}
+			updatePlayerList.push({id:player.id,property:"cashEarnedThisGame",value:player.cashEarnedThisGame});
 
 			//Prevent player from having sub zero ranking
-			if (playerList[p].rating + ptsGained < 0){
-				ptsGained += Math.abs(playerList[p].rating + ptsGained);
+			if (player.rating + ptsGained < 0){
+				logg("Saved player from dipping below zero ranking");
+				ptsGained = -player.rating; //lose all points
 			}
 			//Eligible for rank up/down this game?
-			log("playerList[p].timeInGame: " + playerList[p].timeInGame);
-			if (playerList[p].timeInGame < timeInGameRankingThresh || customServer){
+			log("player.timeInGame: " + player.timeInGame);
+			if (player.timeInGame < timeInGameRankingThresh || customServer){
 				logg("Player ineligible for rank influence this game");
 				ptsGained = 0;				
 			}
+			else if((player.team == 1 && team2EligiblePlayerCount === 0) || (player.team == 2 && team1EligiblePlayerCount === 0)){
+				logg("Playing empty team");
+				ptsGained = 0;				
+			}
+			log("Grand total is " + ptsGained);
+
+
+
 			if (customServer){
-				playerList[p].cashEarnedThisGame =  Math.round(playerList[p].cashEarnedThisGame/2);
+				player.cashEarnedThisGame =  Math.round(player.cashEarnedThisGame/2);
 			}
 
 			//Trigger client's end of game progress results report
 			var endGameProgressResults = {};
-			endGameProgressResults.originalRating = playerList[p].rating;
+			endGameProgressResults.originalRating = player.rating;
 			endGameProgressResults.ratingDif = ptsGained;
-			endGameProgressResults.originalExp = playerList[p].experience;
-			endGameProgressResults.expDif = playerList[p].cashEarnedThisGame;
+			endGameProgressResults.originalExp = player.experience;
+			endGameProgressResults.expDif = player.cashEarnedThisGame;
+			endGameProgressResults.personalPerformancePoints = personalPerformancePoints;
 
-			var rankProgressInfo = getRankFromRating(playerList[p].rating);
+			var rankProgressInfo = getRankFromRating(player.rating);
 			endGameProgressResults.rank = rankProgressInfo.rank;
 			endGameProgressResults.nextRank = rankProgressInfo.nextRank;
 			endGameProgressResults.previousRank = rankProgressInfo.previousRank;
 			endGameProgressResults.rankFloor = rankProgressInfo.floor;
 			endGameProgressResults.rankCeiling = rankProgressInfo.ceiling;
 
-			var experienceProgressInfo = getLevelFromExperience(playerList[p].experience);
+			var experienceProgressInfo = getLevelFromExperience(player.experience);
 			endGameProgressResults.level = experienceProgressInfo.level;
 			endGameProgressResults.experienceFloor = experienceProgressInfo.floor;
 			endGameProgressResults.experienceCeiling = experienceProgressInfo.ceiling;		
-			log(playerList[p].name + "'s endGameProgressResults:");
-			console.log(endGameProgressResults);
-			SOCKET_LIST[p].emit('endGameProgressResults', endGameProgressResults);
-			SOCKET_LIST[p].emit('sendLog', "endGameResults:");
-			SOCKET_LIST[p].emit('sendLog', endGameProgressResults);
 
-			console.log("playerList[p].assists");
-			console.log(playerList[p].assists);
-			//update user's DB stats
-			dataAccessFunctions.dbUserUpdate("inc", playerList[p].cognitoSub, {kills:playerList[p].kills, assists:playerList[p].assists, deaths:playerList[p].deaths, captures:playerList[p].captures, steals:playerList[p].steals, returns:playerList[p].returns, cash: playerList[p].cashEarnedThisGame, experience: playerList[p].cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained});
+			log(player.name + "'s endGameProgressResults:");
+			console.log(endGameProgressResults);
+
+			var updateParams = {};
+			if (socket){
+				updateParams = {kills:player.kills, assists:player.assists, deaths:player.deaths, captures:player.captures, steals:player.steals, returns:player.returns, cash: player.cashEarnedThisGame, experience: player.cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
+				socket.emit('endGameProgressResults', endGameProgressResults);
+			}
+			else {
+				updateParams = {gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
+				logg("Hitting cognito sub with a hard L for abandoning");
+				player.cashEarnedThisGame = 0;
+			}
+			//increase user's DB stats
+			dataAccessFunctions.dbUserUpdate("inc", player.cognitoSub, updateParams);
 		}
 	});
 }
@@ -949,15 +1025,20 @@ function respawnAllNonSpectators(){
 function tabulateVotes(){
 	if (ctfVotes > slayerVotes && ctfVotes > elimVotes && gametype != "ctf"){
 		scoreToWin = 3;
+		gameMinutesLength = 5;
+		gameSecondsLength = 0;
 		gametype = "ctf";
 	}
 	else if (slayerVotes > ctfVotes && slayerVotes > elimVotes && gametype != "slayer"){
 		scoreToWin = 50;
+		gameMinutesLength = 5;
+		gameSecondsLength = 0;
 		gametype = "slayer";
 	}
 	else if (elimVotes > ctfVotes && elimVotes > slayerVotes && gametype != "elim"){
-		scoreToWin = 7;
-		
+		scoreToWin = 7;		
+		gameMinutesLength = 0;
+		gameSecondsLength = 0;
 		gametype = "elim";
 	}
 	
@@ -1354,8 +1435,39 @@ var getAllPlayersFromDB = function(cb){
 	});		
 }
 
+var updatePlayersRatingAndExpFromDB = function(playerList, cb){
+	var cognitoSubs = [];
+
+	for (var i in playerList){
+		cognitoSubs.push(playerList[i].cognitoSub);
+	}
+	
+	var searchParams = { cognitoSub: { $in: cognitoSubs } };	
+	dataAccess.dbFindAwait("RW_USER", searchParams, async function(err, res){
+		if (res && res[0]){
+
+			for (var p in playerList){
+				for (var r in res){
+					if (playerList[p].cognitoSub == res[r].cognitoSub){		
+						playerList[p].rating = res[r].rating;
+						playerList[p].experience = res[r].experience;				
+						break;
+					}
+				}
+				if (typeof playerList[p].rating === 'undefined'){playerList[p].rating = 0;}
+				if (typeof playerList[p].rating === 'undefined'){playerList[p].experience = 0;}
+			}	
+
+			cb(playerList);
+		}
+		else {
+			cb(false);
+		}
+	});		
+}
+
 var joinGame = function(cognitoSub, username, team, partyId){ 
-	//dataAccessFunctions.giveUsersItemsByTimestamp();
+	//if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){dataAccessFunctions.giveUsersItemsByTimestamp();}
 
 	log("Attempting to join game..." + cognitoSub);
 
@@ -1670,21 +1782,8 @@ function secondIntervalLoop(){
 var secondIntervalFunction = function(){
 
 	//ranked Eligibility on timeout
-	var playerList = player.getPlayerList();
-	for (var p in playerList){
-		if (!playerList[p].timeInGame){
-			playerList[p].timeInGame = 0;
-		}
-		if (playerList[p].timeInGame < timeInGameRankingThresh){
-			playerList[p].timeInGame++;
-		}
-		else if (playerList[p].timeInGame >= timeInGameRankingThresh){
-
-		}
-	}
-
-
-
+	if (!pregame && !gameOver)
+		incrementTimeInGameForPlayers();
 
 	//log("ticksSinceLastSecond:" + ticksSinceLastSecond + " Time:" + Date.now() + " TargetNextSecond:" + nextSecond + " WARNING_COUNT:" + warnCount);
 	warnCount = 0;
@@ -1764,6 +1863,13 @@ var secondIntervalFunction = function(){
 	else if (!pregame && player.getPlayerListLength() <= 0){
 		console.log("SETTING BACK TO PREGAME!!!! Because there are " + player.getPlayerListLength() + " players");
 		pregame = true;
+		gameOver = false;
+		secondsLeft = 99;
+		minutesLeft = 9;
+		whiteScore = 0;
+		blackScore = 0;
+		abandoningCognitoSubs = [];
+		bannedCognitoSubs = [];
 		mapEngine.initializeBlocks(map);
 		mapEngine.initializePickups(map);
 		resetHordeMode();
@@ -1804,6 +1910,19 @@ var secondIntervalFunction = function(){
 			}
 		}
 		gameServerSync();
+	}
+}
+
+function incrementTimeInGameForPlayers(){
+	var playerList = player.getPlayerList();
+	for (var p in playerList){
+		if (!playerList[p].timeInGame){
+			playerList[p].timeInGame = 0;
+		}
+		playerList[p].timeInGame++;
+		if (playerList[p].timeInGame == timeInGameRankingThresh){ //1 time trigger
+
+		}
 	}
 }
 

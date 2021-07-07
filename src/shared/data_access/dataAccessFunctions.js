@@ -251,38 +251,42 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 	var thresholdDate = new Date("June 24, 2021 12:00:00");
-	var params = {onlineTimestamp:{ $gt: thresholdDate }};
+	var params = {};
+	//var params = {onlineTimestamp:{ $gt: thresholdDate }};
 	//var params = { USERNAME: { $in: [ "Runswithwood","ceaseless","corboner","Frog","Zeno","Farplepuff","kdizzle","hax","Matt","Lintemurion","JuanJuanson","Zmannifresh","coolnoah1p","Bren","matt-io","blick","NBAclementine", "RTPM3"] } };
 
 
 
-	dataAccess.dbFindAwait("RW_USER", params, async function(err, resy){
+	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:2000}, async function(err, resy){
 		if (resy && resy[0]){ 
 			for (let k = 0; k < resy.length; k++) {
+
 				var cognitoSub = resy[k].cognitoSub;
-				var customizations = resy[k].customizations;
-				var customizationOptions = resy[k].customizationOptions; 
+				//var customizationOptions = resy[k].customizationOptions; 
+				var customizations = resy[k].customizations; 
 					 
-				 console.log("Updating " + resy[k].USERNAME);
-				//  if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
-				// 	 continue;
+				console.log("Updating " + resy[k].USERNAME);
+				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
+				// 	continue;
 		   
-				if (!customizationOptions){
-					console.log("ERROR - no customizationOptions");
-					continue;
-				}
+				// if (!customizationOptions){
+				// 	console.log("ERROR - no customizationOptions");
+				// 	continue;
+				// }
 				if (!customizations || !customizations["1"] || !customizations["2"] ){
-					console.log("ERROR - no customizations");
-					continue;
+				 	console.log("ERROR - no customizations");
+				 	continue;
 				}
 
     
-				// console.log("-----------------------------------customizations");
-				// console.log(customizationOptions);
+				console.log("-----------------------------------customizations");
+				console.log(customizations);
 				
 
-				customizations["1"].sgColor = "#ffcc00"; //CONFIGURATION
-				customizations["2"].sgColor = "#ffcc00"; //CONFIGURATION
+				customizations["1"].icon = "flagUSA"; //CONFIGURATION
+				customizations["2"].icon = "flagUSA"; //CONFIGURATION
+				// customizations["1"].icon = "flagUSA"; //CONFIGURATION
+				// customizations["2"].icon = "flagUSA"; //CONFIGURATION
 
 			
 
@@ -290,7 +294,8 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 
 				var obj = {customizations: customizations};
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
-				});					
+				});			
+				await sleep(10);		
 			}				
 		}
 	});

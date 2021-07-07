@@ -12,7 +12,7 @@ global.config = require("../settings.json");
 global.debug = true;
 global.httpOnlyCookies = false;
 global.allowDuplicateUsername = false;
-global.allowServerCommands = true;
+global.allowServerCommands = false;
 
 global.syncServerWithDbInterval = 15; //Seconds //Both sync and check for stale thresholds
 
@@ -87,6 +87,7 @@ global.AfkFramesAllowed = 60 * 60; //seconds (translated to frames) //timeout
 
 //Player config
 global.timeInGameRankingThresh = 60; //seconds
+global.abandonLimit = 5; //seconds
 global.framesOfAiming = 60;
 global.boostAmount = 19;
 global.playerMaxSpeed = 5;
@@ -225,7 +226,7 @@ global.pushStrength = 15; //Push block strength
 
 //Rating config
 global.matchWinLossRatingBonus = 30;
-global.enemySkillDifferenceDivider = 20;
+global.enemySkillDifferenceDivider = 30;
 
 //----------------------SERVER GLOBAL VARIABLES---------------------------------
 global.myIP = "";

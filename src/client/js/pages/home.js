@@ -28,17 +28,110 @@ function loginAlways(){
 function populateLeaderboard(){
 	console.log("POPULATING LEADERBOARD: " + serverHomePage);
 	if (document.getElementById('tablePrint')){
-		$.post('/getLeaderboard', {}, function(res,status){
-			var leaderboardHTML= "<table class='statsTable' id='leaderboard'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>Rating</th><th>Kills</th><th>Capts</th><th>Wins</th><th>Exp</th></tr>";
-			for (let i = 0; i < res.length; i++) {
-				leaderboardHTML+="<tr><td style='background-color: #728498; text-align: center; font-weight: bold;'>" + (i + 1) + "</td><td><a href='{{serverHomePage}}user/"+res[i].cognitoSub+"'>" + res[i].username + "</td><td>" + res[i].rating + "</td><td>" + res[i].kills + "</td><td>" + res[i].captures + "</td><td>" + res[i].gamesWon + "</td><td>" + res[i].experience + "</td></tr>";			
-			}		
-			leaderboardHTML = leaderboardHTML.replace(/{{serverHomePage}}/g, serverHomePage);
-			leaderboardHTML+="</table>";
+		$.post('/getLeaderboard', {}, function(leaderboard,status){
+			var leaderboardHTML = "";
+			leaderboardHTML += getLeaderboardToggleHTML();
+			leaderboardHTML += getLeaderboardTableHTML(leaderboard.rating, "rating", "experience", "block");
+			leaderboardHTML += getLeaderboardTableHTML(leaderboard.exp, "experience", "rating", "none");
 		
 			document.getElementById('tablePrint').innerHTML = leaderboardHTML;
 		});
 	}	
+}
+
+function getLeaderboardTableHTML(leaderboard, primaryColumn, secondaryColumn, defaultDisplay){
+	var leaderboardHTML = "";
+
+	var primaryColumnLabel = "Rating";
+	var secondaryColumnLabel = "$ Earned";
+
+	if (primaryColumn == "rating"){
+		primaryColumnLabel = "Rating";
+	}
+	else if (primaryColumn == "experience"){
+		primaryColumnLabel = "$ Earned";
+	}
+
+	if (secondaryColumn == "rating"){
+		secondaryColumnLabel = "Rating";
+	}
+	else if (secondaryColumn == "experience"){
+		secondaryColumnLabel = "$ Earned";
+	}
+
+	var tableId = "leaderboard";
+	if (primaryColumnLabel == "$ Earned"){
+		tableId += "Exp";
+	}
+	else {
+		tableId += primaryColumnLabel;
+	}
+
+
+	leaderboardHTML += "<table class='statsTable' style='display:" + defaultDisplay + ";' id='" + tableId + "'><tr><th>Rank</th><th style='width: 900px;'>Username</th><th>" + primaryColumnLabel + "</th><th>" + secondaryColumnLabel + "</th><th>Kills</th><th>Capts</th><th>Wins</th></tr>";
+	for (let i = 0; i < leaderboard.length; i++) {
+		leaderboardHTML+="<tr><td style='background-color: #728498; text-align: center; font-weight: bold;'>" + (i + 1) + 
+		"</td><td><a href='{{serverHomePage}}user/"+leaderboard[i].cognitoSub+"'>" + 
+		leaderboard[i].username + 
+		"</td><td>" + leaderboard[i][primaryColumn] + 
+		"</td><td>" + leaderboard[i][secondaryColumn] + 
+		"</td><td>" + leaderboard[i].kills + 
+		"</td><td>" + leaderboard[i].captures + 
+		"</td><td>" + leaderboard[i].gamesWon + 
+		"</td></tr>";			
+	}		
+	leaderboardHTML = leaderboardHTML.replace(/{{serverHomePage}}/g, serverHomePage);
+	leaderboardHTML+="</table>";
+
+	return leaderboardHTML;
+}
+
+function getLeaderboardToggleHTML(){
+	var leaderboardHTML = "";
+	leaderboardHTML += '<div class="columnTabContainer" id="leaderboardToggle">';
+		leaderboardHTML += '<div class="columnTab active" id="leaderboardRatingTab" onclick="toggleLeaderboard(\'leaderboardRatingTab\')">';
+			leaderboardHTML += '<img src="/src/client/img/icons/iconRank.png">';
+			leaderboardHTML += '<span>Rating</span>';
+		leaderboardHTML += '</div>';
+		leaderboardHTML += '<div class="columnTab" id="leaderboardExpTab" onclick="toggleLeaderboard(\'leaderboardExpTab\')">';
+			leaderboardHTML += '<img src="/src/client/img/icons/iconMoney.png">';
+			leaderboardHTML += '<span>Cash Earned</span>';
+		leaderboardHTML += '</div>';
+	leaderboardHTML += '</div>';
+
+	return leaderboardHTML;
+}
+
+function toggleLeaderboard(divId){
+    var div = document.getElementById(divId);
+
+    var tablinks = [ document.getElementById("leaderboardRatingTab"), document.getElementById("leaderboardExpTab") ]; 
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    div.className += " active";
+
+    var ratingContent = document.getElementById("leaderboardRating");
+    var expContent = document.getElementById("leaderboardExp");
+
+    if (ratingContent && expContent){
+        switch (divId){
+            case "leaderboardRatingTab":
+                ratingContent.style.display = "block";
+                expContent.style.display = "none";
+                break;
+            case "leaderboardExpTab":
+                ratingContent.style.display = "none";
+                expContent.style.display = "block";            
+                break;
+            default:
+                log("Unknown appearance mode clicked...");
+                break;
+        }
+    }
+    else {
+        log("DETECTED NONEXISTANT DIV:" + divId);
+    }     
 }
 
 function getServerList(){

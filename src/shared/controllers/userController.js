@@ -402,20 +402,17 @@ function generateTempName(){
 
 router.post('/getLeaderboard', async function (req, res) {
 	console.log("GET LEADERBOARD");
-	var leaderboard = [];
+	var leaderboard = {
+		exp:[],
+		rating:[]
+	};
 
 	dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}]}, {sort:{experience: -1},limit:100}, async function(err, dbRes){
 		if (dbRes && dbRes[0]){
 			for (var i = 0; i < dbRes.length; i++){
-				if (dbRes[i].USERNAME == "RTPM35"){
-					console.log(dbRes[i].USERNAME + "!!!!!!!!!!!!" );
-					dataAccess.dbUpdateAwait("RW_USER", "inc", {}, {cash: 7}, async function(err, obj){
-						console.log("UPDATED!!!!!!!!!!!!" );
-					});
-				}
-
 				if (dbRes[i].USERNAME){
-					leaderboard.push({cognitoSub:dbRes[i].cognitoSub, username:dbRes[i].USERNAME.substring(0, 15), rating:dbRes[i].rating, kills:dbRes[i].kills, captures:dbRes[i].captures, gamesWon:dbRes[i].gamesWon, experience:dbRes[i].experience});
+					if (dbRes[i].rating == "310"){dbRes[i].rating = "unrated";}
+					leaderboard.exp.push({cognitoSub:dbRes[i].cognitoSub, username:dbRes[i].USERNAME.substring(0, 15), rating:dbRes[i].rating, kills:dbRes[i].kills, captures:dbRes[i].captures, gamesWon:dbRes[i].gamesWon, experience:dbRes[i].experience});
 				}
 				else {
 					logg("ERROR ACQUIRING USERNAME:");
@@ -423,7 +420,21 @@ router.post('/getLeaderboard', async function (req, res) {
 				}
 			}
 		}
-		res.send(leaderboard);
+
+		dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}, {"rating":{$ne:310}} ] }, {sort:{rating: -1},limit:100}, async function(err, ratingRes){
+			if (ratingRes && ratingRes[0]){
+				for (var i = 0; i < ratingRes.length; i++){
+					if (ratingRes[i].USERNAME){
+						leaderboard.rating.push({cognitoSub:ratingRes[i].cognitoSub, username:ratingRes[i].USERNAME.substring(0, 15), rating:ratingRes[i].rating, kills:ratingRes[i].kills, captures:ratingRes[i].captures, gamesWon:ratingRes[i].gamesWon, experience:ratingRes[i].experience});
+					}
+					else {
+						logg("ERROR ACQUIRING USERNAME:");
+						console.log(ratingRes[i]);
+					}
+				}
+			}
+			res.send(leaderboard);
+		});	
 	});	
 });
 
