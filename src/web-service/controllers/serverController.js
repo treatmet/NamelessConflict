@@ -327,7 +327,7 @@ var customSettingsList = [
 	{name:"gameMinutesLength", desc:"Game Length in Minutes [0 is no time limit]", type:2, default:5, standard:true},
 	{name:"scoreToWin", desc:"Score to win [0 is no score limit]", type:2, default:0, standard:true},
 	{name:"map", desc:"Map [1=hall, 2=warehouse, 3=bunkers]", type:2, default:1, standard:true},
-	{name:"gametype", desc:"Gametype [1=capture, 2=deathmatch, 3=invasion]", type:2, default:1, standard:true},
+	{name:"gametype", desc:"Gametype [1=capture, 2=deathmatch, 3=invasion 4=elimination]", type:2, default:1, standard:true},
 	{name:"maxPlayers", desc:"Max Team Size", type:2, default:7, standard:true},
 	{name:"voteGametype", desc:"Allow voting for gametype after match", type:1, default:true, standard:true},
 	{name:"voteMap", desc:"Allow voting for map after match", type:1, default:true, standard:true},
@@ -487,6 +487,9 @@ function processCustomGameServerUpdateRequest(settings){
 					break;
 				case "3":
 					settings[s].value = "'horde'";
+					break;
+				case "4":
+					settings[s].value = "'elim'";
 					break;
 				default:								
 					settings[s].value = "'ctf'";

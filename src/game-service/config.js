@@ -41,8 +41,9 @@ global.winCash = 1000;
 global.loseCash = 100;
 global.mvpCash = 300;
 global.hitCash = 5;
+global.elimDeathCash = 50;
 global.multikillTimer = 4.5 * 60;
-global.startingCash = 0;
+global.startingCash = 50;
 
 //Post game Voting
 global.ctfVotes = 0;
@@ -105,6 +106,9 @@ global.bagDrag = 0.85;
 global.playerMaxHealth = 175;
 global.assistDamageThreshold = 30;
 global.ratingCalcThresh = 200; //Rating threshold for team rating evaluation
+global.grappleSpeed = 20;
+global.grappleStrength = 3;
+global.grappleLength = 5 * 75; //Tiles * 75
 /*
 {rank:"bronze1",rating:0},
 {rank:"bronze2",rating:100},
@@ -217,8 +221,7 @@ global.hordeThugHealth = 15;
 global.thugDamage = 50;
 global.thugSpeed = 3;
 global.thugAttackDelay = 30;
-global.thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are wiped off map (for performance concerns)
-
+global.maxThugs = 35;
 
 //Map Config
 global.threatSpawnRange = 500;

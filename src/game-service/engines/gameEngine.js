@@ -102,7 +102,6 @@ var resetGameSettingsToStandard = function(){
 	thugDamage = 50;
 	thugSpeed = 4;
 	thugAttackDelay = 30;
-	thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are wiped off map (for performance concerns)
 	threatSpawnRange = 500;
 	pushStrength = 15; //Push block strength
 	serverPassword = "";
@@ -1235,6 +1234,7 @@ function initializeNewGame(){
 	pregame = false;
 	bannedCognitoSubs = [];
 	abandoningCognitoSubs = [];
+	if (!(pregameIsHorde && pregame) && gametype != "horde"){spawnOpposingThug = false;}
 
 	whiteScore = 0;
 	blackScore = 0;
@@ -1296,7 +1296,7 @@ function initializeNewGame(){
 	
 	var playerList = player.getPlayerList();
 	for(var i in playerList){		
-		playerList[i].cash = startingCash;
+		playerList[i].cash = (gametype == "elim" ? startingCash : 0);
 		playerList[i].cashEarnedThisGame = 0;
 		playerList[i].kills = 0;
 		playerList[i].assists = 0;
@@ -1365,8 +1365,7 @@ function ensureCorrectThugCount(){
 		}
 	}
 	
-	//Delete all thugs if Thug setting is disabled, or more than "thugLimit" players
-	if (!spawnOpposingThug || (expectedWhiteThugs + expectedBlackThugs > thugLimit)){
+	if (!spawnOpposingThug){
 		for (var t in thugList){
 			for(var i in SOCKET_LIST){
 				SOCKET_LIST[i].emit('removeThug', thugList[t].id);
@@ -1467,7 +1466,7 @@ var updatePlayersRatingAndExpFromDB = function(playerList, cb){
 }
 
 var joinGame = function(cognitoSub, username, team, partyId){ 
-	//if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){dataAccessFunctions.giveUsersItemsByTimestamp();}
+	if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){dataAccessFunctions.giveUsersItemsByTimestamp();}
 
 	log("Attempting to join game..." + cognitoSub);
 
@@ -1681,8 +1680,20 @@ var gameLoop = function(){
 				return effect;
 			}
 		});
+		
+
+		var myUpdatePlayerList = updatePlayerList.filter((item) => { //SELECT //WHERE //LINQ
+			if (!item.single){
+				return true;
+			}
+			else if (item.id == socket.id){
+				return true;
+			}
+			return false;
+		});
+
 		//if (updatePlayerList.length > 0 || updateThugList.length > 0 || updatePickupList.length > 0 || updateNotificationList.length > 0 || Object.keys(updateMisc).length > 0){
-			socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
+			socket.emit('update', myUpdatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
 		//}
 	}
 

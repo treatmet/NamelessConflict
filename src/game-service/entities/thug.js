@@ -386,7 +386,7 @@ var getThugById = function(id){
 }
 
 var createThug = function(team, x, y){
-	if (getThugListLength() < 50)
+	if (getThugListLength() < maxThugs)
 		Thug(team, x, y);
 }
 

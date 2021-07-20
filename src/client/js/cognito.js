@@ -904,6 +904,11 @@ function drawName(drawingCanvas, playerUsername, color, x, y, icon = false){
 }
 
 function drawIcon(drawingCanvas, icon, x, y, width = false, height = false){
+	if (page == "game" && (countdownToRedrawGraphics > -1 && countdownToRedrawGraphics < 4)){
+		return;
+	}
+		
+
 	if (!icon || !drawingCanvas)
 		return;
 	if (!width || !height){

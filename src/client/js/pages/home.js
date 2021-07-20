@@ -168,7 +168,9 @@ function getServerList(){
 
 function getAndShowCustomServerHTML(){
 	hide("tablePrint");
-	document.getElementById("sectionTitle2").innerHTML = "";
+	if (document.getElementById("sectionTitle2")){
+		document.getElementById("sectionTitle2").innerHTML = "";
+	}
 
 	$.post('/getCustomServerHTML', {}, function(data,status){
 		console.log("getCustomServerHTML response:");

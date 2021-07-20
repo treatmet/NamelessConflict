@@ -251,9 +251,20 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 	var thresholdDate = new Date("June 24, 2021 12:00:00");
-	var params = {};
+	//var params = {};
 	//var params = {onlineTimestamp:{ $gt: thresholdDate }};
-	//var params = { USERNAME: { $in: [ "Runswithwood","ceaseless","corboner","Frog","Zeno","Farplepuff","kdizzle","hax","Matt","Lintemurion","JuanJuanson","Zmannifresh","coolnoah1p","Bren","matt-io","blick","NBAclementine", "RTPM3"] } };
+	var params = { USERNAME: { $in: [ 
+		"bigballer4liver"
+	] } }; //Bronze
+	// var params = { USERNAME: { $in: [ 
+	// 	"Savage10","Apple226","Lintemurion","Skippy","KAVAAKS","ceaseless","Ravensmyth","frog","1642518","Arxzon","3k_baby","ilikefortnitekid","Envy.amv","Faceman","Reppy","vWillkidender_SL","lilbaby","jakefish","Matt","Runswithwood","testuser3","B.A.C","wolfy","caff","awsomedreamr2022","nooooooooooooooooooo","coolnoah1p","vDespair_SL","nood","blick","validar","Savage11","Bennie_jr.","testuser"
+	// ] } }; //Silver
+	// var params = { USERNAME: { $in: [ 
+	// 	"DaBaby","hax","Flarplepuff"
+	// ] } }; //Gold
+	// var params = { USERNAME: { $in: [ 
+	// 	"matt-io","corboner","Zeno","Frog","Bigballer4liver"
+	// ] } }; //Dia
 
 
 
@@ -262,40 +273,44 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 			for (let k = 0; k < resy.length; k++) {
 
 				var cognitoSub = resy[k].cognitoSub;
-				//var customizationOptions = resy[k].customizationOptions; 
+				var customizationOptions = resy[k].customizationOptions; 
 				var customizations = resy[k].customizations; 
 					 
-				console.log("Updating " + resy[k].USERNAME);
-				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
-				// 	continue;
-		   
-				// if (!customizationOptions){
-				// 	console.log("ERROR - no customizationOptions");
+				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+				// 	console.log("SAFETYS ON");
 				// 	continue;
 				// }
-				if (!customizations || !customizations["1"] || !customizations["2"] ){
-				 	console.log("ERROR - no customizations");
-				 	continue;
+
+				console.log("Updating " + resy[k].USERNAME);
+		   
+				if (!customizationOptions){
+					console.log("ERROR - no customizationOptions");
+					continue;
 				}
+				// if (!customizations || !customizations["1"] || !customizations["2"] ){
+				//  	console.log("ERROR - no customizations");
+				//  	continue;
+				// }
 
     
 				console.log("-----------------------------------customizations");
 				console.log(customizations);
 				
-
-				customizations["1"].icon = "flagUSA"; //CONFIGURATION
-				customizations["2"].icon = "flagUSA"; //CONFIGURATION
 				// customizations["1"].icon = "flagUSA"; //CONFIGURATION
 				// customizations["2"].icon = "flagUSA"; //CONFIGURATION
 
-			
+				//customizationOptions.push("bronze3_0Icon");
+				//customizationOptions.push("silver3_0Icon");
+				//customizationOptions.push("gold3_0Icon");
+				//customizationOptions.push("diamond_0Icon");
 
-
-
-				var obj = {customizations: customizations};
-				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
+				var obj = resy;
+				obj.USERNAME = "Bigballer4liver";
+				obj.cognitoSub = "c038eee0-1c9f-486f-8350-5ff48bbac2ce";
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: "c038eee0-1c9f-486f-8350-5ff48bbac2ce"}, obj, async function(err, res){
 				});			
-				await sleep(10);		
+				await sleep(10);	
+
 			}				
 		}
 	});
@@ -668,11 +683,13 @@ function getNewShopItem(currentShopList){
 		shopIndex = randomInt(2, fullShopList.length - 1); //Random element from shop, starting with index 2 (to skip unlock and refresh)
 		//New shop rules
 		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT part of default unlocks?
-			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT already added to new shop?
-				if (fullShopList[shopIndex].rarity != 4){ //Is item NOT exclusive
-					break; //PASSED RULES, ADD THIS ITEM
-				}
-			}
+		if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT already added to new shop?
+		if (fullShopList[shopIndex].rarity != 4){ //Is item NOT exclusive
+		if (!fullShopList[shopIndex].hideFromShop){ //Hide from shop
+			break; //PASSED RULES, ADD THIS ITEM
+		}
+		}
+		}
 		}
 		loopCount++;
 	}
