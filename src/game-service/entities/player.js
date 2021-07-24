@@ -1523,19 +1523,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 								player.cloakEngaged = false;						
 								updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});	
 							}
-							if (!player.grapple || typeof player.grapple.x === 'undefined'){
-								player.shootGrapple(); //
-							}
-							else if (player.grapple.x != player.x || player.grapple.y != player.y){
-								player.updatePropAndSend("grapple", {});
-								player.releaseGrapple();
-								return;
-							}
-							else {
 								player.boost();
 								updateEffectList.push({type:3,playerId:player.id});
 								updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
-							}
 
 							player.rechargeDelay = rechargeDelayTime;
 							// if (player.name != "RTPM3")
@@ -1567,7 +1557,6 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							if (player.team == 1){
 								bagBlue.captured = false;
 								updateMisc.bagBlue = bagBlue;
-								console.log("Setting player throwing to " + player.id);
 								bagBlue.playerThrowing = player.id;
 								bagBlue.speed = 25;
 								bagBlue.direction = player.walkingDir;
@@ -1575,7 +1564,6 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							else if (player.team == 2){
 								bagRed.captured = false;
 								updateMisc.bagRed = bagRed;
-								console.log("Setting player throwing to " + player.id);
 								bagRed.playerThrowing = player.id;
 								bagRed.speed = 25;
 								bagRed.direction = player.walkingDir;
@@ -1795,6 +1783,10 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						crikVotes++;
 						voteMapIds.push(socketId);
 					}
+					else if (vote == "narrows"){
+						narrowsVotes++;
+						voteMapIds.push(socketId);
+					}
 				}	
 				else if (voteType == "rebalance" && voteRebalance){
 					for (var i = 0; i < voteRebalanceTeamsIds.length; i++){
@@ -1967,6 +1959,7 @@ function evalServer(socket, data){
 		}
 	}
 	else if (data == "spectate" || data == "spec"){
+		abandonMatch(socket.id);
 		gameEngine.changeTeams(socket.id, 0);
 	}
 	else if (data == "boostUp" || data == "boostU" || data == "boostu"){
@@ -2191,6 +2184,10 @@ function evalServer(socket, data){
 	}
 	else if (data == "crik" || data == "creek"){
 		map = "crik";
+		gameEngine.restartGame();
+	}
+	else if (data == "narrows" || data == "narrow"){
+		map = "narrows";
 		gameEngine.restartGame();
 	}
 	else if (data == "map2"){
@@ -2548,13 +2545,14 @@ function Discharge(player){
 	player.firing = 3; 
 }
 
-Player.onDisconnect = function(id){
+function abandonMatch(id){
 	if (Player.list[id]){
 		console.log("Player.list[id].timeInGame: " + Player.list[id].timeInGame + " greater than " + timeInGameRankingThresh + " and team:" + Player.list[id].team + " ");
+
 		if (Player.list[id].team && !customServer && !gameOver && !pregame){
 			logg("potential DESERTER!");
-			abandoningCognitoSubs.push({cognitoSub:Player.list[id].cognitoSub, team:Player.list[id].team, name:Player.list[id].name, timeInGame:Player.list[id].timeInGame});
 
+			abandoningCognitoSubs.push({cognitoSub:Player.list[id].cognitoSub, team:Player.list[id].team, name:Player.list[id].name, timeInGame:Player.list[id].timeInGame});
 			var timesAbandoned = abandoningCognitoSubs.filter(function(player){ //LINQ
 				if (player.cognitoSub == Player.list[id].cognitoSub){
 					return player;
@@ -2566,7 +2564,6 @@ Player.onDisconnect = function(id){
 				bannedCognitoSubs.push({cognitoSub:Player.list[id].cognitoSub, reason:"abandoning too many times"});
 			}
 		}
-		logg(Player.list[id].name + " disconnected.");
 		if (Player.list[id].holdingBag == true){
 			if (Player.list[id].team == 1){
 				bagBlue.captured = false;
@@ -2579,6 +2576,11 @@ Player.onDisconnect = function(id){
 		}
 		//sendChatToAll(Player.list[id].name + " has disconnected.");
 	}
+}
+
+Player.onDisconnect = function(id){
+	abandonMatch(id);
+	logg(Player.list[id].name + " disconnected.");
 	delete Player.list[id];
 	for(var i in SOCKET_LIST){
 		SOCKET_LIST[i].emit('removePlayer', id);

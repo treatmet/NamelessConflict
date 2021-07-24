@@ -46,7 +46,7 @@ router.post('/kickFromParty', async function (req, res) {
 		res.send({msg:errorMsg});
 		return;
 	}		
-	dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: req.body.cognitoSub, cognitoSub:req.body.targetCognitoSub}, {partyId:""}, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: req.body.cognitoSub, cognitoSub:req.body.targetCognitoSub}, {partyId:""}, async function(err, dbRes){
 		if (!err){
 			//logg("DB: Set: cognitoSub=" + req.body.cognitoSub + " with: ");
 			//console.log('partyId:""');
@@ -106,12 +106,12 @@ router.post('/requestResponse', async function (req, res) {
 						dataAccessFunctions.getUserFromDB(authorizedUser.cognitoSub, function(partyJoiner){
 							if (partyJoiner && partyJoiner.partyId && partyJoiner.partyId.length > 0 && partyJoiner.partyId == partyJoiner.cognitoSub && partyJoiner.partyId != partyDbResults.partyId){ //If party leader of a previous party (which is NOT the party currently requested to join) and accepting a new party request
 								var re = new RegExp(partyJoiner.cognitoSub,"g");
-								dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {partyId: ""}, async function(err, res){}); //Disband the previous party							
+								dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {partyId: ""}, async function(err, dbRes){}); //Disband the previous party							
 							}
 							//log("dataAccessFunctions.dbUserUpdate - Party request accepted, joining party.");
 							dataAccessFunctions.dbUserUpdate("set", authorizedUser.cognitoSub, {partyId:partyDbResults.partyId});
-							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, res){}); //Remove all party requests targeted at the responder
-							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, res){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
+							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove all party requests targeted at the responder
+							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
 						});
 					});					
 					res.status(200);

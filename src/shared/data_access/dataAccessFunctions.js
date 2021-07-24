@@ -2,6 +2,8 @@ var dataAccess = require('./dataAccess.js');
 const ObjectId = require('mongodb').ObjectID;
 
 const fullShopList = require("./shopList.json");
+//const totalShopItems = 
+
 const defaultCustomizations = require("./defaultCustomizations.json");
 
 const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
@@ -9,7 +11,6 @@ const defaultCustomizationOptions = require("./defaultCustomizationOptions.json"
 
 const defaultSettings = require("./defaultSettings.json");
 const  totemize = require('totemize');
-
 
 
 //////////////////////////////////////////////
@@ -250,21 +251,13 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("June 24, 2021 12:00:00");
+	var thresholdDate = new Date("July 22, 2021 16:00:00");
 	//var params = {};
-	//var params = {onlineTimestamp:{ $gt: thresholdDate }};
-	var params = { USERNAME: { $in: [ 
+	var params = {onlineTimestamp:{ $gt: thresholdDate }};
+/* 	var params = { USERNAME: { $in: [ 
 		"bigballer4liver"
 	] } }; //Bronze
-	// var params = { USERNAME: { $in: [ 
-	// 	"Savage10","Apple226","Lintemurion","Skippy","KAVAAKS","ceaseless","Ravensmyth","frog","1642518","Arxzon","3k_baby","ilikefortnitekid","Envy.amv","Faceman","Reppy","vWillkidender_SL","lilbaby","jakefish","Matt","Runswithwood","testuser3","B.A.C","wolfy","caff","awsomedreamr2022","nooooooooooooooooooo","coolnoah1p","vDespair_SL","nood","blick","validar","Savage11","Bennie_jr.","testuser"
-	// ] } }; //Silver
-	// var params = { USERNAME: { $in: [ 
-	// 	"DaBaby","hax","Flarplepuff"
-	// ] } }; //Gold
-	// var params = { USERNAME: { $in: [ 
-	// 	"matt-io","corboner","Zeno","Frog","Bigballer4liver"
-	// ] } }; //Dia
+ */
 
 
 
@@ -276,38 +269,39 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				var customizationOptions = resy[k].customizationOptions; 
 				var customizations = resy[k].customizations; 
 					 
-				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
-				// 	console.log("SAFETYS ON");
-				// 	continue;
-				// }
+				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+					console.log("SAFETYS ON");
+					continue;
+				}
 
 				console.log("Updating " + resy[k].USERNAME);
+				console.log("Timestamp " + resy[k].onlineTimestamp);
 		   
-				if (!customizationOptions){
+/* 				if (!customizationOptions){
 					console.log("ERROR - no customizationOptions");
 					continue;
 				}
-				// if (!customizations || !customizations["1"] || !customizations["2"] ){
-				//  	console.log("ERROR - no customizations");
-				//  	continue;
-				// }
+ */				if (!customizations || !customizations["1"] || !customizations["2"] ){
+				  	console.log("ERROR - no customizations");
+				  	continue;
+				}
 
     
 				console.log("-----------------------------------customizations");
 				console.log(customizations);
 				
-				// customizations["1"].icon = "flagUSA"; //CONFIGURATION
-				// customizations["2"].icon = "flagUSA"; //CONFIGURATION
+				customizations["1"].dpColor = "#ffcc00"; //CONFIGURATION
+				customizations["2"].dpColor = "#ffcc00"; //CONFIGURATION
 
 				//customizationOptions.push("bronze3_0Icon");
 				//customizationOptions.push("silver3_0Icon");
 				//customizationOptions.push("gold3_0Icon");
 				//customizationOptions.push("diamond_0Icon");
+				var obj = {
+					customizations:customizations
+				};
 
-				var obj = resy;
-				obj.USERNAME = "Bigballer4liver";
-				obj.cognitoSub = "c038eee0-1c9f-486f-8350-5ff48bbac2ce";
-				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: "c038eee0-1c9f-486f-8350-5ff48bbac2ce"}, obj, async function(err, res){
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});			
 				await sleep(10);	
 

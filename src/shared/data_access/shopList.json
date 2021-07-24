@@ -33,6 +33,18 @@
 		"canvasValue":"cowboyHat"
 	},	
 	{
+		"id":"crownHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Crown",
+		"text":"You reign supreme",
+		"price": 20000,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":true,
+		"canvasValue":"crownHat"
+	},	
+	{
 		"id":"magaCapHat",
         "category":"hat",
 		"subCategory":"type",
@@ -84,7 +96,8 @@
 		"text":"For participating in the SocketShot community [Exclusive item]",
 		"price": 20000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"alienHat"
 	},		
 	{
@@ -95,7 +108,8 @@
 		"text":"For participating in the SocketShot community [Exclusive item]",
 		"price": 20000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"alienGreenHat"
 	},	
 	{
@@ -566,7 +580,8 @@
 		"text":"#2a2a2a",
 		"price": 100000,
 		"team":2,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"#2a2a2a"
 	},	
 	{
@@ -764,7 +779,8 @@
 		"text":"#dfdfdf",
 		"price": 100000,
 		"team":1,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"#dfdfdf"
 	},	
 	{
@@ -1362,7 +1378,8 @@
 		"text":"For becoming a millionaire!",
 		"price": 5000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"money"
 	},	
 	{
@@ -1384,7 +1401,8 @@
 		"text":"For helping kill SocketShot bugs! [Exclusive item]",
 		"price": 5000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"bug"
 	},	
 	{
@@ -1406,7 +1424,8 @@
 		"text":"For participating in the 'Season Zero' beta tournament",
 		"price": 5000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"tourney0"
 	},	
 	{
@@ -1417,7 +1436,8 @@
 		"text":"For rising above all others in an official SocketShot Tournament!",
 		"price": 5000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,		
 		"canvasValue":"champ"
 	},	
 	{
@@ -1428,7 +1448,8 @@
 		"text":"For being an official SocketShot tournament Finalist!",
 		"price": 5000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"finalist"
 	},	
 	{

@@ -329,7 +329,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking
 			//personal performance formula
 			console.log("Calculating personal performance");
 			var subby = player.cashEarnedThisGame - averageTeamPlayersCash;
-			var personalPerformancePoints = (player.cashEarnedThisGame - averageTeamPlayersCash) / 300;
+			var personalPerformancePoints = (player.cashEarnedThisGame - averageTeamPlayersCash) / 200;
 			if (personalPerformancePoints < 0) {personalPerformancePoints /= 2;}
 			ptsGained += Math.round(personalPerformancePoints);
 			console.log("MyCash:" + player.cashEarnedThisGame + " AVG:" + averageTeamPlayersCash + " subtracted=" + subby + " performance points:" + personalPerformancePoints);
@@ -508,8 +508,14 @@ function getSafeCoordinates(team){
 			}
 		}
 		else {
-			potentialX = randomInt(0,mapWidth);			
-			potentialY = randomInt(0,mapHeight);
+			if (map == "narrows"){
+				potentialX = randomInt(4*75, 40*75);			
+				potentialY = randomInt(0,mapHeight);
+			}
+			else {
+				potentialX = randomInt(0,mapWidth);			
+				potentialY = randomInt(0,mapHeight);
+			}
 		}
 
 		if (!block.isSafeCoords(potentialX, potentialY)){continue;}
@@ -696,7 +702,7 @@ function moveBags(){
 
 	//Check Bag collision with blocks
 	var blockList = block.getBlockList();
-	if (bagBlue.speed > 0){
+	if ((bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY) && !bagBlue.captured){
 		for (var i in blockList){
 			if (bagBlue.x > blockList[i].x && bagBlue.x < blockList[i].x + blockList[i].width && bagBlue.y > blockList[i].y && bagBlue.y < blockList[i].y + blockList[i].height){												
 				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
@@ -741,20 +747,21 @@ function moveBags(){
 					if (bagBlue.x < blockList[i].x){bagBlue.x = blockList[i].x;}
 					updateMisc.bagBlue = bagBlue;
 				}
-				else if (blockList[i].type == "warp1"){
-					bagBlue.x = warp1X;
-					bagBlue.y = warp1Y;
-					updateMisc.bagBlue = bagBlue;
-				}
-				else if (blockList[i].type == "warp2"){
-					bagBlue.x = warp2X;
-					bagBlue.y = warp2Y;
+				else if (blockList[i].type == "warp"){
+					if (blockList[i].warpX){
+						bagBlue.x = blockList[i].warpX;
+						bagBlue.y = blockList[i].warpY;
+					}
+					else {
+						bagBlue.x = bagBlue.homeX;
+						bagBlue.y = bagBlue.homeY;
+					}
 					updateMisc.bagBlue = bagBlue;
 				}
 			}// End check if bag is overlapping block
 		}//End blockList loop		
 	}
-	if (bagRed.speed > 0){		
+	if ((bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY) && !bagRed.captured){
 		for (var i in blockList){
 			if (bagRed.x > blockList[i].x && bagRed.x < blockList[i].x + blockList[i].width && bagRed.y > blockList[i].y && bagRed.y < blockList[i].y + blockList[i].height){												
 				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
@@ -799,14 +806,15 @@ function moveBags(){
 					if (bagRed.x < blockList[i].x){bagRed.x = blockList[i].x;}
 					updateMisc.bagRed = bagRed;
 				}
-				else if (blockList[i].type == "warp1"){
-					bagRed.x = warp1X;
-					bagRed.y = warp1Y;
-					updateMisc.bagRed = bagRed;
-				}
-				else if (blockList[i].type == "warp2"){
-					bagRed.x = warp2X;
-					bagRed.y = warp2Y;
+				else if (blockList[i].type == "warp"){
+					if (blockList[i].warpX){
+						bagRed.x = blockList[i].warpX;
+						bagRed.y = blockList[i].warpY;
+					}
+					else {
+						bagRed.x = bagRed.homeX;
+						bagRed.y = bagRed.homeY;
+					}
 					updateMisc.bagRed = bagRed;
 				}
 
@@ -1041,14 +1049,17 @@ function tabulateVotes(){
 		gametype = "elim";
 	}
 	
-	if (thePitVotes > longestVotes && thePitVotes > crikVotes){
+	if (thePitVotes > longestVotes && thePitVotes > crikVotes && thePitVotes > narrowsVotes){
 		map = "thepit";
 	}
-	else if (longestVotes > thePitVotes && longestVotes > crikVotes){
+	else if (longestVotes > thePitVotes && longestVotes > crikVotes && longestVotes > narrowsVotes){
 		map = "longest";
 	}
-	else if (crikVotes > thePitVotes && crikVotes > longestVotes){
+	else if (crikVotes > thePitVotes && crikVotes > longestVotes && crikVotes > narrowsVotes){
 		map = "crik";
+	}
+	else if (narrowsVotes > thePitVotes && narrowsVotes > longestVotes && narrowsVotes > crikVotes){
+		map = "narrows";
 	}
 	
 	if (voteRebalanceTeamsYes > voteRebalanceTeamsNo){
@@ -1063,6 +1074,7 @@ function tabulateVotes(){
 	elimVotes = 0;
 	thePitVotes = 0;
 	longestVotes = 0;
+	narrowsVotes = 0;
 	crikVotes = 0;
 	voteRebalanceTeamsYes = 0;
 	voteRebalanceTeamsNo = 0;
@@ -1466,7 +1478,7 @@ var updatePlayersRatingAndExpFromDB = function(playerList, cb){
 }
 
 var joinGame = function(cognitoSub, username, team, partyId){ 
-	if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){dataAccessFunctions.giveUsersItemsByTimestamp();}
+	//if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){dataAccessFunctions.giveUsersItemsByTimestamp();}
 
 	log("Attempting to join game..." + cognitoSub);
 
@@ -1818,6 +1830,7 @@ var secondIntervalFunction = function(){
 				thePitVotes:thePitVotes,
 				longestVotes:longestVotes, 
 				crikVotes:crikVotes,
+				narrowsVotes:narrowsVotes,
 				voteRebalanceTeamsYes:voteRebalanceTeamsYes,
 				voteRebalanceTeamsNo:voteRebalanceTeamsNo,
 			};

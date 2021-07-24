@@ -45,6 +45,7 @@ function voteEndgame(voteType, voteSelection){
 		document.getElementById("voteLongest").disabled = true;
 		document.getElementById("voteCrik").disabled = true;
 		document.getElementById("voteThePit").disabled = true;		
+		document.getElementById("voteNarrows").disabled = true;		
 	}
 	else if (voteType == "rebalance"){
 		document.getElementById("voteRebalanceYes").disabled = true;
@@ -57,9 +58,10 @@ socket.on('votesUpdate', function(votesData){
 	document.getElementById("voteCTF").innerHTML = "CTF - [" + votesData.ctfVotes + "]";
 	document.getElementById("voteDeathmatch").innerHTML = "Killfest - [" + votesData.slayerVotes + "]";	
 	document.getElementById("voteElimination").innerHTML = "Elimination - [" + votesData.elimVotes + "]";	
-	document.getElementById("voteLongest").innerHTML = "<span style='color: #408fe0;font-size: 13px;'>Longer </span>Hallway - [" + votesData.longestVotes + "]";
-	document.getElementById("voteThePit").innerHTML = "<span style='color: #408fe0;font-size: 13px;'>ThePitiful </span>Warehouse - [" + votesData.thePitVotes + "]";	
-	document.getElementById("voteCrik").innerHTML = "<span style='color: #408fe0;font-size: 13px;'>Babble Creek </span>Bunkers - [" + votesData.crikVotes + "]";
+	document.getElementById("voteLongest").innerHTML = "Hallway - [" + votesData.longestVotes + "]";
+	document.getElementById("voteThePit").innerHTML = "Warehouse - [" + votesData.thePitVotes + "]";	
+	document.getElementById("voteCrik").innerHTML = "Bunkers - [" + votesData.crikVotes + "]";
+	document.getElementById("voteNarrows").innerHTML = "Narrowed - [" + votesData.narrowsVotes + "]";	
 	document.getElementById("voteRebalanceYes").innerHTML = "Yes - [" + votesData.voteRebalanceTeamsYes + "]";
 	document.getElementById("voteRebalanceNo").innerHTML = "No - [" + votesData.voteRebalanceTeamsNo + "]";
 });
@@ -85,7 +87,7 @@ var screenShakeScale = 0.5;
 var drawDistance = 10; 
 var playerCenterOffset = 4;
 var noPlayerBorders = false;
-var timeInGameRankingThresh = 60; //seconds
+var timeInGameRankingThresh = 15; //seconds
 
 var camOffSet = 450;//Offset is how many pixels away from the center the camera will go when aiming, greater value means player closer to edge of screen
 var diagCamOffSet = 325;
@@ -1221,20 +1223,6 @@ checkBlockCollision = function(obj){
 				if (obj.x < blockList[i].x){obj.x = blockList[i].x;}
 				posUpdated = true;
 			}
-			else if (blockList[i].type == "warp1"){
-				obj.x = warp1X;
-				posUpdated = true;
-				obj.y = warp1Y;
-				posUpdated = true;
-				SOCKET_LIST[obj.id].emit('sfx', "sfxWarp");
-			}
-			else if (blockList[i].type == "warp2"){
-				obj.x = warp2X;
-				posUpdated = true;
-				obj.y = warp2Y;
-				posUpdated = true;
-				SOCKET_LIST[obj.id].emit('sfx', "sfxWarp");
-			}
 
 			if (posUpdated){
 				return true;
@@ -1895,6 +1883,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			document.getElementById("voteLongest").disabled = false;
 			document.getElementById("voteCrik").disabled = false;
 			document.getElementById("voteThePit").disabled = false;				
+			document.getElementById("voteNarrows").disabled = false;				
 			document.getElementById("voteRebalanceYes").disabled = false;				
 			document.getElementById("voteRebalanceNo").disabled = false;				
 		}
@@ -2435,6 +2424,21 @@ function drawMapElementsOnMapCanvas(){
 					drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
 				}				
 			}
+			else if (map == "narrows"){
+				drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+				// if (x >= (tile.width * 6) * zoom && x <= (tile.width * 6) * zoom && y >= (tile.height * 1) * zoom && y <= (tile.height * 5) * zoom){
+				// 	drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				// }
+				// else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (mapWidth - tile.width * 4) * zoom && x <= (mapWidth - tile.width * 2) * zoom){
+				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				// }
+				// else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (tile.width * 1) * zoom && x <= (tile.width * 3) * zoom){
+				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				// }
+				// else {
+				// 	drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+				// }				
+			}
 			else if (map == "horde"){
 				if (y >= (mapHeight - tile.height*3) * zoom && y < (mapHeight - tile.height*3) && x <= 0){
 					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
@@ -2792,7 +2796,7 @@ function drawBlocksOnBlockCanvas(){
 		else if (Block.list[i].type == "blue"){
 			imgBlock = Img.blueBlock;
 		}
-		else if (Block.list[i].type == "warp1" || Block.list[i].type == "warp2"){
+		else if (Block.list[i].type == "warp"){
 			continue;
 		}
 		else if (Block.list[i].type == "pushUp"){
@@ -2826,7 +2830,6 @@ function drawBlockCanvas(){
 	ctx.drawImage(block_canvas, drawX, drawY);
 	
 	//Draw warps every frame
-	if (map == "crik"){
 		warpImageSwapper++;
 		if (warpImageSwapper > 8){
 			warpImageSwapper = 1;
@@ -2835,7 +2838,7 @@ function drawBlockCanvas(){
 		
 			if (centerX - myPlayer.x * zoom + Block.list[i].x * zoom > -Block.list[i].width * zoom - drawDistance && centerX - myPlayer.x * zoom + Block.list[i].x * zoom < canvasWidth + drawDistance && centerY - myPlayer.y * zoom + Block.list[i].y * zoom > -Block.list[i].height * zoom - drawDistance && centerY - myPlayer.y * zoom + Block.list[i].y * zoom < canvasHeight + drawDistance){
 				var imgBlock = Img.warp1;
-				if (Block.list[i].type == "warp1" || Block.list[i].type == "warp2"){
+				if (Block.list[i].type == "warp"){
 					if (warpImageSwapper == 1 || warpImageSwapper == 2)
 						imgBlock = Img.warp1;
 					else if (warpImageSwapper == 3 || warpImageSwapper == 4)
@@ -2851,7 +2854,6 @@ function drawBlockCanvas(){
 				drawImage(imgBlock, centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom);
 			}		
 		}
-	}
 }
 
 var slowDown = 30;

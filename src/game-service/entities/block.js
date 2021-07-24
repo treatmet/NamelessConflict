@@ -1,4 +1,4 @@
-var Block = function(x, y, width, height, type){	
+var Block = function(x, y, width, height, type, warpX = -1, warpY = -1){	
 	x *= 75;
 	y *= 75;
 	width *= 75;
@@ -12,6 +12,11 @@ var Block = function(x, y, width, height, type){
 		height:height,
 		type:type,
 	}		
+
+	if (warpX && warpY){
+		self.warpX = warpX;
+		self.warpY = warpY;
+	}
 
 	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX){
 		if (shooter.weapon != 4){
@@ -57,9 +62,10 @@ var getBlockById = function(id){
     return Block.list[id];
 }
 
-var createBlock = function(x, y, width, height, type){
-	Block(x, y, width, height, type);
+var createBlock = function(x, y, width, height, type, warpX = -1, warpY = -1){
+	Block(x, y, width, height, type, warpX, warpY);
 }
+
 
 var clearBlockList = function(){
 	Block.list = [];
@@ -111,73 +117,102 @@ module.exports.checkCollision = function(obj){
 				var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - obj.x);			
 				if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){	
 					obj.y = blockList[i].y - (1 + extendTopOfBlock);
+					if (typeof obj.speedX != 'undefined'){
+						if (obj.speedY > 0){obj.speedY = 0;}
+					}
+
 					if (obj.y < 0)
 						obj.y = 0;
 					posUpdated = true;
 				}
 				else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
 					obj.y = blockList[i].y + blockList[i].height + (1 + extendBottomOfBlock);
+					if (typeof obj.speedX != 'undefined'){
+						if (obj.speedY < 0){obj.speedY = 0;}
+					}
+
 					if (obj.y > mapHeight)
 						obj.y = mapHeight;
 					posUpdated = true;
 				}
 				else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
 					obj.x = blockList[i].x - (1 + extendLeftOfBlock);
+					if (typeof obj.speedX != 'undefined'){
+						if (obj.speedX > 0){obj.speedX = 0;}
+					}
+
 					if (obj.x < 0)
 						obj.x = 0;
 					posUpdated = true;
 				}
 				else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
 					obj.x = blockList[i].x + blockList[i].width + (1 + extendRightOfBlock);
+					if (typeof obj.speedX != 'undefined'){
+						if (obj.speedX < 0){obj.speedX = 0;}
+					}
+
 					if (obj.x > mapWidth)
 						obj.x = mapWidth;
 					posUpdated = true;
 				}
 			}
 			else if (blockList[i].type == "pushUp"){
-				obj.y -= pushStrength;
-				if (obj.y < blockList[i].y){obj.y = blockList[i].y;}
+				if (typeof obj.speedX == 'undefined'){
+					obj.y -= pushStrength;
+				}
+				else {
+					obj.speedY -= blockPushSpeed;
+					if (obj.speedY < -speedCap*0.75){obj.speedY = -speedCap*0.75;}
+				}
 				posUpdated = true;
 			}
 			else if (blockList[i].type == "pushRight"){
-				obj.x += pushStrength;
-				if (obj.x > blockList[i].x + blockList[i].width){obj.x = blockList[i].x + blockList[i].width;}
+				if (typeof obj.speedX == 'undefined'){
+					obj.x += pushStrength;
+				}
+				else {
+					obj.speedX += blockPushSpeed;
+					if (obj.speedX > speedCap*0.75){obj.speedX = speedCap*0.75;}
+
+				}
 				posUpdated = true;
 			}
 			else if (blockList[i].type == "pushDown"){
-				obj.y += pushStrength;
-				if (obj.y > blockList[i].y + blockList[i].height){obj.y = blockList[i].y + blockList[i].height;}
+				if (typeof obj.speedX == 'undefined'){
+					obj.y += pushStrength;
+				}
+				else {
+					obj.speedY += blockPushSpeed;
+					if (obj.speedY > speedCap*0.75){obj.speedY = speedCap*0.75;}
+				}
 				posUpdated = true;
 			}
 			else if (blockList[i].type == "pushLeft"){
-				obj.x -= pushStrength;
-				if (obj.x < blockList[i].x){obj.x = blockList[i].x;}
+				if (typeof obj.speedX == 'undefined'){
+					obj.x -= pushStrength;
+				}
+				else {
+					obj.speedX -= blockPushSpeed;
+					if (obj.speedX < -speedCap*0.75){obj.speedX = -speedCap*0.75;}
+				}
 				posUpdated = true;
 			}
-			else if (blockList[i].type == "warp1"){
-				obj.x = warp1X;
+			else if (blockList[i].type == "warp"){
+				obj.x = blockList[i].warpX;
 				posUpdated = true;
-				obj.y = warp1Y;
+				obj.y = blockList[i].warpY;
 				posUpdated = true;
 				SOCKET_LIST[obj.id].emit('sfx', "sfxWarp");
 			}
-			else if (blockList[i].type == "warp2"){
-				obj.x = warp2X;
-				posUpdated = true;
-				obj.y = warp2Y;
-				posUpdated = true;
-				SOCKET_LIST[obj.id].emit('sfx', "sfxWarp");
-			}
-
-
 		}// End check if player is overlapping block
 	}//End blockList loop	
 
 	if (posUpdated){
 		return true;
 	}
-
 }
+
+var blockPushSpeed = 4;
 
 module.exports.getBlockList = getBlockList;
 module.exports.getBlockById = getBlockById;

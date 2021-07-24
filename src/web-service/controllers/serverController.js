@@ -472,6 +472,9 @@ function processCustomGameServerUpdateRequest(settings){
 				case "3":
 					settings[s].value = "'crik'";
 					break;
+				case "4":
+					settings[s].value = "'narrows'";
+					break;
 				default:								
 					settings[s].value = "'longest'";
 				break;

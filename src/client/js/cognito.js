@@ -630,10 +630,10 @@ function localClick(){
 
 function showDefaultLoginButtons(){
 	if (page == "game"){return;}
-	else if (page == "home"){document.getElementById("sectionTitle1").innerHTML = "";}
-    document.getElementById("createAccountH").style.display = "";
-    document.getElementById("logInH").style.display = "";
-    document.getElementById("playNowH").style.display = "";
+	else if (page == "home"){show("sectionTitle1")}
+    show("createAccountH");
+    show("logInH");
+    show("playNowH");
     document.getElementById("playNowH").innerHTML = "Play as Guest";
     document.getElementById("logOutH").style.display = "none";
     if (document.getElementById('userWelcomeText')){
@@ -645,7 +645,7 @@ function showAuthorizedLoginButtons(){
 	if (page == "game"){return;}
 	document.getElementById("createAccountH").style.display = "none";
 	
-    document.getElementById("logInH").style.display = "none";
+    hide("logInH");
     document.getElementById("playNowH").style.display = "";
     show("partyUpMessage");
     document.getElementById("logOutH").style.display = "";

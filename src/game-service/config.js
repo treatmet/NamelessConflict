@@ -52,6 +52,7 @@ global.elimVotes = 0;
 global.thePitVotes = 0;
 global.longestVotes = 0;
 global.crikVotes = 0;
+global.narrowsVotes = 0;
 global.voteRebalanceTeamsYes = 0;
 global.voteRebalanceTeamsNo = 0;
 global.voteRebalanceTeamsIds = [];
@@ -87,7 +88,7 @@ global.bootOnAfk = true;
 global.AfkFramesAllowed = 60 * 60; //seconds (translated to frames) //timeout
 
 //Player config
-global.timeInGameRankingThresh = 60; //seconds
+global.timeInGameRankingThresh = 15; //seconds
 global.abandonLimit = 5; //seconds
 global.framesOfAiming = 60;
 global.boostAmount = 19;
@@ -140,7 +141,7 @@ global.damageScale = 1;
 	global.DPDamage = 12;
 	global.DPSideDamage = DPDamage/2; //Stacks on above
 	global.DPBackDamage = DPDamage/2; //Stacks AGAIN on above
-	global.mgDamage = 9; 
+	global.mgDamage = 8; 
 	global.mgSideDamage = mgDamage/2; //Stacks on above
 	global.mgBackDamage = mgDamage/2; //Stacks AGAIN on above
 	global.SGDamage = 30;
@@ -288,11 +289,6 @@ global.roundOver = false;
 //Map global variables
 global.mapWidth = 0;
 global.mapHeight = 0;
-
-global.warp1X = 0;
-global.warp1Y = 0;
-global.warp2X = 0;
-global.warp2Y = 0;
 
 global.spawnXminBlack = 0;
 global.spawnXmaxBlack = 0;
