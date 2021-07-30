@@ -5,6 +5,7 @@ var player = require('../entities/player.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
 var dataAccess = require('../../shared/data_access/dataAccess.js');
 var mapEngine = require('./mapEngine.js');
+const { request } = require('express');
 
 var secondsSinceLastServerSync = syncServerWithDbInterval - 2;
 
@@ -22,7 +23,7 @@ var resetGameSettingsToStandard = function(){
 	voteMap = true;
 	minutesLeft = 9;
 	secondsLeft = 99;
-	scoreToWin = 0;
+	scoreToWin = 3;
 	nextGameTimer = 20;
 	timeBeforeNextGame = 45; //newGameTimer
 	gameMinutesLength = 5;
@@ -62,11 +63,11 @@ var resetGameSettingsToStandard = function(){
 	SGBackDamage = SGDamage/2;
 	LaserDamage = 250;
 	friendlyFireDamageScale = 0.5;
-	boostDamage = 50;
+	boostDamage = 34;
 	cloakBonusDamage = 20;
 	startingWeapon = 1;
 	bulletRange = 19 * 75;
-	laserRange = 19 * 75;
+	laserRange = 22 * 75;
 	SGRange = 310;
 	SGCloseRangeDamageScale = 4;
 	SGPushSpeed = 12;
@@ -101,22 +102,25 @@ var resetGameSettingsToStandard = function(){
 	thugDamage = 50;
 	thugSpeed = 4;
 	thugAttackDelay = 30;
-	thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are wiped off map (for performance concerns)
 	threatSpawnRange = 500;
 	pushStrength = 15; //Push block strength
-
+	serverPassword = "";
+	privateServer = false;
 	console.log("I'm setting " + port + " customServer to false");
 	customServer = false;
 	pregameIsHorde = true;
 	serverName = "Ranked " + port.substring(2,4);
 	bannedCognitoSubs = [];
 	createdByCognitoSub = "";
+	mapEngine.initializeBlocks();
+	mapEngine.initializePickups();
 	gameServerSync();
 }
 
-var changeTeams = function(playerId){
+var changeTeams = function(playerId, requestedTeam = false){
 	var playerList = player.getPlayerList();
- 	console.log("change teams: " + playerList[playerId]);
+	 console.log("change teams: " + playerList[playerId]);
+	 console.log("requestedTeam:" + requestedTeam);
 	if (playerList[playerId]){
 		if (playerList[playerId].holdingBag){
 		
@@ -131,18 +135,31 @@ var changeTeams = function(playerId){
 			playerList[playerId].holdingBag = false;
 			updatePlayerList.push({id:playerList[playerId].id,property:"holdingBag",value:playerList[playerId].holdingBag});				
 		}
-		if (playerList[playerId].team == 1){
+		if (requestedTeam === 0){
+			playerList[playerId].team = 0;
+			playerList[playerId].manualSpectate = true;
+			playerList[playerId].health = 0;
+			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});			
+			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"health",value:playerList[playerId].health});			
+		}
+		else if (playerList[playerId].team == 1 || requestedTeam == 2){
 			playerList[playerId].team = 2;
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
+			if (!(gametype == "elim" && playerList[playerId].health <= 0)){
+				playerList[playerId].respawn(true);			
+			}
 		}
-		else if (playerList[playerId].team == 2){
+		else {
 			playerList[playerId].team = 1;
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
+			if (!(gametype == "elim" && playerList[playerId].health <= 0)){
+				playerList[playerId].respawn(true);			
+			}
 		}
 		SOCKET_LIST[playerId].team = playerList[playerId].team;
-		playerList[playerId].respawn();			
+
 		gameServerSync();
 		
 		//Abandon party
@@ -164,14 +181,71 @@ var changeTeams = function(playerId){
 }
 
 
-function calculateTeamAvgRating(team){
+function getEligibleTeamCount(playerList, team){
+	var blackPlayers = 0;
+	var whitePlayers = 0;
+	
+	for (var i in playerList){
+		if (playerList[i].team == 1){
+			whitePlayers++;
+		}
+		else if (playerList[i].team == 2){
+			blackPlayers++;
+		}
+	}
+	
+	if (team == 1){
+		return whitePlayers;
+	}
+	else if (team == 2){
+		return blackPlayers;		
+	}
+	return 0;
+}
+
+function calculateTeamAvgRating(playerList, team){
 	var blackPlayers = 0;
 	var blackTotalScore = 0;
 	var whitePlayers = 0;
 	var whiteTotalScore = 0;
 	var enemyTeamAvgRating = 0;
-	var playerList = player.getPlayerList();
+	
 	for (var i in playerList){
+		if (!playerList[i].rating){playerList[i].rating = 0;}
+		if (playerList[i].rating < ratingCalcThresh){
+			continue;
+		}
+
+		if (playerList[i].team == 1){
+			whitePlayers++;
+			whiteTotalScore += playerList[i].rating;
+		}
+		else if (playerList[i].team == 2){
+			blackPlayers++;
+			blackTotalScore += playerList[i].rating;
+		}
+	}
+	
+	if (team == 1){
+		enemyTeamAvgRating = whiteTotalScore / whitePlayers;
+	}
+	else if (team == 2){
+		enemyTeamAvgRating = blackTotalScore / blackPlayers;		
+	}
+	if (enemyTeamAvgRating == undefined || enemyTeamAvgRating == null || isNaN(enemyTeamAvgRating)){enemyTeamAvgRating = -1;}
+	return enemyTeamAvgRating;
+}
+
+function calculateTeamAvgRatingPlusNoobs(playerList, team){
+	var blackPlayers = 0;
+	var blackTotalScore = 0;
+	var whitePlayers = 0;
+	var whiteTotalScore = 0;
+	var enemyTeamAvgRating = 0;
+	
+	for (var i in playerList){
+		if (!playerList[i].rating){playerList[i].rating = 0;}
+
 		if (playerList[i].team == 1){
 			whitePlayers++;
 			whiteTotalScore += playerList[i].rating;
@@ -201,116 +275,148 @@ function compare(a,b) {
 	return 0;
   }
 
-function calculateEndgameStats(){ //calculate endgame
+
+  //abandoningCognitoSubs
+function calculateEndgameStats(){ //calculate endgame calculate ranking
 	logg("---CALCULATING ENDGAME STATS!---");
-	var playerList = player.getPlayerList();
-	var team1Sorted = [];
-	var team2Sorted = [];
-	for (var a in playerList){
-		if (playerList[a].team == 1){
-			team1Sorted.push(playerList[a]);
-		}
-		else if (playerList[a].team == 2){
-			team2Sorted.push(playerList[a]);
-		}
-	}
+	var eligiblePlayerList = player.getEligiblePlayerList();
+	var averageTeamPlayersCash = player.getAverageTeamPlayersCash();
 
-	team1Sorted.sort(compare);
-	team2Sorted.sort(compare);
+	// var team1Sorted = [];
+	// var team2Sorted = [];
+	// for (var a in playerList){
+	// 	if (playerList[a].team == 1){
+	// 		team1Sorted.push(playerList[a]);
+	// 	}
+	// 	else if (playerList[a].team == 2){
+	// 		team2Sorted.push(playerList[a]);
+	// 	}
+	// }
 
-	getAllPlayersFromDB(function(mongoRes){
-		//Get CURRENT player rating and experience from mongo (before any stats from this game are added)
-		updatePlayersRatingAndExpWithMongoRes(mongoRes);		
-		var whiteAverageRating = calculateTeamAvgRating(1);
-		var blackAverageRating = calculateTeamAvgRating(2);
+	// team1Sorted.sort(compare);
+	// team2Sorted.sort(compare);
+
+	updatePlayersRatingAndExpFromDB(eligiblePlayerList, function(eligiblePlayerListUpdated){
+		var team1EligiblePlayerCount = getEligibleTeamCount(eligiblePlayerListUpdated, 1);
+		var team2EligiblePlayerCount = getEligibleTeamCount(eligiblePlayerListUpdated, 2);
 		
-		if (whiteAverageRating == -1 && blackAverageRating != -1)
-			whiteAverageRating = blackAverageRating;
-		if (blackAverageRating == -1 && whiteAverageRating != -1)
-			blackAverageRating = whiteAverageRating;
-		
-		
+		var whiteAverageRating = calculateTeamAvgRating(eligiblePlayerListUpdated, 1);
+		var blackAverageRating = calculateTeamAvgRating(eligiblePlayerListUpdated, 2);
+		var whiteAverageRatingPlusNoobs = calculateTeamAvgRatingPlusNoobs(eligiblePlayerListUpdated, 1);
+		var blackAverageRatingPlusNoobs = calculateTeamAvgRatingPlusNoobs(eligiblePlayerListUpdated, 2);
 				
+		//if playing empty team, zero points awarded
+		//if playing noob team, minimum gain/loss awarded (unless you are a noob)
+
 		//Calculate progress made, and send to client (and then update user's DB stats)
-		for (var p in playerList){
-			if (playerList[p].team == 0)
+		for (var p in eligiblePlayerListUpdated){
+			var player = eligiblePlayerListUpdated[p];
+			var socket = SOCKET_LIST[player.id];
+			logg("Processing " + player.name + "'s results");
+
+			if (player.team == 0)
 				continue;
-			
+						
 			var gamesLostInc = 0;
 			var gamesWonInc = 0;
 			var ptsGained = 0;
-			
-			SOCKET_LIST[p].emit('sendLog', "Player in endgame loop...");
 
-			var enemyAverageRating = playerList[p].team == 1 ? blackAverageRating : whiteAverageRating;
-			if ((playerList[p].team == 1 && whiteScore > blackScore) || (playerList[p].team == 2 && whiteScore < blackScore)){
+			var enemyAverageRating = player.team == 1 ? blackAverageRating : whiteAverageRating;
+			if (player.rating < ratingCalcThresh){
+				enemyAverageRating = player.team == 1 ? blackAverageRatingPlusNoobs : whiteAverageRatingPlusNoobs;
+			}
+
+			//personal performance formula
+			console.log("Calculating personal performance");
+			var subby = player.cashEarnedThisGame - averageTeamPlayersCash;
+			var personalPerformancePoints = (player.cashEarnedThisGame - averageTeamPlayersCash) / 200;
+			if (personalPerformancePoints < 0) {personalPerformancePoints /= 2;}
+			ptsGained += Math.round(personalPerformancePoints);
+			console.log("MyCash:" + player.cashEarnedThisGame + " AVG:" + averageTeamPlayersCash + " subtracted=" + subby + " performance points:" + personalPerformancePoints);
+
+			var teamSkillDifferencePoints = (enemyAverageRating - player.rating)/enemySkillDifferenceDivider;
+			console.log("enemyAverageRating:" + enemyAverageRating + " teamSkillDifferencePoints: " + teamSkillDifferencePoints);
+
+			if ( ((player.team == 1 && whiteScore > blackScore) || (player.team == 2 && whiteScore < blackScore)) && socket){
 				//win
 				gamesWonInc++;
-				ptsGained = Math.round(matchWinLossRatingBonus + (enemyAverageRating - playerList[p].rating)/enemySkillDifferenceDivider);
-				if (ptsGained < 3){ptsGained = 3;}		
-				if (ptsGained > 20){ptsGained = 20;} //Gain cap		
-				logg(playerList[p].name + " had " + playerList[p].rating + " pts, and beat a team with " + enemyAverageRating + " pts. He gained " + ptsGained);
-				playerList[p].cashEarnedThisGame+=winCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
+				console.log("matchWinLossBonus: " + matchWinLossRatingBonus);
+				ptsGained += Math.round(matchWinLossRatingBonus + teamSkillDifferencePoints);
+				if (ptsGained < 3 || enemyAverageRating === -1){console.log("win min(" + ptsGained + ") or enemyAverageRating was -1"); ptsGained = 3;}		
+				if (ptsGained > 20){console.log("win max(" + ptsGained + ")"); ptsGained = 20;} //Gain cap		
+				logg(player.name + " had " + player.rating + " pts, and beat a team with " + enemyAverageRating + " pts. He gained " + ptsGained);
+				player.cashEarnedThisGame+=winCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
 			}
 			else {
 				//loss
 				gamesLostInc++;
-				ptsGained = Math.round(-matchWinLossRatingBonus + (enemyAverageRating - playerList[p].rating)/enemySkillDifferenceDivider);
-				if (ptsGained > -1){ptsGained = -1;}		
-				if (ptsGained < -20){ptsGained = -20;} //Loss cap		
-				logg(playerList[p].name + " had " + playerList[p].rating + " pts, and lost to a team with " + enemyAverageRating + " pts. He lost " + ptsGained);
-				playerList[p].cashEarnedThisGame+=loseCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
+				ptsGained += Math.round(-matchWinLossRatingBonus + teamSkillDifferencePoints);
+				console.log("matchWinLossBonus: -" + matchWinLossRatingBonus);
+				if (ptsGained > -1 || enemyAverageRating === -1){console.log("loss min(" + ptsGained + ") or enemyAverageRating was -1"); ptsGained = -1; }		
+				if (ptsGained < -20){console.log("loss max(" + ptsGained + ")"); ptsGained = -20;} //Loss cap		
+				logg(player.name + " had " + player.rating + " pts, and lost to a team with " + enemyAverageRating + " pts. He lost " + ptsGained);				
+				player.cashEarnedThisGame+=loseCash; //Not sending this update to the clients because it is only used for server-side experience calculation, not displaying on scoreboard
 			}
-			updatePlayerList.push({id:playerList[p].id,property:"cashEarnedThisGame",value:playerList[p].cashEarnedThisGame});
-
-			//MVP
-			if (team1Sorted[0])
-				if (playerList[p].id == team1Sorted[0].id && team1Sorted.length >= 2){ptsGained += 10;}
-			if (team2Sorted[0])
-				if (playerList[p].id == team2Sorted[0].id && team2Sorted.length >= 2){ptsGained += 10;}
+			updatePlayerList.push({id:player.id,property:"cashEarnedThisGame",value:player.cashEarnedThisGame});
 
 			//Prevent player from having sub zero ranking
-			if (playerList[p].rating + ptsGained < 0){
-				ptsGained += Math.abs(playerList[p].rating + ptsGained);
+			if (player.rating + ptsGained < 0){
+				logg("Saved player from dipping below zero ranking");
+				ptsGained = -player.rating; //lose all points
 			}
 			//Eligible for rank up/down this game?
-			log("playerList[p].eligibleForRank: " + playerList[p].eligibleForRank);
-			if (!playerList[p].eligibleForRank || customServer){
+			log("player.timeInGame: " + player.timeInGame);
+			if (player.timeInGame < timeInGameRankingThresh || customServer){
 				logg("Player ineligible for rank influence this game");
 				ptsGained = 0;				
 			}
+			else if((player.team == 1 && team2EligiblePlayerCount === 0) || (player.team == 2 && team1EligiblePlayerCount === 0)){
+				logg("Playing empty team");
+				ptsGained = 0;				
+			}
+			log("Grand total is " + ptsGained);
+
+
+
 			if (customServer){
-				playerList[p].cashEarnedThisGame =  Math.round(playerList[p].cashEarnedThisGame/2);
+				player.cashEarnedThisGame =  Math.round(player.cashEarnedThisGame/2);
 			}
 
 			//Trigger client's end of game progress results report
 			var endGameProgressResults = {};
-			endGameProgressResults.originalRating = playerList[p].rating;
+			endGameProgressResults.originalRating = player.rating;
 			endGameProgressResults.ratingDif = ptsGained;
-			endGameProgressResults.originalExp = playerList[p].experience;
-			endGameProgressResults.expDif = playerList[p].cashEarnedThisGame;
+			endGameProgressResults.originalExp = player.experience;
+			endGameProgressResults.expDif = player.cashEarnedThisGame;
+			endGameProgressResults.personalPerformancePoints = personalPerformancePoints;
 
-			var rankProgressInfo = getRankFromRating(playerList[p].rating);
+			var rankProgressInfo = getRankFromRating(player.rating);
 			endGameProgressResults.rank = rankProgressInfo.rank;
 			endGameProgressResults.nextRank = rankProgressInfo.nextRank;
 			endGameProgressResults.previousRank = rankProgressInfo.previousRank;
 			endGameProgressResults.rankFloor = rankProgressInfo.floor;
 			endGameProgressResults.rankCeiling = rankProgressInfo.ceiling;
 
-			var experienceProgressInfo = getLevelFromExperience(playerList[p].experience);
+			var experienceProgressInfo = getLevelFromExperience(player.experience);
 			endGameProgressResults.level = experienceProgressInfo.level;
 			endGameProgressResults.experienceFloor = experienceProgressInfo.floor;
 			endGameProgressResults.experienceCeiling = experienceProgressInfo.ceiling;		
-			log(playerList[p].name + "'s endGameProgressResults:");
-			console.log(endGameProgressResults);
-			SOCKET_LIST[p].emit('endGameProgressResults', endGameProgressResults);
-			SOCKET_LIST[p].emit('sendLog', "endGameResults:");
-			SOCKET_LIST[p].emit('sendLog', endGameProgressResults);
 
-			console.log("playerList[p].assists");
-			console.log(playerList[p].assists);
-			//update user's DB stats
-			dataAccessFunctions.dbUserUpdate("inc", playerList[p].cognitoSub, {kills:playerList[p].kills, assists:playerList[p].assists, deaths:playerList[p].deaths, captures:playerList[p].captures, steals:playerList[p].steals, returns:playerList[p].returns, cash: playerList[p].cashEarnedThisGame, experience: playerList[p].cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained});
+			log(player.name + "'s endGameProgressResults:");
+			console.log(endGameProgressResults);
+
+			var updateParams = {};
+			if (socket){
+				updateParams = {kills:player.kills, assists:player.assists, deaths:player.deaths, captures:player.captures, steals:player.steals, returns:player.returns, cash: player.cashEarnedThisGame, experience: player.cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
+				socket.emit('endGameProgressResults', endGameProgressResults);
+			}
+			else {
+				updateParams = {gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
+				logg("Hitting cognito sub with a hard L for abandoning");
+				player.cashEarnedThisGame = 0;
+			}
+			//increase user's DB stats
+			dataAccessFunctions.dbUserUpdate("inc", player.cognitoSub, updateParams);
 		}
 	});
 }
@@ -334,6 +440,8 @@ function updatePlayersRatingAndExpWithMongoRes(mongoRes){
 				break;
 			}
 		}
+		if (typeof playerList[p].rating === 'undefined'){playerList[p].rating = 0;}
+		if (typeof playerList[p].rating === 'undefined'){playerList[p].experience = 0;}
 	}	
 }
 
@@ -389,7 +497,7 @@ function getSafeCoordinates(team){
 	}
 
 	for (var w = 0; w < 100; w++){
-		if (gametype == "ctf"){
+		if (gametype == "ctf" || gametype == "elim"){
 			if (team == 1) {			
 				potentialX = randomInt(spawnXminWhite,spawnXmaxWhite);			
 				potentialY = randomInt(spawnYminWhite,spawnYmaxWhite);
@@ -400,8 +508,18 @@ function getSafeCoordinates(team){
 			}
 		}
 		else {
-			potentialX = randomInt(0,mapWidth);			
-			potentialY = randomInt(0,mapHeight);
+			if (map == "narrows"){
+				potentialX = randomInt(4*75, 40*75);			
+				potentialY = randomInt(0,mapHeight);
+			}
+			else if (map == "longNarrows"){
+				potentialX = randomInt(6*75, 47*75);			
+				potentialY = randomInt(0,mapHeight);
+			}
+			else {
+				potentialX = randomInt(0,mapWidth);			
+				potentialY = randomInt(0,mapHeight);
+			}
 		}
 
 		if (!block.isSafeCoords(potentialX, potentialY)){continue;}
@@ -467,7 +585,7 @@ var isBagHome = function (bag){
 }
 
 //checkIfIsGameOver //checkIfGameOver
-var lastChanceToCapture = false;
+var lastChanceToCapture = true;
 function checkForGameOver(){
 	//GAME IS OVER, GAME END, ENDGAME GAMEOVER GAME OVER	
 	if (gameOver == false){	
@@ -484,7 +602,7 @@ function checkForGameOver(){
 					endGame(); //End game on time ctf
 				}
 			}
-			else {
+			else if (gametype == "slayer"){
 				endGame(); //End game on time slayer
 			}
 		}
@@ -502,13 +620,14 @@ function endGame(){
 	nextGameTimer = timeBeforeNextGame;			
 	updateMisc.nextGameTimer = nextGameTimer;
 	updateMisc.gameOver = {
-		gameIsOver: true,
+		gameIsOver: gameOver,
 		voteMap:voteMap,
 		voteGametype:voteGametype,
 		voteRebalance:voteRebalance
 	};
 }
 
+//bag physics bagMechanics
 function moveBags(){
 	if (bagRed.speed > 0){
 		if (bagRed.direction == 1){
@@ -586,124 +705,16 @@ function moveBags(){
 		bagBlue.playerThrowing = 0;			
 	}
 
-	//Check Bag collision with blocks
-	var blockList = block.getBlockList();
-	if (bagBlue.speed > 0){
-		for (var i in blockList){
-			if (bagBlue.x > blockList[i].x && bagBlue.x < blockList[i].x + blockList[i].width && bagBlue.y > blockList[i].y && bagBlue.y < blockList[i].y + blockList[i].height){												
-				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
-					var overlapTop = Math.abs(blockList[i].y - bagBlue.y);  
-					var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - bagBlue.y);
-					var overlapLeft = Math.abs(bagBlue.x - blockList[i].x);
-					var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - bagBlue.x);			
-					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){
-						bagBlue.y = blockList[i].y;
-						updateMisc.bagBlue = bagBlue;
-					}
-					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
-						bagBlue.y = blockList[i].y + blockList[i].height;
-						updateMisc.bagBlue = bagBlue;
-					}
-					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
-						bagBlue.x = blockList[i].x;
-						updateMisc.bagBlue = bagBlue;
-					}
-					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
-						bagBlue.x = blockList[i].x + blockList[i].width;
-						updateMisc.bagBlue = bagBlue;
-					}
-				}
-				else if (blockList[i].type == "pushUp"){
-					bagBlue.y -= pushStrength;
-					if (bagBlue.y < blockList[i].y){bagBlue.y = blockList[i].y;}
-					updateMisc.bagBlue = bagBlue;
-				}
-				else if (blockList[i].type == "pushRight"){
-					bagBlue.x += pushStrength;
-					if (bagBlue.x > blockList[i].x + blockList[i].width){bagBlue.x = blockList[i].x + blockList[i].width;}
-					updateMisc.bagBlue = bagBlue;
-				}
-				else if (blockList[i].type == "pushDown"){
-					bagBlue.y += pushStrength;
-					if (bagBlue.y > blockList[i].y + blockList[i].height){bagBlue.y = blockList[i].y + blockList[i].height;}
-					updateMisc.bagBlue = bagBlue;
-				}
-				else if (blockList[i].type == "pushLeft"){
-					bagBlue.x -= pushStrength;
-					if (bagBlue.x < blockList[i].x){bagBlue.x = blockList[i].x;}
-					updateMisc.bagBlue = bagBlue;
-				}
-				else if (blockList[i].type == "warp1"){
-					bagBlue.x = warp1X;
-					bagBlue.y = warp1Y;
-					updateMisc.bagBlue = bagBlue;
-				}
-				else if (blockList[i].type == "warp2"){
-					bagBlue.x = warp2X;
-					bagBlue.y = warp2Y;
-					updateMisc.bagBlue = bagBlue;
-				}
-			}// End check if bag is overlapping block
-		}//End blockList loop		
-	}
-	if (bagRed.speed > 0){		
-		for (var i in blockList){
-			if (bagRed.x > blockList[i].x && bagRed.x < blockList[i].x + blockList[i].width && bagRed.y > blockList[i].y && bagRed.y < blockList[i].y + blockList[i].height){												
-				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
-					var overlapTop = Math.abs(blockList[i].y - bagRed.y);  
-					var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - bagRed.y);
-					var overlapLeft = Math.abs(bagRed.x - blockList[i].x);
-					var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - bagRed.x);			
-					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){
-						bagRed.y = blockList[i].y;
-						updateMisc.bagRed = bagRed;
-					}
-					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
-						bagRed.y = blockList[i].y + blockList[i].height;
-						updateMisc.bagRed = bagRed;
-					}
-					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
-						bagRed.x = blockList[i].x;
-						updateMisc.bagRed = bagRed;
-					}
-					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
-						bagRed.x = blockList[i].x + blockList[i].width;
-						updateMisc.bagRed = bagRed;
-					}
-				}
-				else if (blockList[i].type == "pushUp"){
-					bagRed.y -= pushStrength;
-					if (bagRed.y < blockList[i].y){bagRed.y = blockList[i].y;}
-					updateMisc.bagRed = bagRed;
-				}
-				else if (blockList[i].type == "pushRight"){
-					bagRed.x += pushStrength;
-					if (bagRed.x > blockList[i].x + blockList[i].width){bagRed.x = blockList[i].x + blockList[i].width;}
-					updateMisc.bagRed = bagRed;
-				}
-				else if (blockList[i].type == "pushDown"){
-					bagRed.y += pushStrength;
-					if (bagRed.y > blockList[i].y + blockList[i].height){bagRed.y = blockList[i].y + blockList[i].height;}
-					updateMisc.bagRed = bagRed;
-				}
-				else if (blockList[i].type == "pushLeft"){
-					bagRed.x -= pushStrength;
-					if (bagRed.x < blockList[i].x){bagRed.x = blockList[i].x;}
-					updateMisc.bagRed = bagRed;
-				}
-				else if (blockList[i].type == "warp1"){
-					bagRed.x = warp1X;
-					bagRed.y = warp1Y;
-					updateMisc.bagRed = bagRed;
-				}
-				else if (blockList[i].type == "warp2"){
-					bagRed.x = warp2X;
-					bagRed.y = warp2Y;
-					updateMisc.bagRed = bagRed;
-				}
 
-			}// End check if bag is overlapping block
-		}//End blockList loop		
+
+	//Check Bag collision with blocks
+	if ((bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY) && !bagBlue.captured){
+		if (block.checkCollision(bagBlue))
+			updateMisc.bagBlue = bagBlue;
+	}
+	if ((bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY) && !bagRed.captured){
+		if (block.checkCollision(bagRed))
+			updateMisc.bagRed = bagRed;
 	}
 	
 	if (bagRed.x > mapWidth){bagRed.x = mapWidth; updateMisc.bagRed = bagRed;}
@@ -734,12 +745,13 @@ var capture = function(team) {
 	}
 	for (var i in SOCKET_LIST){
 		var socket = SOCKET_LIST[i];	
-		socket.emit('capture', team, whiteScore, blackScore);
+		socket.emit('score', team, whiteScore, blackScore);
 	}
 }
 
+
 var sendCapturesToClient = function(socket){
-	socket.emit('capture', 'reset', whiteScore, blackScore);
+	socket.emit('score', 'reset', whiteScore, blackScore);
 }
 
 var killScore = function(team){
@@ -749,11 +761,59 @@ var killScore = function(team){
 	else if (team == 2){
 		blackScore++;
 	}
+
+
 	for (var i in SOCKET_LIST){
 		var socket = SOCKET_LIST[i];
 		socket.emit('killScore', team, whiteScore, blackScore);		
 	}
 }
+
+
+var checkIfRoundOver = function() { //isRoundOver //checkForRoundOver
+	if (pregame && pregameIsHorde){return;}
+	if (roundOver == true){return;}
+	if (player.getTeamSize(1) <= 0 || player.getTeamSize(2) <= 0){return;}
+	
+	var playerList = player.getPlayerList();
+
+	var survivingTeam1Players = 0;
+	var survivingTeam2Players = 0;
+	for (var p in playerList){
+		if (playerList[p].health > 0){
+			if (playerList[p].team == 1){
+				survivingTeam1Players++;
+			}
+			if (playerList[p].team == 2){
+				survivingTeam2Players++;
+			}
+		}
+	}
+	if (survivingTeam1Players == 0){
+		eliminationRoundWin(2);
+	}
+	else if (survivingTeam2Players == 0){
+		eliminationRoundWin(1);
+	}
+}
+
+var eliminationRoundWin = function(team) { //endRound //winRound
+	if (team == 1){
+		whiteScore++;
+	}
+	else if (team == 2){
+		blackScore++;
+	}
+	roundOver = true;
+	nextGameTimer = timeBeforeNextRound;
+
+	for (var i in SOCKET_LIST){
+		var socket = SOCKET_LIST[i];	
+		updateMisc.roundOver = roundOver;
+		socket.emit('score', team, whiteScore, blackScore);
+	}
+}
+
 
 var assignSpectatorsToTeam = function(assignEvenIfFull){
 	//First, get the current team sizes
@@ -780,7 +840,7 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 	]
 	*/	
 	for (var l in playerList){
-		if (playerList[l].team != 0){ //only process spectators
+		if (playerList[l].team != 0 || playerList[l].manualSpectate){ //only process spectators who didn't manually spectate
 			continue;
 		}
 		var addedToParty = false;
@@ -804,26 +864,32 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 	//Assign team to spectating parties
 	for (var q = 0; q < parties.length; q++){
 		var newGameZise=parties[q].partySize + getNumTeamPlayersInGame();
-		logg("IF WE ADD YOU, IS NEW GAME SIZE(" + newGameZise + ") greater than maxPlayers (" + maxPlayers);
-		if (parties[q].partySize + getNumTeamPlayersInGame() > maxPlayers && !assignEvenIfFull)
+		logg("IF WE ADD YOU[" + parties[q].playerIds[0] + "'s party], IS NEW GAME SIZE(" + newGameZise + ") greater than maxPlayers (" + maxPlayers);
+		if (parties[q].partySize + getNumTeamPlayersInGame() > maxPlayers && !assignEvenIfFull){
+			logg("Game already full, moving on");
 			continue;
+		}
 			
 		if (moreWhitePlayers <= 0){
 			for (var r = 0; r < parties[q].playerIds.length; r++){
-				if (typeof playerList[parties[q].playerIds[r]] === 'undefined')
+				if (typeof playerList[parties[q].playerIds[r]] === 'undefined'){
+					logg("ERROR!!! Spectating Player does not exist: " + parties[q].playerIds[r]);
 					continue;
-				playerList[parties[q].playerIds[r]].team = 1;
+				}
+				logg("Adding to team 1!");
+				changeTeams(parties[q].playerIds[r], 1);
 				moreWhitePlayers++;
-				playerList[parties[q].playerIds[r]].respawn();
 			}
 		}
 		else {
 			for (var r = 0; r < parties[q].playerIds.length; r++){
-				if (typeof playerList[parties[q].playerIds[r]] === 'undefined')
+				if (typeof playerList[parties[q].playerIds[r]] === 'undefined'){
+					logg("ERROR!!! Spectating Player does not exist: " + parties[q].playerIds[r]);
 					continue;
-				playerList[parties[q].playerIds[r]].team = 2;
+				}
+				logg("Adding to team 2!");
+				changeTeams(parties[q].playerIds[r], 2);
 				moreWhitePlayers--;
-				playerList[parties[q].playerIds[r]].respawn();
 			}
 		}
 	}
@@ -834,30 +900,64 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 function restartGame(){
 	if (gametype == "horde" || (pregame && pregameIsHorde)){upsertHordeRecords(false);}
 	tabulateVotes();
-	assignSpectatorsToTeam(true);
+	assignSpectatorsToTeam(false);
 	initializeNewGame();
+	gameServerSync();
+}
+
+function startNewRound(){ //restartRound //initializeRound //startRound //roundStart
+	roundOver = false;
+	updateMisc.roundOver = roundOver;
+	pickup.clearNonMedPickups();
+	assignSpectatorsToTeam(false);
+	respawnAllNonSpectators();
 	gameServerSync();		
+}
+
+function respawnAllNonSpectators(){
+	var playerList = player.getPlayerList();
+	for (var p in playerList){
+		if (playerList[p].team != 0){
+			playerList[p].respawn();
+		}
+	}
 }
 
 //Updates gametype, map based on postgame player votes
 function tabulateVotes(){
-	if (ctfVotes > slayerVotes && gametype == "slayer"){
+	if (ctfVotes > slayerVotes && ctfVotes > elimVotes && gametype != "ctf"){
 		scoreToWin = 3;
+		gameMinutesLength = 5;
+		gameSecondsLength = 0;
 		gametype = "ctf";
 	}
-	else if (ctfVotes < slayerVotes && gametype == "ctf"){
+	else if (slayerVotes > ctfVotes && slayerVotes > elimVotes && gametype != "slayer"){
 		scoreToWin = 50;
+		gameMinutesLength = 5;
+		gameSecondsLength = 0;
 		gametype = "slayer";
 	}
+	else if (elimVotes > ctfVotes && elimVotes > slayerVotes && gametype != "elim"){
+		scoreToWin = 7;		
+		gameMinutesLength = 0;
+		gameSecondsLength = 0;
+		gametype = "elim";
+	}
 	
-	if (thePitVotes > longestVotes && thePitVotes > crikVotes){
+	if (thePitVotes > longestVotes && thePitVotes > crikVotes && thePitVotes > narrowsVotes && thePitVotes > longNarrowsVotes){
 		map = "thepit";
 	}
-	else if (longestVotes > thePitVotes && longestVotes > crikVotes){
+	else if (longestVotes > thePitVotes && longestVotes > crikVotes && longestVotes > narrowsVotes && longestVotes > longNarrowsVotes){
 		map = "longest";
 	}
-	else if (crikVotes > thePitVotes && crikVotes > longestVotes){
+	else if (crikVotes > thePitVotes && crikVotes > longestVotes && crikVotes > narrowsVotes && crikVotes > longNarrowsVotes){
 		map = "crik";
+	}
+	else if (narrowsVotes > thePitVotes && narrowsVotes > longestVotes && narrowsVotes > crikVotes && narrowsVotes > longNarrowsVotes){
+		map = "narrows";
+	}
+	else if (longNarrowsVotes > thePitVotes && longNarrowsVotes > longestVotes && longNarrowsVotes > crikVotes && longNarrowsVotes > narrowsVotes){
+		map = "longNarrows";
 	}
 	
 	if (voteRebalanceTeamsYes > voteRebalanceTeamsNo){
@@ -869,8 +969,11 @@ function tabulateVotes(){
 	
 	ctfVotes = 0;
 	slayerVotes = 0;
+	elimVotes = 0;
 	thePitVotes = 0;
 	longestVotes = 0;
+	narrowsVotes = 0;
+	longNarrowsVotes = 0;
 	crikVotes = 0;
 	voteRebalanceTeamsYes = 0;
 	voteRebalanceTeamsNo = 0;
@@ -1038,14 +1141,14 @@ function rebalanceTeams(rebalanceOnScore = false){
 }
 function initializeNewGame(){
 	gameOver = false;
+	roundOver = false;
 	pregame = false;
 	bannedCognitoSubs = [];
 	abandoningCognitoSubs = [];
+	if (!(pregameIsHorde && pregame) && gametype != "horde"){spawnOpposingThug = false;}
 
 	whiteScore = 0;
 	blackScore = 0;
-	minutesLeft = gameMinutesLength;
-	secondsLeft = gameSecondsLength;
 	var secondsLeftPlusZero = secondsLeft.toString();	
 	if (secondsLeft < 10){
 		secondsLeftPlusZero = "0" + secondsLeft.toString();
@@ -1056,6 +1159,14 @@ function initializeNewGame(){
 	else if (gametype == "ctf"){
 		respawnTimeLimit = ctfRespawnTimeLimit;
 	}
+	else if (gametype == "elim"){
+		respawnTimeLimit = elimRespawnTimeLimit;
+		gameMinutesLength = 0;
+		gameSecondsLength = 0;
+	}
+
+	minutesLeft = gameMinutesLength;
+	secondsLeft = gameSecondsLength;
 
 	var thugList = thug.getThugList();
 	for (var t in thugList){
@@ -1074,7 +1185,6 @@ function initializeNewGame(){
 		var socket = SOCKET_LIST[i];
 		sendCapturesToClient(socket);
 	}
-	updateMisc.gameOver = gameOver;	
 	updateMisc.bagRed = bagRed;
 	updateMisc.bagBlue = bagBlue;
 	updateMisc.mapWidth = mapWidth;
@@ -1097,7 +1207,7 @@ function initializeNewGame(){
 	
 	var playerList = player.getPlayerList();
 	for(var i in playerList){		
-		playerList[i].cash = startingCash;
+		playerList[i].cash = (gametype == "elim" ? startingCash : 0);
 		playerList[i].cashEarnedThisGame = 0;
 		playerList[i].kills = 0;
 		playerList[i].assists = 0;
@@ -1106,7 +1216,8 @@ function initializeNewGame(){
 		playerList[i].steals = 0;
 		playerList[i].returns = 0;
 		playerList[i].captures = 0;			
-		playerList[i].eligibleForRank = true;	
+		playerList[i].timeInGame = 0;		
+		//playerList[i].eligibleForRank = true;	
 		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
 		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
 		updatePlayerList.push({id:playerList[i].id,property:"kills",value:playerList[i].kills});
@@ -1115,7 +1226,7 @@ function initializeNewGame(){
 		updatePlayerList.push({id:playerList[i].id,property:"steals",value:playerList[i].steals});
 		updatePlayerList.push({id:playerList[i].id,property:"returns",value:playerList[i].returns});
 		updatePlayerList.push({id:playerList[i].id,property:"captures",value:playerList[i].captures});	
-		playerList[i].respawn();
+		playerList[i].respawn(true);
 	}//End player for loop update
 
 
@@ -1165,8 +1276,7 @@ function ensureCorrectThugCount(){
 		}
 	}
 	
-	//Delete all thugs if Thug setting is disabled, or more than "thugLimit" players
-	if (!spawnOpposingThug || (expectedWhiteThugs + expectedBlackThugs > thugLimit)){
+	if (!spawnOpposingThug){
 		for (var t in thugList){
 			for(var i in SOCKET_LIST){
 				SOCKET_LIST[i].emit('removeThug', thugList[t].id);
@@ -1235,8 +1345,39 @@ var getAllPlayersFromDB = function(cb){
 	});		
 }
 
-var joinGame = function(cognitoSub, username, team, partyId){
-	//dataAccessFunctions.giveUsersItemsByTimestamp();
+var updatePlayersRatingAndExpFromDB = function(playerList, cb){
+	var cognitoSubs = [];
+
+	for (var i in playerList){
+		cognitoSubs.push(playerList[i].cognitoSub);
+	}
+	
+	var searchParams = { cognitoSub: { $in: cognitoSubs } };	
+	dataAccess.dbFindAwait("RW_USER", searchParams, async function(err, res){
+		if (res && res[0]){
+
+			for (var p in playerList){
+				for (var r in res){
+					if (playerList[p].cognitoSub == res[r].cognitoSub){		
+						playerList[p].rating = res[r].rating;
+						playerList[p].experience = res[r].experience;				
+						break;
+					}
+				}
+				if (typeof playerList[p].rating === 'undefined'){playerList[p].rating = 0;}
+				if (typeof playerList[p].rating === 'undefined'){playerList[p].experience = 0;}
+			}	
+
+			cb(playerList);
+		}
+		else {
+			cb(false);
+		}
+	});		
+}
+
+var joinGame = function(cognitoSub, username, team, partyId){ 
+	//if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){dataAccessFunctions.giveUsersItemsByTimestamp();}
 
 	log("Attempting to join game..." + cognitoSub);
 
@@ -1450,7 +1591,21 @@ var gameLoop = function(){
 				return effect;
 			}
 		});
-		socket.emit('update', updatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
+		
+
+		var myUpdatePlayerList = updatePlayerList.filter((item) => { //SELECT //WHERE //LINQ
+			if (!item.single){
+				return true;
+			}
+			else if (item.id == socket.id){
+				return true;
+			}
+			return false;
+		});
+
+		//if (updatePlayerList.length > 0 || updateThugList.length > 0 || updatePickupList.length > 0 || updateNotificationList.length > 0 || Object.keys(updateMisc).length > 0){
+			socket.emit('update', myUpdatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
+		//}
 	}
 
 	//console.log("Sent " + msSinceLastTick + "ms after last tick. Emit took " + msSinceEmit + "ms");
@@ -1529,6 +1684,10 @@ function secondIntervalLoop(){
 
 		secondIntervalFunction();
 	}
+
+	if (gametype == "elim" && !(pregame && pregameIsHorde) && !roundOver){
+		checkIfRoundOver();
+	}
 	
 	if (Date.now() - previousSecond < secondLengthMs - sloppyTimerWindowMs){ //if the current time is NOT within a very short time from the NEXT time code should be executed
 		var aFewMsBeforeNextLoopShouldExecute = (nextSecond - Date.now()) - sloppyTimerWindowMs;
@@ -1543,6 +1702,11 @@ function secondIntervalLoop(){
 
 
 var secondIntervalFunction = function(){
+
+	//ranked Eligibility on timeout
+	if (!pregame && !gameOver)
+		incrementTimeInGameForPlayers();
+
 	//log("ticksSinceLastSecond:" + ticksSinceLastSecond + " Time:" + Date.now() + " TargetNextSecond:" + nextSecond + " WARNING_COUNT:" + warnCount);
 	warnCount = 0;
 	ticksSinceLastSecond = 0;
@@ -1561,9 +1725,12 @@ var secondIntervalFunction = function(){
 			var votesData = {
 				ctfVotes:ctfVotes,
 				slayerVotes:slayerVotes,
+				elimVotes:elimVotes,
 				thePitVotes:thePitVotes,
 				longestVotes:longestVotes, 
 				crikVotes:crikVotes,
+				narrowsVotes:narrowsVotes,
+				longNarrowsVotes:longNarrowsVotes,
 				voteRebalanceTeamsYes:voteRebalanceTeamsYes,
 				voteRebalanceTeamsNo:voteRebalanceTeamsNo,
 			};
@@ -1620,6 +1787,13 @@ var secondIntervalFunction = function(){
 	else if (!pregame && player.getPlayerListLength() <= 0){
 		console.log("SETTING BACK TO PREGAME!!!! Because there are " + player.getPlayerListLength() + " players");
 		pregame = true;
+		gameOver = false;
+		secondsLeft = 99;
+		minutesLeft = 9;
+		whiteScore = 0;
+		blackScore = 0;
+		abandoningCognitoSubs = [];
+		bannedCognitoSubs = [];
 		mapEngine.initializeBlocks(map);
 		mapEngine.initializePickups(map);
 		resetHordeMode();
@@ -1628,14 +1802,20 @@ var secondIntervalFunction = function(){
 	//Pickup timer stuff
 	pickup.clockTick();
 	
-	if (gameOver == true){
+	if (gameOver == true || (gametype == "elim" && roundOver == true)){
 		if (nextGameTimer > 0){
 			nextGameTimer--;
 			updateMisc.nextGameTimer = nextGameTimer;
 		}
 		if (nextGameTimer == 0) {
-			restartGame();
-			nextGameTimer = timeBeforeNextGame;
+			if (gametype == "elim" && !gameOver){
+				startNewRound();
+				nextGameTimer = timeBeforeNextRound;
+			}
+			else {
+				restartGame();
+				nextGameTimer = timeBeforeNextGame;
+			}
 			updateMisc.nextGameTimer = nextGameTimer;
 		}
 	}	
@@ -1644,7 +1824,7 @@ var secondIntervalFunction = function(){
 	secondsSinceLastServerSync++;
 	if (secondsSinceLastServerSync > syncServerWithDbInterval){
 		if (pregame == true){
-			if ((gametype == "ctf" || gametype == "slayer") && getNumPlayersInGame() >= 4){
+			if ((gametype == "ctf" || gametype == "slayer" || gametype == "elim") && getNumPlayersInGame() >= 4 && !customServer){
 				console.log("Restarting because gametype is " + gametype + " and there are " + getNumPlayersInGame() + " players (need 4)");
 				restartGame();
 			}
@@ -1654,6 +1834,19 @@ var secondIntervalFunction = function(){
 			}
 		}
 		gameServerSync();
+	}
+}
+
+function incrementTimeInGameForPlayers(){
+	var playerList = player.getPlayerList();
+	for (var p in playerList){
+		if (!playerList[p].timeInGame){
+			playerList[p].timeInGame = 0;
+		}
+		playerList[p].timeInGame++;
+		if (playerList[p].timeInGame == timeInGameRankingThresh){ //1 time trigger
+
+		}
 	}
 }
 
@@ -1679,6 +1872,9 @@ function getServerSubName(){
 	}
 	else if (gametype == "slayer"){
 		serverSubName += " Deathmatch]";
+	}
+	else if (gametype == "elim"){
+		serverSubName += " Elimination]";
 	}
 	else if (gametype == "horde"){
 		serverSubName = "[" + maxPlayers + " Players]";
@@ -1743,6 +1939,7 @@ var gameServerSync = function(cognitoSubToRemoveFromIncoming = false){
 	obj.voteMap = voteMap;
 	obj.scoreToWin = scoreToWin;
 	obj.queryString = myQueryString;
+	obj.serverPassword = serverPassword;
 
 	dataAccessFunctions.dbGameServerUpdate(obj, cognitoSubToRemoveFromIncoming);
 	secondsSinceLastServerSync = 0;
@@ -1783,7 +1980,6 @@ var sendFullGameStatus = function(socketId){
 			reloading:playerList[a].reloading,
 			images:{ 1:{}, 2:{} },
 			customizations:playerList[a].customizations,			
-			settings:playerList[a].settings,			
 			
 			cash:playerList[a].cash,
 			cashEarnedThisGame:playerList[a].cashEarnedThisGame,
@@ -1795,6 +1991,11 @@ var sendFullGameStatus = function(socketId){
 			chat:"",
 			chatDecay:0,
 		};
+
+		if (playerList[a].id == socketId){
+			playa.settings = playerList[a].settings;			
+		}
+
 		playerPack.push(playa);
 	}
 	var thugList = thug.getThugList();
@@ -1920,6 +2121,7 @@ var updateRequestedSettings = function(settings, cb){
 
 	var allowAbleSettings = [
 		"serverName",
+		"serverPassword", 
 		"gameMinutesLength", 
 		"scoreToWin",
 		"map",
@@ -1942,7 +2144,7 @@ var updateRequestedSettings = function(settings, cb){
 	for (var s in settings){
 		if (allowAbleSettings.indexOf(settings[s].name) > -1){
 
-			if (settings[s].name == 'serverName'){
+			if (settings[s].name == 'serverName' || settings[s].name == 'serverPassword'){
 				settings[s].value = "'" + settings[s].value + "'";
 			}
 
@@ -1960,6 +2162,10 @@ var updateRequestedSettings = function(settings, cb){
 	bootOnAfk = false;
 	pregameIsHorde = false;
 	pregame = true;
+	if (serverPassword != ""){
+		privateServer = true;
+	}
+
 	log(port + " And of course, setting customServer to " + customServer);
 	mapEngine.initializeBlocks(map);
 	mapEngine.initializePickups(map);
@@ -1988,3 +2194,5 @@ module.exports.resetHordeMode = resetHordeMode;
 module.exports.upsertHordeRecords = upsertHordeRecords;
 module.exports.gameServerSync = gameServerSync;
 module.exports.isBagHome = isBagHome;
+module.exports.eliminationRoundWin = eliminationRoundWin;
+module.exports.checkIfRoundOver = checkIfRoundOver;

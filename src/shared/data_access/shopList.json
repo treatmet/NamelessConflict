@@ -8,6 +8,7 @@
 		"price": 5000,
 		"team":0,
 		"rarity":0,
+		"hideFromShop":true,
 		"canvasValue":"refresh.png"
 	},
 	{
@@ -31,6 +32,18 @@
 		"team":0,
 		"rarity":3,
 		"canvasValue":"cowboyHat"
+	},	
+	{
+		"id":"crownHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Crown",
+		"text":"You reign supreme",
+		"price": 20000,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":true,
+		"canvasValue":"crownHat"
 	},	
 	{
 		"id":"magaCapHat",
@@ -84,7 +97,8 @@
 		"text":"For participating in the SocketShot community [Exclusive item]",
 		"price": 20000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"alienHat"
 	},		
 	{
@@ -95,7 +109,8 @@
 		"text":"For participating in the SocketShot community [Exclusive item]",
 		"price": 20000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"alienGreenHat"
 	},	
 	{
@@ -103,10 +118,10 @@
 		"category":"hat",
 		"subCategory":"type",
 		"title":"Blue Alien Head",
-		"text":"For participating in the SocketShot community [Exclusive item]",
+		"text":"The new alien species of Season Zero-2",
 		"price": 20000,
-		"team":0,
-		"rarity":4,
+		"team":2,
+		"rarity":2,
 		"canvasValue":"alienBlueHat"
 	},	
 	{
@@ -566,7 +581,8 @@
 		"text":"#2a2a2a",
 		"price": 100000,
 		"team":2,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"#2a2a2a"
 	},	
 	{
@@ -623,6 +639,28 @@
 		"team":2,
 		"rarity":1,
 		"canvasValue":"#2c7b06"
+	},		
+	{
+		"id":"shirtColorChill",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Chill Blue",
+		"text":"#006393",
+		"price": 20000,
+		"team":2,
+		"rarity":2,
+		"canvasValue":"#006393"
+	},		
+	{
+		"id":"shirtColorMagenta",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Magenta",
+		"text":"#c40e9b",
+		"price": 20000,
+		"team":1,
+		"rarity":2,
+		"canvasValue":"#c40e9b"
 	},		
 	{
 		"id":"whiteShirtColor1",
@@ -742,7 +780,8 @@
 		"text":"#dfdfdf",
 		"price": 100000,
 		"team":1,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"#dfdfdf"
 	},	
 	{
@@ -1032,6 +1071,28 @@
 		"canvasValue":"defaultGreen"
 	},	
 	{
+		"id":"laserBlueBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Blue Laser Beam",
+		"text":"Isn't this supposed to come out the front?",
+		"price": 20000,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"laserBlue"
+	},	
+	{
+		"id":"laserRedBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Magenta Laser Beam",
+		"text":"Careful where you point your rear.",
+		"price": 20000,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"laserRed"
+	},	
+	{
 		"id":"heartsBoost",
         "category":"boost",
 		"subCategory":"type",
@@ -1241,6 +1302,76 @@
 		"canvasValue":"smile"
 	},	
 	{
+		"id":"bronze3_0Icon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Season 0 Bronze",
+		"text":"Achieved a Bronze rank in Season 0",
+		"price": 5000,
+		"team":0,
+		"rarity":2,
+		"hideFromShop":true,
+		"canvasValue":"bronze3_0"
+	},	
+	{
+		"id":"silver3_0Icon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Season 0 Silver",
+		"text":"Achieved a Silver rank in Season 0",
+		"price": 5000,
+		"team":0,
+		"rarity":2,
+		"hideFromShop":true,
+		"canvasValue":"silver3_0"
+	},	
+	{
+		"id":"gold3_0Icon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Season 0 Gold",
+		"text":"Achieved a Gold rank in Season 0",
+		"price": 5000,
+		"team":0,
+		"rarity":2,
+		"hideFromShop":true,
+		"canvasValue":"gold3_0"
+	},	
+	{
+		"id":"diamond_0Icon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Season 0 Diamond",
+		"text":"Achieved a Diamond rank in Season 0",
+		"price": 5000,
+		"team":0,
+		"rarity":2,
+		"hideFromShop":true,
+		"canvasValue":"diamond_0"
+	},	
+	{
+		"id":"flagUSAIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"USA Flag",
+		"text":"Murica!",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"flagUSA"
+	},	
+	{
+		"id":"flagCANIcon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Canadian Flag",
+		"text":"Blame Canada!",
+		"price": 5000,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"flagCAN"
+	},	
+	{
 		"id":"moneyIcon",
         "category":"icon",
 		"subCategory":"type",
@@ -1248,7 +1379,8 @@
 		"text":"For becoming a millionaire!",
 		"price": 5000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"money"
 	},	
 	{
@@ -1259,7 +1391,7 @@
 		"text":"Some things just defy explanation",
 		"price": 5000,
 		"team":0,
-		"rarity":4,
+		"rarity":1,
 		"canvasValue":"wtf"
 	},	
 	{
@@ -1270,7 +1402,8 @@
 		"text":"For helping kill SocketShot bugs! [Exclusive item]",
 		"price": 5000,
 		"team":0,
-		"rarity":4,
+		"rarity":3,
+		"hideFromShop":true,
 		"canvasValue":"bug"
 	},	
 	{
@@ -1278,11 +1411,47 @@
 		"category":"icon",
 		"subCategory":"type",
 		"title":"Frog",
-		"text":"Did you find this? :]",
+		"text":"Created in honor of the first SocketShot modder",
 		"price": 5000,
 		"team":0,
-		"rarity":4,
+		"rarity":2,
 		"canvasValue":"frog"
+	},	
+	{
+		"id":"tourney0Icon",
+		"category":"icon",
+		"subCategory":"type",
+		"title":"Tourney Zero Trophy",
+		"text":"For participating in the 'Season Zero' beta tournament",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":true,
+		"canvasValue":"tourney0"
+	},	
+	{
+		"id":"champIcon",
+		"category":"icon",
+		"subCategory":"type",
+		"title":"Champion's Trophy",
+		"text":"For rising above all others in an official SocketShot Tournament!",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":true,		
+		"canvasValue":"champ"
+	},	
+	{
+		"id":"finalistIcon",
+		"category":"icon",
+		"subCategory":"type",
+		"title":"Finalist Trophy",
+		"text":"For being an official SocketShot tournament Finalist!",
+		"price": 5000,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":true,
+		"canvasValue":"finalist"
 	},	
 	{
 		"id":"alertIcon",

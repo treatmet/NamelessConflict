@@ -46,7 +46,7 @@ router.post('/kickFromParty', async function (req, res) {
 		res.send({msg:errorMsg});
 		return;
 	}		
-	dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: req.body.cognitoSub, cognitoSub:req.body.targetCognitoSub}, {partyId:""}, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: req.body.cognitoSub, cognitoSub:req.body.targetCognitoSub}, {partyId:""}, async function(err, dbRes){
 		if (!err){
 			//logg("DB: Set: cognitoSub=" + req.body.cognitoSub + " with: ");
 			//console.log('partyId:""');
@@ -106,12 +106,12 @@ router.post('/requestResponse', async function (req, res) {
 						dataAccessFunctions.getUserFromDB(authorizedUser.cognitoSub, function(partyJoiner){
 							if (partyJoiner && partyJoiner.partyId && partyJoiner.partyId.length > 0 && partyJoiner.partyId == partyJoiner.cognitoSub && partyJoiner.partyId != partyDbResults.partyId){ //If party leader of a previous party (which is NOT the party currently requested to join) and accepting a new party request
 								var re = new RegExp(partyJoiner.cognitoSub,"g");
-								dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {partyId: ""}, async function(err, res){}); //Disband the previous party							
+								dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {partyId: ""}, async function(err, dbRes){}); //Disband the previous party							
 							}
 							//log("dataAccessFunctions.dbUserUpdate - Party request accepted, joining party.");
 							dataAccessFunctions.dbUserUpdate("set", authorizedUser.cognitoSub, {partyId:partyDbResults.partyId});
-							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, res){}); //Remove all party requests targeted at the responder
-							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, res){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
+							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove all party requests targeted at the responder
+							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
 						});
 					});					
 					res.status(200);
@@ -402,20 +402,17 @@ function generateTempName(){
 
 router.post('/getLeaderboard', async function (req, res) {
 	console.log("GET LEADERBOARD");
-	var leaderboard = [];
+	var leaderboard = {
+		exp:[],
+		rating:[]
+	};
 
 	dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}]}, {sort:{experience: -1},limit:100}, async function(err, dbRes){
 		if (dbRes && dbRes[0]){
 			for (var i = 0; i < dbRes.length; i++){
-				if (dbRes[i].USERNAME == "RTPM35"){
-					console.log(dbRes[i].USERNAME + "!!!!!!!!!!!!" );
-					dataAccess.dbUpdateAwait("RW_USER", "inc", {}, {cash: 7}, async function(err, obj){
-						console.log("UPDATED!!!!!!!!!!!!" );
-					});
-				}
-
 				if (dbRes[i].USERNAME){
-					leaderboard.push({cognitoSub:dbRes[i].cognitoSub, username:dbRes[i].USERNAME.substring(0, 15), rating:dbRes[i].rating, kills:dbRes[i].kills, captures:dbRes[i].captures, gamesWon:dbRes[i].gamesWon, experience:dbRes[i].experience});
+					if (dbRes[i].rating == "310"){dbRes[i].rating = "unrated";}
+					leaderboard.exp.push({cognitoSub:dbRes[i].cognitoSub, username:dbRes[i].USERNAME.substring(0, 15), rating:dbRes[i].rating, kills:dbRes[i].kills, captures:dbRes[i].captures, gamesWon:dbRes[i].gamesWon, experience:dbRes[i].experience});
 				}
 				else {
 					logg("ERROR ACQUIRING USERNAME:");
@@ -423,7 +420,21 @@ router.post('/getLeaderboard', async function (req, res) {
 				}
 			}
 		}
-		res.send(leaderboard);
+
+		dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}, {"rating":{$ne:310}} ] }, {sort:{rating: -1},limit:100}, async function(err, ratingRes){
+			if (ratingRes && ratingRes[0]){
+				for (var i = 0; i < ratingRes.length; i++){
+					if (ratingRes[i].USERNAME){
+						leaderboard.rating.push({cognitoSub:ratingRes[i].cognitoSub, username:ratingRes[i].USERNAME.substring(0, 15), rating:ratingRes[i].rating, kills:ratingRes[i].kills, captures:ratingRes[i].captures, gamesWon:ratingRes[i].gamesWon, experience:ratingRes[i].experience});
+					}
+					else {
+						logg("ERROR ACQUIRING USERNAME:");
+						console.log(ratingRes[i]);
+					}
+				}
+			}
+			res.send(leaderboard);
+		});	
 	});	
 });
 

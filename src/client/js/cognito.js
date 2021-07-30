@@ -242,6 +242,9 @@ function getJoinableServer(options){
 	options.partyId = partyId;
 	options.cognitoSub = cognitoSub;
 	options.username = username;
+	if (options.privateServer){
+		options.password = prompt("This server requires a password", "Enter Password");
+	}
 
 	if (options.server){
 		logg("Attempting to join server with: ");
@@ -476,6 +479,7 @@ function getPerformanceInstrucitons(){
 	}
 
 	var html = "";
+	html += '<img class="perfCloseIcon" src="/src/client/img/icons/close.png" onclick=\'hide("performanceInstructions")\'>';
 	html += '<div id="unplayableHeader" class="redFlashing">Unplayable conditions detected! Follow these performance instructions!</div><br>';
 	html += '1. Game performs best in Google Chrome or Firefox <span style="font-weight: normal;">[If one doesn’t work, try the other]</span><br><br>';
 	html += '2. Make sure hardware acceleration is enabled in ' + browser + '’s settings:';
@@ -626,10 +630,10 @@ function localClick(){
 
 function showDefaultLoginButtons(){
 	if (page == "game"){return;}
-	else if (page == "home"){document.getElementById("sectionTitle1").innerHTML = "";}
-    document.getElementById("createAccountH").style.display = "";
-    document.getElementById("logInH").style.display = "";
-    document.getElementById("playNowH").style.display = "";
+	else if (page == "home"){show("sectionTitle1")}
+    show("createAccountH");
+    show("logInH");
+    show("playNowH");
     document.getElementById("playNowH").innerHTML = "Play as Guest";
     document.getElementById("logOutH").style.display = "none";
     if (document.getElementById('userWelcomeText')){
@@ -641,7 +645,7 @@ function showAuthorizedLoginButtons(){
 	if (page == "game"){return;}
 	document.getElementById("createAccountH").style.display = "none";
 	
-    document.getElementById("logInH").style.display = "none";
+    hide("logInH");
     document.getElementById("playNowH").style.display = "";
     show("partyUpMessage");
     document.getElementById("logOutH").style.display = "";
@@ -748,6 +752,12 @@ function show(element){
 function showUnset(element){
 	if (document.getElementById(element)) {
 		document.getElementById(element).style.display = "unset";
+	}
+}
+
+function showBlock(element){
+	if (document.getElementById(element)) {
+		document.getElementById(element).style.display = "block";
 	}
 }
 
@@ -900,6 +910,11 @@ function drawName(drawingCanvas, playerUsername, color, x, y, icon = false){
 }
 
 function drawIcon(drawingCanvas, icon, x, y, width = false, height = false){
+	if (page == "game" && (countdownToRedrawGraphics > -1 && countdownToRedrawGraphics < 4)){
+		return;
+	}
+		
+
 	if (!icon || !drawingCanvas)
 		return;
 	if (!width || !height){
@@ -927,7 +942,9 @@ function loadImages(imgArr,callback) {
 	var imagesLoaded = 0;
 	var invalidSrcPaths = [];
 	if (!imgArr || imgArr.length == 0){callback([]); return;}
-	function _loadAllImages(callback){
+	async function _loadAllImages(callback){
+		//console.log("Slept on " + imagesLoaded + " " + imgArr[imagesLoaded]);
+
 		//Create an temp image and load the url
 		var img = new Image();
 		$(img).attr('src',imgArr[imagesLoaded]); //Second parameter must be the src of the image
@@ -1110,6 +1127,10 @@ function hydrateKeybindingSettings(data){
         }
     }
     return data;
+}
+
+function sleep(ms){ //sleep
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 console.log("cognito.js loaded");

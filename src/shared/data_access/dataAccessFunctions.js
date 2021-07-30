@@ -2,6 +2,9 @@ var dataAccess = require('./dataAccess.js');
 const ObjectId = require('mongodb').ObjectID;
 
 const fullShopList = require("./shopList.json");
+const totalShopableItems = countTotalShopableItems(fullShopList, true);
+console.log("totalShopableItems: " + totalShopableItems);
+
 const defaultCustomizations = require("./defaultCustomizations.json");
 
 const defaultCustomizationOptions = require("./defaultCustomizationOptions.json");
@@ -11,8 +14,27 @@ const defaultSettings = require("./defaultSettings.json");
 const  totemize = require('totemize');
 
 
-
 //////////////////////////////////////////////
+function countTotalShopableItems(list, shopable){
+	var count = list.filter(function(item){ //LINQ count
+		var hydratedItem = item;
+		if (typeof item.category === 'undefined'){
+			hydratedItem = getShopItem(item);
+		}
+
+		var isItemShoppable = true;
+		if (hydratedItem.hideFromShop == true){
+			isItemShoppable = false;
+		}
+
+		if (isItemShoppable == shopable){
+			return item;
+		}
+	}).length;
+
+	return count;
+}
+
 function generateTempName(prefix){
 	let name;
 	
@@ -189,7 +211,6 @@ var searchUserFromDB = function(searchText,cb){
 	dataAccess.dbFindOptionsAwait("RW_USER", {USERNAME:re}, {limit:50}, async function(err, res){	
 		if (res && res[0]){
 			var users = res;
-			console.log(users);
 			cb(users);
 		}
 		else {
@@ -249,32 +270,61 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 
-var giveUsersItemsByTimestamp = function(){
-	var thresholdDate = new Date("June 10, 2019 20:00:00");
+var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
+	var thresholdDate = new Date("July 22, 2021 16:00:00");
+	//var params = {};
+	var params = {onlineTimestamp:{ $gt: thresholdDate }};
+/* 	var params = { USERNAME: { $in: [ 
+		"bigballer4liver"
+	] } }; //Bronze
+ */
 
-	dataAccess.dbFindAwait("RW_USER",{onlineTimestamp:{ $gt: thresholdDate }}, async function(err, resy){
+
+
+	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:2000}, async function(err, resy){
 		if (resy && resy[0]){ 
 			for (let k = 0; k < resy.length; k++) {
+
 				var cognitoSub = resy[k].cognitoSub;
-				var customizations = resy[k].customizations;
-				if (!customizations)
+				var customizationOptions = resy[k].customizationOptions; 
+				var customizations = resy[k].customizations; 
+					 
+				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+					console.log("SAFETYS ON");
 					continue;
+				}
+
+				console.log("Updating " + resy[k].USERNAME);
+				console.log("Timestamp " + resy[k].onlineTimestamp);
+		   
+/* 				if (!customizationOptions){
+					console.log("ERROR - no customizationOptions");
+					continue;
+				}
+ */				if (!customizations || !customizations["1"] || !customizations["2"] ){
+				  	console.log("ERROR - no customizations");
+				  	continue;
+				}
+
     
 				console.log("-----------------------------------customizations");
 				console.log(customizations);
 				
-				if (!customizations || !customizations["1"] || !customizations["2"] )
-					continue;
+				customizations["1"].dpColor = "#ffcc00"; //CONFIGURATION
+				customizations["2"].dpColor = "#ffcc00"; //CONFIGURATION
 
-				customizations["1"].pistolColor = "#ffcc00"; //CONFIGURATION
-				customizations["2"].pistolColor = "#ffcc00"; //CONFIGURATION
+				//customizationOptions.push("bronze3_0Icon");
+				//customizationOptions.push("silver3_0Icon");
+				//customizationOptions.push("gold3_0Icon");
+				//customizationOptions.push("diamond_0Icon");
+				var obj = {
+					customizations:customizations
+				};
 
-				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea") //Safety
-				// 	continue;
-
-				var obj = {customizations: customizations};
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
-				});					
+				});			
+				await sleep(10);	
+
 			}				
 		}
 	});
@@ -345,8 +395,6 @@ var setUserCustomizations = function(cognitoSub, obj) {
 		}
 	}
 
-	console.log("UPDATING USER CUSTOMIZATIONS setUserCustomizations()");
-	console.log(obj);
 
 	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: obj}, async function(err, obj){
 	});		
@@ -402,8 +450,10 @@ function transformToClientCustomizationOptions(customizationOptions){ //customiz
 	var clientOptions = getEmptyClientCustomizationOptions();
 	clientOptions.fullList = customizationOptions.filter(option => option != "unlock");
 
-
   	customizationOptions = removeDuplicates(customizationOptions);
+
+	clientOptions.completion.percent = Math.round(((countTotalShopableItems(customizationOptions, true) / totalShopableItems) * 1000)) / 10;
+	clientOptions.completion.exclusives = countTotalShopableItems(customizationOptions, false);
 
 	for (var o = 0; o < customizationOptions.length; o++){
 		var shopItem = getShopItem(customizationOptions[o]); 
@@ -489,7 +539,13 @@ function getEmptyClientCustomizationOptions(){
             icon: {
 				type:[]
             }        
-        }
+        },
+		"fullList":[],
+		"completion": {
+			percent: 0.0,
+			exclusives: 0
+		},
+
     };
 }
 
@@ -647,11 +703,13 @@ function getNewShopItem(currentShopList){
 		shopIndex = randomInt(2, fullShopList.length - 1); //Random element from shop, starting with index 2 (to skip unlock and refresh)
 		//New shop rules
 		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT part of default unlocks?
-			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT already added to new shop?
-				if (fullShopList[shopIndex].rarity != 4){ //Is item NOT exclusive
-					break; //PASSED RULES, ADD THIS ITEM
-				}
-			}
+		if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT already added to new shop?
+		if (fullShopList[shopIndex].rarity != 4){ //Is item NOT exclusive
+		if (!fullShopList[shopIndex].hideFromShop){ //Hide from shop
+			break; //PASSED RULES, ADD THIS ITEM
+		}
+		}
+		}
 		}
 		loopCount++;
 	}
@@ -666,7 +724,7 @@ function transformToClientShop(shopList, nextRefreshTime){ //shopList is list of
 	//transform from list of id's to full shop object
 	var clientShopList = [];
 	for (var i = 0; i < shopList.length; i++){
-		var shopItem = fullShopList.find(item => item.id == shopList[i]);		
+		var shopItem = fullShopList.find(item => item.id == shopList[i]);	
 		if (shopItem){
 			const fixedPrices = true;
 			if (fixedPrices && shopItem.category != "other"){
@@ -1073,6 +1131,31 @@ var getPublicServersFromDB = function(cb){
 	});
 }
 
+var getAllServersFromDB = function(cb){
+	var servers = [];
+	dataAccess.dbFindAwait("RW_SERV", {}, function(err,res){
+		if (res && res[0]){
+				
+			for (var i = 0; i < res.length; i++){
+
+				if (res[i].gametype == "ctf"){
+					res[i].gametype = "CTF";
+				}
+				else if (res[i].gametype == "slayer"){
+					res[i].gametype = "Deathmatch";
+				}
+
+				servers.push(res[i]);
+			}		
+			
+			cb(servers);
+		}
+		else {
+			cb(servers);
+		}
+	});
+}
+
 var getEmptyServersFromDB = function(cb){
 	var servers = [];
 
@@ -1091,6 +1174,7 @@ var getEmptyServersFromDB = function(cb){
 	});
 }
 
+//sync gameServerSync gameSync
 var dbGameServerUpdate = function(obj, cognitoSubToRemoveFromIncoming = false) {
 	dataAccess.dbFindAwait("RW_SERV", {url:myUrl}, async function(err, res){ //!!! Sort by timestamp
 		var serverParam = {url:myUrl};
@@ -1225,6 +1309,7 @@ module.exports.getPlayerRelationshipFromDB = getPlayerRelationshipFromDB;
 module.exports.upsertFriend = upsertFriend;
 module.exports.removeFriend = removeFriend;
 module.exports.getPublicServersFromDB = getPublicServersFromDB;
+module.exports.getAllServersFromDB = getAllServersFromDB;
 module.exports.getEmptyServersFromDB = getEmptyServersFromDB;
 module.exports.dbGameServerUpdate = dbGameServerUpdate;
 module.exports.checkForUnhealthyServers = checkForUnhealthyServers;

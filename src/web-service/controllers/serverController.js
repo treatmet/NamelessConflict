@@ -9,7 +9,7 @@ router.post('/getServerList', async function (req, res) {
 	console.log("GET SERVER LIST");
 	var serverList = [];
 
-	dataAccessFunctions.getPublicServersFromDB(function(servers){
+	dataAccessFunctions.getAllServersFromDB(function(servers){
 		servers.sort(compareCurrentPlayerSize);
 		
 		for (let j = 0; j < servers.length; j++) {
@@ -114,7 +114,7 @@ var getJoinableServer = function(options, cb){
 		//return;
 	}
 	else if (options.server.indexOf(':') > -1) { //Server IP provided
-		params = {url:options.server, privateServer:false};
+		params = {url:options.server};
 		options.matchmaking = false;
 	}
 	else if (options.server.indexOf('any') > -1) { //Any server //Contains
@@ -139,11 +139,25 @@ var getJoinableServer = function(options, cb){
 				log("CHECKING OUT SERVER:" + serv[i].url + "");
 				console.log(serv[i]);
 				if (!options.matchmaking){
+
+					if (serv[i].privateServer){
+						if (options.password != serv[i].serverPassword){
+							cb("Wrong Password", false);
+							break;
+						}
+						//else, correct password, continue allowing joining						
+					}
 				
-					////////////////////RULES////////////////////////////////
-					
+					////////////////////RULES////////////////////////////////					
 					var team = -1;
 					//Server full dis-qualifier
+					var currentActualPlayers = 0;
+					for (var u in serv[i].currentUsers){
+						if (serv[i].currentUsers[u].team){
+							currentActualPlayers++;
+						}
+					}
+
 					if (getCurrentPlayersFromUsers(serv[i].currentUsers).length + options.party.length > serv[i].maxPlayers){						
 						console.log("SHOULD BE SPECTATING TEAM!1" + allowFullGameSpectating);
 						logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");
@@ -210,10 +224,14 @@ var getJoinableServer = function(options, cb){
 					log("(isGameInFullSwing) " + isGameInFullSwing(serv[i].currentTimeLeft, serv[i].matchTime, serv[i].currentHighestScore, serv[i].scoreToWin));
 					log("(CURRENT PLAYERS) IS " + getCurrentPlayersFromUsers(serv[i].currentUsers).length + " GREATER THAN OR EQUAL TO 8?");
 					log("(POSSIBLE TEAM DIFF) IS " + possibleTeamDifference + " GREATER THAN OR EQUAL TO " + Math.abs(moreWhitePlayers));
-					
-					if (!isGameInFullSwing(serv[i].currentTimeLeft, serv[i].matchTime, serv[i].currentHighestScore, serv[i].scoreToWin) && Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) && getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 8){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
-						team = 0;
-					}
+
+
+					//This code replaced by spectating logic above
+					// if (!isGameInFullSwing(serv[i].currentTimeLeft, serv[i].matchTime, serv[i].currentHighestScore, serv[i].scoreToWin) &&
+					// 	Math.abs(Math.abs(moreWhitePlayers) - options.party.length) >= Math.abs(moreWhitePlayers) &&
+					// 	getCurrentPlayersFromUsers(serv[i].currentUsers).length >= 8){ //Spectate - if percentage of match remaining is less than threshold, and there is a 2 sided match underway that isn't unbalanced
+					// 	team = 0;
+					// }
 
 					if (serv[i].gametype == "horde"){
 						team = 2;
@@ -305,10 +323,11 @@ router.post('/sendPlayerToGameServer', async function (req, res) {
 //CONFIG
 var customSettingsList = [
 	{name:"serverName", desc:"Server Name (Letters and numbers only)", type:2, default:"Custom", standard:true},
+	{name:"serverPassword", desc:"Password (Letters and numbers only, leave blank for no password)", type:2, default:"", standard:true},
 	{name:"gameMinutesLength", desc:"Game Length in Minutes [0 is no time limit]", type:2, default:5, standard:true},
 	{name:"scoreToWin", desc:"Score to win [0 is no score limit]", type:2, default:0, standard:true},
-	{name:"map", desc:"Map [1=hall, 2=warehouse, 3=bunkers]", type:2, default:1, standard:true},
-	{name:"gametype", desc:"Gametype [1=capture, 2=deathmatch, 3=invasion]", type:2, default:1, standard:true},
+	{name:"map", desc:"Map [1=Hall, 2=Warehouse, 3=Bunkers, 4=Narrowed, 5=LongNarrowed]", type:2, default:1, standard:true},
+	{name:"gametype", desc:"Gametype [1=capture, 2=deathmatch, 3=invasion 4=elimination]", type:2, default:1, standard:true},
 	{name:"maxPlayers", desc:"Max Team Size", type:2, default:7, standard:true},
 	{name:"voteGametype", desc:"Allow voting for gametype after match", type:1, default:true, standard:true},
 	{name:"voteMap", desc:"Allow voting for map after match", type:1, default:true, standard:true},
@@ -320,7 +339,7 @@ var customSettingsList = [
 	{name:"healRate", desc:"Heal Delay [lower number is faster heal]", type:2, default:10},
 	{name:"bagDrag", desc:"Player speed ratio while carying bag", type:2, default:0.85},
 	{name:"damageScale", desc:"Global Damage Multiplier", type:2, default:1},
-	{name:"spawnOpposingThug", desc:"Bots Enabled", type:1, default:true},
+	{name:"spawnOpposingThug", desc:"Bots Enabled", type:1, default:false},
 	{name:"timeBeforeNextGame", desc:"Time Between Games [Seconds]", type:2, default:45}
 ];
 
@@ -342,9 +361,9 @@ router.post('/getCustomServerHTML', async function (req, res) {
 				addHTML += '<div class="settingsLabel" style="display: block;padding-top: 5px;">' + customSettingsList[s].desc + '</div>';
 				var nameOfClass = "settingsTextInput";
 				var maxLength = 2;
-				if (customSettingsList[s].name == "serverName"){
+				if (customSettingsList[s].name == "serverName" || customSettingsList[s].name == "serverPassword"){
 					nameOfClass = "settingsTextInputLarge";
-					maxLength = 20;
+					maxLength = 25;
 				}
 				addHTML += '<input maxlength="' + maxLength + '" placeholder="' + customSettingsList[s].default + '" id="' + customSettingsList[s].name + '" autocomplete="off" class="' + nameOfClass + ' customServerSettingInput">';
 				break;
@@ -417,9 +436,15 @@ router.post('/sendUpdateRequestToGameServer', async function (req, res) {
 function processCustomGameServerUpdateRequest(settings){
 	for (var s in settings){
 		if (settings[s].name == "serverName"){
-			settings[s].value = settings[s].value.substring(0,20);
+			settings[s].value = settings[s].value.substring(0,25);
 			if (!settings[s].value.match(/^[a-z 0-9]+$/i)){
 				settings[s].value = "Custom";
+			}
+		}
+		else if (settings[s].name == "serverPassword"){
+			settings[s].value = settings[s].value.substring(0,25);
+			if (!settings[s].value.match(/^[a-z 0-9]+$/i)){
+				settings[s].value = "";
 			}
 		}
 		else if (settings[s].name == "gameMinutesLength"){
@@ -447,6 +472,12 @@ function processCustomGameServerUpdateRequest(settings){
 				case "3":
 					settings[s].value = "'crik'";
 					break;
+				case "4":
+					settings[s].value = "'narrows'";
+					break;
+				case "5":
+					settings[s].value = "'longNarrows'";
+					break;
 				default:								
 					settings[s].value = "'longest'";
 				break;
@@ -462,6 +493,9 @@ function processCustomGameServerUpdateRequest(settings){
 					break;
 				case "3":
 					settings[s].value = "'horde'";
+					break;
+				case "4":
+					settings[s].value = "'elim'";
 					break;
 				default:								
 					settings[s].value = "'ctf'";

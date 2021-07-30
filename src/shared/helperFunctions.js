@@ -118,8 +118,13 @@ global.compareCurrentPlayerSize = function(a,b) { //order
 	var aCurrentPlayers = getCurrentPlayersFromUsers(a.currentUsers).length;
 	var bCurrentPlayers = getCurrentPlayersFromUsers(b.currentUsers).length;
 	
-	var aPort = a.url.substring(a.url.length - 4);
-	var bPort = b.url.substring(b.url.length - 4);
+	var aPort = "";
+	var bPort = "";
+	
+	if (a.url && b.url){
+		aPort = a.url.substring(a.url.length - 4);
+		bPort = b.url.substring(b.url.length - 4);
+	}
 	
 	var aIsCustom = a.customServer;
 	var bIsCustom = b.customServer;
@@ -392,6 +397,8 @@ global.getObjectiveText = function(){
 		objectiveText = "Type ./start to start the match!";
 	else if (gametype == "ctf")
 		objectiveText = "Capture the enemy's bag to win!";
+	else if (gametype == "elim")
+		objectiveText = "Eliminate the other team to win!";
 	return objectiveText;
 }
 

@@ -12,7 +12,7 @@ global.config = require("../settings.json");
 global.debug = true;
 global.httpOnlyCookies = false;
 global.allowDuplicateUsername = false;
-global.allowServerCommands = true;
+global.allowServerCommands = false;
 
 global.syncServerWithDbInterval = 15; //Seconds //Both sync and check for stale thresholds
 
@@ -41,31 +41,19 @@ global.winCash = 1000;
 global.loseCash = 100;
 global.mvpCash = 300;
 global.hitCash = 5;
+global.elimDeathCash = 50;
 global.multikillTimer = 4.5 * 60;
-
-//Shop config
-global.shopEnabled = false;
-global.invincibleInShop = false;
-global.shop = {
-	active:false,
-	selection:3,
-	price1:150,
-	price2:300,
-	price3:200,
-	price4:300,
-	price5:100,	
-	uniqueTextTimer:0,
-	uniqueText:"",
-	purchaseEffectTimer:0,
-};
-global.startingCash = 0;
+global.startingCash = 50;
 
 //Post game Voting
 global.ctfVotes = 0;
 global.slayerVotes = 0;
+global.elimVotes = 0;
 global.thePitVotes = 0;
 global.longestVotes = 0;
 global.crikVotes = 0;
+global.narrowsVotes = 0;
+global.longNarrowsVotes = 0;
 global.voteRebalanceTeamsYes = 0;
 global.voteRebalanceTeamsNo = 0;
 global.voteRebalanceTeamsIds = [];
@@ -87,34 +75,56 @@ global.personalHordeMode = true;
 
 global.minutesLeft = 9;
 global.secondsLeft = 99;
-global.scoreToWin = 0;
+global.scoreToWin = 3;
 global.nextGameTimer = 20;
 global.timeBeforeNextGame = 45; //newGameTimer
+global.timeBeforeNextRound = 20; //roundTimer
 global.gameMinutesLength = 5;
 global.gameSecondsLength = 0;
 global.map = "longest";
-global.gametype = "ctf";
+global.gametype = "elim";
 global.freeForAll = false;
 global.maxPlayers = 14;
 global.bootOnAfk = true;
 global.AfkFramesAllowed = 60 * 60; //seconds (translated to frames) //timeout
 
 //Player config
+global.timeInGameRankingThresh = 15; //seconds
+global.abandonLimit = 5; //seconds
 global.framesOfAiming = 60;
 global.boostAmount = 19;
 global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
 global.diagMovementScale = (2/3);
 global.maxEnergyMultiplier = 1;
-global.rechargeDelayTime = 120; //Double for breaking under zero energy
+global.rechargeDelayTime = 130; //Double for breaking under zero energy
 global.healDelayTime = 300;
 global.healRate = 10; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal)
 global.respawnTimeLimit = 3 * 60;
 global.slayerRespawnTimeLimit = 3 * 60; //seconds (translated to frames)
 global.ctfRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
+global.elimRespawnTimeLimit = 2 * 60; //seconds (translated to frames)
 global.bagDrag = 0.85;
 global.playerMaxHealth = 175;
 global.assistDamageThreshold = 30;
+global.ratingCalcThresh = 200; //Rating threshold for team rating evaluation
+global.grappleSpeed = 20;
+global.grappleStrength = 3;
+global.grappleLength = 5 * 75; //Tiles * 75
+/*
+{rank:"bronze1",rating:0},
+{rank:"bronze2",rating:100},
+{rank:"bronze3",rating:200},
+{rank:"silver1",rating:300},
+{rank:"silver2",rating:500},
+{rank:"silver3",rating:700},
+{rank:"gold1",rating:1000},
+{rank:"gold2",rating:1300},
+{rank:"gold3",rating:1600},
+{rank:"diamond",rating:2000},
+{rank:"diamond2",rating:9999}
+*/
+
 
 //Cloaking config
 global.cloakingEnabled = true;
@@ -132,7 +142,7 @@ global.damageScale = 1;
 	global.DPDamage = 12;
 	global.DPSideDamage = DPDamage/2; //Stacks on above
 	global.DPBackDamage = DPDamage/2; //Stacks AGAIN on above
-	global.mgDamage = 9; 
+	global.mgDamage = 8; 
 	global.mgSideDamage = mgDamage/2; //Stacks on above
 	global.mgBackDamage = mgDamage/2; //Stacks AGAIN on above
 	global.SGDamage = 30;
@@ -140,19 +150,20 @@ global.damageScale = 1;
 	global.SGBackDamage = SGDamage/2;
 	global.LaserDamage = 250;
 	global.friendlyFireDamageScale = 0.5;
-	global.boostDamage = 50;
+	global.boostDamage = 34;
 	global.cloakBonusDamage = 20;
 	
 global.startingWeapon = 1;
 global.bulletRange = 19 * 75;
-global.laserRange = 19 * 75;
+global.laserRange = 22 * 75;
+global.laserSecondShotTimer = 10; //In frames
 global.SGRange = 310;
 global.SGCloseRangeDamageScale = 4;
 global.SGPushSpeed = 12;
 global.laserPushSpeed = 36;
 global.laserOffsetX = 9;
 global.MGPushSpeed = 2;
-global.speedCap = 45;
+global.speedCap = 45; //Maxspeed max speed
 
 
 global.pistolFireRateLimiter = true;	
@@ -180,6 +191,30 @@ global.pushMaxSpeed = 35;
 
 global.allowBagWeapons = false;
 
+//Shop config
+global.shopEnabled = true;
+global.invincibleInShop = false;
+global.shop = {
+	active:false,
+	selection:3,
+	price1:100,
+	price2:150,
+	price3:50,
+	price4:100,
+	price5:150,	
+	price6:200,	
+	amount1:MGClipSize,
+	amount2:SGClipSize,
+	amount3:DPClipSize,
+	amount4:laserClipSize,
+	amount5:75,	
+	amount6:100,	
+	uniqueTextTimer:0,
+	uniqueText:"",
+	purchaseEffectTimer:0,
+};
+
+
 //thug Config
 global.spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
 global.thugSightDistance = 600;
@@ -188,8 +223,7 @@ global.hordeThugHealth = 15;
 global.thugDamage = 50;
 global.thugSpeed = 3;
 global.thugAttackDelay = 30;
-global.thugLimit = 2; //Limit on how many thugs can appear before ALL thugs are wiped off map (for performance concerns)
-
+global.maxThugs = 35;
 
 //Map Config
 global.threatSpawnRange = 500;
@@ -197,7 +231,7 @@ global.pushStrength = 15; //Push block strength
 
 //Rating config
 global.matchWinLossRatingBonus = 30;
-global.enemySkillDifferenceDivider = 20;
+global.enemySkillDifferenceDivider = 30;
 
 //----------------------SERVER GLOBAL VARIABLES---------------------------------
 global.myIP = "";
@@ -216,6 +250,7 @@ global.pause = false;
 global.privateServer = false;
 global.customServer = false;
 global.serverName = "Ranked";
+global.serverPassword = "";
 global.createdByCognitoSub = "";
 
 
@@ -250,15 +285,11 @@ global.blackScore = 0;
 
 global.pregame = true;
 global.gameOver = false;
+global.roundOver = false;
 
 //Map global variables
 global.mapWidth = 0;
 global.mapHeight = 0;
-
-global.warp1X = 0;
-global.warp1Y = 0;
-global.warp2X = 0;
-global.warp2Y = 0;
 
 global.spawnXminBlack = 0;
 global.spawnXmaxBlack = 0;

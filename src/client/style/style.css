@@ -11,6 +11,16 @@ body{
     font-size: 18px;
 }
 
+h1 {
+    font-size: 40px;
+    margin:0px;
+}
+
+h2 {
+    font-size: 20px;
+    margin: 0px;
+}
+
 /*----TOP NAV-------*/
 
 #header {
@@ -310,6 +320,10 @@ a#partyDecline{
     font-weight: bold;
     display: inline-block;
     width: 100%;
+    text-align: center;
+    background-color: #363c40;
+    border-bottom: 1px solid black;
+    margin-bottom: 8px;
 }
 
 
@@ -825,6 +839,23 @@ div#serverSelection {
     cursor:pointer;
     background-color: #cf3e71;
 }
+
+.elimServerSelectButton {
+    border-radius: 5px;
+    color: white;
+    border: 2px black solid;
+    text-align: center;
+    max-width: 250px;
+    padding: 5px;
+    font-family: electrolize;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000, 0px 1px 0 #000, 0px -1px 0 #000, -1px 0px 0 #000, 1px 0px 0 #000, 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000, 0px 2px 0 #000, 0px -2px 0 #000, -2px 0px 0 #000, 2px 0px 0 #000, 1px 2px 0 #000, -1px 2px 0 #000, 1px -2px 0 #000, -1px -2px 0 #000, 2px 1px 0 #000, -2px 1px 0 #000, 2px -1px 0 #000, -2px -1px 0 #000;
+    margin: auto;
+    margin-bottom: 10px;
+    font-size: 18px;
+    cursor:pointer;
+    background-color: #db6732;
+}
 .heavyTextShadow {
     text-shadow: 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000, 0px 2px 0 #000, 0px -2px 0 #000, -2px 0px 0 #000, 2px 0px 0 #000, 4px 4px 0 #000, -4px 4px 0 #000, 4px -4px 0 #000, -4px -4px 0 #000, 0px 4px 0 #000, 0px -4px 0 #000, -4px 0px 0 #000, 4px 0px 0 #000, 2px 4px 0 #000, -2px 4px 0 #000, 2px -4px 0 #000, -2px -4px 0 #000, 4px 2px 0 #000, -4px 2px 0 #000, 4px -2px 0 #000, -4px -2px 0 #000;
 }
@@ -1041,11 +1072,27 @@ div#performanceInstructions {
     font-weight: bold;
     text-align: center;
     margin: 20px;
-    margin-bottom: 500px;
+    margin-bottom: 10px;
     display: none;
+    width: 90%;
+}
+
+.perfCloseIcon {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    opacity: 50%;
+}
+
+.perfCloseIcon:hover {
+    opacity: 100%;
 }
 
 div#closePerfInstructions {
+    background-color: #393939;
 }
 
 div#unplayableHeader {
@@ -1123,6 +1170,10 @@ img.controlsImage {
 #learnToPlayMore {
     display: inline-block;
     margin-top: 30px;
+}
+
+#leaderboardToggle {
+    display: block;
 }
 
 .leaderboard{
@@ -1298,6 +1349,10 @@ table.keybindingConfigTable td.keybindingUnclickableCell {
 
 div#chat-window {
     text-align: left;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
 }
 
 .chatElement{
@@ -1457,6 +1512,19 @@ div#appearance {
     /* margin-bottom: 10px; */
 }
 
+div#shopCompletionDisplay {
+    display:none;
+    float: left;
+    text-align: left;
+    margin-left: 10px;
+    font-size: 12px;
+    position: absolute;
+}
+
+div#shopCompletionPercentage {
+    display: inline-block;
+}
+
 .teamTabs {
     width: 150px;
     margin-left: auto;
@@ -1608,7 +1676,7 @@ div#appearanceOptions {
 .shopText {
     float: left;
     font-size: 14px;
-    max-width: 200px;
+    max-width: 210px;
     text-align: left;
     margin-right: 5px;
 }

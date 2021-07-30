@@ -54,16 +54,26 @@ var Pickup = function(id, x, y, type, amount, respawnTime){
 }//End Pickup Function
 Pickup.list = [];
 
-var pickupPickup = function(playerId, pickupId){
+var pickupPickup = function(playerId, pickupId, pickupOverride = false){
 	var playerPickingUp = player.getPlayerList()[playerId];
 	var socket = SOCKET_LIST[playerId];
 	if (!playerPickingUp || !socket){return;}
 
 	var sfx = "";
 
-	if (Pickup.list[pickupId].type == 1){ //MD
+	var pickup = {};
+	if (pickupOverride){
+		pickup = pickupOverride;
+	}
+	else {
+		pickup = Pickup.list[pickupId];
+	}
+
+	if (!pickup){return;}
+
+	if (pickup.type == 1){ //MD
 		if (playerPickingUp.health < 100){
-			playerPickingUp.health += Pickup.list[pickupId].amount;
+			playerPickingUp.health += pickup.amount;
 			if (playerPickingUp.health > 100){
 				playerPickingUp.health = 100;
 			}
@@ -75,7 +85,7 @@ var pickupPickup = function(playerId, pickupId){
 			return;
 		}
 	}
-	else if (Pickup.list[pickupId].type == 2){ //DP
+	else if (pickup.type == 2){ //DP
 		if (playerPickingUp.holdingBag == false && playerPickingUp.weapon == 1){
 			if (playerPickingUp.reloading > 0){
 				playerPickingUp.reloading = 0;
@@ -88,25 +98,25 @@ var pickupPickup = function(playerId, pickupId){
 			sfx = "sfxDPEquip";
 		}
 		if (playerPickingUp.DPClip <= 0 && playerPickingUp.DPAmmo <= 0){
-			if (Pickup.list[pickupId].amount <= DPClipSize){
-				playerPickingUp.DPClip += Pickup.list[pickupId].amount;				
+			if (pickup.amount <= DPClipSize){
+				playerPickingUp.DPClip += pickup.amount;				
 			}
 			else {
 				playerPickingUp.DPClip += DPClipSize;
-				playerPickingUp.DPAmmo += Pickup.list[pickupId].amount - DPClipSize;
+				playerPickingUp.DPAmmo += pickup.amount - DPClipSize;
 				if (playerPickingUp.DPAmmo > maxDPAmmo){playerPickingUp.DPAmmo = maxDPAmmo;}
 			}
 			updatePlayerList.push({id:playerId,property:"DPClip",value:playerPickingUp.DPClip});								
 			updatePlayerList.push({id:playerId,property:"DPAmmo",value:playerPickingUp.DPAmmo});								
 		}
 		else {
-			playerPickingUp.DPAmmo += Pickup.list[pickupId].amount;
+			playerPickingUp.DPAmmo += pickup.amount;
 			if (playerPickingUp.DPAmmo > maxDPAmmo){playerPickingUp.DPAmmo = maxDPAmmo;}
 			updatePlayerList.push({id:playerId,property:"DPAmmo",value:playerPickingUp.DPAmmo});								
 		}	
 		removePickup(pickupId);		
 	}
-	else if (Pickup.list[pickupId].type == 3){ //MG
+	else if (pickup.type == 3){ //MG
 		if (playerPickingUp.holdingBag == false && playerPickingUp.weapon == 1){
 			if (playerPickingUp.reloading > 0){
 				playerPickingUp.reloading = 0;
@@ -119,25 +129,25 @@ var pickupPickup = function(playerId, pickupId){
 			sfx = "sfxMGEquip";
 		}
 		if (playerPickingUp.MGClip <= 0 && playerPickingUp.MGAmmo <= 0){
-			if (Pickup.list[pickupId].amount <= MGClipSize){
-				playerPickingUp.MGClip += Pickup.list[pickupId].amount;				
+			if (pickup.amount <= MGClipSize){
+				playerPickingUp.MGClip += pickup.amount;				
 			}
 			else {
 				playerPickingUp.MGClip += MGClipSize;
-				playerPickingUp.MGAmmo += Pickup.list[pickupId].amount - MGClipSize;
+				playerPickingUp.MGAmmo += pickup.amount - MGClipSize;
 				if (playerPickingUp.MGAmmo > maxMGAmmo){playerPickingUp.MGAmmo = maxMGAmmo;}
 			}
 			updatePlayerList.push({id:playerId,property:"MGClip",value:playerPickingUp.MGClip});								
 			updatePlayerList.push({id:playerId,property:"MGAmmo",value:playerPickingUp.MGAmmo});								
 		}
 		else {
-			playerPickingUp.MGAmmo += Pickup.list[pickupId].amount;
+			playerPickingUp.MGAmmo += pickup.amount;
 			if (playerPickingUp.MGAmmo > maxMGAmmo){playerPickingUp.MGAmmo = maxMGAmmo;}
 			updatePlayerList.push({id:playerId,property:"MGAmmo",value:playerPickingUp.MGAmmo});								
 		}	
 		removePickup(pickupId);		
 	}
-	else if (Pickup.list[pickupId].type == 4){ //SG
+	else if (pickup.type == 4){ //SG
 		if (playerPickingUp.holdingBag == false && playerPickingUp.weapon == 1){
 			if (playerPickingUp.reloading > 0){
 				playerPickingUp.reloading = 0;
@@ -150,25 +160,25 @@ var pickupPickup = function(playerId, pickupId){
 			sfx = "sfxSGEquip";
 		}
 		if (playerPickingUp.SGClip <= 0 && playerPickingUp.SGAmmo <= 0){
-			if (Pickup.list[pickupId].amount <= SGClipSize){
-				playerPickingUp.SGClip += Pickup.list[pickupId].amount;				
+			if (pickup.amount <= SGClipSize){
+				playerPickingUp.SGClip += pickup.amount;				
 			}
 			else {
 				playerPickingUp.SGClip += SGClipSize;
-				playerPickingUp.SGAmmo += Pickup.list[pickupId].amount - SGClipSize;
+				playerPickingUp.SGAmmo += pickup.amount - SGClipSize;
 				if (playerPickingUp.SGAmmo > maxSGAmmo){playerPickingUp.SGAmmo = maxSGAmmo;}
 			}
 			updatePlayerList.push({id:playerId,property:"SGClip",value:playerPickingUp.SGClip});								
 			updatePlayerList.push({id:playerId,property:"SGAmmo",value:playerPickingUp.SGAmmo});								
 		}
 		else {
-			playerPickingUp.SGAmmo += Pickup.list[pickupId].amount;
+			playerPickingUp.SGAmmo += pickup.amount;
 			if (playerPickingUp.SGAmmo > maxSGAmmo){playerPickingUp.SGAmmo = maxSGAmmo;}
 			updatePlayerList.push({id:playerId,property:"SGAmmo",value:playerPickingUp.SGAmmo});								
 		}		
 		removePickup(pickupId);		
 	}
-	else if (Pickup.list[pickupId].type == 6){ //Laser
+	else if (pickup.type == 6){ //Laser
 		if (playerPickingUp.holdingBag == false && playerPickingUp.weapon == 1){
 			if (playerPickingUp.reloading > 0){
 				playerPickingUp.reloading = 0;
@@ -180,13 +190,13 @@ var pickupPickup = function(playerId, pickupId){
 		else { //because the sfx will already trigger automatically clientside if switching weapons to SG
 			sfx = "sfxLaserEquip";
 		}
-		playerPickingUp.laserClip += Pickup.list[pickupId].amount;
+		playerPickingUp.laserClip += pickup.amount;
 		if (playerPickingUp.laserClip > maxLaserAmmo){playerPickingUp.laserClip = maxLaserAmmo;}
 		updatePlayerList.push({id:playerId,property:"laserClip",value:playerPickingUp.laserClip});								
 		removePickup(pickupId);		
 	}
-	else if (Pickup.list[pickupId].type == 5 && playerPickingUp.health <= 100){ //BA
-		playerPickingUp.health = 100 + Pickup.list[pickupId].amount;
+	else if (pickup.type == 5 && playerPickingUp.health <= 100){ //BA
+		playerPickingUp.health = 100 + pickup.amount;
 		if (playerPickingUp.health > playerMaxHealth){
 			playerPickingUp.health = playerMaxHealth;
 		}
@@ -201,6 +211,7 @@ var pickupPickup = function(playerId, pickupId){
 }
 
 var removePickup = function(pickupId){
+	if (pickupId === 0){return;}
 	if (Pickup.list[pickupId].respawnTime == -1){
 		delete Pickup.list[pickupId];
 	}
@@ -241,6 +252,14 @@ var clearPickupList = function(){
 	Pickup.list = [];
 }
 
+var clearNonMedPickups = function(){
+	for (var p in Pickup.list){
+		if (Pickup.list[p].type != 1){
+			removePickup(Pickup.list[p].id);
+		}
+	}
+}
+
 var clockTick = function(){
 	for (var i in Pickup.list){
 		if (Pickup.list[i].respawnTime > -1 && gameOver == false){				
@@ -253,6 +272,7 @@ var clockTick = function(){
 }
 
 var checkForPickup = function(player){
+	if (roundOver){return;}
 	for (var i in Pickup.list){
 		if (player.health > 0 && player.x > Pickup.list[i].x - 30 && player.x < Pickup.list[i].x + Pickup.list[i].width + 30 && player.y > Pickup.list[i].y - 30 && player.y < Pickup.list[i].y + Pickup.list[i].height + 30 && Pickup.list[i].respawnTimer == 0){
 			pickupPickup(player.id, Pickup.list[i].id);
@@ -268,3 +288,4 @@ module.exports.createPickup = createPickup;
 module.exports.clearPickupList = clearPickupList;
 module.exports.clockTick = clockTick;
 module.exports.checkForPickup = checkForPickup;
+module.exports.clearNonMedPickups = clearNonMedPickups;

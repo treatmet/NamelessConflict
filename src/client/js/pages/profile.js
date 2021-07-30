@@ -129,6 +129,7 @@ function populateProfilePage(){
 
 function showSelfProfileOptions(){
     if (viewedProfileCognitoSub == cognitoSub && isLoggedIn()) {
+        showBlock("shopCompletionDisplay");
         show("appearanceOptions");			
         show("shopCustomizeToggle");			
         show("statsOptionsToggle");			
@@ -343,8 +344,10 @@ function charToKeyCode(){
 
 
 function drawProfileCustomizations(){
-    drawCustomizations(currentCustomizations, 0, function(frames, id){
-        displayAppearanceFrame(frames[displayTeam][displayAnimation], 1, frames[displayTeam]["legs"]);
+    drawCustomization(currentCustomizations[displayTeam], displayAnimation, displayTeam, 0, function(drawnFrameTorso, id){
+        drawCustomization(currentCustomizations[displayTeam], "legs", displayTeam, 0, function(drawnFrameLegs, id){
+            displayAppearanceFrame(drawnFrameTorso, 1, drawnFrameLegs);
+        });
     });
 }
 
@@ -961,7 +964,17 @@ function cycleAppearance(){
 function populateCustomizationOptions(){
     var options = customizationOptions;
 
-
+    console.log(options.completion.percent);
+    if (options && options.completion && options.completion.percent){
+        var percentage = document.getElementById("shopCompletionPercentage");
+        var exclusives = document.getElementById("shopCompletionExclusives");
+        if (percentage){
+            percentage.innerHTML = options.completion.percent + "%"
+        }
+        if (exclusives){
+            exclusives.innerHTML = "+" + options.completion.exclusives;
+        }
+    }
 
     for (const category in options[displayTeam]){
         var HTML = "";

@@ -50,14 +50,23 @@ router.post('/playNow', async function (req, res) {
 	console.log("REQ BODY: ");
 	console.log(req.body);
 
-	if ((authorizedUser && bannedCognitoSubs.find(sub => sub == authorizedUser.cognitoSub)) || bannedCognitoSubs.find(sub => sub == req.body.tempCognito)){
-		logg("res.send: " + "You are banned from the current game for betraying. Please try again in a few minutes.");
-		res.send({msg:"You are banned from the current game for betraying. Please try again in a few minutes.", success:false});
+	var foundBannedPlayer = "";
+	if (authorizedUser){
+		foundBannedPlayer = bannedCognitoSubs.find(plyr => plyr.cognitoSub == authorizedUser.cognitoSub);
+	}
+	else {
+		foundBannedPlayer = bannedCognitoSubs.find(plyr => plyr.cognitoSub == req.body.tempCognito);
+	}
+
+	if (foundBannedPlayer){
+		var msg = "res.send: " + "You are banned from the current game for " + foundBannedPlayer.reason + ". Please try again in a few minutes.";
+		logg(msg);
+		res.send({msg:msg, success:false});
 		return;
     }
 
 	//Check if server is expecting this incoming user
-	var params = {url:myUrl, privateServer:false};
+	var params = {url:myUrl};
 	var approvedToJoinServer = false;
 	
 	dataAccess.dbFindAwait("RW_SERV", params, async function(err, serv){	
