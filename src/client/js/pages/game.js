@@ -46,6 +46,7 @@ function voteEndgame(voteType, voteSelection){
 		document.getElementById("voteCrik").disabled = true;
 		document.getElementById("voteThePit").disabled = true;		
 		document.getElementById("voteNarrows").disabled = true;		
+		document.getElementById("voteLongNarrows").disabled = true;		
 	}
 	else if (voteType == "rebalance"){
 		document.getElementById("voteRebalanceYes").disabled = true;
@@ -62,6 +63,7 @@ socket.on('votesUpdate', function(votesData){
 	document.getElementById("voteThePit").innerHTML = "Warehouse - [" + votesData.thePitVotes + "]";	
 	document.getElementById("voteCrik").innerHTML = "Bunkers - [" + votesData.crikVotes + "]";
 	document.getElementById("voteNarrows").innerHTML = "Narrowed - [" + votesData.narrowsVotes + "]";	
+	document.getElementById("voteLongNarrows").innerHTML = "Long Narrowed - [" + votesData.longNarrowsVotes + "]";	
 	document.getElementById("voteRebalanceYes").innerHTML = "Yes - [" + votesData.voteRebalanceTeamsYes + "]";
 	document.getElementById("voteRebalanceNo").innerHTML = "No - [" + votesData.voteRebalanceTeamsNo + "]";
 });
@@ -1884,6 +1886,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			document.getElementById("voteCrik").disabled = false;
 			document.getElementById("voteThePit").disabled = false;				
 			document.getElementById("voteNarrows").disabled = false;				
+			document.getElementById("voteLongNarrows").disabled = false;				
 			document.getElementById("voteRebalanceYes").disabled = false;				
 			document.getElementById("voteRebalanceNo").disabled = false;				
 		}
@@ -2425,6 +2428,21 @@ function drawMapElementsOnMapCanvas(){
 				}				
 			}
 			else if (map == "narrows"){
+				drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+				// if (x >= (tile.width * 6) * zoom && x <= (tile.width * 6) * zoom && y >= (tile.height * 1) * zoom && y <= (tile.height * 5) * zoom){
+				// 	drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				// }
+				// else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (mapWidth - tile.width * 4) * zoom && x <= (mapWidth - tile.width * 2) * zoom){
+				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				// }
+				// else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (tile.width * 1) * zoom && x <= (tile.width * 3) * zoom){
+				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				// }
+				// else {
+				// 	drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+				// }				
+			}
+			else if (map == "longNarrows"){
 				drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
 				// if (x >= (tile.width * 6) * zoom && x <= (tile.width * 6) * zoom && y >= (tile.height * 1) * zoom && y <= (tile.height * 5) * zoom){
 				// 	drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
@@ -4247,10 +4265,10 @@ function drawSpectatingInfo(){
 		ctx.font = 'bold 15px Electrolize';
 		ctx.lineWidth = 3;
 		if (!gametype == "elim" || (pregame && pregameIsHorde) || !myPlayer.team){
-			strokeAndFillText("Use the arrow keys to move camera",canvasWidth/2,800);		
+			strokeAndFillText("WASD to free move camera, Up/Down to follow players",canvasWidth/2,800);		
 		}
 		else {
-			strokeAndFillText("[U] To open shop | Use the arrow keys to move camera",canvasWidth/2,800);		
+			strokeAndFillText("[U] To open shop | WASD to free move camera, Up/Down to follow players",canvasWidth/2,800);		
 		}
 	}
 }
@@ -4263,13 +4281,13 @@ function updateSpectatingView(){ //updates spectating camera
 	}
 
 	if (!shop.active){
-		if (myPlayer.pressingDown)
+		if (myPlayer.pressingS)
 			myPlayer.y += spectateMoveSpeed;
-		if (myPlayer.pressingUp)
+		if (myPlayer.pressingW)
 			myPlayer.y -= spectateMoveSpeed;
-		if (myPlayer.pressingLeft)
+		if (myPlayer.pressingA)
 			myPlayer.x -= spectateMoveSpeed;
-		if (myPlayer.pressingRight)
+		if (myPlayer.pressingD)
 			myPlayer.x += spectateMoveSpeed;
 	}
 
@@ -4297,14 +4315,17 @@ function updateSpectatingView(){ //updates spectating camera
 function drawInformation(){
 	if (!gameOver && debugText == true){
 		noShadow();
-		ctx.fillStyle="#FFFFFF";
-		ctx.font = '14px Electrolize';
+		ctx.fillStyle="#11e448";
+		ctx.font = 'bold 14px Electrolize';
 		ctx.textAlign="left";
 
 		//Version and debug text label1 //debug lable1
 
-		fillText("Health:" + Player.list[myPlayer.id].health, 5, 15); //debug
-		fillText("ping:" + ping, 5, 35);
+		fillText("Cash: $" + Player.list[myPlayer.id].cash, 5, 15); //debug
+		ctx.fillStyle="#FFFFFF";
+		ctx.font = '14px Electrolize';
+		fillText("Health:" + Player.list[myPlayer.id].health, 5, 35); //debug
+		fillText("ping:" + ping, 5, 55);
 		if (showStatOverlay == true){
 			fillText("" + version, 5, 55); //debug
 			// fillText("x: " + Player.list[myPlayer.id].x, 5, 95); //debug info
@@ -4570,6 +4591,19 @@ function drawChat(){
 	}
 }
 
+function getAliveTeamPlayersCount(team){
+	var count = 0;
+
+	for (var p in Player.list){
+		//console.log(team + " Players team is " + Player.list[p].team + " and health is " + Player.list[p].health);
+		if (Player.list[p].team == team && Player.list[p].health >= 0){
+			count++;
+		}
+	}
+	//console.log(count);
+	return count;
+}
+
 //Top Scoreboard top scoreboard topscoreboard	
 function drawTopScoreboard(){
 	noShadow();
@@ -4631,9 +4665,16 @@ function drawTopScoreboard(){
 				strokeAndFillText(minutesLeft + ":" + secondsLeft, canvasWidth/2, (clockHeight + (clockHeight/2 + 16))/2);
 			}
 		}
+		ctx.fillStyle="#FFFFFF";
+		ctx.font = '22px Electrolize';
+		ctx.lineWidth=4;
+		//Eminimation players remaining
+		if (gametype == "elim"){
+			strokeAndFillText(getAliveTeamPlayersCount(1), canvasWidth/2 - 110, 20);
+			strokeAndFillText(getAliveTeamPlayersCount(2), canvasWidth/2 + 110, 20);
+		}
 		
 		//Top scoreboard Score Numbers
-		ctx.fillStyle="#FFFFFF";
 		ctx.lineWidth=6;
 		ctx.font = '36px Electrolize';
 		if (whiteScoreHeight >= 36){whiteScoreHeight -= 7;}
@@ -5392,15 +5433,16 @@ function drawStatOverlay(){
 		var scoreboardPlayerNameGap = 29;
 		for (var a in blackPlayers){
 			ctx.textAlign="left";			
-			if (blackPlayers[a].id == myPlayer.id || (myPlayer.team == 0 && spectatingPlayerId == blackPlayers[a].id)){
+			if (blackPlayers[a].id == myPlayer.id || ((myPlayer.team == 0 || myPlayer.eliminationSpectate) && spectatingPlayerId == blackPlayers[a].id)){
 				var arrowIcon = Img.statArrow;
-				if (myPlayer.team == 0){arrowIcon = Img.statCamera;}
+				if ((myPlayer.team == 0 || myPlayer.eliminationSpectate) && spectatingPlayerId == blackPlayers[a].id){arrowIcon = Img.statCamera;}
 				drawImage(arrowIcon, 123, blackScoreY - 13); //scoreboard arrow
 				ctx.fillStyle="#FFFFFF";
 			}
 			else {
 				ctx.fillStyle="#AAAAAA";
 			}
+			if (blackPlayers[a].health <= 0){ctx.fillStyle="#FF0000";}
 			strokeAndFillText(blackPlayers[a].name.substring(0, 15),143,blackScoreY);
 			ctx.textAlign="center";
 			ctx.fillStyle="#19BE44";
@@ -5430,15 +5472,16 @@ function drawStatOverlay(){
 		
 		for (var a in whitePlayers){
 			ctx.textAlign="left";
-			if (whitePlayers[a].id == myPlayer.id || (myPlayer.team == 0 && spectatingPlayerId == whitePlayers[a].id)){
+			if (whitePlayers[a].id == myPlayer.id || ((myPlayer.team == 0 || myPlayer.eliminationSpectate) && spectatingPlayerId == whitePlayers[a].id)){
 				var arrowIcon = Img.statArrow;
-				if (myPlayer.team == 0){arrowIcon = Img.statCamera;}
+				if ((myPlayer.team == 0 || myPlayer.eliminationSpectate) && spectatingPlayerId == whitePlayers[a].id){arrowIcon = Img.statCamera;}
 				drawImage(arrowIcon, 123, whiteScoreY - 13);	
 				ctx.fillStyle="#FFFFFF";
 			}
 			else {
 				ctx.fillStyle="#AAAAAA";
 			}
+			if (whitePlayers[a].health <= 0){ctx.fillStyle="#FF0000";}
 			strokeAndFillText(whitePlayers[a].name.substring(0, 15),143,whiteScoreY);
 			ctx.textAlign="center";
 			ctx.fillStyle="#19BE44";
@@ -6197,24 +6240,36 @@ document.onkeydown = function(event){
 			keyPress(87, true);
 		}
 		myPlayer.pressingW = true;
+		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
+			spectatePlayers = false;
+		}
 	}
 	else if(hitKeyCode === 68 && chatInput.style.display == "none"){ //D
 		if (!myPlayer.pressingD && !shop.active){
 			keyPress(68, true);
 		}
 		myPlayer.pressingD = true;
+		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
+			spectatePlayers = false;
+		}
 	}
 	else if(hitKeyCode === 83 && chatInput.style.display == "none"){ //S
 		if (!myPlayer.pressingS && !shop.active){
 			keyPress(83, true);
 		}
 		myPlayer.pressingS = true;
+		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
+			spectatePlayers = false;
+		}
 	}
 	else if(hitKeyCode === 65 && chatInput.style.display == "none"){ //A
 		if (!myPlayer.pressingA && !shop.active){
 			keyPress(65, true);
 		}
 		myPlayer.pressingA = true;
+		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
+			spectatePlayers = false;
+		}
 	}		
 	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up
 		if (myPlayer.pressingUp != true){
@@ -6227,11 +6282,14 @@ document.onkeydown = function(event){
 					//purchase();
 				}
 			}
-			else {
-				if (!spectatePlayers){
-				}
-				else {
+			if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true && !shop.active){
+				spectatePlayers = true;
+				var count = 0;
+				getNextOrderedPlayer(spectatingPlayerId, true);	
+				while (Player.list[spectatingPlayerId] && Player.list[spectatingPlayerId].health <= 0){
 					getNextOrderedPlayer(spectatingPlayerId, true);
+					count++;
+					if (count > getNumPlayersInGame() + 1){spectatingPlayerId = ""; break;}	
 				}
 			}
 		}
@@ -6249,16 +6307,13 @@ document.onkeydown = function(event){
 						sfxMenuMove.play();
 				}
 			}
-			else {
-				if (!spectatePlayers){
+			if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true && !shop.active){
+				spectatePlayers = true;
+				if (spectatingPlayerId == "bagRed"){
+					spectatingPlayerId = "";
 				}
 				else {
-					if (spectatingPlayerId == "bagRed"){
-						spectatingPlayerId = "";
-					}
-					else {
-						spectatingPlayerId = "bagBlue";
-					}
+					spectatingPlayerId = "bagBlue";
 				}
 			}
 		}
@@ -6271,11 +6326,15 @@ document.onkeydown = function(event){
 					keyPress(40, true);
 				}
 			}
-			else {
-				if (!spectatePlayers){
-				}
-				else {
+			if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true && !shop.active){
+				spectatePlayers = true;
+				var count = 0;
+				getNextOrderedPlayer(spectatingPlayerId, false);	
+				while (Player.list[spectatingPlayerId] && Player.list[spectatingPlayerId].health <= 0){
+					console.log("count " + count);
 					getNextOrderedPlayer(spectatingPlayerId, false);
+					count++;
+					if (count > getNumPlayersInGame() + 1){spectatingPlayerId = ""; break;}	
 				}
 			}
 		}
@@ -6293,16 +6352,13 @@ document.onkeydown = function(event){
 						sfxMenuMove.play();			
 				}
 			}	
-			else {
-				if (!spectatePlayers){
+			if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true && !shop.active){
+				spectatePlayers = true;
+				if (spectatingPlayerId == "bagBlue"){
+					spectatingPlayerId = "";
 				}
 				else {
-					if (spectatingPlayerId == "bagBlue"){
-						spectatingPlayerId = "";
-					}
-					else {
-						spectatingPlayerId = "bagRed";
-					}
+					spectatingPlayerId = "bagRed";
 				}
 			}	
 		}
@@ -6491,7 +6547,7 @@ document.onkeydown = function(event){
 	}
 	
 	else if(hitKeyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing U Testing
-		if (isLocal || myPlayer.eliminationSpectate || (roundOver && myPlayer.team != 0)){	
+		if (isLocal || myPlayer.eliminationSpectate || (myPlayer.team != 0)){	
 			shop.active = true;
 		}
 	}
@@ -6596,6 +6652,19 @@ function getNewTip(){
 
 
 //Handy handy functions
+
+var getNumPlayersInGame = function(){
+	var totalPlayers = 0;
+	var playerList = Player.list;
+
+	for (var p in playerList){
+		if (playerList[p].team != 0)
+			totalPlayers++;
+	}
+	console.log(totalPlayers + "players");
+	return totalPlayers;
+}
+
 
 function getDirDif(shootingDirA, shootingDirB){
 	var shootingDirAPlus = shootingDirA + 8;

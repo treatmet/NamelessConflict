@@ -129,6 +129,7 @@ function populateProfilePage(){
 
 function showSelfProfileOptions(){
     if (viewedProfileCognitoSub == cognitoSub && isLoggedIn()) {
+        showBlock("shopCompletionDisplay");
         show("appearanceOptions");			
         show("shopCustomizeToggle");			
         show("statsOptionsToggle");			
@@ -963,7 +964,17 @@ function cycleAppearance(){
 function populateCustomizationOptions(){
     var options = customizationOptions;
 
-
+    console.log(options.completion.percent);
+    if (options && options.completion && options.completion.percent){
+        var percentage = document.getElementById("shopCompletionPercentage");
+        var exclusives = document.getElementById("shopCompletionExclusives");
+        if (percentage){
+            percentage.innerHTML = options.completion.percent + "%"
+        }
+        if (exclusives){
+            exclusives.innerHTML = "+" + options.completion.exclusives;
+        }
+    }
 
     for (const category in options[displayTeam]){
         var HTML = "";

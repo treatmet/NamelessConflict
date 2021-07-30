@@ -53,6 +53,7 @@ global.thePitVotes = 0;
 global.longestVotes = 0;
 global.crikVotes = 0;
 global.narrowsVotes = 0;
+global.longNarrowsVotes = 0;
 global.voteRebalanceTeamsYes = 0;
 global.voteRebalanceTeamsNo = 0;
 global.voteRebalanceTeamsIds = [];
@@ -162,7 +163,7 @@ global.SGPushSpeed = 12;
 global.laserPushSpeed = 36;
 global.laserOffsetX = 9;
 global.MGPushSpeed = 2;
-global.speedCap = 45;
+global.speedCap = 45; //Maxspeed max speed
 
 
 global.pistolFireRateLimiter = true;	
@@ -196,12 +197,12 @@ global.invincibleInShop = false;
 global.shop = {
 	active:false,
 	selection:3,
-	price1:150,
-	price2:100,
+	price1:100,
+	price2:150,
 	price3:50,
 	price4:100,
 	price5:150,	
-	price6:150,	
+	price6:200,	
 	amount1:MGClipSize,
 	amount2:SGClipSize,
 	amount3:DPClipSize,

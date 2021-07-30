@@ -1186,7 +1186,13 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		
 		if (gametype == "elim" && gameOver == false){				
-			self.updatePropAndSend("cash", self.cash + elimDeathCash);			
+			var cashToAdd = elimDeathCash;
+			var scoreDif = whiteScore - blackScore;
+
+			if ((self.team == 1 && scoreDif < 0) || (self.team == 2 && scoreDif > 0)){ //Comeback mechanics
+				cashToAdd += Math.abs(scoreDif * elimDeathCash);
+			}
+			self.updatePropAndSend("cash", self.cash + cashToAdd);			
 			gameEngine.checkIfRoundOver();
 		}
 
@@ -1787,6 +1793,10 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						narrowsVotes++;
 						voteMapIds.push(socketId);
 					}
+					else if (vote == "longNarrows"){
+						longNarrowsVotes++;
+						voteMapIds.push(socketId);
+					}
 				}	
 				else if (voteType == "rebalance" && voteRebalance){
 					for (var i = 0; i < voteRebalanceTeamsIds.length; i++){
@@ -1811,6 +1821,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						evalServer(socket, data[1].substring(2));
 					}
 					else {
+						if (gametype == "elim" && getPlayerById(data[0]).health <= 0 && getPlayerById(data[0]).team != 0 && !roundOver && !gameOver){
+							return;
+						}
 						if (data[1].substring(0,6) == "[Team]"){
 							for(var i in SOCKET_LIST){
 								if (getPlayerById(SOCKET_LIST[i].id) && getPlayerById(data[0]) && getPlayerById(data[0]).team == getPlayerById(SOCKET_LIST[i].id).team && data[1] != "[Team] " && data[1] != "[Team]"){
@@ -2190,6 +2203,10 @@ function evalServer(socket, data){
 		map = "narrows";
 		gameEngine.restartGame();
 	}
+	else if (data == "longNarrows" || data == "lNarrows" || data == "long"){
+		map = "longNarrows";
+		gameEngine.restartGame();
+	}
 	else if (data == "map2"){
 		map = "map2";
 		gameEngine.restartGame();
@@ -2553,7 +2570,7 @@ function abandonMatch(id){
 			logg("potential DESERTER!");
 
 			abandoningCognitoSubs.push({cognitoSub:Player.list[id].cognitoSub, team:Player.list[id].team, name:Player.list[id].name, timeInGame:Player.list[id].timeInGame});
-			var timesAbandoned = abandoningCognitoSubs.filter(function(player){ //LINQ
+			var timesAbandoned = abandoningCognitoSubs.filter(function(player){ //LINQ count
 				if (player.cognitoSub == Player.list[id].cognitoSub){
 					return player;
 				}

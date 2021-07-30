@@ -755,6 +755,12 @@ function showUnset(element){
 	}
 }
 
+function showBlock(element){
+	if (document.getElementById(element)) {
+		document.getElementById(element).style.display = "block";
+	}
+}
+
 function hide(element){
 	if (document.getElementById(element)) {
 		document.getElementById(element).style.display = "none";

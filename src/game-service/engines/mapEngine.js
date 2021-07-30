@@ -101,7 +101,7 @@ var initializePickups = function(map){
 			pickup.createPickup(Math.random(), 33, 9, 2, DPClipSize*2, 25); //DP		
 			pickup.createPickup(Math.random(), 12, 9, 4, SGClipSize*2, 40); //SG
 
-			pickup.createPickup(Math.random(), 22, 32, 6, laserClipSize, 90); //Laser
+			pickup.createPickup(Math.random(), 22, 32, 6, 10, 60); //Laser
 
 			//blue south
 			pickup.createPickup(Math.random(), 11, 46, 5, 75, 45); //Body Armor
@@ -116,6 +116,37 @@ var initializePickups = function(map){
 		pickup.createPickup(Math.random(), 22, 30, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 22, 34, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 25, 61, 1, 50, 10); //MD
+
+	}	
+	else if (map == "longNarrows"){
+		bagRed.homeX = 3.5*75;
+		bagRed.homeY = 5.5*75;
+		bagBlue.homeX = 50.5*75;
+		bagBlue.homeY = 81.5*75;
+		if (gametype != "elim"){
+			//red north
+			pickup.createPickup(Math.random(), 38, 25, 5, 75, 45); //Body Armor
+			pickup.createPickup(Math.random(), 49, 22, 3, MGClipSize*2, 45); //MG
+			pickup.createPickup(Math.random(), 18, 13, 3, MGClipSize*2, 45); //MG
+			pickup.createPickup(Math.random(), 35, 13, 2, DPClipSize*2, 25); //DP
+			pickup.createPickup(Math.random(), 35, 16, 2, DPClipSize*2, 25); //DP		
+			pickup.createPickup(Math.random(), 12, 10, 4, SGClipSize*2, 40); //SG
+
+			pickup.createPickup(Math.random(), 27, 44, 6, 10, 60); //Laser
+
+			//blue south
+			pickup.createPickup(Math.random(), 16, 63, 5, 75, 45); //Body Armor
+			pickup.createPickup(Math.random(), 5, 66, 3, MGClipSize*2, 45); //MG
+			pickup.createPickup(Math.random(), 36, 75, 3, MGClipSize*2, 45); //MG
+			pickup.createPickup(Math.random(), 19, 72, 2, DPClipSize*2, 25); //DP
+			pickup.createPickup(Math.random(), 19, 75, 2, DPClipSize*2, 25); //DP		
+			pickup.createPickup(Math.random(), 42, 78, 4, SGClipSize*2, 40); //SG
+
+		}
+		pickup.createPickup(Math.random(), 33, 85, 1, 50, 10); //MD
+		pickup.createPickup(Math.random(), 27, 42, 1, 50, 10); //MD
+		pickup.createPickup(Math.random(), 27, 42, 1, 50, 10); //MD
+		pickup.createPickup(Math.random(), 21, 3, 1, 50, 10); //MD
 
 	}	
 	else if (map == "close"){
@@ -480,6 +511,118 @@ var initializeBlocks = function(map){
 		block.createBlock(30, 44, 1, 3, "warp", 11.1*75, 45.5*75);	
 		block.createBlock(12, 44, 1, 3, "warp", 31.1*75, 45.5*75);	
 		block.createBlock(20, 62, 3, 1, "warp", 21.5*75, 37*75);
+
+		// block.createBlock(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
+		// block.createBlock(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
+		// block.createBlock(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
+		// block.createBlock(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
+	}	
+	else if (map == "longNarrows"){
+		mapWidth = 53*75;
+		mapHeight = 87*75;
+		
+		//Spawn areas
+		spawnXminWhite = 1*75;
+		spawnXmaxWhite = 50*75;
+		spawnYminWhite = 1*75;
+		spawnYmaxWhite = 20*75;
+
+		spawnXminBlack = 1*75;
+		spawnXmaxBlack = 46*75;
+		spawnYminBlack = 67*75;
+		spawnYmaxBlack = mapHeight - 75;
+
+		//pushblocks
+		block.createBlock(18.9, 20, 1.1, 6, "pushDown");
+		block.createBlock(32.9, 20, 1.1, 6, "pushDown");
+		block.createBlock(18.9, 61, 1.1, 6, "pushUp");
+		block.createBlock(32.9, 61, 1.1, 6, "pushUp");
+
+			
+		//red north
+		block.createBlock(0, 0, 23, 1, "normal");	
+		block.createBlock(0, 0, 1, 14, "normal");	
+		block.createBlock(0, 0, 19, 4, "normal");	
+		block.createBlock(26, 0, 25, 1, "normal");	
+		block.createBlock(31, 0, 20, 4, "normal");	
+		block.createBlock(41, 0, 10, 8, "normal");	
+		block.createBlock(50, 0, 1, 27, "normal");
+		block.createBlock(0, 13, 9, 1, "normal");
+
+		block.createBlock(12, 5.1, 3, 4.9, "red");	
+		block.createBlock(12, 5, 8, 3, "red");	
+		block.createBlock(17, 13, 4, 2, "red");	
+
+		block.createBlock(37, 5.1, 3, 4.9, "red");	
+		block.createBlock(33, 5, 7, 3, "red");	
+		block.createBlock(31, 13, 4, 2, "red");	
+
+		//red warps
+		block.createBlock(23, 0, 3, 1, "warp", 26.5*75, 37*75);	
+		block.createBlock(17, 23, 1, 3, "warp", 36.1*75, 24.5*75);	
+		block.createBlock(35, 23, 1, 3, "warp", 16.9*75, 24.5*75);	
+
+		//right device
+		block.createBlock(43.8, 16, 2.2, 22, "pushDown");
+		block.createBlock(43.8, 38, 2.2, 23, "pushDown");
+		block.createBlock(46, 22, 5, 5, "normal");
+		block.createBlock(37, 18, 3, 4.9, "normal");	
+		block.createBlock(34, 20, 6, 3, "normal");	
+		block.createBlock(43, 14, 1, 47, "normal");	
+		block.createBlock(46, 14, 1, 60, "normal");
+		block.createBlock(34, 26, 10, 35, "normal");
+		block.createBlock(34, 64, 7, 3, "normal");
+		block.createBlock(38, 64, 3, 5, "normal");
+		block.createBlock(44, 63, 3, 11, "normal");
+
+		//left device
+		block.createBlock(6.8, 26, 2.2, 22, "pushUp");
+		block.createBlock(6.8, 48, 2.2, 23, "pushUp");
+		block.createBlock(2, 60, 5, 5, "normal");
+		block.createBlock(6, 13, 3, 11, "normal");	
+		block.createBlock(12, 18, 3, 4.9, "normal");	
+		block.createBlock(12, 20, 6, 3, "normal");	
+		block.createBlock(9, 26, 10, 35, "normal");
+		block.createBlock(6, 13, 1, 60, "normal");
+		block.createBlock(9, 26, 1, 47, "normal");
+		block.createBlock(13.1, 64, 6, 2.9, "normal");
+		block.createBlock(13, 64, 3, 5, "normal");
+		block.createBlock(13, 64, 6, 3, "normal");
+
+		//center map
+		block.createBlock(18, 20, 1, 47, "normal");	//rails
+		block.createBlock(34, 20, 1, 47, "normal");	
+
+		block.createBlock(24, 28, 5, 1, "normal");	
+		block.createBlock(25, 38, 1, 5, "red");	
+		block.createBlock(27, 38, 1, 5, "red");	
+		block.createBlock(25, 42, 3, 1, "red");	
+		block.createBlock(25, 44, 1, 5, "blue");	
+		block.createBlock(27, 44, 1, 5, "blue");	
+		block.createBlock(25, 44, 3, 1, "blue");	
+		block.createBlock(24, 58, 5, 1, "normal");	
+
+		//Blue south
+		block.createBlock(2, 60, 1, 27, "normal");	
+		block.createBlock(2, 79, 10, 8, "normal");	
+		block.createBlock(2, 83, 20, 4, "normal");	
+		block.createBlock(2, 86, 25, 1, "normal");	
+		block.createBlock(30, 86, 23, 1, "normal");	
+		block.createBlock(34, 83, 19, 4, "normal");	
+		block.createBlock(52, 73, 1, 14, "normal");	
+		block.createBlock(44, 73, 9, 1, "normal");	
+
+		block.createBlock(38, 77, 3, 4.9, "blue");	
+		block.createBlock(34, 79, 7, 3, "blue");	
+		block.createBlock(13, 77, 3, 4.9, "blue");	
+		block.createBlock(13, 79, 7, 3, "blue");	
+		block.createBlock(18, 72, 4, 2, "blue");	
+		block.createBlock(32, 72, 4, 2, "blue");	
+
+		//blue warps
+		block.createBlock(17, 61, 1, 3, "warp", 36.1*75, 62.5*75);	
+		block.createBlock(35, 61, 1, 3, "warp", 16.9*75, 62.5*75);	
+		block.createBlock(27, 86, 3, 1, "warp", 26.5*75, 49.5*75);
 
 		// block.createBlock(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
 		// block.createBlock(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left

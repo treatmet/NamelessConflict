@@ -2,7 +2,8 @@ var dataAccess = require('./dataAccess.js');
 const ObjectId = require('mongodb').ObjectID;
 
 const fullShopList = require("./shopList.json");
-//const totalShopItems = 
+const totalShopableItems = countTotalShopableItems(fullShopList, true);
+console.log("totalShopableItems: " + totalShopableItems);
 
 const defaultCustomizations = require("./defaultCustomizations.json");
 
@@ -14,6 +15,26 @@ const  totemize = require('totemize');
 
 
 //////////////////////////////////////////////
+function countTotalShopableItems(list, shopable){
+	var count = list.filter(function(item){ //LINQ count
+		var hydratedItem = item;
+		if (typeof item.category === 'undefined'){
+			hydratedItem = getShopItem(item);
+		}
+
+		var isItemShoppable = true;
+		if (hydratedItem.hideFromShop == true){
+			isItemShoppable = false;
+		}
+
+		if (isItemShoppable == shopable){
+			return item;
+		}
+	}).length;
+
+	return count;
+}
+
 function generateTempName(prefix){
 	let name;
 	
@@ -190,7 +211,6 @@ var searchUserFromDB = function(searchText,cb){
 	dataAccess.dbFindOptionsAwait("RW_USER", {USERNAME:re}, {limit:50}, async function(err, res){	
 		if (res && res[0]){
 			var users = res;
-			console.log(users);
 			cb(users);
 		}
 		else {
@@ -375,8 +395,6 @@ var setUserCustomizations = function(cognitoSub, obj) {
 		}
 	}
 
-	console.log("UPDATING USER CUSTOMIZATIONS setUserCustomizations()");
-	console.log(obj);
 
 	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizations: obj}, async function(err, obj){
 	});		
@@ -432,8 +450,10 @@ function transformToClientCustomizationOptions(customizationOptions){ //customiz
 	var clientOptions = getEmptyClientCustomizationOptions();
 	clientOptions.fullList = customizationOptions.filter(option => option != "unlock");
 
-
   	customizationOptions = removeDuplicates(customizationOptions);
+
+	clientOptions.completion.percent = Math.round(((countTotalShopableItems(customizationOptions, true) / totalShopableItems) * 1000)) / 10;
+	clientOptions.completion.exclusives = countTotalShopableItems(customizationOptions, false);
 
 	for (var o = 0; o < customizationOptions.length; o++){
 		var shopItem = getShopItem(customizationOptions[o]); 
@@ -519,7 +539,13 @@ function getEmptyClientCustomizationOptions(){
             icon: {
 				type:[]
             }        
-        }
+        },
+		"fullList":[],
+		"completion": {
+			percent: 0.0,
+			exclusives: 0
+		},
+
     };
 }
 
@@ -698,7 +724,7 @@ function transformToClientShop(shopList, nextRefreshTime){ //shopList is list of
 	//transform from list of id's to full shop object
 	var clientShopList = [];
 	for (var i = 0; i < shopList.length; i++){
-		var shopItem = fullShopList.find(item => item.id == shopList[i]);		
+		var shopItem = fullShopList.find(item => item.id == shopList[i]);	
 		if (shopItem){
 			const fixedPrices = true;
 			if (fixedPrices && shopItem.category != "other"){

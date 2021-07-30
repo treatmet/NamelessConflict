@@ -1512,6 +1512,19 @@ div#appearance {
     /* margin-bottom: 10px; */
 }
 
+div#shopCompletionDisplay {
+    display:none;
+    float: left;
+    text-align: left;
+    margin-left: 10px;
+    font-size: 12px;
+    position: absolute;
+}
+
+div#shopCompletionPercentage {
+    display: inline-block;
+}
+
 .teamTabs {
     width: 150px;
     margin-left: auto;

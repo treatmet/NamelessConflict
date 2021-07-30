@@ -326,7 +326,7 @@ var customSettingsList = [
 	{name:"serverPassword", desc:"Password (Letters and numbers only, leave blank for no password)", type:2, default:"", standard:true},
 	{name:"gameMinutesLength", desc:"Game Length in Minutes [0 is no time limit]", type:2, default:5, standard:true},
 	{name:"scoreToWin", desc:"Score to win [0 is no score limit]", type:2, default:0, standard:true},
-	{name:"map", desc:"Map [1=hall, 2=warehouse, 3=bunkers]", type:2, default:1, standard:true},
+	{name:"map", desc:"Map [1=Hall, 2=Warehouse, 3=Bunkers, 4=Narrowed, 5=LongNarrowed]", type:2, default:1, standard:true},
 	{name:"gametype", desc:"Gametype [1=capture, 2=deathmatch, 3=invasion 4=elimination]", type:2, default:1, standard:true},
 	{name:"maxPlayers", desc:"Max Team Size", type:2, default:7, standard:true},
 	{name:"voteGametype", desc:"Allow voting for gametype after match", type:1, default:true, standard:true},
@@ -474,6 +474,9 @@ function processCustomGameServerUpdateRequest(settings){
 					break;
 				case "4":
 					settings[s].value = "'narrows'";
+					break;
+				case "5":
+					settings[s].value = "'longNarrows'";
 					break;
 				default:								
 					settings[s].value = "'longest'";

@@ -8,6 +8,7 @@
 		"price": 5000,
 		"team":0,
 		"rarity":0,
+		"hideFromShop":true,
 		"canvasValue":"refresh.png"
 	},
 	{

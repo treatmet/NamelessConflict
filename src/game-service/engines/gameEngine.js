@@ -512,6 +512,10 @@ function getSafeCoordinates(team){
 				potentialX = randomInt(4*75, 40*75);			
 				potentialY = randomInt(0,mapHeight);
 			}
+			else if (map == "longNarrows"){
+				potentialX = randomInt(6*75, 47*75);			
+				potentialY = randomInt(0,mapHeight);
+			}
 			else {
 				potentialX = randomInt(0,mapWidth);			
 				potentialY = randomInt(0,mapHeight);
@@ -623,6 +627,7 @@ function endGame(){
 	};
 }
 
+//bag physics bagMechanics
 function moveBags(){
 	if (bagRed.speed > 0){
 		if (bagRed.direction == 1){
@@ -700,126 +705,16 @@ function moveBags(){
 		bagBlue.playerThrowing = 0;			
 	}
 
+
+
 	//Check Bag collision with blocks
-	var blockList = block.getBlockList();
 	if ((bagBlue.x != bagBlue.homeX || bagBlue.y != bagBlue.homeY) && !bagBlue.captured){
-		for (var i in blockList){
-			if (bagBlue.x > blockList[i].x && bagBlue.x < blockList[i].x + blockList[i].width && bagBlue.y > blockList[i].y && bagBlue.y < blockList[i].y + blockList[i].height){												
-				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
-					var overlapTop = Math.abs(blockList[i].y - bagBlue.y);  
-					var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - bagBlue.y);
-					var overlapLeft = Math.abs(bagBlue.x - blockList[i].x);
-					var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - bagBlue.x);			
-					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){
-						bagBlue.y = blockList[i].y;
-						updateMisc.bagBlue = bagBlue;
-					}
-					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
-						bagBlue.y = blockList[i].y + blockList[i].height;
-						updateMisc.bagBlue = bagBlue;
-					}
-					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
-						bagBlue.x = blockList[i].x;
-						updateMisc.bagBlue = bagBlue;
-					}
-					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
-						bagBlue.x = blockList[i].x + blockList[i].width;
-						updateMisc.bagBlue = bagBlue;
-					}
-				}
-				else if (blockList[i].type == "pushUp"){
-					bagBlue.y -= pushStrength;
-					if (bagBlue.y < blockList[i].y){bagBlue.y = blockList[i].y;}
-					updateMisc.bagBlue = bagBlue;
-				}
-				else if (blockList[i].type == "pushRight"){
-					bagBlue.x += pushStrength;
-					if (bagBlue.x > blockList[i].x + blockList[i].width){bagBlue.x = blockList[i].x + blockList[i].width;}
-					updateMisc.bagBlue = bagBlue;
-				}
-				else if (blockList[i].type == "pushDown"){
-					bagBlue.y += pushStrength;
-					if (bagBlue.y > blockList[i].y + blockList[i].height){bagBlue.y = blockList[i].y + blockList[i].height;}
-					updateMisc.bagBlue = bagBlue;
-				}
-				else if (blockList[i].type == "pushLeft"){
-					bagBlue.x -= pushStrength;
-					if (bagBlue.x < blockList[i].x){bagBlue.x = blockList[i].x;}
-					updateMisc.bagBlue = bagBlue;
-				}
-				else if (blockList[i].type == "warp"){
-					if (blockList[i].warpX){
-						bagBlue.x = blockList[i].warpX;
-						bagBlue.y = blockList[i].warpY;
-					}
-					else {
-						bagBlue.x = bagBlue.homeX;
-						bagBlue.y = bagBlue.homeY;
-					}
-					updateMisc.bagBlue = bagBlue;
-				}
-			}// End check if bag is overlapping block
-		}//End blockList loop		
+		if (block.checkCollision(bagBlue))
+			updateMisc.bagBlue = bagBlue;
 	}
 	if ((bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY) && !bagRed.captured){
-		for (var i in blockList){
-			if (bagRed.x > blockList[i].x && bagRed.x < blockList[i].x + blockList[i].width && bagRed.y > blockList[i].y && bagRed.y < blockList[i].y + blockList[i].height){												
-				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
-					var overlapTop = Math.abs(blockList[i].y - bagRed.y);  
-					var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - bagRed.y);
-					var overlapLeft = Math.abs(bagRed.x - blockList[i].x);
-					var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - bagRed.x);			
-					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){
-						bagRed.y = blockList[i].y;
-						updateMisc.bagRed = bagRed;
-					}
-					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
-						bagRed.y = blockList[i].y + blockList[i].height;
-						updateMisc.bagRed = bagRed;
-					}
-					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
-						bagRed.x = blockList[i].x;
-						updateMisc.bagRed = bagRed;
-					}
-					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
-						bagRed.x = blockList[i].x + blockList[i].width;
-						updateMisc.bagRed = bagRed;
-					}
-				}
-				else if (blockList[i].type == "pushUp"){
-					bagRed.y -= pushStrength;
-					if (bagRed.y < blockList[i].y){bagRed.y = blockList[i].y;}
-					updateMisc.bagRed = bagRed;
-				}
-				else if (blockList[i].type == "pushRight"){
-					bagRed.x += pushStrength;
-					if (bagRed.x > blockList[i].x + blockList[i].width){bagRed.x = blockList[i].x + blockList[i].width;}
-					updateMisc.bagRed = bagRed;
-				}
-				else if (blockList[i].type == "pushDown"){
-					bagRed.y += pushStrength;
-					if (bagRed.y > blockList[i].y + blockList[i].height){bagRed.y = blockList[i].y + blockList[i].height;}
-					updateMisc.bagRed = bagRed;
-				}
-				else if (blockList[i].type == "pushLeft"){
-					bagRed.x -= pushStrength;
-					if (bagRed.x < blockList[i].x){bagRed.x = blockList[i].x;}
-					updateMisc.bagRed = bagRed;
-				}
-				else if (blockList[i].type == "warp"){
-					if (blockList[i].warpX){
-						bagRed.x = blockList[i].warpX;
-						bagRed.y = blockList[i].warpY;
-					}
-					else {
-						bagRed.x = bagRed.homeX;
-						bagRed.y = bagRed.homeY;
-					}
-					updateMisc.bagRed = bagRed;
-				}
-
-			}// End check if bag is overlapping block
-		}//End blockList loop		
+		if (block.checkCollision(bagRed))
+			updateMisc.bagRed = bagRed;
 	}
 	
 	if (bagRed.x > mapWidth){bagRed.x = mapWidth; updateMisc.bagRed = bagRed;}
@@ -1049,17 +944,20 @@ function tabulateVotes(){
 		gametype = "elim";
 	}
 	
-	if (thePitVotes > longestVotes && thePitVotes > crikVotes && thePitVotes > narrowsVotes){
+	if (thePitVotes > longestVotes && thePitVotes > crikVotes && thePitVotes > narrowsVotes && thePitVotes > longNarrowsVotes){
 		map = "thepit";
 	}
-	else if (longestVotes > thePitVotes && longestVotes > crikVotes && longestVotes > narrowsVotes){
+	else if (longestVotes > thePitVotes && longestVotes > crikVotes && longestVotes > narrowsVotes && longestVotes > longNarrowsVotes){
 		map = "longest";
 	}
-	else if (crikVotes > thePitVotes && crikVotes > longestVotes && crikVotes > narrowsVotes){
+	else if (crikVotes > thePitVotes && crikVotes > longestVotes && crikVotes > narrowsVotes && crikVotes > longNarrowsVotes){
 		map = "crik";
 	}
-	else if (narrowsVotes > thePitVotes && narrowsVotes > longestVotes && narrowsVotes > crikVotes){
+	else if (narrowsVotes > thePitVotes && narrowsVotes > longestVotes && narrowsVotes > crikVotes && narrowsVotes > longNarrowsVotes){
 		map = "narrows";
+	}
+	else if (longNarrowsVotes > thePitVotes && longNarrowsVotes > longestVotes && longNarrowsVotes > crikVotes && longNarrowsVotes > narrowsVotes){
+		map = "longNarrows";
 	}
 	
 	if (voteRebalanceTeamsYes > voteRebalanceTeamsNo){
@@ -1075,6 +973,7 @@ function tabulateVotes(){
 	thePitVotes = 0;
 	longestVotes = 0;
 	narrowsVotes = 0;
+	longNarrowsVotes = 0;
 	crikVotes = 0;
 	voteRebalanceTeamsYes = 0;
 	voteRebalanceTeamsNo = 0;
@@ -1831,6 +1730,7 @@ var secondIntervalFunction = function(){
 				longestVotes:longestVotes, 
 				crikVotes:crikVotes,
 				narrowsVotes:narrowsVotes,
+				longNarrowsVotes:longNarrowsVotes,
 				voteRebalanceTeamsYes:voteRebalanceTeamsYes,
 				voteRebalanceTeamsNo:voteRebalanceTeamsNo,
 			};

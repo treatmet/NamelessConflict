@@ -106,6 +106,14 @@ module.exports.checkCollision = function(obj){
 				break;
 		}
 	}
+
+	if (obj.homeX){
+		extendTopOfBlock = 10;
+		extendRightOfBlock = 10;
+		extendBottomOfBlock = 10;
+		extendLeftOfBlock = 10;
+	}
+
 	var posUpdated = false;
 	for (var i in blockList){
 		if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
@@ -202,7 +210,8 @@ module.exports.checkCollision = function(obj){
 				posUpdated = true;
 				obj.y = blockList[i].warpY;
 				posUpdated = true;
-				SOCKET_LIST[obj.id].emit('sfx', "sfxWarp");
+				if (SOCKET_LIST[obj.id])
+					SOCKET_LIST[obj.id].emit('sfx', "sfxWarp");
 			}
 		}// End check if player is overlapping block
 	}//End blockList loop	
