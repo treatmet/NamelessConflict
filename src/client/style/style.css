@@ -399,7 +399,7 @@ div#progressColumn {
     width: 33.2%;
     text-align: center;
     padding-top: 5px;
-    line-height: 70px;
+/*     line-height: 70px; */
 }
 
 .sectionTitle2 {
@@ -409,7 +409,7 @@ div#progressColumn {
     text-align: center;
     padding-top: 5px;
     font-size: 30px;
-    line-height: 58px;
+/*     line-height: 58px; */
 }
 .sectionTitle3 {
     display: none;
@@ -418,7 +418,7 @@ div#progressColumn {
     text-align: center;
     padding-top: 5px;
     font-size: 30px;
-    line-height: 58px;
+/*     line-height: 58px; */
 }
 
 #fullScreenError {
@@ -1523,6 +1523,9 @@ div#shopCompletionDisplay {
 
 div#shopCompletionPercentage {
     display: inline-block;
+}
+span#shopCompletionExclusives {
+    color: #ff3600;
 }
 
 .teamTabs {

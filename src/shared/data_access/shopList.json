@@ -28,7 +28,7 @@
 		"subCategory":"type",
 		"title":"Cowboy Hat",
 		"text":"Yee Haw!",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"cowboyHat"
@@ -39,7 +39,7 @@
 		"subCategory":"type",
 		"title":"Crown",
 		"text":"You reign supreme",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"hideFromShop":true,
@@ -51,7 +51,7 @@
 		"subCategory":"type",
 		"title":"MAGMA Hat",
 		"text":"Make All Grown Men Angry!",
-		"price": 20000,
+		"price": 0,
 		"team":1,
 		"rarity":1,
 		"canvasValue":"magaCapHat"
@@ -62,7 +62,7 @@
 		"subCategory":"type",
 		"title":"Psychic Boy Hat",
 		"text":"Thank you for reading this description. This description loves you.",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"nessCapHat"
@@ -73,7 +73,7 @@
 		"subCategory":"type",
 		"title":"Greek Wreath",
 		"text":"The only true wisdom is in knowing you know nothing",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"wreathHat"
@@ -84,7 +84,7 @@
 		"subCategory":"type",
 		"title":"Golden Wreath",
 		"text":"The only true wisdom is in knowing you're rich",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"goldWreathHat"
@@ -95,7 +95,7 @@
 		"subCategory":"type",
 		"title":"Gray Alien Head",
 		"text":"For participating in the SocketShot community [Exclusive item]",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"hideFromShop":true,
@@ -107,7 +107,7 @@
 		"subCategory":"type",
 		"title":"Green Alien Head",
 		"text":"For participating in the SocketShot community [Exclusive item]",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"hideFromShop":true,
@@ -119,7 +119,7 @@
 		"subCategory":"type",
 		"title":"Blue Alien Head",
 		"text":"The new alien species of Season Zero-2",
-		"price": 20000,
+		"price": 0,
 		"team":2,
 		"rarity":2,
 		"canvasValue":"alienBlueHat"
@@ -130,7 +130,7 @@
 		"subCategory":"type",
 		"title":"Santa Hat",
 		"text":"Tis the season",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"santaHat"
@@ -141,7 +141,7 @@
 		"subCategory":"type",
 		"title":"Headband",
 		"text":"Infinite ammo [not really]",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"headbandHat"
@@ -152,7 +152,7 @@
 		"subCategory":"type",
 		"title":"Halo",
 		"text":"Innocent as can be",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"haloHat"
@@ -163,7 +163,7 @@
 		"subCategory":"type",
 		"title":"Ski Mask",
 		"text":"For protection against windburn, or identification",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"skiMaskHat"
@@ -173,7 +173,7 @@
 		"subCategory":"type",
 		"title":"Blue Cap",
 		"text":"A blue baseball hat",
-		"price": 5000,
+		"price": 0,
 		"team":2,
 		"rarity":0,
 		"canvasValue":"blueCapHat"
@@ -184,7 +184,7 @@
 		"subCategory":"type",
 		"title":"Red Cap",
 		"text":"Just a normal red hat",
-		"price": 5000,
+		"price": 0,
 		"team":1,
 		"rarity":0,
 		"canvasValue":"redCapHat"
@@ -195,7 +195,7 @@
 		"subCategory":"type",
 		"title":"Green Cap",
 		"text":"It's a nice green hat",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"greenCapHat"
@@ -206,7 +206,7 @@
 		"subCategory":"type",
 		"title":"Shades",
 		"text":"Thug life",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"sunglassesHat"
@@ -217,7 +217,7 @@
 		"subCategory":"type",
 		"title":"Googly Eyes",
 		"text":"These eyes be poppin",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"googlyHat"
@@ -228,7 +228,7 @@
 		"subCategory":"type",
 		"title":"Bald",
 		"text":"beautiful",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"baldHair"
@@ -239,7 +239,7 @@
 		"subCategory":"type",
 		"title":"Male Pattern",
 		"text":"Don't make fun",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"malePatternHair"
@@ -250,7 +250,7 @@
 		"subCategory":"type",
 		"title":"Pony Tail",
 		"text":"Anyone got a hair tie?",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"ponyTailHair"
@@ -261,7 +261,7 @@
 		"subCategory":"type",
 		"title":"Crew Cut",
 		"text":"Military standard",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"crewHair"
@@ -272,7 +272,7 @@
 		"subCategory":"type",
 		"title":"Afro",
 		"text":"It's complicated",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"afroHair"
@@ -283,7 +283,7 @@
 		"subCategory":"type",
 		"title":"Big Afro",
 		"text":"Bring back the 80's",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"bigAfroHair"
@@ -294,7 +294,7 @@
 		"subCategory":"type",
 		"title":"Cornrows",
 		"text":"Don't be culturally appropriating the Greeks",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"cornrowsHair"
@@ -305,7 +305,7 @@
 		"subCategory":"type",
 		"title":"Mohawk",
 		"text":"Punk never dies",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"mohawkHair"
@@ -315,7 +315,7 @@
 		"subCategory":"type",
 		"title":"Anime",
 		"text":"KAAAMEEHAAAMEEE...",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"animeHair"
@@ -326,7 +326,7 @@
 		"subCategory":"color",
 		"title":"Light Brown",
 		"text":"",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#7f5227"
@@ -337,7 +337,7 @@
 		"subCategory":"color",
 		"title":"Dark Brown",
 		"text":"",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#381f07"
@@ -348,7 +348,7 @@
 		"subCategory":"color",
 		"title":"Ginger",
 		"text":"",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#be5329"
@@ -359,7 +359,7 @@
 		"subCategory":"color",
 		"title":"Ramona",
 		"text":"I'm in lesbians with you",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#b8133c"
@@ -370,7 +370,7 @@
 		"subCategory":"color",
 		"title":"Green",
 		"text":"",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"#259a1f"
@@ -381,7 +381,7 @@
 		"subCategory":"color",
 		"title":"Black",
 		"text":"",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#130900"
@@ -392,7 +392,7 @@
 		"subCategory":"color",
 		"title":"Slim Shady",
 		"text":"I'm back",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#fff3b3"
@@ -403,7 +403,7 @@
 		"subCategory":"color",
 		"title":"Gray",
 		"text":"",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#9e9e9e"
@@ -414,7 +414,7 @@
 		"subCategory":"color",
 		"title":"Albino",
 		"text":"Sun = death",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#ffe9ed"
@@ -425,7 +425,7 @@
 		"subCategory":"color",
 		"title":"Medium",
 		"text":"We aren't so different",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#d2aa7d"
@@ -436,7 +436,7 @@
 		"subCategory":"color",
 		"title":"Fair Skin",
 		"text":"Really lacking in melanin",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#f2cfa8"
@@ -447,7 +447,7 @@
 		"subCategory":"color",
 		"title":"Cartoon Skin",
 		"text":"*Simpsons reference*",
-		"price": 50000,
+		"price": 0,
 		"team":1,
 		"rarity":3,
 		"canvasValue":"#fbbd00"
@@ -458,7 +458,7 @@
 		"subCategory":"color",
 		"title":"Jaundice",
 		"text":"Caused by the buildup of bilirubin in the blood",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#fffdbe"
@@ -469,7 +469,7 @@
 		"subCategory":"color",
 		"title":"Sunburn",
 		"text":"YOWCH!",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#ffa8a6"
@@ -480,7 +480,7 @@
 		"subCategory":"color",
 		"title":"Espresso",
 		"text":"Brown like Beyonce",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#6a4118"
@@ -491,7 +491,7 @@
 		"subCategory":"color",
 		"title":"Chocolate",
 		"text":"Well don't you look delicious",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#321f11"
@@ -502,7 +502,7 @@
 		"subCategory":"color",
 		"title":"Golden brown",
 		"text":"What you want your marshmallow to look like",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#7f4829"
@@ -513,7 +513,7 @@
 		"subCategory":"color",
 		"title":"Chestnut",
 		"text":"In a nutshell, we're all the same",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#895434"
@@ -524,7 +524,7 @@
 		"subCategory":"color",
 		"title":"Sand",
 		"text":"Ain't this about a beach",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#ad8b65"
@@ -535,7 +535,7 @@
 		"subCategory":"color",
 		"title":"Lime Green",
 		"text":"#41bd09",
-		"price": 50000,
+		"price": 0,
 		"team":2,
 		"rarity":2,
 		"canvasValue":"#41bd09"
@@ -546,7 +546,7 @@
 		"subCategory":"color",
 		"title":"Aqua",
 		"text":"#09bf7b",
-		"price": 20000,
+		"price": 0,
 		"team":2,
 		"rarity":1,
 		"canvasValue":"#09bf7b"
@@ -557,7 +557,7 @@
 		"subCategory":"color",
 		"title":"Cyan",
 		"text":"#09b8c2",
-		"price": 5000,
+		"price": 0,
 		"team":2,
 		"rarity":0,
 		"canvasValue":"#09b8c2"
@@ -568,7 +568,7 @@
 		"subCategory":"color",
 		"title":"Sky Blue",
 		"text":"#098bc3",
-		"price": 5000,
+		"price": 0,
 		"team":2,
 		"rarity":1,
 		"canvasValue":"#098bc3"
@@ -579,7 +579,7 @@
 		"subCategory":"color",
 		"title":"Charcoal",
 		"text":"#2a2a2a",
-		"price": 100000,
+		"price": 0,
 		"team":2,
 		"rarity":3,
 		"hideFromShop":true,
@@ -591,7 +591,7 @@
 		"subCategory":"color",
 		"title":"Regular Blue",
 		"text":"#0942c2",
-		"price": 5000,
+		"price": 0,
 		"team":2,
 		"rarity":0,
 		"canvasValue":"#0942c2"
@@ -602,7 +602,7 @@
 		"subCategory":"color",
 		"title":"Navy",
 		"text":"#071b9b",
-		"price": 20000,
+		"price": 0,
 		"team":2,
 		"rarity":1,
 		"canvasValue":"#071b9b"
@@ -613,7 +613,7 @@
 		"subCategory":"color",
 		"title":"Purple",
 		"text":"#2a0577",
-		"price": 50000,
+		"price": 0,
 		"team":2,
 		"rarity":2,
 		"canvasValue":"#2a0577"
@@ -624,7 +624,7 @@
 		"subCategory":"color",
 		"title":"Light Purple",
 		"text":"#520bec",
-		"price": 50000,
+		"price": 0,
 		"team":2,
 		"rarity":2,
 		"canvasValue":"#520bec"
@@ -635,7 +635,7 @@
 		"subCategory":"color",
 		"title":"Dino Green",
 		"text":"#2c7b06",
-		"price": 20000,
+		"price": 0,
 		"team":2,
 		"rarity":1,
 		"canvasValue":"#2c7b06"
@@ -646,7 +646,7 @@
 		"subCategory":"color",
 		"title":"Chill Blue",
 		"text":"#006393",
-		"price": 20000,
+		"price": 0,
 		"team":2,
 		"rarity":2,
 		"canvasValue":"#006393"
@@ -657,7 +657,7 @@
 		"subCategory":"color",
 		"title":"Magenta",
 		"text":"#c40e9b",
-		"price": 20000,
+		"price": 0,
 		"team":1,
 		"rarity":2,
 		"canvasValue":"#c40e9b"
@@ -668,7 +668,7 @@
 		"subCategory":"color",
 		"title":"Light Pink",
 		"text":"#ff6bb9",
-		"price": 5000,
+		"price": 0,
 		"team":1,
 		"rarity":1,
 		"canvasValue":"#ff6bb9"
@@ -679,7 +679,7 @@
 		"subCategory":"color",
 		"title":"Gold",
 		"text":"#d7b50b",
-		"price": 50000,
+		"price": 0,
 		"team":1,
 		"rarity":2,
 		"canvasValue":"#d7b50b"
@@ -690,7 +690,7 @@
 		"subCategory":"color",
 		"title":"Honey",
 		"text":"#de900b",
-		"price": 5000,
+		"price": 0,
 		"team":1,
 		"rarity":0,
 		"canvasValue":"#de900b"
@@ -701,7 +701,7 @@
 		"subCategory":"color",
 		"title":"Orangecide",
 		"text":"#e9630c",
-		"price": 5000,
+		"price": 0,
 		"team":1,
 		"rarity":0,
 		"canvasValue":"#e9630c"
@@ -712,7 +712,7 @@
 		"subCategory":"color",
 		"title":"Tor Orange",
 		"text":"#c82f0a",
-		"price": 20000,
+		"price": 0,
 		"team":1,
 		"rarity":1,
 		"canvasValue":"#c82f0a"
@@ -723,7 +723,7 @@
 		"subCategory":"color",
 		"title":"Red",
 		"text":"#9e0b0f",
-		"price": 5000,
+		"price": 0,
 		"team":1,
 		"rarity":0,
 		"canvasValue":"#9e0b0f"
@@ -734,7 +734,7 @@
 		"subCategory":"color",
 		"title":"Raspberry",
 		"text":"#c40a4c",
-		"price": 20000,
+		"price": 0,
 		"team":1,
 		"rarity":1,
 		"canvasValue":"#c40a4c"
@@ -745,7 +745,7 @@
 		"subCategory":"color",
 		"title":"Hot Pink",
 		"text":"#fb0c84",
-		"price": 100000,
+		"price": 0,
 		"team":1,
 		"rarity":2,
 		"canvasValue":"#fb0c84"
@@ -756,7 +756,7 @@
 		"subCategory":"color",
 		"title":"Dark Red",
 		"text":"#770606",
-		"price": 50000,
+		"price": 0,
 		"team":1,
 		"rarity":2,
 		"canvasValue":"#770606"
@@ -767,7 +767,7 @@
 		"subCategory":"color",
 		"title":"Neon",
 		"text":"#f9fa0c",
-		"price": 20000,
+		"price": 0,
 		"team":1,
 		"rarity":1,
 		"canvasValue":"#f9fa0c"
@@ -778,7 +778,7 @@
 		"subCategory":"color",
 		"title":"Slate",
 		"text":"#dfdfdf",
-		"price": 100000,
+		"price": 0,
 		"team":1,
 		"rarity":3,
 		"hideFromShop":true,
@@ -790,7 +790,7 @@
 		"subCategory":"type",
 		"title":"No sleeves",
 		"text":"Guns out",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"default"
@@ -801,7 +801,7 @@
 		"subCategory":"type",
 		"title":"Long sleeves",
 		"text":"Toasty",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"longSleevesShirtType"
@@ -812,7 +812,7 @@
 		"subCategory":"pattern",
 		"title":"None",
 		"text":"",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"default"
@@ -823,7 +823,7 @@
 		"subCategory":"pattern",
 		"title":"Zebra",
 		"text":"Confuse your predators!",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"zebra"
@@ -834,7 +834,7 @@
 		"subCategory":"pattern",
 		"title":"Tartan",
 		"text":"Often mistakenly called 'plaid'",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"plaid"
@@ -845,7 +845,7 @@
 		"subCategory":"pattern",
 		"title":"Scales",
 		"text":"Unleash the reptile brain",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"chainLink"
@@ -856,7 +856,7 @@
 		"subCategory":"pattern",
 		"title":"Honeycomb",
 		"text":"ME WANT HONEYCOMB ME WANT HONEYCOMB",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"cells"
@@ -867,7 +867,7 @@
 		"subCategory":"pattern",
 		"title":"Pyramids",
 		"text":"Not made with slave labor",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"pyramids"
@@ -878,7 +878,7 @@
 		"subCategory":"color",
 		"title":"Brown Shoes",
 		"text":"Standard brown",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#603913"
@@ -889,7 +889,7 @@
 		"subCategory":"color",
 		"title":"Black Shoes",
 		"text":"Goes with anything",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#000000"
@@ -900,7 +900,7 @@
 		"subCategory":"color",
 		"title":"White Shoes",
 		"text":"Lookin' fly",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#f4f4f4"
@@ -911,7 +911,7 @@
 		"subCategory":"color",
 		"title":"Gold Shoes",
 		"text":"Pretty heavy, but looks over practicality: always",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"#ffde00"
@@ -922,7 +922,7 @@
 		"subCategory":"color",
 		"title":"Green Shoes",
 		"text":"Kinda ugly if you ask me",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#4b9608"
@@ -933,7 +933,7 @@
 		"subCategory":"color",
 		"title":"Hot Pink Shoes",
 		"text":"Can you pull off pink?",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#ec008c"
@@ -944,7 +944,7 @@
 		"subCategory":"color",
 		"title":"Blue jeans",
 		"text":"Tried and true",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#0b276e"
@@ -955,7 +955,7 @@
 		"subCategory":"color",
 		"title":"Tactical Green",
 		"text":"Get tactical, marines!",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#2d5807"
@@ -966,7 +966,7 @@
 		"subCategory":"color",
 		"title":"Brown Pants",
 		"text":"Enjoy free shipping and easy returns every day",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#624004"
@@ -977,7 +977,7 @@
 		"subCategory":"color",
 		"title":"Teal Pants",
 		"text":"For any occasion, except funerals",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#028c87"
@@ -988,7 +988,7 @@
 		"subCategory":"color",
 		"title":"Pink Pants",
 		"text":"Make a statement",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#f552ff"
@@ -999,7 +999,7 @@
 		"subCategory":"color",
 		"title":"Neon Pants",
 		"text":"Need some attention?",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#f6ff00"
@@ -1010,7 +1010,7 @@
 		"subCategory":"color",
 		"title":"No Pants",
 		"text":"Do you want to end up on a list??",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#FFFFFF"
@@ -1021,7 +1021,7 @@
 		"subCategory":"color",
 		"title":"Slate Pants",
 		"text":"Whitewashed jeans",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#dfdfdf"
@@ -1032,7 +1032,7 @@
 		"subCategory":"color",
 		"title":"Charcoal Pants",
 		"text":"Why risk clashing?",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#2a2a2a"
@@ -1043,7 +1043,7 @@
 		"subCategory":"type",
 		"title":"Standard Yellow",
 		"text":"Methane based propulsion",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"default"
@@ -1054,7 +1054,7 @@
 		"subCategory":"type",
 		"title":"Standard Blue",
 		"text":"Bluethane based propulsion",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"defaultBlue"
@@ -1065,7 +1065,7 @@
 		"subCategory":"type",
 		"title":"Standard Green",
 		"text":"Kryptonite based propulsion",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"defaultGreen"
@@ -1076,7 +1076,7 @@
 		"subCategory":"type",
 		"title":"Blue Laser Beam",
 		"text":"Isn't this supposed to come out the front?",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"laserBlue"
@@ -1087,7 +1087,7 @@
 		"subCategory":"type",
 		"title":"Magenta Laser Beam",
 		"text":"Careful where you point your rear.",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"laserRed"
@@ -1098,7 +1098,7 @@
 		"subCategory":"type",
 		"title":"Hearts",
 		"text":"The power of love",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"hearts2"
@@ -1109,7 +1109,7 @@
 		"subCategory":"type",
 		"title":"Rainbow",
 		"text":"Created from attacking robotic unicorns",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"rainbow"
@@ -1120,7 +1120,7 @@
 		"subCategory":"type",
 		"title":"Ion Thrusters",
 		"text":"Creates thrust by accelerating ions using electricity",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"streaks"
@@ -1131,7 +1131,7 @@
 		"subCategory":"type",
 		"title":"Red Ion Thrusters",
 		"text":"Creates thrust by accelerating red ions using electricity",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"streaksRed"
@@ -1142,7 +1142,7 @@
 		"subCategory":"type",
 		"title":"Blast",
 		"text":"Big boom, big go",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"blast"
@@ -1153,7 +1153,7 @@
 		"subCategory":"type",
 		"title":"Lightning",
 		"text":"The primordial force of nature",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"lightning"
@@ -1164,7 +1164,7 @@
 		"subCategory":"type",
 		"title":"Green Slime",
 		"text":"Eww, gross",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"slime"
@@ -1175,7 +1175,7 @@
 		"subCategory":"type",
 		"title":"Purple Slime",
 		"text":"What is this stuff?",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"slimePurple"
@@ -1186,7 +1186,7 @@
 		"subCategory":"color",
 		"title":"White Name",
 		"text":"#FFFFFF",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"#FFFFFF"
@@ -1197,7 +1197,7 @@
 		"subCategory":"color",
 		"title":"Blue Name",
 		"text":"#00259d",
-		"price": 20000,
+		"price": 0,
 		"team":2,
 		"rarity":1,
 		"canvasValue":"#00259d"
@@ -1208,7 +1208,7 @@
 		"subCategory":"color",
 		"title":"Red Name",
 		"text":"#9d0000",
-		"price": 20000,
+		"price": 0,
 		"team":1,
 		"rarity":1,
 		"canvasValue":"#9d0000"
@@ -1219,7 +1219,7 @@
 		"subCategory":"color",
 		"title":"Green Name",
 		"text":"#005d02",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"#005d02"
@@ -1230,7 +1230,7 @@
 		"subCategory":"color",
 		"title":"Black Name",
 		"text":"#000000",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"#000000"
@@ -1241,7 +1241,7 @@
 		"subCategory":"color",
 		"title":"Yellow Name",
 		"text":"#fffc00",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"#fffc00"
@@ -1252,7 +1252,7 @@
 		"subCategory":"color",
 		"title":"Cyan Name",
 		"text":"#00fcff",
-		"price": 20000,
+		"price": 0,
 		"team":2,
 		"rarity":2,
 		"canvasValue":"#00fcff"
@@ -1263,7 +1263,7 @@
 		"subCategory":"color",
 		"title":"Pink Name",
 		"text":"#ff00f0",
-		"price": 50000,
+		"price": 0,
 		"team":1,
 		"rarity":2,
 		"canvasValue":"#ff00f0"
@@ -1296,7 +1296,7 @@
 		"subCategory":"type",
 		"title":"Smiley",
 		"text":"Show your optimism!",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"smile"
@@ -1307,9 +1307,9 @@
 		"subCategory":"type",
 		"title":"Season 0 Bronze",
 		"text":"Achieved a Bronze rank in Season 0",
-		"price": 5000,
+		"price": 0,
 		"team":0,
-		"rarity":2,
+		"rarity":4,
 		"hideFromShop":true,
 		"canvasValue":"bronze3_0"
 	},	
@@ -1319,9 +1319,9 @@
 		"subCategory":"type",
 		"title":"Season 0 Silver",
 		"text":"Achieved a Silver rank in Season 0",
-		"price": 5000,
+		"price": 0,
 		"team":0,
-		"rarity":2,
+		"rarity":4,
 		"hideFromShop":true,
 		"canvasValue":"silver3_0"
 	},	
@@ -1331,9 +1331,9 @@
 		"subCategory":"type",
 		"title":"Season 0 Gold",
 		"text":"Achieved a Gold rank in Season 0",
-		"price": 5000,
+		"price": 0,
 		"team":0,
-		"rarity":2,
+		"rarity":4,
 		"hideFromShop":true,
 		"canvasValue":"gold3_0"
 	},	
@@ -1343,9 +1343,9 @@
 		"subCategory":"type",
 		"title":"Season 0 Diamond",
 		"text":"Achieved a Diamond rank in Season 0",
-		"price": 5000,
+		"price": 0,
 		"team":0,
-		"rarity":2,
+		"rarity":4,
 		"hideFromShop":true,
 		"canvasValue":"diamond_0"
 	},	
@@ -1355,7 +1355,7 @@
 		"subCategory":"type",
 		"title":"USA Flag",
 		"text":"Murica!",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"flagUSA"
@@ -1366,7 +1366,7 @@
 		"subCategory":"type",
 		"title":"Canadian Flag",
 		"text":"Blame Canada!",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"flagCAN"
@@ -1377,7 +1377,7 @@
 		"subCategory":"type",
 		"title":"$",
 		"text":"For becoming a millionaire!",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"hideFromShop":true,
@@ -1389,7 +1389,7 @@
 		"subCategory":"type",
 		"title":"WTF",
 		"text":"Some things just defy explanation",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"wtf"
@@ -1400,7 +1400,7 @@
 		"subCategory":"type",
 		"title":"Bug Killer",
 		"text":"For helping kill SocketShot bugs! [Exclusive item]",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"hideFromShop":true,
@@ -1412,7 +1412,7 @@
 		"subCategory":"type",
 		"title":"Frog",
 		"text":"Created in honor of the first SocketShot modder",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"frog"
@@ -1423,7 +1423,7 @@
 		"subCategory":"type",
 		"title":"Tourney Zero Trophy",
 		"text":"For participating in the 'Season Zero' beta tournament",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"hideFromShop":true,
@@ -1435,7 +1435,7 @@
 		"subCategory":"type",
 		"title":"Champion's Trophy",
 		"text":"For rising above all others in an official SocketShot Tournament!",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"hideFromShop":true,		
@@ -1447,7 +1447,7 @@
 		"subCategory":"type",
 		"title":"Finalist Trophy",
 		"text":"For being an official SocketShot tournament Finalist!",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"hideFromShop":true,
@@ -1459,7 +1459,7 @@
 		"subCategory":"type",
 		"title":"ALERT",
 		"text":"War has changed",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"alert"
@@ -1470,7 +1470,7 @@
 		"subCategory":"type",
 		"title":"@",
 		"text":"Twitter handle",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"at"
@@ -1481,7 +1481,7 @@
 		"subCategory":"type",
 		"title":"Sheriff Badge",
 		"text":"I'm the sheriff 'round these parts",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"badge"
@@ -1492,7 +1492,7 @@
 		"subCategory":"type",
 		"title":"Science Beaker",
 		"text":"For participating in the public Beta",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"beaker"
@@ -1503,7 +1503,7 @@
 		"subCategory":"type",
 		"title":"Birdy",
 		"text":"A symbol of freedom",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"bird"
@@ -1514,7 +1514,7 @@
 		"subCategory":"type",
 		"title":"Light Bulb",
 		"text":"Eureka!",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"bulb"
@@ -1525,7 +1525,7 @@
 		"subCategory":"type",
 		"title":"4 Leaf Clover",
 		"text":"Lucky",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"clover"
@@ -1536,7 +1536,7 @@
 		"subCategory":"type",
 		"title":"Copyright",
 		"text":"All rights reserved",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"copyright"
@@ -1547,7 +1547,7 @@
 		"subCategory":"type",
 		"title":"Crosshairs",
 		"text":"Target sighted",
-		"price": 100000,
+		"price": 0,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"crosshairs"
@@ -1558,7 +1558,7 @@
 		"subCategory":"type",
 		"title":"Cursor",
 		"text":"Clickity click click",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"cursor"
@@ -1569,7 +1569,7 @@
 		"subCategory":"type",
 		"title":"Fist",
 		"text":"Pound it, bro",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"fist"
@@ -1580,7 +1580,7 @@
 		"subCategory":"type",
 		"title":"Hashtag",
 		"text":"Let's get it trending",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"hashtag"
@@ -1591,7 +1591,7 @@
 		"subCategory":"type",
 		"title":"Middle Finger",
 		"text":"Fuck you",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"middleFinger"
@@ -1602,7 +1602,7 @@
 		"subCategory":"type",
 		"title":"NO",
 		"text":"Consent not given",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"no"
@@ -1613,7 +1613,7 @@
 		"subCategory":"type",
 		"title":"Notes",
 		"text":"Music is life itself",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"notes"
@@ -1624,7 +1624,7 @@
 		"subCategory":"type",
 		"title":"Paw Print",
 		"text":"I <3 Animals",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"pawPrint"
@@ -1635,7 +1635,7 @@
 		"subCategory":"type",
 		"title":"Radiation",
 		"text":"Danger: radioactive materials",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"radiation"
@@ -1646,7 +1646,7 @@
 		"subCategory":"type",
 		"title":"Recycle",
 		"text":"Don't be trashy",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"recycle"
@@ -1657,7 +1657,7 @@
 		"subCategory":"type",
 		"title":"Snowflake",
 		"text":"Let it snow",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"snowflake"
@@ -1668,7 +1668,7 @@
 		"subCategory":"type",
 		"title":"Gold Star",
 		"text":"Awarded for exemplary performance",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"star"
@@ -1679,7 +1679,7 @@
 		"subCategory":"type",
 		"title":"Thumbs Up",
 		"text":"Used to express assent, approval, or encouragement",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"thumbsUp"
@@ -1690,7 +1690,7 @@
 		"subCategory":"type",
 		"title":"Trophy",
 		"text":"MVP",
-		"price": 50000,
+		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"trophy"
@@ -1701,7 +1701,7 @@
 		"subCategory":"type",
 		"title":"Bitcoin",
 		"text":"Cryptocurrency is the future",
-		"price": 20000,
+		"price": 0,
 		"team":0,
 		"rarity":1,
 		"canvasValue":"bitcoin"
@@ -1712,7 +1712,7 @@
 		"subCategory":"type",
 		"title":"None",
 		"text":"",
-		"price": 5000,
+		"price": 0,
 		"team":0,
 		"rarity":0,
 		"canvasValue":"noneHat"

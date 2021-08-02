@@ -271,7 +271,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("July 22, 2021 16:00:00");
+	var thresholdDate = new Date("July 29, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -289,13 +289,13 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				var customizationOptions = resy[k].customizationOptions; 
 				var customizations = resy[k].customizations; 
 					 
+				console.log("Updating " + resy[k].USERNAME);
 				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
 					console.log("SAFETYS ON");
 					continue;
 				}
 
-				console.log("Updating " + resy[k].USERNAME);
-				console.log("Timestamp " + resy[k].onlineTimestamp);
+//				console.log("Timestamp " + resy[k].onlineTimestamp);
 		   
 /* 				if (!customizationOptions){
 					console.log("ERROR - no customizationOptions");
@@ -310,8 +310,8 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				console.log("-----------------------------------customizations");
 				console.log(customizations);
 				
-				customizations["1"].dpColor = "#ffcc00"; //CONFIGURATION
-				customizations["2"].dpColor = "#ffcc00"; //CONFIGURATION
+				customizations["1"].mgColor = "#ffcc00"; //CONFIGURATION
+				customizations["2"].mgColor = "#ffcc00"; //CONFIGURATION
 
 				//customizationOptions.push("bronze3_0Icon");
 				//customizationOptions.push("silver3_0Icon");

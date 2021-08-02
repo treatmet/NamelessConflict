@@ -1153,40 +1153,55 @@ function getShopItemHTML(item, active, isInShop){
             break;
     }
 
-
+    if (item.hideFromShop){
+        rarityText = "[Exclusive]";   
+        rarityColor = "#ff3600";
+    }
 
     if (rarityImg && showRarityImg)
         HTML += "<div class='shopIconOverlay' id ='" + item.id + "''><img src='/src/client/img/shopIcons/" + rarityImg + "'></div>";
+
+    //Item Title
     if (item.title){
         HTML += "<div id='shopTitle' class='shopTitle' ";
         if (showRarityTitleColor)  
             HTML += "style='color:" + rarityColor + "'";
         HTML += ">" + item.title + "</div>";
-    }
+    }    
+    //Rarity Text
     HTML += "<div id='rarityText' class='shopTitle' style='float:right; color:" + rarityColor + "'>" + rarityText + "</div>";
+
+    //Item category
+    if (isInShop){
+        HTML += "<br>";
+        if (displayCategory.length > 0)
+            HTML += "<div id='shopTextCategory' class='shopText'>" + displayCategory + "</div>";
+        //Team item text
+        if (item.team){
+            switch(item.team){
+                case 1:
+                    HTML += "<div class='shopText' style='color: #bf1f1f;'>| Red team item</div>";
+                    break;
+                case 2:
+                    HTML += "<div class='shopText' style='color: #476aeb;'>| Blue team item</div>";
+                    break;
+                default:
+                    break;
+            }       
+        }
+        HTML += "<br>";
+    }
+
+    //Price + Owned
     if (item.price && isInShop)
-        HTML += "<br><div id='shopTextPrice' class='shopText'>$" + numberWithCommas(item.price) + ownedHTML + "</div>";
+        HTML += "<div id='shopTextPrice' class='shopText'>$" + numberWithCommas(item.price) + ownedHTML + "</div>";
     HTML += "<br>";
     if (item.text && !isInShop){
         HTML += "<div class='shopText'>" + item.text + ownedHTML + "</div>";
     }
 
 
-    if (displayCategory.length > 0 && isInShop)
-        HTML += "<div id='shopTextCategory' class='shopText'>" + displayCategory + "</div>";
 
-    if (item.team && isInShop){
-        switch(item.team){
-            case 1:
-                HTML += "<div class='shopText' style='color: #bf1f1f;'>| Red team item</div>";
-                break;
-            case 2:
-                HTML += "<div class='shopText' style='color: #476aeb;'>| Blue team item</div>";
-                break;
-            default:
-                break;
-        }       
-    }
     HTML += "</div>"; 
 
     return HTML;
