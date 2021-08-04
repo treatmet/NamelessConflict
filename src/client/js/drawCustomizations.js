@@ -41,7 +41,22 @@ function getMannequinFrame(shopItem, cb){
 		legLayers = getLayerOrder("legs");
 	}
 	
-	var bodyLayers = getLayerOrder("pistol");
+	let bodyLayers;
+	switch (shopItem.subCategory){
+		case "dualPistols":
+			bodyLayers = getLayerOrder("DP");
+			break;
+		case "shotgun":
+			bodyLayers = getLayerOrder("SG");
+			break;
+		case "machineGun":
+			bodyLayers = getLayerOrder("MG");
+			break;
+		default:
+			bodyLayers = getLayerOrder("pistol");
+			break;
+	}
+	
 	var layerOrder = [];
 	
 	if (shopItem.category == "boost"){
@@ -136,6 +151,18 @@ function getMannequinCustomizations(shopItem){
 			break;
 		case "icontype":
 			customizations.icon = shopItem.canvasValue;
+			break;
+		case "weaponspistol":
+			customizations.pistolColor = shopItem.canvasValue;
+			break;
+		case "weaponsdualPistols":
+			customizations.dpColor = shopItem.canvasValue;
+			break;
+		case "weaponsmachineGun":
+			customizations.mgColor = shopItem.canvasValue;
+			break;
+		case "weaponsshotgun":
+			customizations.sgColor = shopItem.canvasValue;
 			break;
 		default:
 			logg("ERROR - invalid category+subcategory:" + catSubCat);

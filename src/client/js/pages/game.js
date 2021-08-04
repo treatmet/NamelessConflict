@@ -6547,8 +6547,9 @@ document.onkeydown = function(event){
 	}
 	
 	else if(hitKeyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing U Testing
-		if (isLocal || myPlayer.eliminationSpectate || (myPlayer.team != 0)){	
-			shop.active = true;
+		if (isLocal || myPlayer.eliminationSpectate || (myPlayer.team != 0) ){	
+			if (gametype == "elim")
+				shop.active = true;
 		}
 	}
 }//end key down

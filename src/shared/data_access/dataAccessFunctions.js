@@ -272,8 +272,8 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 	var thresholdDate = new Date("July 29, 2021 16:00:00");
-	//var params = {};
-	var params = {onlineTimestamp:{ $gt: thresholdDate }};
+	var params = {};
+	//var params = {customizations:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
 		"bigballer4liver"
 	] } }; //Bronze
@@ -297,28 +297,60 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 
 //				console.log("Timestamp " + resy[k].onlineTimestamp);
 		   
-/* 				if (!customizationOptions){
+ 				if (!customizationOptions){
 					console.log("ERROR - no customizationOptions");
 					continue;
 				}
- */				if (!customizations || !customizations["1"] || !customizations["2"] ){
+				if (!customizations || !customizations["1"] || !customizations["2"] ){
 				  	console.log("ERROR - no customizations");
 				  	continue;
 				}
 
+				if (customizations["1"].pistolColor == "#ffcc00" && customizationOptions.indexOf("goldPistolWeapon") == -1){
+					customizationOptions.push("goldPistolWeapon");
+					console.log("Pushing Pistol");
+				}
+				if (customizations["1"].dpColor == "#ffcc00" && customizationOptions.indexOf("goldDPWeapon") == -1){
+					customizationOptions.push("goldDPWeapon");
+					console.log("Pushing DP");
+				}
+				if (customizations["1"].mgColor == "#ffcc00" && customizationOptions.indexOf("goldMGWeapon") == -1){
+					customizationOptions.push("goldMGWeapon");
+					console.log("Pushing MG");
+				}
+				if (customizations["1"].sgColor == "#ffcc00" && customizationOptions.indexOf("goldSGWeapon") == -1){
+					customizationOptions.push("goldSGWeapon");
+					console.log("Pushing SG");
+				}
+				if (customizationOptions.indexOf("defaultPistolWeapon") == -1){
+					customizationOptions.push("defaultPistolWeapon");
+					console.log("defaultPistolWeapon");
+				}
+				if (customizationOptions.indexOf("defaultDPWeapon") == -1){
+					customizationOptions.push("defaultDPWeapon");
+					console.log("defaultDPWeapon");
+				}
+				if (customizationOptions.indexOf("defaultMGWeapon") == -1){
+					customizationOptions.push("defaultMGWeapon");
+					console.log("defaultMGWeapon");
+				}
+				if (customizationOptions.indexOf("defaultSGWeapon") == -1){
+					customizationOptions.push("defaultSGWeapon");
+					console.log("defaultSGWeapon");
+				}
     
-				console.log("-----------------------------------customizations");
+/* 				console.log("-----------------------------------customizations");
 				console.log(customizations);
 				
 				customizations["1"].mgColor = "#ffcc00"; //CONFIGURATION
 				customizations["2"].mgColor = "#ffcc00"; //CONFIGURATION
-
+ */
 				//customizationOptions.push("bronze3_0Icon");
 				//customizationOptions.push("silver3_0Icon");
 				//customizationOptions.push("gold3_0Icon");
 				//customizationOptions.push("diamond_0Icon");
 				var obj = {
-					customizations:customizations
+					customizationOptions:customizationOptions
 				};
 
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
@@ -464,6 +496,7 @@ function transformToClientCustomizationOptions(customizationOptions){ //customiz
 		if (shopItem.category == "other")
 			continue;
 
+
 		if (shopItem.team == 0 || shopItem.team == 1){
 			clientOptions[1][shopItem.category][shopItem.subCategory].push(shopItem);
 		}
@@ -506,6 +539,12 @@ function getEmptyClientCustomizationOptions(){
             },
             icon: {
 				type:[]
+            },
+            weapons: {
+				pistol:[],
+				dualPistols:[],
+				machineGun:[],
+				shotgun:[]
             }
         },
         "2": {
@@ -538,7 +577,13 @@ function getEmptyClientCustomizationOptions(){
             },
             icon: {
 				type:[]
-            }        
+            },
+            weapons: {
+				pistol:[],
+				dualPistols:[],
+				machineGun:[],
+				shotgun:[]
+            }
         },
 		"fullList":[],
 		"completion": {
@@ -600,7 +645,7 @@ var getUserShopList = function(cognitoSub,cb){
 				});
 			}
 
-			//shopList[0] = "animeHair";
+			//shopList[0] = "blackSkinColor6";
 			// shopList[1] = "alertIcon";
 			// shopList[2] = "birdIcon";
 			// shopList[3] = "bulbIcon";
@@ -704,10 +749,8 @@ function getNewShopItem(currentShopList){
 		//New shop rules
 		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT part of default unlocks?
 		if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT already added to new shop?
-		if (fullShopList[shopIndex].rarity != 4){ //Is item NOT exclusive
 		if (!fullShopList[shopIndex].hideFromShop){ //Hide from shop
 			break; //PASSED RULES, ADD THIS ITEM
-		}
 		}
 		}
 		}

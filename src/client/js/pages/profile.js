@@ -964,7 +964,6 @@ function cycleAppearance(){
 function populateCustomizationOptions(){
     var options = customizationOptions;
 
-    console.log(options.completion.percent);
     if (options && options.completion && options.completion.percent){
         var percentage = document.getElementById("shopCompletionPercentage");
         var exclusives = document.getElementById("shopCompletionExclusives");
@@ -1000,11 +999,20 @@ function populateCustomizationOptions(){
 
                 var active = false;
                 if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasValue ||
-                (options[displayTeam][category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank)){
+                (options[displayTeam][category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank) ||
+                (subCategory == "pistol" && currentCustomizations[displayTeam]["pistolColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
+                (subCategory == "dualPistols" && currentCustomizations[displayTeam]["dpColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
+                (subCategory == "machineGun" && currentCustomizations[displayTeam]["mgColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
+                (subCategory == "shotgun" && currentCustomizations[displayTeam]["sgColor"] == options[displayTeam][category][subCategory][item].canvasValue)
+                ){
                     active = true;
                 }
                
                 options[displayTeam][category][subCategory][item].customizationCategory = category + displaySubCategory;
+                if (subCategory == "pistol"){ options[displayTeam][category][subCategory][item].customizationCategory = "pistolColor";}
+                if (subCategory == "dualPistols"){ options[displayTeam][category][subCategory][item].customizationCategory = "dpColor";}
+                if (subCategory == "machineGun"){ options[displayTeam][category][subCategory][item].customizationCategory = "mgColor";}
+                if (subCategory == "shotgun"){ options[displayTeam][category][subCategory][item].customizationCategory = "sgColor";}
                 options[displayTeam][category][subCategory][item].subCategory = subCategory;
                 HTML += getShopItemHTML(options[displayTeam][category][subCategory][item], active, false);
             }
@@ -1213,6 +1221,11 @@ function customizationSelect(canvasValue, team, key){
     if (key == "icon" && isRank(canvasValue)){
         canvasValue = "rank";
     }
+    
+    if (key == "pistolColor"){displayAnimation = "pistol";}
+    if (key == "dpColor"){displayAnimation = "DP";}
+    if (key == "mgColor"){displayAnimation = "MG";}
+    if (key == "sgColor"){displayAnimation = "SG";}
 
     currentCustomizations[team][key] = canvasValue;
     drawProfileCustomizations();

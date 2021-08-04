@@ -26,5 +26,9 @@
 	"rankIcon",
 	"beakerIcon",
 	"smileyIcon",
+	"defaultPistolWeapon",
+	"defaultDPWeapon",
+	"defaultMGWeapon",
+	"defaultSGWeapon",
 	"whiteSkinColor2"
 ]

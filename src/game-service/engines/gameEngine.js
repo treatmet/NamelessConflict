@@ -1373,11 +1373,11 @@ var updatePlayersRatingAndExpFromDB = function(playerList, cb){
 		else {
 			cb(false);
 		}
-	});		
+	});
 }
 
 var joinGame = function(cognitoSub, username, team, partyId){ 
-	//if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){dataAccessFunctions.giveUsersItemsByTimestamp();}
+	//if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" && isLocal){dataAccessFunctions.giveUsersItemsByTimestamp();}
 
 	log("Attempting to join game..." + cognitoSub);
 

@@ -23,6 +23,17 @@
 		"canvasValue":"unlock.png"
 	},
 	{
+		"id":"noneHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"None",
+		"text":"",
+		"price": 0,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"noneHat"
+	},
+	{
 		"id":"cowboyHat",
         "category":"hat",
 		"subCategory":"type",
@@ -32,18 +43,6 @@
 		"team":0,
 		"rarity":3,
 		"canvasValue":"cowboyHat"
-	},	
-	{
-		"id":"crownHat",
-        "category":"hat",
-		"subCategory":"type",
-		"title":"Crown",
-		"text":"You reign supreme",
-		"price": 0,
-		"team":0,
-		"rarity":3,
-		"hideFromShop":true,
-		"canvasValue":"crownHat"
 	},	
 	{
 		"id":"magaCapHat",
@@ -94,10 +93,10 @@
         "category":"hat",
 		"subCategory":"type",
 		"title":"Gray Alien Head",
-		"text":"For participating in the SocketShot community [Exclusive item]",
+		"text":"For participating in the SocketShot community",
 		"price": 0,
 		"team":0,
-		"rarity":3,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"alienHat"
 	},		
@@ -106,10 +105,10 @@
 		"category":"hat",
 		"subCategory":"type",
 		"title":"Green Alien Head",
-		"text":"For participating in the SocketShot community [Exclusive item]",
+		"text":"For participating in the SocketShot community",
 		"price": 0,
 		"team":0,
-		"rarity":3,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"alienGreenHat"
 	},	
@@ -530,6 +529,17 @@
 		"canvasValue":"#ad8b65"
 	},	
 	{
+		"id":"blackSkinColor6",
+        "category":"skin",
+		"subCategory":"color",
+		"title":"Blue Skin",
+		"text":"If you choke a Smurf, what color does it turn?",
+		"price": 0,
+		"team":2,
+		"rarity":3,
+		"canvasValue":"#4aacff"
+	},		
+	{
 		"id":"blackShirtColor1",
         "category":"shirt",
 		"subCategory":"color",
@@ -581,7 +591,7 @@
 		"text":"#2a2a2a",
 		"price": 0,
 		"team":2,
-		"rarity":3,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"#2a2a2a"
 	},	
@@ -780,7 +790,7 @@
 		"text":"#dfdfdf",
 		"price": 0,
 		"team":1,
-		"rarity":3,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"#dfdfdf"
 	},	
@@ -1309,7 +1319,7 @@
 		"text":"Achieved a Bronze rank in Season 0",
 		"price": 0,
 		"team":0,
-		"rarity":4,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"bronze3_0"
 	},	
@@ -1321,7 +1331,7 @@
 		"text":"Achieved a Silver rank in Season 0",
 		"price": 0,
 		"team":0,
-		"rarity":4,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"silver3_0"
 	},	
@@ -1333,7 +1343,7 @@
 		"text":"Achieved a Gold rank in Season 0",
 		"price": 0,
 		"team":0,
-		"rarity":4,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"gold3_0"
 	},	
@@ -1345,7 +1355,7 @@
 		"text":"Achieved a Diamond rank in Season 0",
 		"price": 0,
 		"team":0,
-		"rarity":4,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"diamond_0"
 	},	
@@ -1379,7 +1389,7 @@
 		"text":"For becoming a millionaire!",
 		"price": 0,
 		"team":0,
-		"rarity":3,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"money"
 	},	
@@ -1399,10 +1409,10 @@
 		"category":"icon",
 		"subCategory":"type",
 		"title":"Bug Killer",
-		"text":"For helping kill SocketShot bugs! [Exclusive item]",
+		"text":"For helping kill SocketShot bugs!",
 		"price": 0,
 		"team":0,
-		"rarity":3,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"bug"
 	},	
@@ -1425,7 +1435,7 @@
 		"text":"For participating in the 'Season Zero' beta tournament",
 		"price": 0,
 		"team":0,
-		"rarity":3,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"tourney0"
 	},	
@@ -1437,7 +1447,7 @@
 		"text":"For rising above all others in an official SocketShot Tournament!",
 		"price": 0,
 		"team":0,
-		"rarity":3,
+		"rarity":5,
 		"hideFromShop":true,		
 		"canvasValue":"champ"
 	},	
@@ -1449,7 +1459,7 @@
 		"text":"For being an official SocketShot tournament Finalist!",
 		"price": 0,
 		"team":0,
-		"rarity":3,
+		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"finalist"
 	},	
@@ -1707,14 +1717,346 @@
 		"canvasValue":"bitcoin"
 	},	
 	{
-		"id":"noneHat",
-        "category":"hat",
-		"subCategory":"type",
-		"title":"None",
-		"text":"",
+		"id":"defaultPistolWeapon",
+        "category":"weapons",
+		"subCategory":"pistol",
+		"title":"Gun Metal Pistol",
+		"text":"Default",
 		"price": 0,
 		"team":0,
 		"rarity":0,
-		"canvasValue":"noneHat"
-	}	
+		"canvasValue":"#707070"
+	},
+	{
+		"id":"crystalPistolWeapon",
+        "category":"weapons",
+		"subCategory":"pistol",
+		"title":"Crystal Pistol",
+		"text":"Handle with care",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"#ffccff"
+	},	
+	{
+		"id":"blackPistolWeapon",
+        "category":"weapons",
+		"subCategory":"pistol",
+		"title":"Black Pistol",
+		"text":"No matter how cool it looks, it's the shitty starter pistol",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"hideFromShop":true,		
+		"canvasValue":"#2a2a2a"
+	},	
+	{
+		"id":"bluePistolWeapon",
+        "category":"weapons",
+		"subCategory":"pistol",
+		"title":"Blue Pistol",
+		"text":"Season Zero-2 themed starter pistol",
+		"price": 0,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"#0ba5ed"
+	},	
+	{
+		"id":"woodPistolWeapon",
+        "category":"weapons",
+		"subCategory":"pistol",
+		"title":"Wooden Pistol",
+		"text":"What do you call a combatant with a wood pistol? Fucked.",
+		"price": 0,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#8b4500"
+	},	
+	{
+		"id":"rubyPistolWeapon",
+        "category":"weapons",
+		"subCategory":"pistol",
+		"title":"Ruby Pistol",
+		"text":"Distinguished weapon for growing the SocketShot community",
+		"price": 0,
+		"team":0,
+		"rarity":5,
+		"hideFromShop":true,
+		"canvasValue":"#ff2860"
+	},	
+	{
+		"id":"goldPistolWeapon",
+        "category":"weapons",
+		"subCategory":"pistol",
+		"title":"Golden Pistol",
+		"text":"For participating in SocketShot Community Night",
+		"price": 0,
+		"team":0,
+		"rarity":5,
+		"hideFromShop":true,
+		"canvasValue":"#ffcc00"
+	},		
+	{
+		"id":"defaultDPWeapon",
+        "category":"weapons",
+		"subCategory":"dualPistols",
+		"title":"Gun Metal DP",
+		"text":"Default",
+		"price": 0,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"#707070"
+	},
+	{
+		"id":"crystalDPWeapon",
+        "category":"weapons",
+		"subCategory":"dualPistols",
+		"title":"Crystal DP",
+		"text":"Careful not to break them",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"#ffccff"
+	},	
+	{
+		"id":"blackDPWeapon",
+        "category":"weapons",
+		"subCategory":"dualPistols",
+		"title":"Black DP",
+		"text":"There's nothing stealthy about weilding 2 guns",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"hideFromShop":true,		
+		"canvasValue":"#2a2a2a"
+	},	
+	{
+		"id":"blueDPWeapon",
+        "category":"weapons",
+		"subCategory":"dualPistols",
+		"title":"Blue DP",
+		"text":"Season Zero-2 themed dualies",
+		"price": 0,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"#0ba5ed"
+	},	
+	{
+		"id":"woodDPWeapon",
+        "category":"weapons",
+		"subCategory":"dualPistols",
+		"title":"Wooden DP",
+		"text":"Rub them together to make a fire",
+		"price": 0,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#8b4500"
+	},	
+	{
+		"id":"rubyDPWeapon",
+        "category":"weapons",
+		"subCategory":"dualPistols",
+		"title":"Ruby DP",
+		"text":"Distinguished dual weapons for growing the SocketShot community",
+		"price": 0,
+		"team":0,
+		"rarity":5,
+		"hideFromShop":true,
+		"canvasValue":"#ff2860"
+	},	
+	{
+		"id":"goldDPWeapon",
+        "category":"weapons",
+		"subCategory":"dualPistols",
+		"title":"Golden DP",
+		"text":"For participating in SocketShot Community Night",
+		"price": 0,
+		"team":0,
+		"rarity":5,
+		"hideFromShop":true,
+		"canvasValue":"#ffcc00"
+	},		
+	{
+		"id":"defaultMGWeapon",
+        "category":"weapons",
+		"subCategory":"machineGun",
+		"title":"Gun Metal MG",
+		"text":"Default",
+		"price": 0,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"#707070"
+	},
+	{
+		"id":"crystalMGWeapon",
+        "category":"weapons",
+		"subCategory":"machineGun",
+		"title":"Crystal MG",
+		"text":"A machine gun made of crystal? Whatever, it's a videogame.",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"#ffccff"
+	},	
+	{
+		"id":"blackMGWeapon",
+        "category":"weapons",
+		"subCategory":"machineGun",
+		"title":"Black MG",
+		"text":"Special operations weapon of choice",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"hideFromShop":true,		
+		"canvasValue":"#2a2a2a"
+	},	
+	{
+		"id":"blueMGWeapon",
+        "category":"weapons",
+		"subCategory":"machineGun",
+		"title":"Blue MG",
+		"text":"Official machine gun of Season Zero-2",
+		"price": 0,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"#0ba5ed"
+	},	
+	{
+		"id":"woodMGWeapon",
+        "category":"weapons",
+		"subCategory":"machineGun",
+		"title":"Wooden MG",
+		"text":"Machine gun used for centuries by indigenous tribes",
+		"price": 0,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#8b4500"
+	},	
+	{
+		"id":"rubyMGWeapon",
+        "category":"weapons",
+		"subCategory":"machineGun",
+		"title":"Ruby MG",
+		"text":"Distinguished automatic weapon for growing the SocketShot community",
+		"price": 0,
+		"team":0,
+		"rarity":5,
+		"hideFromShop":true,
+		"canvasValue":"#ff2860"
+	},	
+	{
+		"id":"goldMGWeapon",
+        "category":"weapons",
+		"subCategory":"machineGun",
+		"title":"Golden MG",
+		"text":"For participating in SocketShot Community Night",
+		"price": 0,
+		"team":0,
+		"rarity":5,
+		"hideFromShop":true,
+		"canvasValue":"#ffcc00"
+	},		
+	{
+		"id":"defaultSGWeapon",
+        "category":"weapons",
+		"subCategory":"shotgun",
+		"title":"Gun Metal SG",
+		"text":"Default",
+		"price": 0,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"#3d3d3d"
+	},
+	{
+		"id":"lightSGWeapon",
+        "category":"weapons",
+		"subCategory":"shotgun",
+		"title":"Light Metal SG",
+		"text":"A different shade of gray",
+		"price": 0,
+		"team":0,
+		"rarity":0,
+		"canvasValue":"#707070"
+	},
+	{
+		"id":"crystalSGWeapon",
+        "category":"weapons",
+		"subCategory":"shotgun",
+		"title":"Crystal SG",
+		"text":"What kind of crystal is this anyway?",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"#ffccff"
+	},	
+	{
+		"id":"blackSGWeapon",
+        "category":"weapons",
+		"subCategory":"shotgun",
+		"title":"Black SG",
+		"text":"Last thing you want to see pointed at you",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"hideFromShop":true,		
+		"canvasValue":"#2a2a2a"
+	},	
+	{
+		"id":"blueSGWeapon",
+        "category":"weapons",
+		"subCategory":"shotgun",
+		"title":"Blue SG",
+		"text":"Season Zero-2 blue shotty",
+		"price": 0,
+		"team":0,
+		"rarity":1,
+		"canvasValue":"#0ba5ed"
+	},	
+	{
+		"id":"woodSGWeapon",
+        "category":"weapons",
+		"subCategory":"shotgun",
+		"title":"Wooden SG",
+		"text":"Only you can prevent forest fires. Nah screw that.",
+		"price": 0,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"#8b4500"
+	},	
+	{
+		"id":"rubySGWeapon",
+        "category":"weapons",
+		"subCategory":"shotgun",
+		"title":"Ruby SG",
+		"text":"Distinguished boomstick for growing the SocketShot community",
+		"price": 0,
+		"team":0,
+		"rarity":5,
+		"hideFromShop":true,
+		"canvasValue":"#ff2860"
+	},	
+	{
+		"id":"goldSGWeapon",
+        "category":"weapons",
+		"subCategory":"shotgun",
+		"title":"Golden SG",
+		"text":"For participating in SocketShot Community Night",
+		"price": 0,
+		"team":0,
+		"rarity":5,
+		"hideFromShop":true,
+		"canvasValue":"#ffcc00"
+	},	
+	{
+		"id":"crownHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Crown",
+		"text":"You reign supreme",
+		"price": 0,
+		"team":0,
+		"rarity":5,
+		"hideFromShop":true,
+		"canvasValue":"crownHat"
+	}
 ]
