@@ -6242,6 +6242,7 @@ document.onkeydown = function(event){
 		myPlayer.pressingW = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
 			spectatePlayers = false;
+			spectatingPlayerId = "";
 		}
 	}
 	else if(hitKeyCode === 68 && chatInput.style.display == "none"){ //D
@@ -6251,6 +6252,7 @@ document.onkeydown = function(event){
 		myPlayer.pressingD = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
 			spectatePlayers = false;
+			spectatingPlayerId = "";
 		}
 	}
 	else if(hitKeyCode === 83 && chatInput.style.display == "none"){ //S
@@ -6260,6 +6262,7 @@ document.onkeydown = function(event){
 		myPlayer.pressingS = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
 			spectatePlayers = false;
+			spectatingPlayerId = "";
 		}
 	}
 	else if(hitKeyCode === 65 && chatInput.style.display == "none"){ //A
@@ -6269,6 +6272,7 @@ document.onkeydown = function(event){
 		myPlayer.pressingA = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
 			spectatePlayers = false;
+			spectatingPlayerId = "";
 		}
 	}		
 	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up

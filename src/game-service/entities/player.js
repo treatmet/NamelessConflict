@@ -1715,6 +1715,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			
 			
 			socket.on('purchase', function(data){
+				if (!Player.list[data.playerId]){return;}
 				if (data.selection == 1 && Player.list[data.playerId].cash >= shop.price1){
 					Player.list[data.playerId].cash -= shop.price1;
 					updatePlayerList.push({id:data.playerId,property:"cash",value:Player.list[data.playerId].cash});								

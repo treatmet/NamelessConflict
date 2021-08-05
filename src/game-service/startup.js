@@ -107,7 +107,7 @@ function processArgs(){
 
 	if (port == "3001"){
 		gametype = "ctf";
-		maxPlayers = 14;
+		maxPlayers = 8;
 	}
 	else if (port == "3002"){
 		gametype = "elim";
