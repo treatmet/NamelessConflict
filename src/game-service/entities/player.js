@@ -966,7 +966,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
 			}
 		}
-		else if (!self.pressingW && !self.pressingA && !self.pressingS && !self.pressingD){
+		else if ((!self.pressingW && !self.pressingA && !self.pressingS && !self.pressingD) || (self.pressingD && self.pressingA) || (self.pressingS && self.pressingW)){
 			const targetSpeedX = 0;
 			const targetSpeedY = 0;
 			var incrementX = playerAcceleration * diagMovementScale;

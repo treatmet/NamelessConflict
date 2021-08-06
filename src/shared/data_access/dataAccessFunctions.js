@@ -271,16 +271,16 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("July 29, 2021 16:00:00");
-	var params = {};
-	//var params = {customizations:{ $gt: thresholdDate }};
+	var thresholdDate = new Date("August 5, 2021 16:00:00");
+	//var params = {};
+	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
 		"bigballer4liver"
 	] } }; //Bronze
  */
 
 
-
+console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:2000}, async function(err, resy){
 		if (resy && resy[0]){ 
 			for (let k = 0; k < resy.length; k++) {
@@ -290,10 +290,6 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				var customizations = resy[k].customizations; 
 					 
 				console.log("Updating " + resy[k].USERNAME);
-				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
-					console.log("SAFETYS ON");
-					continue;
-				}
 
 //				console.log("Timestamp " + resy[k].onlineTimestamp);
 		   
@@ -306,37 +302,9 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				  	continue;
 				}
 
-				if (customizations["1"].pistolColor == "#ffcc00" && customizationOptions.indexOf("goldPistolWeapon") == -1){
+				if (customizationOptions.indexOf("goldPistolWeapon") == -1){
 					customizationOptions.push("goldPistolWeapon");
 					console.log("Pushing Pistol");
-				}
-				if (customizations["1"].dpColor == "#ffcc00" && customizationOptions.indexOf("goldDPWeapon") == -1){
-					customizationOptions.push("goldDPWeapon");
-					console.log("Pushing DP");
-				}
-				if (customizations["1"].mgColor == "#ffcc00" && customizationOptions.indexOf("goldMGWeapon") == -1){
-					customizationOptions.push("goldMGWeapon");
-					console.log("Pushing MG");
-				}
-				if (customizations["1"].sgColor == "#ffcc00" && customizationOptions.indexOf("goldSGWeapon") == -1){
-					customizationOptions.push("goldSGWeapon");
-					console.log("Pushing SG");
-				}
-				if (customizationOptions.indexOf("defaultPistolWeapon") == -1){
-					customizationOptions.push("defaultPistolWeapon");
-					console.log("defaultPistolWeapon");
-				}
-				if (customizationOptions.indexOf("defaultDPWeapon") == -1){
-					customizationOptions.push("defaultDPWeapon");
-					console.log("defaultDPWeapon");
-				}
-				if (customizationOptions.indexOf("defaultMGWeapon") == -1){
-					customizationOptions.push("defaultMGWeapon");
-					console.log("defaultMGWeapon");
-				}
-				if (customizationOptions.indexOf("defaultSGWeapon") == -1){
-					customizationOptions.push("defaultSGWeapon");
-					console.log("defaultSGWeapon");
 				}
     
 /* 				console.log("-----------------------------------customizations");
@@ -352,6 +320,11 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				var obj = {
 					customizationOptions:customizationOptions
 				};
+
+				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+					console.log("SAFETYS ON");
+					continue;
+				}
 
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});			
