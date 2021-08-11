@@ -51,8 +51,9 @@ function checkViewedProfileIsFriendOrParty(){
 	$.post('/getPlayerRelationship', params, function(data,status){
 		if (data.friends == true){
 			hide("addFriendButton");
-			show("removeFriendButton");		
-			show("inviteToTradeButton");
+            show("removeFriendButton");
+            if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea")		
+			    show("inviteToTradeButton");
 		}
 		else {
 			hide("removeFriendButton");											

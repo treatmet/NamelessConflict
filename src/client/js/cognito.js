@@ -42,6 +42,7 @@ function getSocketParams(){
 const cognitoClientId = '70ru3b3jgosqa5fpre6khrislj';
 const cognitoPoolId = 'us-east-2_SbevJL5zt';
 var page = "";
+var isWebServer = true;
 var cognitoSub = "";
 var username = "SomeGuy";
 var partyId = "";
@@ -129,6 +130,7 @@ function assessPerformance(){
 
 socket.on('socketInfoUpdated', function(data){
 	log("socket info updated url:" +  data.url +" isWebServer:" + data.isWebServer);
+	isWebServer = data.isWebServer;
 	if (isLoggedIn()){
 		loginSuccess();
 	}
@@ -194,6 +196,9 @@ socket.on('redirect', function(url){
 });
 
 socket.on('redirectToUrl', function(url){
+	if (!isWebServer){
+		console.log("ERROR - You were attempted to be summoned to another server/game, but you are in a game currently");
+	}
 	url = url + getTokenUrlParams();
 	logg("Redirecting webpage to " + url);
 	window.location.href = url;

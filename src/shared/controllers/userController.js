@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 const path = require("path");
 const  totemize = require('totemize');
+const request = require('request-promise');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
 router.get('/getSharedCode', function(req, res) {
@@ -66,10 +67,10 @@ router.post('/requestResponse', async function (req, res) {
 	logObj(req.body);
 
 	//First look up request by req.body.id
-	dataAccessFunctions.getRequestById(req.body.id, async function(request){
-		if (request){		
+	dataAccessFunctions.getRequestById(req.body.id, async function(requestDB){
+		if (requestDB){		
 			var authorizedUser = await authenticationEngine.getAuthorizedUser(req.cookies); //Get authorized user
-			if (!authorizedUser.cognitoSub || authorizedUser.cognitoSub != request.targetCognitoSub){ //Make sure the one responding to this request is authorized as the person this request was sent to
+			if (!authorizedUser.cognitoSub || authorizedUser.cognitoSub != requestDB.targetCognitoSub){ //Make sure the one responding to this request is authorized as the person this request was sent to
 				var errorMsg = "ERROR: User unauthorized to perform this action!";
 				logg(errorMsg);
 				res.status(200);
@@ -86,7 +87,7 @@ router.post('/requestResponse', async function (req, res) {
 			else {
 				//Perform accept operation							
 				if(req.body.type == "friend") {
-					dataAccessFunctions.upsertFriend({cognitoSub:authorizedUser.cognitoSub, targetCognitoSub:request.cognitoSub}, function(dbResults){
+					dataAccessFunctions.upsertFriend({cognitoSub:authorizedUser.cognitoSub, targetCognitoSub:requestDB.cognitoSub}, function(dbResults){
 						if (!dbResults.error){
 							dataAccessFunctions.removeRequestById(req.body.id);
 						}
@@ -95,7 +96,7 @@ router.post('/requestResponse', async function (req, res) {
 					});
 				}
 				else if(req.body.type == "party") {
-					dataAccessFunctions.getPartyForUser(request.cognitoSub, function(partyDbResults){
+					dataAccessFunctions.getPartyForUser(requestDB.cognitoSub, function(partyDbResults){
 						/*
 						var partyDbResults = {
 							partyId:"12345",
@@ -111,37 +112,52 @@ router.post('/requestResponse', async function (req, res) {
 							}
 							//log("dataAccessFunctions.dbUserUpdate - Party request accepted, joining party.");
 							dataAccessFunctions.dbUserUpdate("set", authorizedUser.cognitoSub, {partyId:partyDbResults.partyId});
-							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove all party requests targeted at the responder
-							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
+							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:requestDB.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove all party requests targeted at the responder
+							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:requestDB.cognitoSub, cognitoSub:requestDB.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
 						});
 					});					
 					res.status(200);
 					res.send({msg:"Joined player's party"});	
 				}				
 				else if(req.body.type == "trade") {
-					dataAccessFunctions.getUser(request.cognitoSub, function(requestingUser){
-						dataAccessFunctions.getUser(request.targetCognitoSub, function(targetUser){
-							/*
-						var partyDbResults = {
-							partyId:"12345",
-							party:[]
-						};	
-						*/
-						log("2REQUEST RESPONSE ENDPOINT - FOUND PARTY WE ARE JOINING:");
-						//console.log(partyDbResults);
-						dataAccessFunctions.getUser(authorizedUser.cognitoSub, function(partyJoiner){
-							if (partyJoiner && partyJoiner.partyId && partyJoiner.partyId.length > 0 && partyJoiner.partyId == partyJoiner.cognitoSub && partyJoiner.partyId != partyDbResults.partyId){ //If party leader of a previous party (which is NOT the party currently requested to join) and accepting a new party request
-								var re = new RegExp(partyJoiner.cognitoSub,"g");
-								dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {partyId: ""}, async function(err, dbRes){}); //Disband the previous party							
+					dataAccessFunctions.getUser(requestDB.cognitoSub, function(requestingUser){
+						dataAccessFunctions.getUser(requestDB.targetCognitoSub, function(targetUser){
+
+							if (!(requestingUser && targetUser && targetUser.serverUrl && requestingUser.serverUrl)){
+								logg("ERROR (/requestResponse) - Did not retrieve users from DB");
+								return;
 							}
-							//log("dataAccessFunctions.dbUserUpdate - Party request accepted, joining party.");
-							dataAccessFunctions.dbUserUpdate("set", authorizedUser.cognitoSub, {partyId:partyDbResults.partyId});
-							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove all party requests targeted at the responder
-							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
+
+							var targetUrl = requestingUser.serverUrl + "/user/";
+							if (isLocal)
+								targetUrl = "http://" + requestingUser.serverUrl  + "/user/"; 
+							
+							//Redirect Requesting User
+							var options = {
+								method: 'POST',
+								uri: 'http://' + requestingUser.serverUrl + '/sendUserToUrl',
+								form: {
+									cognitoSub: requestDB.cognitoSub,
+									targetUrl: targetUrl + requestingUser.cognitoSub
+								}
+							};
+							logg("Attempting to summon User [" + requestingUser + "] on server [" + requestingUser.serverUrl + "]...");
+							request(options)
+								.then(function (parsedBody) {
+									// POST succeeded...
+									logg("SUCCESSFUL request for party member!");
+								})
+								.catch(function (err) {
+									// POST failed...
+									logg("ERROR summoning party member! Classic...");
+									logObj(err);
+							});
+
+							//Return data to targetUser (the one accepting the trade request)
+							res.status(200);
+							res.send({error:false, url:targetUrl + targetUser.cognitoSub});	
 						});
 					});					
-					res.status(200);
-					res.send({msg:"Joined player's party"});	
 				}				
 			}
 		}

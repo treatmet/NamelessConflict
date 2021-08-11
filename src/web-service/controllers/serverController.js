@@ -250,8 +250,6 @@ var getJoinableServer = function(options, cb){
 					var selectedServer = i;
 					dataAccess.dbUpdateAwait("RW_SERV", "set", {url: serv[selectedServer].url}, obj, async function(err2, res){
 						if (!err2){
-							
-							
 							logg("DB: UPDATING incomingUsers: " + serv[selectedServer].url + " with: " + JSON.stringify(obj));
 							var targetUrl = serverHomePage + "game/" + serv[selectedServer].queryString;
 							if (isLocal)
@@ -279,7 +277,7 @@ function sendPartyToGameServer(party, targetUrl) {
 	for (var p = 0; p < party.length; p++){
 		var options = {
 			method: 'POST',
-			uri: 'http://' + party[p].serverUrl + '/sendPlayerToUrl',
+			uri: 'http://' + party[p].serverUrl + '/sendUserToUrl',
 			form: {
 				cognitoSub: party[p].cognitoSub,
 				targetUrl: targetUrl
@@ -300,7 +298,8 @@ function sendPartyToGameServer(party, targetUrl) {
 	}
 }
 
-router.post('/sendPlayerToUrl', async function (req, res) {
+
+router.post('/sendUserToUrl', async function (req, res) {
 	/*req.body
 	{
 		cognitoSub: "1534523452345",
