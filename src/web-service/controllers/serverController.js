@@ -279,7 +279,7 @@ function sendPartyToGameServer(party, targetUrl) {
 	for (var p = 0; p < party.length; p++){
 		var options = {
 			method: 'POST',
-			uri: 'http://' + party[p].serverUrl + '/sendPlayerToGameServer',
+			uri: 'http://' + party[p].serverUrl + '/sendPlayerToUrl',
 			form: {
 				cognitoSub: party[p].cognitoSub,
 				targetUrl: targetUrl
@@ -300,7 +300,7 @@ function sendPartyToGameServer(party, targetUrl) {
 	}
 }
 
-router.post('/sendPlayerToGameServer', async function (req, res) {
+router.post('/sendPlayerToUrl', async function (req, res) {
 	/*req.body
 	{
 		cognitoSub: "1534523452345",
@@ -311,7 +311,7 @@ router.post('/sendPlayerToGameServer', async function (req, res) {
 		log("CHECKING SOCKET " + SOCKET_LIST[s].id);
 		if (SOCKET_LIST[s].cognitoSub == req.body.cognitoSub){
 			log("FOUND USER'S SOCKET (" + SOCKET_LIST[s].id + ") REDIRECTING USER");
-			SOCKET_LIST[s].emit('redirectToGame', req.body.targetUrl);
+			SOCKET_LIST[s].emit('redirectToUrl', req.body.targetUrl);
 		}
 	}
 	res.send({msg:"Request received"});
@@ -413,7 +413,6 @@ router.post('/sendUpdateRequestToGameServer', async function (req, res) {
 		var options = {
 			method: 'POST',
 			uri: "http://" + selectedServerUrl + "/updateGameServer",
-			//uri: 'http://' + party[p].serverUrl + '/sendPlayerToGameServer',
 			form: req.body
 		};
 		 

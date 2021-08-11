@@ -193,7 +193,7 @@ socket.on('redirect', function(url){
 	window.location.href  = url;
 });
 
-socket.on('redirectToGame', function(url){
+socket.on('redirectToUrl', function(url){
 	url = url + getTokenUrlParams();
 	logg("Redirecting webpage to " + url);
 	window.location.href = url;
@@ -418,28 +418,39 @@ function getRequests(){
 }
 
 function updateRequestsSectionHtml(data){	
-	if (document.getElementById("invitesBar") && data.partyRequests.length > 0 || data.friendRequests.length > 0){
-		if (data.friendRequests.length > 0){document.getElementById("invitesBar").style.backgroundColor = '#153e17';}
+	if (document.getElementById("invitesBar") && (data.party.length > 0 || data.friend.length > 0)){
+
+		if (data.friend.length > 0){document.getElementById("invitesBar").style.backgroundColor = '#153e17';}
 			else {document.getElementById("friendInvitesSection").style.display = 'none';}
-		if (data.partyRequests.length > 0){document.getElementById("invitesBar").style.backgroundColor = '#003461';}
+		if (data.party.length > 0){document.getElementById("invitesBar").style.backgroundColor = '#003461';}
 			else {document.getElementById("partyInvitesSection").style.display = 'none';}
 		document.getElementById("invitesBar").style.display = 'inline-block';
 		
 		var friendRequestsHtml = "<span>Friend Requests: </span>";	
-		for (var f = 0; f < data.friendRequests.length; f++){
-			friendRequestsHtml += "<span> [ </span><a href='" + serverHomePage + "user/" + data.friendRequests[f].cognitoSub + "'>" + data.friendRequests[f].username + "</a> ";
-			friendRequestsHtml += "<a id='friendAccept' onclick='friendAcceptClick(\"" + data.friendRequests[f]._id + "\")'>Accept</a> <a id='friendDecline' onclick='requestDeclineClick(\"" + data.friendRequests[f]._id + "\")'>Decline</a>";
+		for (var f = 0; f < data.friend.length; f++){
+			friendRequestsHtml += "<span> [ </span><a href='" + serverHomePage + "user/" + data.friend[f].cognitoSub + "'>" + data.friend[f].username + "</a> ";
+			friendRequestsHtml += "<a class='accept' id='friendAccept' onclick='friendAcceptClick(\"" + data.friend[f]._id + "\")'>Accept</a> <a class='decline' id='friendDecline' onclick='requestDeclineClick(\"" + data.friend[f]._id + "\")'>Decline</a>";
 			friendRequestsHtml += "<span> ] </span>";
 		}
 		document.getElementById("friendInvitesSection").innerHTML = friendRequestsHtml;
 		
 		var partyRequestsHtml = "";	
-		for (var f = 0; f < data.partyRequests.length; f++){
-			partyRequestsHtml += "<span> [ </span><a href='" + serverHomePage + "user/" + data.partyRequests[f].cognitoSub + "'>" + data.partyRequests[f].username + "</a><span> invited you to a party </span>";
-			partyRequestsHtml += "<a id='partyAccept' onclick='partyAcceptClick(\"" + data.partyRequests[f]._id + "\")'>Accept</a> <a id='partyDecline' onclick='requestDeclineClick(\"" + data.partyRequests[f]._id + "\")'>Decline</a>";
+		for (var f = 0; f < data.party.length; f++){
+			partyRequestsHtml += "<span> [ </span><a href='" + serverHomePage + "user/" + data.party[f].cognitoSub + "'>" + data.party[f].username + "</a><span> invited you to a party </span>";
+			partyRequestsHtml += "<a class='accept' id='partyAccept' onclick='partyAcceptClick(\"" + data.party[f]._id + "\")'>Accept</a> <a class='decline' id='partyDecline' onclick='requestDeclineClick(\"" + data.party[f]._id + "\")'>Decline</a>";
 			partyRequestsHtml += "<span> ] </span>";
 		}
-		document.getElementById("partyInvitesSection").innerHTML = partyRequestsHtml;
+		populateHTML("partyInvitesSection", partyRequestsHtml);
+	}
+	if (data.trade.length > 0){
+		showBlock("tradeInvitesSection");
+		var tradeRequestsHtml = "";	
+		for (var f = 0; f < data.trade.length; f++){
+			tradeRequestsHtml += "<span> [ </span><a href='" + serverHomePage + "user/" + data.trade[f].cognitoSub + "'>" + data.trade[f].username + "</a><span> invited you to a trade </span>";
+			tradeRequestsHtml += "<a class='accept' id='tradeAccept' onclick='tradeAcceptClick(\"" + data.trade[f]._id + "\")'>Accept</a> <a class='decline' id='tradeDecline' onclick='requestDeclineClick(\"" + data.trade[f]._id + "\")'>Decline</a>";
+			tradeRequestsHtml += "<span> ] </span>";
+		}
+		populateHTML("tradeInvitesSection", tradeRequestsHtml);
 	}
 }
 
@@ -551,6 +562,25 @@ function requestDeclineClick(id){
 		console.log("requestResponse (decline) endpoint response from server:");
 		console.log(data);		
 		window.location.reload();
+	});
+}
+
+function tradeAcceptClick(id){
+	const params = {
+		type:"trade",
+		id:id,
+		accept:true
+	};
+	
+	$.post('/requestResponse', params, function(data,status){
+		console.log("requestResponse (party accept) endpoint response from server:");
+		console.log(data);		
+		if (data.error){
+			alert(data.error);
+		}
+		else {
+			window.location.href = data.url;
+		}
 	});
 }
 
@@ -1131,6 +1161,13 @@ function hydrateKeybindingSettings(data){
 
 function sleep(ms){ //sleep
 	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+//hydrate HTML populate HTML
+function populateHTML(id, content){
+	if (document.getElementById(id)){
+		document.getElementById(id).innerHTML = content;
+	}
 }
 
 console.log("cognito.js loaded");

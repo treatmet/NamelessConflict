@@ -76,6 +76,7 @@ router.post('/requestResponse', async function (req, res) {
 				res.send({msg:errorMsg});
 				return;
 			}		
+
 			//Perform decline operation			
 			if (req.body.accept == "false"){
 				dataAccessFunctions.removeRequestById(req.body.id);
@@ -103,7 +104,32 @@ router.post('/requestResponse', async function (req, res) {
 						*/
 						log("2REQUEST RESPONSE ENDPOINT - FOUND PARTY WE ARE JOINING:");
 						//console.log(partyDbResults);
-						dataAccessFunctions.getUserFromDB(authorizedUser.cognitoSub, function(partyJoiner){
+						dataAccessFunctions.getUser(authorizedUser.cognitoSub, function(partyJoiner){
+							if (partyJoiner && partyJoiner.partyId && partyJoiner.partyId.length > 0 && partyJoiner.partyId == partyJoiner.cognitoSub && partyJoiner.partyId != partyDbResults.partyId){ //If party leader of a previous party (which is NOT the party currently requested to join) and accepting a new party request
+								var re = new RegExp(partyJoiner.cognitoSub,"g");
+								dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {partyId: ""}, async function(err, dbRes){}); //Disband the previous party							
+							}
+							//log("dataAccessFunctions.dbUserUpdate - Party request accepted, joining party.");
+							dataAccessFunctions.dbUserUpdate("set", authorizedUser.cognitoSub, {partyId:partyDbResults.partyId});
+							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove all party requests targeted at the responder
+							dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {targetCognitoSub:request.cognitoSub, cognitoSub:request.targetCognitoSub, type:"party"}, {}, async function(err, dbRes){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)
+						});
+					});					
+					res.status(200);
+					res.send({msg:"Joined player's party"});	
+				}				
+				else if(req.body.type == "trade") {
+					dataAccessFunctions.getUser(request.cognitoSub, function(requestingUser){
+						dataAccessFunctions.getUser(request.targetCognitoSub, function(targetUser){
+							/*
+						var partyDbResults = {
+							partyId:"12345",
+							party:[]
+						};	
+						*/
+						log("2REQUEST RESPONSE ENDPOINT - FOUND PARTY WE ARE JOINING:");
+						//console.log(partyDbResults);
+						dataAccessFunctions.getUser(authorizedUser.cognitoSub, function(partyJoiner){
 							if (partyJoiner && partyJoiner.partyId && partyJoiner.partyId.length > 0 && partyJoiner.partyId == partyJoiner.cognitoSub && partyJoiner.partyId != partyDbResults.partyId){ //If party leader of a previous party (which is NOT the party currently requested to join) and accepting a new party request
 								var re = new RegExp(partyJoiner.cognitoSub,"g");
 								dataAccess.dbUpdateAwait("RW_USER", "set", {partyId: partyJoiner.partyId, cognitoSub: {$not: re}}, {partyId: ""}, async function(err, dbRes){}); //Disband the previous party							
@@ -171,13 +197,14 @@ router.post('/upsertRequest', async function (req, res) {
 		dataAccess.dbFindAwait("RW_FRIEND", {cognitoSub:req.body.targetCognitoSub, friendCognitoSub:req.body.cognitoSub}, function(err,friendRes){ //Make sure they're not already a friend
 			if (friendRes[0]){
 				res.status(200);
-				res.send("Already friends!");				
+				res.send({error:false, msg:"Player has already added you as a friend too"});				
 			}
 			else {
-				console.log("Added friend has not friended back yet, so adding request to do so");
+				var msg = "Added friend has not friended back yet, so adding request to do so";
+				console.log(msg);
 				dataAccessFunctions.upsertRequest(req.body, function(dbResults){
 					res.status(200);
-					res.send(dbResults);
+					res.send({error:false, msg:msg});
 				});			
 			}
 		});
@@ -186,8 +213,28 @@ router.post('/upsertRequest', async function (req, res) {
 		dataAccessFunctions.setPartyIdIfEmpty(req.body.cognitoSub);
 		dataAccessFunctions.upsertRequest(req.body, function(dbResults){
 			res.status(200);
-			res.send(dbResults);
+			res.send({error:false, msg:"Party request added"});
 		});
+	}
+	else if (req.body.type == "trade"){
+		dataAccess.dbFindAwait("RW_FRIEND", {cognitoSub:req.body.targetCognitoSub, friendCognitoSub:req.body.cognitoSub}, function(err,friendRes){ //Make sure they're not already a friend
+			if (friendRes[0]){
+				dataAccessFunctions.upsertRequest(req.body, function(dbResults){
+					var msg = "Trade requested";
+					console.log(msg);
+					res.status(200);
+					res.send({error:false, msg:msg});
+				});
+			}
+			else {
+				var msg = "This player has not added you as a friend. Both players must be friends to initiate a trade.";
+				console.log(msg);
+				res.status(200);
+				res.send({error:true, msg:msg});	
+			}
+		});
+
+
 	}
 	else {
 		res.status(200);
@@ -233,19 +280,9 @@ router.post('/getRequests', async function (req, res) {
 	log("Get requests endpoint called with:");
 	console.log(req.body);
 	
-	var response = {
-		friendRequests:[],
-		partyRequests:[]
-	};
-	
-	dataAccessFunctions.getFriendRequests(req.body.cognitoSub, function(friendDbResults){
-		dataAccessFunctions.getPartyRequests(req.body.cognitoSub, function(partyDbResults){
-			response.friendRequests = friendDbResults;
-			response.partyRequests = partyDbResults;			
-			res.status(200);
-			res.send(response);
-		});
-
+	dataAccessFunctions.getRequests(req.body.cognitoSub, function(requests){
+		res.status(200);
+		res.send(requests);
 	});
 });
 
@@ -366,7 +403,7 @@ router.post('/validateToken', async function (req, res) {
 	}
 
 	//(Auth success) Get or create mongo username, and then return to the client
-	dataAccessFunctions.getUserFromDB(httpResult.cognitoSub, function(mongoRes){
+	dataAccessFunctions.getUser(httpResult.cognitoSub, function(mongoRes){
 		if (mongoRes && mongoRes.username){
 			httpResult.username = mongoRes.username;
 			httpResult.cash = mongoRes.cash;
@@ -442,7 +479,7 @@ router.post('/getProfile', async function (req, res) {
 	var cognitoSub = req.body.cognitoSub;		
 	var returnData = {};
 
-	dataAccessFunctions.getUserFromDB(cognitoSub, function(pageData){
+	dataAccessFunctions.getUser(cognitoSub, function(pageData){
 		if (pageData){
 
 			var rankProgressInfo = getRankFromRating(pageData["rating"]);

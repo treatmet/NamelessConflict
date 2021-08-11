@@ -25,7 +25,7 @@ h2 {
 
 #header {
 	background-color: #212121;
-	font-size: 22;
+	font-size: 16;
 	font-family: Electrolize;
 	font-weight: bold;
 	color:white;	
@@ -292,25 +292,31 @@ div#warningBar a:hover{
 	padding-right:5px;
 }
 
-a#friendAccept{
+#tradeInvitesSection{
+    display: none;
+    padding: 5px;
+    background-color: #460009;
+    border-bottom: 2px solid black;
+}
+
+a.accept {
     color: #1ede1e;
 	cursor: pointer;
 }
 
-a#friendDecline{
+a.accept:hover {
+    color: #4d944d;
+}
+
+a.decline {
     color: red;
 	cursor: pointer;
 }
 
-a#partyAccept{
-    color: #1ede1e;
-	cursor: pointer;
+a.decline:hover {
+    color: rgb(148, 57, 57);
 }
 
-a#partyDecline{
-    color: red;
-	cursor: pointer;
-}
 /*Column Headers*/
 
 #sectionTitles {

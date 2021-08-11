@@ -55,7 +55,7 @@ function generateTempName(prefix){
 }
 
 ///////////////////////////////USER FUNCTIONS///////////////////////////////////
-var getUserFromDB = function(cognitoSub,cb){
+var getUser = function(cognitoSub,cb){
 	//log("searching for user: " + cognitoSub);
 	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
@@ -952,6 +952,28 @@ var getPartyRequests = function(cognitoSub, cb){
 	});		
 }
 
+var getRequests = function(cognitoSub, cb){
+	var requests = {
+		party:[],
+		friend:[],
+		trade:[]
+	};
+	
+	//console.log("Searching DB for party requests of: " + cognitoSub);
+	dataAccess.dbFindAwait("RW_REQUEST", {targetCognitoSub:cognitoSub}, async function(err, reqRes){
+		if (err){
+			logg("DB ERROR - getRequests() - RW_REQUEST.find: " + err);
+		}
+		if (reqRes[0]){
+			for (let j = 0; j < reqRes.length; j++) {
+				requests[reqRes[j].type].push(reqRes[j]);
+			}						
+		}
+		cb(requests);
+	});		
+}
+
+
 var getRequestById = function(id, cb){
 	console.log("DB getRequestById: " + id);
 	
@@ -1043,9 +1065,9 @@ var getPlayerRelationshipFromDB = function(data,cb){
 					}
 				}
 			}
-			getUserFromDB(data.callerCognitoSub, function(callingUser){
+			getUser(data.callerCognitoSub, function(callingUser){
 				if (callingUser){
-					getUserFromDB(data.targetCognitoSub, function(targetUser){
+					getUser(data.targetCognitoSub, function(targetUser){
 						if (targetUser){
 							if (callingUser.partyId && targetUser.partyId == callingUser.partyId){
 								result.inParty = true;
@@ -1291,7 +1313,7 @@ function checkForUnhealthyServers(){
 	});
 }
 
-module.exports.getUserFromDB = getUserFromDB;
+module.exports.getUser = getUser;
 module.exports.getAllUsersOnServer = getAllUsersOnServer;
 module.exports.getPartyForUser = getPartyForUser;
 module.exports.getPartyById = getPartyById;
@@ -1318,6 +1340,7 @@ module.exports.removeRequest = removeRequest;
 module.exports.upsertRequest = upsertRequest;
 module.exports.getFriendRequests = getFriendRequests;
 module.exports.getPartyRequests = getPartyRequests;
+module.exports.getRequests = getRequests;
 module.exports.getRequestById = getRequestById;
 module.exports.removeRequestById = removeRequestById;
 module.exports.getOnlineFriends = getOnlineFriends;

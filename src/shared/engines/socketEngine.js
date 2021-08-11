@@ -18,7 +18,7 @@ io.sockets.on('connection', function(socket){
 		socket.cognitoSub = cognitoSub;
 		logg("updateSocketInfo for cognitoSub: " + SOCKET_LIST[socket.id].cognitoSub + " url=" + myUrl);
 		
-		dataAccessFunctions.getUserFromDB(cognitoSub, function(userData){
+		dataAccessFunctions.getUser(cognitoSub, function(userData){
 			if (userData){
 				socket.partyId = userData.partyId;
 				socket.rating = userData.rating;

@@ -52,6 +52,7 @@ function checkViewedProfileIsFriendOrParty(){
 		if (data.friends == true){
 			hide("addFriendButton");
 			show("removeFriendButton");		
+			show("inviteToTradeButton");
 		}
 		else {
 			hide("removeFriendButton");											
@@ -803,18 +804,32 @@ function inviteToPartyButtonClick() {
 	}
 }
 
+function inviteToTradeButtonClick() {
+	console.log("inviteToTradeButtonClick()");
+
+	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
+		const data = {
+			cognitoSub:cognitoSub,
+			username:username,
+			targetCognitoSub:getUrl().split('/user/')[1],
+			type:"trade"
+		};		
+		upsertRequest(data);
+	}
+}
+
 function upsertRequest(data){
 	$.post('/upsertRequest', data, function(data,status){
 	if (data){
+		console.log("upsertRequest response:");
+        console.log(data);
 		if (data.error){
-			alert(data.error);
+			alert(data.msg);
 		}
 		else {
 			window.location.reload();
 		}
 	}
-		console.log("upsertRequest response:");
-		console.log(data);
 	});
 }
 
