@@ -47,6 +47,15 @@ router.get('/user/:cognitoSub', function(req, res) {
 	res.send(pageContent);
 });
 
+//Trade page
+router.get('/trade', function(req, res) {
+	var pageData = {};
+	var pageContent = getClientFile('trade.html');
+	pageData["header"] = getClientFile('header.html');		
+	pageContent = replaceValues(pageData, pageContent);	
+	res.send(pageContent);
+});
+
 //Player Search
 router.get('/search/:searchText', function(req, res) {
 	var pageData = {};

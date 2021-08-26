@@ -1175,4 +1175,240 @@ function populateHTML(id, content){
 	}
 }
 
+////////////////////////User Customization Stuff//////////////////////////
+function populateCustomizationOptions(){
+    var options = customizationOptions;
+
+    var div = document.getElementById("appearanceOptions");
+    var categoryTabsHTML = '<div id="appearaceCategoryTabs" class="tab">';
+    var categoryContentHTML = "";
+
+    for (const category in options[displayTeam]){
+        categoryTabsHTML += getCategoryTabHTML(category);
+
+        var categoryDiv = category + "Div";
+
+        var activeText = "";
+        if (category == "hat"){
+            activeText = " active";
+        }
+        categoryContentHTML += '<div id="' + categoryDiv + '" class="tabcontent' + activeText + '">';
+
+        for (const subCategory in options[displayTeam][category]){
+            var displaySubCategory = capitalizeFirstLetter(subCategory);
+
+            if (subCategory == "type")
+                displaySubCategory = "";
+
+                categoryContentHTML += "<div class='shopCategory'>" + displaySubCategory + "</div>"
+
+            for (const item in options[displayTeam][category][subCategory]){
+
+                options[displayTeam][category][subCategory] = options[displayTeam][category][subCategory].sort(
+                    function (item1, item2){
+                        return item1.rarity - item2.rarity;
+                    }
+                );
+
+                var active = false;
+                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasValue ||
+                (options[displayTeam][category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank) ||
+                (subCategory == "pistol" && currentCustomizations[displayTeam]["pistolColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
+                (subCategory == "dualPistols" && currentCustomizations[displayTeam]["dpColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
+                (subCategory == "machineGun" && currentCustomizations[displayTeam]["mgColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
+                (subCategory == "shotgun" && currentCustomizations[displayTeam]["sgColor"] == options[displayTeam][category][subCategory][item].canvasValue)
+                ){
+                    active = true;
+                }
+               
+                options[displayTeam][category][subCategory][item].customizationCategory = category + displaySubCategory;
+                if (subCategory == "pistol"){ options[displayTeam][category][subCategory][item].customizationCategory = "pistolColor";}
+                if (subCategory == "dualPistols"){ options[displayTeam][category][subCategory][item].customizationCategory = "dpColor";}
+                if (subCategory == "machineGun"){ options[displayTeam][category][subCategory][item].customizationCategory = "mgColor";}
+                if (subCategory == "shotgun"){ options[displayTeam][category][subCategory][item].customizationCategory = "sgColor";}
+                options[displayTeam][category][subCategory][item].subCategory = subCategory;
+                categoryContentHTML += getShopItemHTML(options[displayTeam][category][subCategory][item], active, false);
+            }
+        }
+        categoryContentHTML += "</div>";
+    }
+
+    categoryTabsHTML += "</div>";
+    div.innerHTML = categoryTabsHTML + categoryContentHTML;
+
+    //draw on icon canvases
+    for (const team in options){
+        if (team == "fullList"){continue;}
+        for (const category in options[team]){
+            for (const subCategory in options[team][category]){
+                for (const item in options[team][category][subCategory]){
+                    //Logic for not drawing if already drawn
+                    //if (document.getElementById(options[team][category][subCategory][item].id + "CustomizeCtx"))
+                        drawShopIcon(options[team][category][subCategory][item], options[team][category][subCategory][item].id + "CustomizeCtx");
+                }
+            }
+        }
+    }        
+}
+
+function getCategoryTabHTML(category){
+    return '<button class="tablinks" id="' + category + '" onclick="showContent(\'' + category + '\')">' + capitalizeFirstLetter(category) + '</button>';
+}
+
+function getShopItemHTML(item, active, isInShop){
+    var shopItemClass = "shopItem";
+    var shopIconClass = "shopIcon";
+    if (active){
+        shopItemClass += " active";
+        shopIconClass += " active";
+    }
+
+    var ownedHTML = "";
+    var ownedCount = getItemOwnedCount(item.id);
+    if (ownedCount > 0){
+        if (isInShop){
+            ownedHTML += " | ";
+        }
+        ownedHTML += "[" + ownedCount + " owned]";
+        if (!isInShop && item.text){ //No need for break if no description subtext
+            ownedHTML = "<br>" + ownedHTML;
+        }
+        if (!isInShop && ownedCount < 2){
+            ownedHTML = "";
+        }
+    }
+
+    const shopItemDivId = isInShop ? item.id : "customizeItem";
+    var HTML = "<div id='" + shopItemDivId + "' class='" + shopItemClass + "' " + getOnClickHTML(item, isInShop) + ">";
+
+    var iconCtxId = isInShop ? item.id + "ShopCtx" : item.id + "CustomizeCtx";
+    if (item.category == "other"){
+        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><img src='/src/client/img/shopIcons/" + item.canvasValue + "'></div>";
+    }
+    else {
+        var iconClassPrefix = isInShop ? "shop" : "equip";
+        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'>";
+        HTML += "<img class='" + iconClassPrefix + "IconRoulette' style='display:none' src='/src/client/img/shopIcons/roulette/questionO.png'>";
+        HTML += "<canvas class='" + iconClassPrefix + "IconCanvas' id='" + iconCtxId + "'></canvas>";
+        HTML += "</div>";
+    }
+    
+    //Rarity appearance configuration
+    const showRarityImg = isInShop ? true : false;
+    const showRarityTitleColor = isInShop ? true : false;
+
+    
+    var rarityImg;
+    var rarityText;
+    var rarityColor;
+    switch(item.rarity){
+        case 0:
+            rarityImg = false;
+            rarityText = "";
+            rarityColor = "#ffffff";
+            break;
+        case 1:
+            rarityImg = "rarities/rare.png";
+            rarityText = "Rare";
+            rarityColor = "#0074e0";
+            break;
+        case 2:
+            rarityImg = "rarities/epic.png";
+            rarityText = "Epic";
+            rarityColor = "#b700d8";                
+            break;
+        case 3:
+            rarityImg = "rarities/legendary.png";
+            rarityText = "Legendary";
+            rarityColor = "#ffd200";
+            break;
+        case 4:
+            rarityImg = "rarities/legendary.png";
+            rarityText = "Legendary";
+            rarityColor = "#ffd200";
+            break;
+        default:            
+            break;
+    }
+
+    if (item.hideFromShop){
+        rarityText = "[Exclusive]";   
+        rarityColor = "#ff3600";
+    }
+
+    if (rarityImg && showRarityImg)
+        HTML += "<div class='shopIconOverlay' id ='" + item.id + "''><img src='/src/client/img/shopIcons/" + rarityImg + "'></div>";
+
+    //Item Title
+    if (item.title){
+        HTML += "<div id='shopTitle' class='shopTitle' ";
+        if (showRarityTitleColor)  
+            HTML += "style='color:" + rarityColor + "'";
+        HTML += ">" + item.title + "</div>";
+    }    
+    //Rarity Text
+    HTML += "<div id='rarityText' class='shopTitle' style='float:right; color:" + rarityColor + "'>" + rarityText + "</div>";
+
+    //Item category
+    if (isInShop){
+        HTML += "<br>";
+        HTML += "<div id='shopTextCategory' class='shopText'>" + getDisplayCategory(item) + "</div>";
+        //Team item text
+        if (item.team){
+            switch(item.team){
+                case 1:
+                    HTML += "<div class='shopText' style='color: #bf1f1f;'>| Red team item</div>";
+                    break;
+                case 2:
+                    HTML += "<div class='shopText' style='color: #476aeb;'>| Blue team item</div>";
+                    break;
+                default:
+                    break;
+            }       
+        }
+        HTML += "<br>";
+    }
+
+    //Price + Owned
+    if (item.price && isInShop)
+        HTML += "<div id='shopTextPrice' class='shopText'>$" + numberWithCommas(item.price) + ownedHTML + "</div>";
+    HTML += "<br>";
+    if (item.text && !isInShop){
+        HTML += "<div class='shopText'>" + item.text + ownedHTML + "</div>";
+    }
+
+
+
+    HTML += "</div>"; 
+
+    return HTML;
+}
+
+function getDisplayCategory(item){
+    var displayCategory = "";
+    if (item.category){
+        if (item.category != "other"){
+            displayCategory += capitalizeFirstLetter(item.category);
+            if (item.subCategory != "type"){
+                displayCategory += (" " + capitalizeFirstLetter(item.subCategory));
+            }
+        }
+    }
+    return displayCategory;
+}
+
+function getOnClickHTML(item, isInShop){
+    var onClickHTML = "";
+    if (page == "trade"){
+        onClickHTML = "onclick='addItemToTradeClick(\"" + item.id + "\")'";
+    }
+    else if (isInShop){
+        onClickHTML = "onclick='shopClick(\"" + item.id + "\"," + item.price + ")'";
+    }
+    else {
+        onClickHTML = "onclick='customizationSelect(\"" + item.canvasValue + "\", \"" + displayTeam + "\",\"" + item.customizationCategory + "\")'";
+    }
+    return onClickHTML;
+}
+
 console.log("cognito.js loaded");

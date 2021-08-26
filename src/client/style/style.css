@@ -1587,6 +1587,10 @@ span#shopCompletionExclusives {
     border: 1px solid transparent;
 }
 
+.tradeOfferings {
+    width: 66.66%;
+}
+
 /* Customization Tabs */
 div#appearanceOptions {
     width: 100%;
@@ -1631,7 +1635,7 @@ div#appearanceOptions {
     padding-left: 12px;
     /*border-left: 1px solid #ccc;
     border-bottom: 1px solid #ccc;*/
-    height: calc(100% - 298px);
+    height: calc(100% - 355px);
     overflow-y: auto;
     overflow-x: hidden;
 }

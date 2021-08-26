@@ -271,7 +271,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("August 5, 2021 16:00:00");
+	var thresholdDate = new Date("August 19, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -284,7 +284,7 @@ console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:2000}, async function(err, resy){
 		if (resy && resy[0]){ 
 			for (let k = 0; k < resy.length; k++) {
-
+				var updatey = false;
 				var cognitoSub = resy[k].cognitoSub;
 				var customizationOptions = resy[k].customizationOptions; 
 				var customizations = resy[k].customizations; 
@@ -302,9 +302,10 @@ console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 				  	continue;
 				}
 
-				if (customizationOptions.indexOf("goldPistolWeapon") == -1){
-					customizationOptions.push("goldPistolWeapon");
-					console.log("Pushing Pistol");
+				if (customizationOptions.indexOf("goldSGWeapon") == -1){
+					customizationOptions.push("goldSGWeapon");
+					console.log("Pushing SG");
+					updatey = true;
 				}
     
 /* 				console.log("-----------------------------------customizations");
@@ -321,6 +322,10 @@ console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 					customizationOptions:customizationOptions
 				};
 
+				if (!updatey){
+					console.log("Nothing to update...");
+					continue;
+				}
 				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
 					console.log("SAFETYS ON");
 					continue;
