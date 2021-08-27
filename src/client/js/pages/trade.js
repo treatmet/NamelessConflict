@@ -29,12 +29,16 @@ function getTradeId(){
 	if (getUrl().indexOf('/trade/') > -1){
 		return getUrl().split('/trade/')[1].substring(0,36);
 	}	
-	return "";
+    else {
+        return getUrlParam("tradeId");
+    }
 }
 
 function populateTradePage(){
-
+    populateCustomizationOptions();
+    show("appearanceOptions");		
 }
+
 
 
 //Customization Options example

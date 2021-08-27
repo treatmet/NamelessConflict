@@ -136,7 +136,6 @@ function showSelfProfileOptions(){
         show("shopCustomizeToggle");			
         show("statsOptionsToggle");			
         showSecondaySectionTitles();
-        show("appearanceOptions");
         $.get( '/getUserCustomizationOptions', {cognitoSub:viewedProfileCognitoSub}, function(data) {
             logg("GET CUSTOMIZATION OPTIONS RESPONSE:");
             console.log(data);
@@ -1176,7 +1175,7 @@ function getRefreshTimerTextHTML(){
     return '<div id="refreshTimerText">⟳ in </div><div id="refreshTimerTimer">' + secondsToTimer(shopRefreshTimer) + '</div>';
 }
 
-function getItemOwnedCount(itemId){
+/* function getItemOwnedCount(itemId){
     var count = 0;
     if (!customizationOptions.fullList)
         return count;
@@ -1188,7 +1187,7 @@ function getItemOwnedCount(itemId){
 
 	return count;
 }
-
+ */
 
 
 setInterval( 

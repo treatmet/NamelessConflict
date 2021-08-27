@@ -431,7 +431,7 @@ function isRank(value){
     return false;
 }
 
-var getUserCustomizationOptions = function(cognitoSub,cb){
+var getUserCustomizationOptions = function(cognitoSub,cb){ //GetCustomizationOptions
 	//log("searching for user: " + cognitoSub);
 	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
@@ -444,131 +444,87 @@ var getUserCustomizationOptions = function(cognitoSub,cb){
 				updateUserCustomizationOptions(cognitoSub, customizationOptions);
 			}
 
-			customizationOptions = transformToClientCustomizationOptions(customizationOptions);
+			var clientCustomizationResponse = {
+				items:{},
+				completion:{}
+			};
+
+			clientCustomizationResponse.items = transformToClientCustomizationOptions(customizationOptions);
+			clientCustomizationResponse.completion = getCompletion(customizationOptions);
+
 			console.log("RETURNING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
 			console.log(customizationOptions);
-			cb({msg: "Successfully got customization options", result:customizationOptions});
+			cb({msg: "Successfully got customization options", result:clientCustomizationResponse});
 		}
 		else {
 			console.log("ERROR - COULD NOT FIND USER WHEN GETTING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
-			cb({msg: "Failed to get customization options for [" + cognitoSub + "] from DB", result:defaultCustomizationOptions});
+			cb({msg: "Failed to get customization options for [" + cognitoSub + "] from DB", result:false});
 		}
 	});
 }
 
 function transformToClientCustomizationOptions(customizationOptions){ //customizationOptions = list of strings (id of shopList)
-	var clientOptions = getEmptyClientCustomizationOptions();
-	clientOptions.fullList = customizationOptions.filter(option => option != "unlock");
-
-  	customizationOptions = removeDuplicates(customizationOptions);
-
-	clientOptions.completion.percent = Math.round(((countTotalShopableItems(customizationOptions, true) / totalShopableItems) * 1000)) / 10;
-	clientOptions.completion.exclusives = countTotalShopableItems(customizationOptions, false);
+	var items = getEmptyClientCustomizationOptions();
 
 	for (var o = 0; o < customizationOptions.length; o++){
-		var shopItem = getShopItem(customizationOptions[o]); 
-
-		if (!shopItem)
+		var shopItem = getShopItem(customizationOptions[o]);
+		if (!shopItem || shopItem.category == "other")
 			continue;
 
-		if (shopItem.category == "other")
-			continue;
+		var duplicateItems = customizationOptions.filter(item => item  == shopItem.id);
+		shopItem.ownedCount = duplicateItems.length;
 
-
-		if (shopItem.team == 0 || shopItem.team == 1){
-			clientOptions[1][shopItem.category][shopItem.subCategory].push(shopItem);
-		}
-		if (shopItem.team == 0 || shopItem.team == 2){
-			clientOptions[2][shopItem.category][shopItem.subCategory].push(shopItem);
-		}
+		items[shopItem.category][shopItem.subCategory].push(shopItem);
 	}
-	return clientOptions;
+	return items;
+}
+
+function getCompletion(customizationOptions){
+	customizationOptions = removeDuplicates(customizationOptions);
+	var completion = {};
+	completion.percent = Math.round(((countTotalShopableItems(customizationOptions, true) / totalShopableItems) * 1000)) / 10;
+	completion.exclusives = countTotalShopableItems(customizationOptions, false);
+	return completion;
 }
 
 function getEmptyClientCustomizationOptions(){
 	return {
-        "1": {
-            hat: {
-                type:[]
-			},
-            hair: {
-                type:[],
-				color:[]
-            },
-            skin: {
-				color:[]
-            },
-            shirt: {
-				type:[],
-				color:[],
-				pattern:[]
-            },
-            pants: {
-				color:[]
-            },
-            shoes: {
-				color:[]
-            },
-            boost: {
-				type:[]
-            },
-            name: {
-				color:[]
-            },
-            icon: {
-				type:[]
-            },
-            weapons: {
-				pistol:[],
-				dualPistols:[],
-				machineGun:[],
-				shotgun:[]
-            }
-        },
-        "2": {
-            hat: {
-                type:[]
-			},
-            hair: {
-                type:[],
-				color:[]
-            },
-            skin: {
-				color:[]
-            },
-            shirt: {
-				type:[],
-				color:[],
-				pattern:[]
-            },
-            pants: {
-				color:[]
-            },
-            shoes: {
-				color:[]
-            },
-            boost: {
-				type:[]
-            },
-            name: {
-				color:[]
-            },
-            icon: {
-				type:[]
-            },
-            weapons: {
-				pistol:[],
-				dualPistols:[],
-				machineGun:[],
-				shotgun:[]
-            }
-        },
-		"fullList":[],
-		"completion": {
-			percent: 0.0,
-			exclusives: 0
+		hat: {
+			type:[]
 		},
-
+		hair: {
+			type:[],
+			color:[]
+		},
+		skin: {
+			color:[]
+		},
+		shirt: {
+			type:[],
+			color:[],
+			pattern:[]
+		},
+		pants: {
+			color:[]
+		},
+		shoes: {
+			color:[]
+		},
+		boost: {
+			type:[]
+		},
+		name: {
+			color:[]
+		},
+		icon: {
+			type:[]
+		},
+		weapons: {
+			pistol:[],
+			dualPistols:[],
+			machineGun:[],
+			shotgun:[]
+		}
     };
 }
 

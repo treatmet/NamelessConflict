@@ -1264,7 +1264,7 @@ function getShopItemHTML(item, active, isInShop){
     }
 
     var ownedHTML = "";
-    var ownedCount = getItemOwnedCount(item.id);
+    var ownedCount = item.ownedCount;
     if (ownedCount > 0){
         if (isInShop){
             ownedHTML += " | ";
