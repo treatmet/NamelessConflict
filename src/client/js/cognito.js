@@ -1183,7 +1183,7 @@ function populateCustomizationOptions(){
     var categoryTabsHTML = '<div id="appearaceCategoryTabs" class="tab">';
     var categoryContentHTML = "";
 
-    for (const category in options[displayTeam]){
+    for (const category in options.items){
         categoryTabsHTML += getCategoryTabHTML(category);
 
         var categoryDiv = category + "Div";
@@ -1194,40 +1194,39 @@ function populateCustomizationOptions(){
         }
         categoryContentHTML += '<div id="' + categoryDiv + '" class="tabcontent' + activeText + '">';
 
-        for (const subCategory in options[displayTeam][category]){
+        for (const subCategory in options.items[category]){
             var displaySubCategory = capitalizeFirstLetter(subCategory);
+            if (subCategory == "type"){displaySubCategory = "";}
+            categoryContentHTML += "<div class='shopCategory'>" + displaySubCategory + "</div>"
 
-            if (subCategory == "type")
-                displaySubCategory = "";
-
-                categoryContentHTML += "<div class='shopCategory'>" + displaySubCategory + "</div>"
-
-            for (const item in options[displayTeam][category][subCategory]){
-
-                options[displayTeam][category][subCategory] = options[displayTeam][category][subCategory].sort(
-                    function (item1, item2){
-                        return item1.rarity - item2.rarity;
-                    }
-                );
+			options.items[category][subCategory] = options.items[category][subCategory].sort(
+				function (item1, item2){
+					return item1.rarity - item2.rarity;
+				}
+            );
+            for (const item in options.items[category][subCategory]){
+				if (displayTeam){
+					if ((displayTeam == 1 && options.items[category][subCategory][item].team == 2) || (displayTeam == 2 && options.items[category][subCategory][item].team == 1)){continue;}
+				}
 
                 var active = false;
-                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasValue ||
-                (options[displayTeam][category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank) ||
-                (subCategory == "pistol" && currentCustomizations[displayTeam]["pistolColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
-                (subCategory == "dualPistols" && currentCustomizations[displayTeam]["dpColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
-                (subCategory == "machineGun" && currentCustomizations[displayTeam]["mgColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
-                (subCategory == "shotgun" && currentCustomizations[displayTeam]["sgColor"] == options[displayTeam][category][subCategory][item].canvasValue)
+                if (currentCustomizations[displayTeam][category + displaySubCategory] == options.items[category][subCategory][item].canvasValue ||
+                (options.items[category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank) ||
+                (subCategory == "pistol" && currentCustomizations[displayTeam]["pistolColor"] == options.items[category][subCategory][item].canvasValue) ||
+                (subCategory == "dualPistols" && currentCustomizations[displayTeam]["dpColor"] == options.items[category][subCategory][item].canvasValue) ||
+                (subCategory == "machineGun" && currentCustomizations[displayTeam]["mgColor"] == options.items[category][subCategory][item].canvasValue) ||
+                (subCategory == "shotgun" && currentCustomizations[displayTeam]["sgColor"] == options.items[category][subCategory][item].canvasValue)
                 ){
                     active = true;
                 }
                
-                options[displayTeam][category][subCategory][item].customizationCategory = category + displaySubCategory;
-                if (subCategory == "pistol"){ options[displayTeam][category][subCategory][item].customizationCategory = "pistolColor";}
-                if (subCategory == "dualPistols"){ options[displayTeam][category][subCategory][item].customizationCategory = "dpColor";}
-                if (subCategory == "machineGun"){ options[displayTeam][category][subCategory][item].customizationCategory = "mgColor";}
-                if (subCategory == "shotgun"){ options[displayTeam][category][subCategory][item].customizationCategory = "sgColor";}
-                options[displayTeam][category][subCategory][item].subCategory = subCategory;
-                categoryContentHTML += getShopItemHTML(options[displayTeam][category][subCategory][item], active, false);
+                options.items[category][subCategory][item].customizationCategory = category + displaySubCategory;
+                if (subCategory == "pistol"){ options.items[category][subCategory][item].customizationCategory = "pistolColor";}
+                if (subCategory == "dualPistols"){ options.items[category][subCategory][item].customizationCategory = "dpColor";}
+                if (subCategory == "machineGun"){ options.items[category][subCategory][item].customizationCategory = "mgColor";}
+                if (subCategory == "shotgun"){ options.items[category][subCategory][item].customizationCategory = "sgColor";}
+                options.items[category][subCategory][item].subCategory = subCategory;
+                categoryContentHTML += getShopItemHTML(options.items[category][subCategory][item], active, false);
             }
         }
         categoryContentHTML += "</div>";

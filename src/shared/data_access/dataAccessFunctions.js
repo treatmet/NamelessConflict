@@ -271,7 +271,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("August 19, 2021 16:00:00");
+	var thresholdDate = new Date("August 26, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -280,7 +280,7 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
  */
 
 
-console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
+	console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:2000}, async function(err, resy){
 		if (resy && resy[0]){ 
 			for (let k = 0; k < resy.length; k++) {
@@ -302,9 +302,9 @@ console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 				  	continue;
 				}
 
-				if (customizationOptions.indexOf("goldSGWeapon") == -1){
-					customizationOptions.push("goldSGWeapon");
-					console.log("Pushing SG");
+				if (customizationOptions.indexOf("goldDPWeapon") == -1){
+					customizationOptions.push("goldDPWeapon");
+					console.log("Pushing DP");
 					updatey = true;
 				}
     
@@ -326,10 +326,10 @@ console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 					console.log("Nothing to update...");
 					continue;
 				}
-				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
-					console.log("SAFETYS ON");
-					continue;
-				}
+				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+					// console.log("SAFETYS ON");
+					// continue;
+				// }
 
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});			
@@ -473,7 +473,9 @@ function transformToClientCustomizationOptions(customizationOptions){ //customiz
 
 		var duplicateItems = customizationOptions.filter(item => item  == shopItem.id);
 		shopItem.ownedCount = duplicateItems.length;
-
+		
+		if (items[shopItem.category][shopItem.subCategory].filter(item => item.id  == shopItem.id).length > 0){continue;} //remove duplicates
+		
 		items[shopItem.category][shopItem.subCategory].push(shopItem);
 	}
 	return items;
