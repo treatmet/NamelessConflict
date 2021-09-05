@@ -40,6 +40,11 @@ io.sockets.on('connection', function(socket){
 	
 	socket.on('test', function(data){
 	});
+	
+	socket.on('updateTrade', function(tradeData){
+		
+	});
+
 
 	socket.on('disconnect', function(){
 		var socketCognitoSub = "";

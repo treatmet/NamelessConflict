@@ -10,19 +10,37 @@
 	{{header}}
     
 <div style="display:none;" id="mainContent">
-	<div id="sectionTitles">
-		<div id="sectionTitle1" class="sectionTitle">TRADE</div>
-		<div id="sectionTitle2" class="sectionTitle3"></div>
-		<div id="sectionTitle3" class="sectionTitle3">Your Stuff</div>
+	<div id="sectionTitles" style='display:none'>
+		<div id="sectionTitle1" class="sectionTitle">testuser's offerings</div>
+		<div id="sectionTitle2" class="sectionTitle">Your offerings</div>
+		<div id="sectionTitle3" class="sectionTitle">Your Stuff</div>
 	</div>
 
 
 	<!--PAGE COLUMNS-->
 	<div id="tradeOfferings" class="tradeOfferings">
-		TRADE STUFF!
+		<div id="leftPlayerTradeSection" class="tradeSection">
+			<div id="leftPlayerTradeTitle" class="tradeTitle">
+				testuser's offerings
+			</div>
+			<div id="leftPlayerTradeList" class="tradeList">
+				<div id="customizeItem" class="shopItem" onclick="addItemToTradeClick(&quot;rankIcon&quot;)"><div class="shopIcon" id="rankIconT"><img class="equipIconRoulette" style="display:none" src="/src/client/img/shopIcons/roulette/questionO.png"><canvas class="equipIconCanvas" id="rankIconTCustomizeCtx" width="70" height="70"></canvas></div><div id="shopTitle" class="shopTitle">Rank</div><div id="rarityText" class="shopTitle" style="float:right; color:#ffffff"></div><br><div class="shopText">Show current rank</div></div>
+			</div>
+		</div>
+		<div id="rightPlayerTradeSection" class="tradeSection">
+			<div id="rightPlayerTradeTitle" class="tradeTitle">
+				Your offerings
+			</div>
+			<div id="rightPlayerTradeList" class="tradeList">
+				<div id="customizeItem" class="shopItem" onclick="addItemToTradeClick(&quot;rankIcon&quot;)"><div class="shopIcon" id="rankIconT"><img class="equipIconRoulette" style="display:none" src="/src/client/img/shopIcons/roulette/questionO.png"><canvas class="equipIconCanvas" id="rankIconTCustomizeCtx" width="70" height="70"></canvas></div><div id="shopTitle" class="shopTitle">Rank</div><div id="rarityText" class="shopTitle" style="float:right; color:#ffffff"></div><br><div class="shopText">Show current rank</div></div>
+			</div>
+		</div>
 	</div>
 
 	<div id="customizationColumn" class="columnSection">
+			<div id="yourStuffTitle" class="tradeTitle">
+				Your Stuff
+			</div>
 
 		<div id="appearanceOptions" style="display: none">
 

@@ -136,16 +136,16 @@ function showSelfProfileOptions(){
         show("shopCustomizeToggle");			
         show("statsOptionsToggle");			
         showSecondaySectionTitles();
-        $.get( '/getUserCustomizationOptions', {cognitoSub:viewedProfileCognitoSub}, function(data) {
-            logg("GET CUSTOMIZATION OPTIONS RESPONSE:");
-            console.log(data);
-            if (data.result)
-                customizationOptions = data.result;
-    
+		
+		getCustomizationOptions(viewedProfileCognitoSub, function(data){
+            customizationOptions = data.result;
+			
+			createCustomizationOptionDivs();
+			populateCustomizationOptions();
+			showContent("hat");	
             populateShopCompletion();
-            populateCustomizationOptions();
-
-            $.get( '/getUserShopList', {cognitoSub:viewedProfileCognitoSub}, function(data) {
+            
+			$.get( '/getUserShopList', {cognitoSub:viewedProfileCognitoSub}, function(data) {
                 logg("GET SHOP LIST RESPONSE:");
                 console.log(data);
                 if (data.result){
@@ -159,11 +159,11 @@ function showSelfProfileOptions(){
                         toggleStatsSettings('settingsTab');
                         showEditUserForm();
                     }        
-                    showContent("hat");
+                    
                 }
                 populateShopOptions();
-            });
-        });    
+            });			
+		});
         $.get( '/getUserSettings', {cognitoSub:viewedProfileCognitoSub}, function(data) {
             logg("GET SETTINGS RESPONSE:");
             console.log(data);
@@ -333,7 +333,6 @@ function setDefault(action){
     setAllKeybindingCells(currentSettings);
 }
 
-
 function keycodeToChar(code){    
     var char = keycodeToCharRef[code];
     if (!char)
@@ -341,10 +340,6 @@ function keycodeToChar(code){
 
     return char;
 }
-
-function charToKeyCode(){
-}
-
 
 function drawProfileCustomizations(){
     drawCustomization(currentCustomizations[displayTeam], displayAnimation, displayTeam, 0, function(drawnFrameTorso, id){
@@ -354,13 +349,12 @@ function drawProfileCustomizations(){
     });
 }
 
-
 function displayAppearanceFrame(image, zoom = 1, secondImage = false){
     var ctx = document.getElementById("ctx").getContext("2d", { alpha: false });
     var canvas = document.getElementById("ctx");
 
     var backgroundImg = new Image();
-    backgroundImg.src = "/src/client/img/factory-floor.png";
+    backgroundImg.src = "/src/client/img/map/tile.png";
 
     loadImages([backgroundImg.src], function(){
         var backgroundLayer = {
@@ -390,50 +384,6 @@ function displayAppearanceFrame(image, zoom = 1, secondImage = false){
 	});
 }
 
-function drawShopIcon(shopItem, iconId){
-    // console.log("GETTING CANVAS FOR: " + iconId);
-    var zoom = 1; //Zoom config of all shop icons
-    var canvas = document.getElementById(iconId);
-    if (!canvas){
-        //logg("ERROR: CAN NOT FIND SHOP ICON:" + iconId); 
-        return;
-    }
-    canvas.width = 70;
-    canvas.height = 70;
-    var ctx = canvas.getContext("2d", { alpha: false });
-
-    ctx.fillStyle="#37665a";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    var drawY = 25;
-    if (shopItem.category == "name"){
-        drawName(ctx, username, shopItem.canvasValue, canvas.width/2, drawY);
-    }
-    else if (shopItem.category == "icon"){
-        if (shopItem.canvasValue == "rank"){
-            shopItem.canvasValue = viewedProfileRank;
-        }
-        getUserIconImg(shopItem.canvasValue, false, function(iconImg, team){
-            drawIcon(ctx, iconImg, canvas.width/2 - 10, drawY, 20, 20);   
-        });                             
-    }
-    else {
-        getMannequinFrame(shopItem, function(image){
-            var shiftDistForIconX = -11;
-            var shiftDistForIconY = -11;
-            if (shopItem.category == "boost"){
-                shiftDistForIconX = -1;
-                shiftDistForIconY = -3;
-            }
-            var mannequinLayer = {
-                img:image,
-                x: shiftDistForIconX,
-                y: shiftDistForIconY                
-            };
-            drawOnCanvas(ctx, mannequinLayer, zoom, false);
-        });
-    }
-}
 
 
 
@@ -814,6 +764,7 @@ function inviteToTradeButtonClick() {
 			cognitoSub:cognitoSub,
 			username:username,
 			targetCognitoSub:getUrl().split('/user/')[1],
+			ip: myIp,
 			type:"trade"
 		};		
 		upsertRequest(data);
@@ -821,15 +772,20 @@ function inviteToTradeButtonClick() {
 }
 
 function upsertRequest(data){
-	$.post('/upsertRequest', data, function(data,status){
-	if (data){
+	$.post('/upsertRequest', data, function(response,status){
+	if (response){
 		console.log("upsertRequest response:");
-        console.log(data);
-		if (data.error){
-			alert(data.msg);
+        console.log(response);
+		if (response.error){
+			alert(response.msg);
 		}
 		else {
-			window.location.reload();
+			if (data.type == "trade" && response.url){
+				window.location = response.url;
+			}
+			else {
+				window.location.reload();
+			}
 		}
 	}
 	});
@@ -918,22 +874,6 @@ function toggleEquipBuy(divId) {
     else {
         log("DETECTED NONEXISTANT DIV");
     }    
-}
-
-
-function showContent(divId) {
-    var div = document.getElementById(divId);
-    var tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (var i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-    tablinks = document.getElementsByClassName("tablinks");
-    for (var i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    document.getElementById(divId + "Div").style.display = "block";
-    div.className += " active";
 }
 
 function selectTeam(event, team) {

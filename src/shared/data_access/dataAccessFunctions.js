@@ -271,7 +271,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("August 26, 2021 16:00:00");
+	var thresholdDate = new Date("September 2, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -302,9 +302,9 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				  	continue;
 				}
 
-				if (customizationOptions.indexOf("goldDPWeapon") == -1){
-					customizationOptions.push("goldDPWeapon");
-					console.log("Pushing DP");
+				if (customizationOptions.indexOf("goldMGWeapon") == -1){
+					customizationOptions.push("goldMGWeapon");
+					console.log("Pushing MG");
 					updatey = true;
 				}
     
@@ -326,10 +326,10 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 					console.log("Nothing to update...");
 					continue;
 				}
-				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
-					// console.log("SAFETYS ON");
-					// continue;
-				// }
+				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+				console.log("SAFETYS ON");
+				continue;
+				}
 
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});			
@@ -449,7 +449,7 @@ var getUserCustomizationOptions = function(cognitoSub,cb){ //GetCustomizationOpt
 				completion:{}
 			};
 
-			clientCustomizationResponse.items = transformToClientCustomizationOptions(customizationOptions);
+			clientCustomizationResponse.items = transformToClientCustomizationOptions(customizationOptions, res[0].rating);
 			clientCustomizationResponse.completion = getCompletion(customizationOptions);
 
 			console.log("RETURNING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
@@ -463,7 +463,7 @@ var getUserCustomizationOptions = function(cognitoSub,cb){ //GetCustomizationOpt
 	});
 }
 
-function transformToClientCustomizationOptions(customizationOptions){ //customizationOptions = list of strings (id of shopList)
+function transformToClientCustomizationOptions(customizationOptions, rating){ //customizationOptions = list of strings (id of shopList)
 	var items = getEmptyClientCustomizationOptions();
 
 	for (var o = 0; o < customizationOptions.length; o++){
@@ -471,11 +471,16 @@ function transformToClientCustomizationOptions(customizationOptions){ //customiz
 		if (!shopItem || shopItem.category == "other")
 			continue;
 
+		//Get owned Count
 		var duplicateItems = customizationOptions.filter(item => item  == shopItem.id);
 		shopItem.ownedCount = duplicateItems.length;
 		
-		if (items[shopItem.category][shopItem.subCategory].filter(item => item.id  == shopItem.id).length > 0){continue;} //remove duplicates
+		//Add dyanmic canvasValues (rank icon)
+		if (shopItem.canvasValue == "rank"){
+			shopItem.dynamicCanvasValue = getRankFromRating(rating).rank;
+		}
 		
+		if (items[shopItem.category][shopItem.subCategory].filter(item => item.id  == shopItem.id).length > 0){continue;} //Do not add duplicates		
 		items[shopItem.category][shopItem.subCategory].push(shopItem);
 	}
 	return items;
@@ -821,6 +826,8 @@ var buyItem = function(data, cb){
 
 
 ///////////////////////////////REQUEST FUNCTIONS////////////////////////////////
+
+
 var removeRequest = function(data){
 	/*const data = {
 		cognitoSub:cognitoSub,
@@ -850,21 +857,30 @@ var upsertRequest = function(data,cb){
 	try {
 		log("searching for request: ");
 		logObj(data);
-		dataAccess.dbFindAwait("RW_REQUEST", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, function(err,friendRes){
-			if (friendRes[0]){
+		dataAccess.dbFindAwait("RW_REQUEST", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, function(err,requestRes){
+			if (requestRes[0]){
 				logg("REQUEST ALREADY EXISTS SPAMMER, exiting");
-				cb({error:"REQUEST ALREADY EXISTS"});
+				cb({error:"REQUEST ALREADY EXISTS", status:false});
 			}
 			else {
-				dataAccess.dbUpdateAwait("RW_REQUEST", "ups", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, {cognitoSub:data.cognitoSub, username:data.username, targetCognitoSub:data.targetCognitoSub, type:data.type, timestamp:new Date()}, async function(err, doc){
+				var upsObj = {
+					cognitoSub:data.cognitoSub,
+					username:data.username,
+					targetCognitoSub:data.targetCognitoSub,
+					type:data.type,
+					timestamp:new Date()
+				};
+				//if (data.type == "trade" && data.ip){upsObj.ip = data.ip;}
+				
+				dataAccess.dbUpdateAwait("RW_REQUEST", "ups", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, upsObj, async function(err, doc){
 					if (!err){
 						logg("New request added to RW_REQUEST: " + data.cognitoSub + "," + data.targetCognitoSub + "," + data.type);
-						cb({status:"added"});
+						cb({error:false, status:true});
 					}
 					else {
 						logg("ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub);
 						logg(err);
-						cb({error:"ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub});
+						cb({error:"ERROR when adding friend to RW_FRIEND: " + data.cognitoSub + "," + data.targetCognitoSub, status:false});
 					}
 				});				
 			}
@@ -953,6 +969,8 @@ var getRequestById = function(id, cb){
 		}		
 	});	
 }
+
+
 
 var removeRequestById = function(id){
 	console.log("DB Removing request by id: " + id);

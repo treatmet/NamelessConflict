@@ -43,6 +43,7 @@ const cognitoClientId = '70ru3b3jgosqa5fpre6khrislj';
 const cognitoPoolId = 'us-east-2_SbevJL5zt';
 var page = "";
 var isWebServer = true;
+var myIp = "";
 var cognitoSub = "";
 var username = "SomeGuy";
 var partyId = "";
@@ -87,6 +88,7 @@ function getTokenFromUrlParameterAndLogin(){
 		cognitoSub = tempCognitoSub ? tempCognitoSub : data.cognitoSub;
 		cognitoSub = String(cognitoSub);
 		serverHomePage = data.serverHomePage;
+		myIp = data.ip;
 		console.log("About to make sure page(" + page + ") is game OR isLoggedIn:" + isLoggedIn());
 		socket.emit('updateSocketInfo', cognitoSub);
 
@@ -196,13 +198,18 @@ socket.on('redirect', function(url){
 });
 
 socket.on('redirectToUrl', function(url){
+	redirectToUrl(url);
+});
+
+function redirectToUrl(url){
 	if (!isWebServer){
 		console.log("ERROR - You were attempted to be summoned to another server/game, but you are in a game currently");
 	}
 	url = url + getTokenUrlParams();
 	logg("Redirecting webpage to " + url);
 	window.location.href = url;
-});
+}
+
 
 function autoPlayNow(){
 	playNow();
@@ -473,19 +480,7 @@ function leavePartyButtonClick(userPartyId){
 	});	
 }
 
-function friendAcceptClick(id){
-	const params = {
-		type:"friend",
-		id:id,
-		accept:true
-	};
-	
-	$.post('/requestResponse', params, function(data,status){
-		console.log("requestResponse (friend accept) endpoint response from server:");
-		console.log(data);		
-		window.location.reload();
-	});
-}
+
 
 function getPerformanceInstrucitons(){
 	var isFirefox = typeof InstallTrigger !== 'undefined';
@@ -543,6 +538,20 @@ function showPerformanceInstructionsHeader(){
 	show('performanceInstructions');
 }
 
+function friendAcceptClick(id){
+	const params = {
+		type:"friend",
+		id:id,
+		accept:true
+	};
+	
+	$.post('/requestResponse', params, function(data,status){
+		console.log("requestResponse (friend accept) endpoint response from server:");
+		console.log(data);		
+		window.location.reload();
+	});
+}
+
 function partyAcceptClick(id){
 	const params = {
 		type:"party",
@@ -584,7 +593,7 @@ function tradeAcceptClick(id){
 			alert(data.error);
 		}
 		else {
-			window.location.href = data.url;
+			//window.location.href = data.url; //redirection happens server-side
 		}
 	});
 }
@@ -597,8 +606,8 @@ function isValidUsername(newUsername){
         alert("Please enter a Username that is at least 3 characters long.");
         return false;
     }
-    else if (newUsername.length > 20){
-        alert("Username is too long.\nPlease enter a Username that is less than 20 characters.");
+    else if (newUsername.length > 15){
+        alert("Username is too long.\nPlease enter a Username that is less than 15 characters.");
         return false;
     }
     else if (!isValid(newUsername) || newUsername.indexOf(' ') > -1 || newUsername.indexOf('@') > -1 || newUsername.indexOf('%') > -1 || newUsername.indexOf(')') > -1 || newUsername.indexOf('(') > -1 || newUsername.indexOf('}') > -1 || newUsername.indexOf('{') > -1 || newUsername.indexOf('nigger') > -1 || newUsername.indexOf('cunt') > -1){
@@ -810,7 +819,7 @@ setInterval(
 	function(){	
 	
 		//Refresh header
-		if (document.getElementById("header") && document.getElementById("header").style.display != 'none' && isLoggedIn()){
+		if (document.getElementById("header") && document.getElementById("header").style.display != 'none' && isLoggedIn() && page != "trade"){
 			headerRefreshTicker--;
 			if (headerRefreshTicker < 1){
 				//logg("Refreshing header");
@@ -1176,23 +1185,42 @@ function populateHTML(id, content){
 }
 
 ////////////////////////User Customization Stuff//////////////////////////
+function createCustomizationOptionDivs(){
+    var div = document.getElementById("appearanceOptions");
+    var categoryTabsHTML = '<div id="appearaceCategoryTabs" class="tab">';
+    var categoryHTML = "";
+    for (const category in customizationOptions.items){
+        categoryTabsHTML += getCategoryTabHTML(category);
+
+        var categoryDiv = category + "Div";
+        var activeText = "";
+        if (category == "hat"){activeText = " active";}
+		
+        categoryHTML += '<div id="' + categoryDiv + '" class="tabcontent' + activeText + '"></div>';
+ 	}
+	categoryTabsHTML += "</div>";
+	
+	div.innerHTML = categoryTabsHTML + categoryHTML;
+}
+
+function getCustomizationOptions(requestCognitoSub, cb){
+	$.get( '/getUserCustomizationOptions', {cognitoSub:requestCognitoSub}, function(data) {
+		logg("GET CUSTOMIZATION OPTIONS RESPONSE:");
+		console.log(data);
+		cb(data);
+	});    
+}
+
+
 function populateCustomizationOptions(){
     var options = customizationOptions;
 
     var div = document.getElementById("appearanceOptions");
-    var categoryTabsHTML = '<div id="appearaceCategoryTabs" class="tab">';
-    var categoryContentHTML = "";
 
     for (const category in options.items){
-        categoryTabsHTML += getCategoryTabHTML(category);
-
         var categoryDiv = category + "Div";
-
-        var activeText = "";
-        if (category == "hat"){
-            activeText = " active";
-        }
-        categoryContentHTML += '<div id="' + categoryDiv + '" class="tabcontent' + activeText + '">';
+		if (!document.getElementById(categoryDiv)){console.log("ERROR - DIV NOT CREATED"); continue;}
+		var categoryContentHTML = "";
 
         for (const subCategory in options.items[category]){
             var displaySubCategory = capitalizeFirstLetter(subCategory);
@@ -1205,20 +1233,21 @@ function populateCustomizationOptions(){
 				}
             );
             for (const item in options.items[category][subCategory]){
-				if (displayTeam){
-					if ((displayTeam == 1 && options.items[category][subCategory][item].team == 2) || (displayTeam == 2 && options.items[category][subCategory][item].team == 1)){continue;}
-				}
-
                 var active = false;
-                if (currentCustomizations[displayTeam][category + displaySubCategory] == options.items[category][subCategory][item].canvasValue ||
-                (options.items[category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank) ||
-                (subCategory == "pistol" && currentCustomizations[displayTeam]["pistolColor"] == options.items[category][subCategory][item].canvasValue) ||
-                (subCategory == "dualPistols" && currentCustomizations[displayTeam]["dpColor"] == options.items[category][subCategory][item].canvasValue) ||
-                (subCategory == "machineGun" && currentCustomizations[displayTeam]["mgColor"] == options.items[category][subCategory][item].canvasValue) ||
-                (subCategory == "shotgun" && currentCustomizations[displayTeam]["sgColor"] == options.items[category][subCategory][item].canvasValue)
-                ){
-                    active = true;
-                }
+
+				if (typeof displayTeam != 'undefined'){
+					if ((displayTeam == 1 && options.items[category][subCategory][item].team == 2) || (displayTeam == 2 && options.items[category][subCategory][item].team == 1)){continue;}
+
+					if (currentCustomizations[displayTeam][category + displaySubCategory] == options.items[category][subCategory][item].canvasValue ||
+					(options.items[category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank) ||
+					(subCategory == "pistol" && currentCustomizations[displayTeam]["pistolColor"] == options.items[category][subCategory][item].canvasValue) ||
+					(subCategory == "dualPistols" && currentCustomizations[displayTeam]["dpColor"] == options.items[category][subCategory][item].canvasValue) ||
+					(subCategory == "machineGun" && currentCustomizations[displayTeam]["mgColor"] == options.items[category][subCategory][item].canvasValue) ||
+					(subCategory == "shotgun" && currentCustomizations[displayTeam]["sgColor"] == options.items[category][subCategory][item].canvasValue)
+					){
+						active = true;
+					}
+				}
                
                 options.items[category][subCategory][item].customizationCategory = category + displaySubCategory;
                 if (subCategory == "pistol"){ options.items[category][subCategory][item].customizationCategory = "pistolColor";}
@@ -1229,11 +1258,11 @@ function populateCustomizationOptions(){
                 categoryContentHTML += getShopItemHTML(options.items[category][subCategory][item], active, false);
             }
         }
-        categoryContentHTML += "</div>";
+		document.getElementById(categoryDiv).innerHTML = categoryContentHTML;
     }
 
-    categoryTabsHTML += "</div>";
-    div.innerHTML = categoryTabsHTML + categoryContentHTML;
+    
+    
 
     //draw on icon canvases
     for (const team in options){
@@ -1247,7 +1276,8 @@ function populateCustomizationOptions(){
                 }
             }
         }
-    }        
+    }   
+	
 }
 
 function getCategoryTabHTML(category){
@@ -1408,6 +1438,21 @@ function getOnClickHTML(item, isInShop){
         onClickHTML = "onclick='customizationSelect(\"" + item.canvasValue + "\", \"" + displayTeam + "\",\"" + item.customizationCategory + "\")'";
     }
     return onClickHTML;
+}
+
+function showContent(divId) {
+    var div = document.getElementById(divId);
+    var tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (var i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(divId + "Div").style.display = "block";
+    div.className += " active";
 }
 
 console.log("cognito.js loaded");

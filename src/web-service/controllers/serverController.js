@@ -90,7 +90,7 @@ router.post('/getJoinableServer', async function (req, res) {
 				}
 				else { //Join approved
 					log("SENDING PARTY TO SERVER: " + msg);				
-					sendPartyToGameServer(party, joinableServer);
+					sendUsersToServer(party, joinableServer);
 					res.send({msg:msg, server:joinableServer});
 				}
 			}); //End getJoinableServer
@@ -271,8 +271,8 @@ var getJoinableServer = function(options, cb){
 	});
 }
 
-function sendPartyToGameServer(party, targetUrl) {
-	logg("function sendPartyToGameServer with this party:");
+function sendUsersToServer(party, targetUrl) {
+	logg("function sendUsersToServer with this party:");
 	console.log(party);
 	for (var p = 0; p < party.length; p++){
 		var options = {

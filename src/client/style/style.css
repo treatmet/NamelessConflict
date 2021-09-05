@@ -1001,6 +1001,33 @@ button#createCustomServerButton {
     padding-right: 15px; */
 }
 
+.tradeOfferings {
+    width: 66.66%;
+	height: 500px;
+	display: inline-block;
+    float: left;
+}
+
+.tradeSection {
+    width: 49%;
+    float: left;
+    border-left: solid #404040 1px;
+	height:473px;
+}
+
+.tradeTitle {
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 1px #404040 solid;
+}
+
+.tradeList {
+    background-color: #20333f;
+    display: grid;
+    height: 100%;
+}
+
 div#playerProfile {
     overflow-y: auto;
 }
@@ -1587,14 +1614,12 @@ span#shopCompletionExclusives {
     border: 1px solid transparent;
 }
 
-.tradeOfferings {
-    width: 66.66%;
-}
 
 /* Customization Tabs */
 div#appearanceOptions {
     width: 100%;
     display: none;
+    border-bottom: white 1px solid;
 }
 
 .tab {

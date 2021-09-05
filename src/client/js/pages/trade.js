@@ -1,19 +1,20 @@
 page = "trade";
 var customizationOptions = {};
-var tradeId = "";
+var tradeId = getUrlParam("tradeId");
 
 var unsavedSettings = false;
 
 initializePage();
 function initializePage(){
-    tradeId = getTradeId();
+    //tradeId = getTradeId();
+console.log("tradeId:" + tradeId);
     showLocalElements();
 	getTokenFromUrlParameterAndLogin();
 }
 
 function loginSuccess(){
 	showAuthorizedLoginButtons();            
-    getRequests();        
+	registerForTrade();
 }
 
 function loginFail(){
@@ -26,19 +27,34 @@ function loginAlways(){
 }
 
 function getTradeId(){
-	if (getUrl().indexOf('/trade/') > -1){
-		return getUrl().split('/trade/')[1].substring(0,36);
-	}	
-    else {
-        return getUrlParam("tradeId");
-    }
+    return getUrlParam("tradeId");
 }
 
 function populateTradePage(){
-    populateCustomizationOptions();
-    show("appearanceOptions");		
+	getCustomizationOptions(cognitoSub, function(customizationsResult){
+		customizationOptions = customizationsResult.result;	
+		createCustomizationOptionDivs();
+		populateCustomizationOptions();
+		showContent("hat");
+		show("appearanceOptions");		
+	});
 }
 
+function addItemToTradeClick(itemId){
+	
+}
+
+function registerForTrade(){
+	const params = {
+		cognitoSub:cognitoSub,
+		tradeId:tradeId
+	};
+	
+	$.post('/registerForTrade', params, function(data,status){
+		console.log("registerForTrade endpoint response from server:");
+		console.log(data);		
+	});	
+}
 
 
 //Customization Options example
