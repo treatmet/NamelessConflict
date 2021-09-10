@@ -1,13 +1,12 @@
 page = "trade";
-var customizationOptions = {};
 var tradeId = getUrlParam("tradeId");
-
-var unsavedSettings = false;
+var customizationOptions = {};
+var yourOfferings = [];
+var opponentsOfferings = [];
 
 initializePage();
 function initializePage(){
-    //tradeId = getTradeId();
-console.log("tradeId:" + tradeId);
+    console.log("tradeId:" + tradeId);
     showLocalElements();
 	getTokenFromUrlParameterAndLogin();
 }
@@ -40,10 +39,6 @@ function populateTradePage(){
 	});
 }
 
-function addItemToTradeClick(itemId){
-	
-}
-
 function registerForTrade(){
 	const params = {
 		cognitoSub:cognitoSub,
@@ -52,9 +47,84 @@ function registerForTrade(){
 	
 	$.post('/registerForTrade', params, function(data,status){
 		console.log("registerForTrade endpoint response from server:");
-		console.log(data);		
+        console.log(data);		
+        
+        if (data.status){
+            //Successfully joined a trade that the server was expecting you to join
+        }
+        else {
+            alert(data.msg);
+            window.location.href = serverHomePage;
+        }
 	});	
 }
+
+function addItemToTradeClick(itemId){
+    socket.emit("addItemToTrade", {itemId:itemId, cognitoSub:cognitoSub, tradeId:tradeId});
+}
+
+function removeItemFromTradeClick(itemId){
+    socket.emit("removeItemFromTrade", {itemId:itemId, cognitoSub:cognitoSub, tradeId:tradeId});
+}
+
+function liveTradeAcceptClick(){
+    socket.emit("acceptTrade", {cognitoSub:cognitoSub, tradeId:tradeId});
+}
+
+
+socket.on('updateTrade', function(trade){
+    console.log("CURRENT TRADE:");
+    console.log(trade);
+    var yourListDiv = document.getElementById("rightPlayerTradeList");
+    var opponentListDiv = document.getElementById("leftPlayerTradeList");
+
+    var opponentListHTML = "";
+    var yourListHTML = "";
+
+    for (const item in trade.yourItemsOffered){
+        yourListHTML += getShopItemHTML(trade.yourItemsOffered[item], false, "tradeListYourOffered");
+    }
+    for (const item in trade.opponentItemsOffered){
+        opponentListHTML += getShopItemHTML(trade.opponentItemsOffered[item], false, "tradeListOpponentOffered");
+    }
+
+    yourListDiv.innerHTML = yourListHTML;
+    opponentListDiv.innerHTML = opponentListHTML;
+
+    //Set Accepted Status
+    if (trade.yourAccepted){
+        yourListDiv.style.backgroundColor = "green";
+        document.getElementById("tradeAccept").style.backgroundColor = "#bc2020";
+        document.getElementById("tradeAccept").innerHTML = "Unaccept";
+    }
+    else{
+        yourListDiv.style.backgroundColor = "#20333f";
+        document.getElementById("tradeAccept").style.backgroundColor = "#16e448";
+        document.getElementById("tradeAccept").innerHTML = "Accept Trade";
+    }
+
+    if (trade.opponentAccepted)
+        opponentListDiv.style.backgroundColor = "green";
+    else
+        opponentListDiv.style.backgroundColor = "#20333f";
+
+    //Show/hide timer
+    if (trade.yourAccepted && trade.opponentAccepted){
+        document.getElementById("tradeTimerContainer").style.color = "white";
+    }
+    else {
+        document.getElementById("tradeTimerContainer").style.color = "#2c2f31";
+        document.getElementById("tradeTimer").innerHTML = "5";
+    }
+
+});
+
+socket.on('tradeTimer', function(timer){
+    console.log("Timer:");
+    console.log(timer);
+
+    document.getElementById("tradeTimer").innerHTML = timer;
+});
 
 
 //Customization Options example

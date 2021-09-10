@@ -436,7 +436,7 @@ var getUserCustomizationOptions = function(cognitoSub,cb){ //GetCustomizationOpt
 	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
 			var customizationOptions = res[0].customizationOptions;
-			if (typeof customizationOptions === 'undefined'){
+			if (typeof customizationOptions === 'undefined' || !Array.isArray(customizationOptions)){
 				console.log("ERROR - COULD NOT GET CUSTOMIZATION OPTIONS FOR " + cognitoSub);
 				customizationOptions = defaultCustomizationOptions;
 				console.log("SETTING FIRST TIME CUSTOMIZATION OPTIONS");
@@ -461,6 +461,30 @@ var getUserCustomizationOptions = function(cognitoSub,cb){ //GetCustomizationOpt
 			cb({msg: "Failed to get customization options for [" + cognitoSub + "] from DB", result:false});
 		}
 	});
+}
+
+var getUserOwnedItems = function(cognitoSub, cb){
+	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
+		if (res && res[0]){
+			var customizationOptions = res[0].customizationOptions;
+			if (typeof customizationOptions === 'undefined'){
+				console.log("ERROR - COULD NOT GET CUSTOMIZATION OPTIONS FOR " + cognitoSub);
+				customizationOptions = defaultCustomizationOptions;
+				console.log("SETTING FIRST TIME CUSTOMIZATION OPTIONS");
+				console.log(customizationOptions);
+				updateUserCustomizationOptions(cognitoSub, customizationOptions);
+			}
+
+			console.log("RETURNING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
+			console.log(customizationOptions);
+			cb({msg: "Successfully got customization options", result:customizationOptions});
+		}
+		else {
+			console.log("ERROR - COULD NOT FIND USER WHEN GETTING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
+			cb({msg: "Failed to get customization options for [" + cognitoSub + "] from DB", result:false});
+		}
+	});
+
 }
 
 function transformToClientCustomizationOptions(customizationOptions, rating){ //customizationOptions = list of strings (id of shopList)
@@ -488,6 +512,7 @@ function transformToClientCustomizationOptions(customizationOptions, rating){ //
 
 function getCompletion(customizationOptions){
 	customizationOptions = removeDuplicates(customizationOptions);
+	if (!customizationOptions){return false;}
 	var completion = {};
 	completion.percent = Math.round(((countTotalShopableItems(customizationOptions, true) / totalShopableItems) * 1000)) / 10;
 	completion.exclusives = countTotalShopableItems(customizationOptions, false);
@@ -541,8 +566,19 @@ var updateUserCustomizationOptions = function(cognitoSub, obj) {
 	});		
 }
 
+var updateUserCustomizationOptionsAwait = function(cognitoSub, obj, cb) {
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {customizationOptions: obj}, async function(err, obj){
+		if (!err){
+			cb(true);
+		}
+		else {
+			cb(false);
+		}
+	});		
+}
 
-var getUserShopList = function(cognitoSub,cb){
+
+var getUserShopList = function(cognitoSub,cb){ //getShopList
 	//log("searching for user: " + cognitoSub);
 	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
 		if (res && res[0]){
@@ -586,7 +622,7 @@ var getUserShopList = function(cognitoSub,cb){
 				});
 			}
 
-			//shopList[0] = "blackSkinColor6";
+			//shopList[0] = "deerHat";
 			// shopList[1] = "alertIcon";
 			// shopList[2] = "birdIcon";
 			// shopList[3] = "bulbIcon";
@@ -710,8 +746,7 @@ function transformToClientShop(shopList, nextRefreshTime){ //shopList is list of
 	for (var i = 0; i < shopList.length; i++){
 		var shopItem = fullShopList.find(item => item.id == shopList[i]);	
 		if (shopItem){
-			const fixedPrices = true;
-			if (fixedPrices && shopItem.category != "other"){
+			if (!shopItem.price && shopItem.category != "other"){
 				switch(shopItem.rarity){
 					default:
 						shopItem.price = 2000;
@@ -751,17 +786,30 @@ var updateUserShopList = function(cognitoSub, obj) {
 }
 
 var getShopItem = function(itemId){
-	var shopItem = fullShopList.find(item => item.id == itemId); //LINQ
+	var shopItem = fullShopList.find(item => item.id == itemId); //LINQ SELECT SINGLE
 	if (!shopItem){
 		shopItem = false;
 	}
 	return shopItem;
 }
 
+var getShopItems = function(array){
+	var shopItems = [];
+	array.forEach(function(shopItemId){
+		var shopItem = fullShopList.find(item => item.id == shopItemId); //LINQ SELECT SINGLE
+		if (shopItem){
+			shopItems.push(shopItem);
+		}
+	});
+
+	return shopItems;
+}
+
 var buyItem = function(data, cb){
 	var cognitoSub = data.cognitoSub;
 	var itemId = data.itemId;
 	var price = getShopItem(itemId).price;
+
 	var msg = "";
 
 	//price = 100000000000;
@@ -950,6 +998,24 @@ var getRequests = function(cognitoSub, cb){
 		}
 		cb(requests);
 	});		
+}
+
+var completeTrade = function(trade, cb){ //tradeComplete
+	if (trade && trade.requestorCognitoSub && trade.requestorItemsOwned && trade.targetCognitoSub && trade.targetItemsOwned && Array.isArray(trade.requestorItemsOwned) && Array.isArray(trade.targetItemsOwned)){
+		updateUserCustomizationOptionsAwait(trade.requestorCognitoSub, trade.requestorItemsOwned, function(requestorResult){
+			updateUserCustomizationOptionsAwait(trade.targetCognitoSub, trade.targetItemsOwned, function(targetResult){
+				if (targetResult && requestorResult){
+					cb(true);
+				}
+				else {
+					cb(false);
+				}
+			});	
+		});
+	}
+	else {
+		cb(false);
+	}
 }
 
 
@@ -1312,7 +1378,7 @@ module.exports.setUserSettings = setUserSettings;
 module.exports.setUserSetting = setUserSetting;
 module.exports.defaultCustomizations = defaultCustomizations;
 module.exports.getShopItem = getShopItem;
-module.exports.getUserShopList = getUserShopList;
+module.exports.getShopItems = getShopItems;
 module.exports.getUserShopList = getUserShopList;
 module.exports.buyItem = buyItem;
 module.exports.setPartyIdIfEmpty = setPartyIdIfEmpty;
@@ -1339,3 +1405,5 @@ module.exports.setHordeGlobalBest = setHordeGlobalBest;
 module.exports.getHordePersonalBest = getHordePersonalBest;
 module.exports.getHordeGlobalBest = getHordeGlobalBest;
 module.exports.giveUsersItemsByTimestamp = giveUsersItemsByTimestamp;
+module.exports.getUserOwnedItems = getUserOwnedItems;
+module.exports.completeTrade = completeTrade;

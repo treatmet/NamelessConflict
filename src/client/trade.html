@@ -16,23 +16,33 @@
 		<div id="sectionTitle3" class="sectionTitle">Your Stuff</div>
 	</div>
 
-
 	<!--PAGE COLUMNS-->
-	<div id="tradeOfferings" class="tradeOfferings">
-		<div id="leftPlayerTradeSection" class="tradeSection">
-			<div id="leftPlayerTradeTitle" class="tradeTitle">
-				testuser's offerings
+	<div id="leftTradeSection">
+		<div id="tradeOfferings" class="tradeOfferings">
+			<div id="leftPlayerTradeSection" class="tradeSection">
+				<div id="leftPlayerTradeTitle" class="tradeTitle">
+					testuser's offerings
+				</div>
+				<div id="leftPlayerTradeList" class="tradeList">
+					<div id="customizeItem" class="shopItem" onclick="removeItemFromTradeClick(&quot;rankIcon&quot;)"><div class="shopIcon" id="rankIconT"><img class="equipIconRoulette" style="display:none" src="/src/client/img/shopIcons/roulette/questionO.png"><canvas class="equipIconCanvas" id="rankIconTCustomizeCtx" width="70" height="70"></canvas></div><div id="shopTitle" class="shopTitle">Rank</div><div id="rarityText" class="shopTitle" style="float:right; color:#ffffff"></div><br><div class="shopText">Show current rank</div></div>
+				</div>
 			</div>
-			<div id="leftPlayerTradeList" class="tradeList">
-				<div id="customizeItem" class="shopItem" onclick="addItemToTradeClick(&quot;rankIcon&quot;)"><div class="shopIcon" id="rankIconT"><img class="equipIconRoulette" style="display:none" src="/src/client/img/shopIcons/roulette/questionO.png"><canvas class="equipIconCanvas" id="rankIconTCustomizeCtx" width="70" height="70"></canvas></div><div id="shopTitle" class="shopTitle">Rank</div><div id="rarityText" class="shopTitle" style="float:right; color:#ffffff"></div><br><div class="shopText">Show current rank</div></div>
+			<div id="rightPlayerTradeSection" class="tradeSection">
+				<div id="rightPlayerTradeTitle" class="tradeTitle">
+					Your offerings
+				</div>
+				<div id="rightPlayerTradeList" class="tradeList">
+					<div id="customizeItem" class="shopItem" onclick="removeItemFromTradeClick(&quot;rankIcon&quot;)"><div class="shopIcon" id="rankIconT"><img class="equipIconRoulette" style="display:none" src="/src/client/img/shopIcons/roulette/questionO.png"><canvas class="equipIconCanvas" id="rankIconTCustomizeCtx" width="70" height="70"></canvas></div><div id="shopTitle" class="shopTitle">Rank</div><div id="rarityText" class="shopTitle" style="float:right; color:#ffffff"></div><br><div class="shopText">Show current rank</div></div>
+				</div>
 			</div>
 		</div>
-		<div id="rightPlayerTradeSection" class="tradeSection">
-			<div id="rightPlayerTradeTitle" class="tradeTitle">
-				Your offerings
-			</div>
-			<div id="rightPlayerTradeList" class="tradeList">
-				<div id="customizeItem" class="shopItem" onclick="addItemToTradeClick(&quot;rankIcon&quot;)"><div class="shopIcon" id="rankIconT"><img class="equipIconRoulette" style="display:none" src="/src/client/img/shopIcons/roulette/questionO.png"><canvas class="equipIconCanvas" id="rankIconTCustomizeCtx" width="70" height="70"></canvas></div><div id="shopTitle" class="shopTitle">Rank</div><div id="rarityText" class="shopTitle" style="float:right; color:#ffffff"></div><br><div class="shopText">Show current rank</div></div>
+		<div id="tradeBottomSection">
+			<div id="tradeWarning">Warning: Review both sides before clicking Accept!</div>
+			<button id="tradeAccept" class="RWButton" style="" onclick="liveTradeAcceptClick()">Accept Trade</button>
+			<div id="tradeTimerContainer">
+				<div class="tradeText">Trade Accepted in:</div>
+				<div id="tradeTimer">5</div>
+				<div class="tradeText">Look over the trade!</div>
 			</div>
 		</div>
 	</div>

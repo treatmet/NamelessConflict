@@ -950,7 +950,7 @@ function populateShopOptions(){
     HTML += "<div id='shopMainContent'>";
     HTML += "<div class='shopCategory' style='margin-top: 10px;'>Store</div>";
     for (const item in options.shop){
-        HTML += getShopItemHTML(options.shop[item], false, true);
+        HTML += getShopItemHTML(options.shop[item], false, "shop");
     }
 
     HTML += "</div>"; 
@@ -1150,8 +1150,6 @@ setInterval(
         if (viewedProfileCognitoSub == cognitoSub){
             var shopIconRoulettes = document.getElementsByClassName("shopIconRoulette");
             var shopIconCanvases = document.getElementsByClassName("shopIconCanvas");
-
-            var unlockable = document.getElementById("lightningBoost");
 
             if (rouletteOn){
                 for (var c in shopIconCanvases){

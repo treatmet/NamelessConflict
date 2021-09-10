@@ -1254,8 +1254,10 @@ function populateCustomizationOptions(){
                 if (subCategory == "dualPistols"){ options.items[category][subCategory][item].customizationCategory = "dpColor";}
                 if (subCategory == "machineGun"){ options.items[category][subCategory][item].customizationCategory = "mgColor";}
                 if (subCategory == "shotgun"){ options.items[category][subCategory][item].customizationCategory = "sgColor";}
-                options.items[category][subCategory][item].subCategory = subCategory;
-                categoryContentHTML += getShopItemHTML(options.items[category][subCategory][item], active, false);
+				options.items[category][subCategory][item].subCategory = subCategory;
+				var type = "customizationOptions";
+				if (page == "trade"){type = "tradeListOwned";}
+                categoryContentHTML += getShopItemHTML(options.items[category][subCategory][item], active, type);
             }
         }
 		document.getElementById(categoryDiv).innerHTML = categoryContentHTML;
@@ -1284,7 +1286,12 @@ function getCategoryTabHTML(category){
     return '<button class="tablinks" id="' + category + '" onclick="showContent(\'' + category + '\')">' + capitalizeFirstLetter(category) + '</button>';
 }
 
-function getShopItemHTML(item, active, isInShop){
+function getShopItemHTML(item, active, type){
+	var isInShop = false;
+	if (type == "shop"){
+		isInShop = true;
+	}
+
     var shopItemClass = "shopItem";
     var shopIconClass = "shopIcon";
     if (active){
@@ -1308,7 +1315,7 @@ function getShopItemHTML(item, active, isInShop){
     }
 
     const shopItemDivId = isInShop ? item.id : "customizeItem";
-    var HTML = "<div id='" + shopItemDivId + "' class='" + shopItemClass + "' " + getOnClickHTML(item, isInShop) + ">";
+    var HTML = "<div id='" + shopItemDivId + "' class='" + shopItemClass + "' " + getOnClickHTML(item, type) + ">";
 
     var iconCtxId = isInShop ? item.id + "ShopCtx" : item.id + "CustomizeCtx";
     if (item.category == "other"){
@@ -1318,7 +1325,7 @@ function getShopItemHTML(item, active, isInShop){
         var iconClassPrefix = isInShop ? "shop" : "equip";
         HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'>";
         HTML += "<img class='" + iconClassPrefix + "IconRoulette' style='display:none' src='/src/client/img/shopIcons/roulette/questionO.png'>";
-        HTML += "<canvas class='" + iconClassPrefix + "IconCanvas' id='" + iconCtxId + "'></canvas>";
+        HTML += "<canvas class='" + iconClassPrefix + "IconCanvas iconCanvas' id='" + iconCtxId + "'></canvas>";
         HTML += "</div>";
     }
     
@@ -1426,12 +1433,18 @@ function getDisplayCategory(item){
     return displayCategory;
 }
 
-function getOnClickHTML(item, isInShop){
+function getOnClickHTML(item, type){
     var onClickHTML = "";
-    if (page == "trade"){
+    if (type == "tradeListOwned"){
         onClickHTML = "onclick='addItemToTradeClick(\"" + item.id + "\")'";
     }
-    else if (isInShop){
+    else if (type == "tradeListYourOffered"){
+        onClickHTML = "onclick='removeItemFromTradeClick(\"" + item.id + "\")'";
+    }
+    else if (type == "tradeListOpponentOffered"){
+        onClickHTML = "";
+    }
+    else if (type == "shop"){
         onClickHTML = "onclick='shopClick(\"" + item.id + "\"," + item.price + ")'";
     }
     else {

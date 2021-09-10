@@ -85,10 +85,13 @@ global.getCurrentPlayersFromUsers = function(users){
 }
 
 global.removeDuplicates = function(array){
-	array = array.filter((item, index) => { //SELECT //WHERE
-		return array.indexOf(item) === index;
-	});
-	return array;
+	if (Array.isArray(array)){
+		array = array.filter((item, index) => { //SELECT //WHERE
+			return array.indexOf(item) === index;
+		});
+		return array;
+	}
+	return false;
 }
 
 global.removeIndexesFromArray = function(array, indexes){

@@ -202,9 +202,10 @@ function createTradeFromRequest(tradeModel, serverUrl, cb){
 router.post('/createTrade', async function (req, res) {
 	log("createTrade ENDPOINT CALLED WITH:");
 	console.log(req.body);
-	tradingEngine.newTrade(req.body.tradeModel.requestorCognitoSub, req.body.tradeModel.targetCognitoSub, req.body.tradeModel.tradeId);
-	res.status(200);
-	res.send({msg:"Created Trade"});
+	tradingEngine.newTrade(req.body.tradeModel.requestorCognitoSub, req.body.tradeModel.targetCognitoSub, req.body.tradeModel.tradeId, function(tradeId){
+		res.status(200);
+		res.send({msg:"Created Trade"});	
+	});
 });
 
 /*//Delete trade requsts
@@ -242,15 +243,26 @@ function sendUsersToServer(party, targetUrl, deleteOutgoingTradeRequests = false
 	}
 }
 
-;router.post('/registerForTrade', async function (req, res) {
+router.post('/registerForTrade', async function (req, res) {
 	log("registerForTrade ENDPOINT CALLED WITH:");
-	console.log(req.body);
+	console.log(req.body);	
 	
 	//Check if trade exists
-	if (tradingEngine.getTradeById(req.body.tradeId).length > 0){
-		console.log("PLAY SOME HADES!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		console.log("PLAY SOME HADES!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		console.log("PLAY SOME HADES!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+	if (tradingEngine.getTradeById(req.body.tradeId)){
+		var socket = SOCKET_LIST[getSocketIdFromCognitoSub(req.body.cognitoSub)];
+		var createResult = tradingEngine.createTradeSocketEvents(socket, req.body.cognitoSub, req.body.tradeId);
+		if (createResult.error){
+			res.status(200);
+			res.send({status:false, msg:createResult.msg});
+		}
+		else {
+			res.status(200);
+			res.send({status:true, msg:"Successfully registered for existing trade"});
+		}
+	}
+	else {
+		res.status(200);
+		res.send({status:false, msg:"You have no active trades on this server. Please create another Trade request."});
 	}
 	
 

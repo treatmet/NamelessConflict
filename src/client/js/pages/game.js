@@ -154,6 +154,7 @@ var pressShiftTimer = 300;
 var	showStatOverlay = false;
 
 var spectatingPlayerId = "";
+var mutedPlayerIds = []; //PlayerIds
 
 var canvasDiv = document.getElementById("canvasDiv"); 
 
@@ -974,7 +975,7 @@ function pressingMovementKey(){
 	return false;
 }
 
-//new player
+//new player newPlayer
 var Player = function(id){
 	var self = {
 		id:id,
@@ -1380,7 +1381,10 @@ chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome t
 //chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome! Teams will be auto balanced next game.</div>';
 
 socket.on('addToChat', function(data, playerId){ //Player chat
-var color = "#FFFFFF";
+	if (mutedPlayerIds.filter(thisPlayer => thisPlayer == playerId).length > 0)
+		return;
+
+	var color = "#FFFFFF";
 	if (Player.list[playerId]){
 		if (Player.list[playerId].team == 1){
 			color = "#e09f9f";
@@ -1401,7 +1405,7 @@ socket.on('addMessageToChat', function(text){ //Server message
 });
 
 var maxChatMessages = 9;
-function addToChat(data, color, bold = false){
+function addToChat(data, color = "#FFFFFF", bold = false){
 	var nodes = chatText.childNodes.length;
 	for (var i=0; i<nodes - (maxChatMessages - 1); i++){
 		chatText.childNodes[i].remove();
@@ -3473,7 +3477,7 @@ var personalInstructions = {
 
 //DrawInstructions
 function drawPersonalInstructions(){
-	if (shop.active){return;}
+	if (shop.active || myPlayer.team == 0){return;}
 	if (personalInstructions.team.life > 0 && myPlayer.settings && myPlayer.settings.display && myPlayer.settings.display.find(setting => setting.key == "tutorialCompleted") && myPlayer.settings.display.find(setting => setting.key == "tutorialCompleted").value == true){
 		personalInstructions.move.life = -1;
 		personalInstructions.shoot.life = -1;
@@ -4327,7 +4331,7 @@ function drawInformation(){
 		fillText("Health:" + Player.list[myPlayer.id].health, 5, 35); //debug
 		fillText("ping:" + ping, 5, 55);
 		if (showStatOverlay == true){
-			fillText("" + version, 5, 55); //debug
+			fillText("" + version, 5, 75); //debug
 			// fillText("x: " + Player.list[myPlayer.id].x, 5, 95); //debug info
 			//fillText("boosting: " + Player.list[myPlayer.id].boosting, 5, 55); //debug info
 			//fillText("speedX: " + Player.list[myPlayer.id].speedX, 5, 75); //debug
@@ -5369,16 +5373,26 @@ function drawGameEventText(){
 	}
 }
 
-// STAT OVERLAY scoreboard
+
+// STAT OVERLAY scoreboard drawScoreBoard
+var scoreBoardX = 0;
+var scoreBoardY = 0;
+var scoreboardPlayerNameGap = 29;
+var mouseHoveringPlayerId = 0;
 function drawStatOverlay(){	
 	noShadow();
+	if (!scoreBoardX){
+		scoreBoardX = Math.round(canvasWidth/2 - 861/2);
+		scoreBoardY = Math.round(canvasHeight/2 - 513/2 + -50);
+	}
 		
 	if (gameOver){
 		showStatOverlay = true;		
 	}
 	if (showStatOverlay == true){
 		chatStale = 0;		
-		drawImage(Img.statOverlay, Math.round(canvasWidth/2 - Img.statOverlay.width/2), Math.round(canvasHeight/2 - Img.statOverlay.height/2 + -50));	
+		drawImage(Img.statOverlay, scoreBoardX, scoreBoardY);	
+
 
 		if (pcMode == 2){
 			ctx.fillStyle="#9e0b0f"; //red/white
@@ -5428,10 +5442,27 @@ function drawStatOverlay(){
 		whitePlayers.sort(compare);
 		blackPlayers.sort(compare);
 		
+		mouseHoveringPlayerId = 0;
 		var whiteScoreY = 237;
 		var blackScoreY = 482; //245 difference in these 2
-		var scoreboardPlayerNameGap = 29;
 		for (var a in blackPlayers){
+			if (checkIfMouseHovering(blackScoreY - 21)){
+				drawImage(Img.redLaser, scoreBoardX, blackScoreY - 21, 300, scoreboardPlayerNameGap);
+				ctx.fillStyle="#FF0000";
+				ctx.textAlign="right";
+				if (mutedPlayerIds.filter(playerId => playerId == blackPlayers[a].id).length > 0){
+					strokeAndFillText("UNMUTE", scoreBoardX - 5, blackScoreY);
+				}
+				else {
+					strokeAndFillText("MUTE", scoreBoardX - 5, blackScoreY);
+				}
+				mouseHoveringPlayerId = blackPlayers[a].id;
+			}
+
+			if (mutedPlayerIds.filter(playerId => playerId == blackPlayers[a].id).length > 0){
+				drawImage(Img.mute, 123, blackScoreY - 13, 16, 16 ); //mute icon
+			}
+
 			ctx.textAlign="left";			
 			if (blackPlayers[a].id == myPlayer.id || ((myPlayer.team == 0 || myPlayer.eliminationSpectate) && spectatingPlayerId == blackPlayers[a].id)){
 				var arrowIcon = Img.statArrow;
@@ -5471,6 +5502,23 @@ function drawStatOverlay(){
 		}
 		
 		for (var a in whitePlayers){
+			if (checkIfMouseHovering(whiteScoreY - 21)){
+				drawImage(Img.redLaser, scoreBoardX, whiteScoreY - 21, 300, scoreboardPlayerNameGap);
+				ctx.fillStyle="#FF0000";
+				ctx.textAlign="right";
+				if (mutedPlayerIds.filter(playerId => playerId == whitePlayers[a].id).length > 0){
+					strokeAndFillText("UNMUTE", scoreBoardX - 5, whiteScoreY);
+				}
+				else {
+					strokeAndFillText("MUTE", scoreBoardX - 5, whiteScoreY);
+				}
+				mouseHoveringPlayerId = whitePlayers[a].id;
+			}
+			if (mutedPlayerIds.filter(playerId => playerId == whitePlayers[a].id).length > 0){
+				drawImage(Img.mute, 123, whiteScoreY - 13, 16, 16); //mute icon
+			}
+
+
 			ctx.textAlign="left";
 			if (whitePlayers[a].id == myPlayer.id || ((myPlayer.team == 0 || myPlayer.eliminationSpectate) && spectatingPlayerId == whitePlayers[a].id)){
 				var arrowIcon = Img.statArrow;
@@ -5510,6 +5558,13 @@ function drawStatOverlay(){
 		}	
 		//controls
 	}
+}
+
+function checkIfMouseHovering(YPos){
+	if (mouseCoords[0] > scoreBoardX && mouseCoords[0] < scoreBoardX + 300 && mouseCoords[1] > YPos && mouseCoords[1] < YPos + scoreboardPlayerNameGap){
+		return true;	
+	}
+	return false;
 }
 
 function drawMute(){
@@ -6456,7 +6511,7 @@ document.onkeydown = function(event){
 		canvasDiv.style.backgroundColor="black";
 		if (chatInput.style.display == "inline"){
 			if (chatInput.value != "") {
-				if (chatInput.value == './shadow' || chatInput.value == './shadows'){
+				if (chatInput.value == '/shadow' || chatInput.value == '/shadows'){
 					if (noShadows){
 						noShadows = false;
 					}
@@ -6464,7 +6519,7 @@ document.onkeydown = function(event){
 						noShadows = true;
 					}
 				}
-				else if (chatInput.value == './zoom' || chatInput.value == './zoom1'){
+				else if (chatInput.value == '/zoom' || chatInput.value == '/zoom1'){
 					if (defaultZoom == 1){
 						defaultZoom = 0.75;
 					}
@@ -6474,7 +6529,21 @@ document.onkeydown = function(event){
 					drawMapElementsOnMapCanvas();
 					drawBlocksOnBlockCanvas();
 				}
-				else if (chatInput.value == './g' || chatInput.value == './graphics'){
+				else if (chatInput.value.substring(0,5) == '/mute'){
+					if (chatInput.value.substring(5).length > 0){
+						var idToMute = 0;
+						for (var p in Player.list){
+							if (Player.list[p].name == chatInput.value.substring(5)){
+								idToMute = Player.list[p].id
+							}
+						}
+						if (idToMute != 0) {
+							mutedPlayerIds.push(idToMute);
+							addToChat("Muted " + chatInput.value.substring(5));
+						}
+					}
+				}
+				else if (chatInput.value == '/g' || chatInput.value == '/graphics'){
 					if (Player.list[myPlayer.id]){
 						if (lowGraphicsMode == false){
 							lowGraphicsMode = true;
@@ -6812,7 +6881,31 @@ socket.on('bootAfk', function(){
 	window.location.href = serverHomePage;
 });
 
+var mouseCoords = [0, 0];
+var mouseangle = 0;
+var dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
+document.onmousemove=(evt)=>{
+	let rect = document.getElementById("ctx").getBoundingClientRect();
+	mouseCoords[0] = (evt.clientX - rect.left);
+	mouseCoords[1] = (evt.clientY - rect.top);
+    mouseangle = Math.atan2((mouseCoords[1]-centerY)/canvasWidth, (mouseCoords[0]-centerX)/canvasHeight);
+}
+
+function removeItemAll(arr, value) {
+	var i = 0;
+	while (i < arr.length) {
+	  if (arr[i] === value) {
+		arr.splice(i, 1);
+	  } else {
+		++i;
+	  }
+	}
+	return arr;
+  }
+
 logg("game.js loaded");
+
+
 
 //////////MODS///////////////
 
@@ -6827,17 +6920,16 @@ var release=(c)=>{
     document.dispatchEvent(new KeyboardEvent('keyup', {'keyCode': c})); pressing[c]=0
 };
 
-var mousepos = [0, 0];
-var mouseangle = 0;
-var dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
-document.onmousemove=(evt)=>{
-    let rect = document.getElementById("ctx").getBoundingClientRect();
-    mousepos = [((evt.clientX - rect.left)-centerX)/canvasHeight, ((evt.clientY - rect.top)-centerY)/canvasWidth]; // mouse
-    mouseangle = Math.atan2(mousepos[1], mousepos[0]);
-}
-
 var mouseDown = 0;
 document.onmousedown=(etx)=>{
+	if (mouseHoveringPlayerId != 0){
+		if (mutedPlayerIds.filter(playerId => playerId == mouseHoveringPlayerId).length > 0){
+			removeItemAll(mutedPlayerIds, mouseHoveringPlayerId);
+		}
+		else {
+			mutedPlayerIds.push(mouseHoveringPlayerId);
+		}
+	}
     if (etx.button == 0) mouseDown = 1;
     else mouseDown = 0;
 }
@@ -6845,10 +6937,16 @@ document.onmouseup=(etx)=>{
     mouseDown = 0;
 }
 
-var threshold = 0.4;
+function mouseIsOnCanvas(){
+	if (mouseCoords[0] > 0 && mouseCoords[0] < canvasWidth && mouseCoords[1] > 0 && mouseCoords[1] < canvasHeight){
+		return true;
+	}
+	return false;
+}
 
+var threshold = 0.4;
 var update=()=>{
-    if (mouseDown != 0) {
+    if (mouseDown != 0 && !(gameOver && !mouseIsOnCanvas())) {
 
         if (Math.cos(mouseangle) < -threshold){
 			if (!myPlayer.pressingLeft)

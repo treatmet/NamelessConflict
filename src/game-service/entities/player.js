@@ -1821,6 +1821,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 					if (data[1].substring(0,2) == "./"){
 						evalServer(socket, data[1].substring(2));
 					}
+					else if (data[1].substring(0,1) == "/"){
+						evalServer(socket, data[1].substring(1));
+					}
 					else {
 						if (gametype == "elim" && getPlayerById(data[0]).health <= 0 && getPlayerById(data[0]).team != 0 && !roundOver && !gameOver){
 							return;
@@ -1956,6 +1959,11 @@ function evalServer(socket, data){
 
 			var teamToChangeTo = false;
 			if (getPlayerById(socket.id).team == 0){
+				console.log("TEAM IS ZERO");
+				if (getActivePlayerListLength() >= maxPlayers){
+					socket.emit('addToChat', "Can't change teams. Game is full!");
+					return;
+				}
 				if (gameEngine.getMoreTeam1Players() >= 1){
 					teamToChangeTo = 2;
 				}
@@ -2853,10 +2861,19 @@ function runPlayerEngines(){
 	}		
 }
 
-var getPlayerListLength = function(){
+var getPlayerListLength = function(){ //getPlayerListCount //getPlayerCount
 	var length = 0;
 	for (var i in Player.list){
 		length++;
+	}		
+	return length;	
+}
+
+var getActivePlayerListLength = function(){ //getPlayerListCount //getPlayerCount
+	var length = 0;
+	for (var i in Player.list){
+		if (Player.list[i].team != 0)
+			length++;
 	}		
 	return length;	
 }
@@ -2941,3 +2958,4 @@ module.exports.getTeamSize = getTeamSize;
 module.exports.getTeamPlayerList = getTeamPlayerList;
 module.exports.getEligiblePlayerList = getEligiblePlayerList;
 module.exports.getAverageTeamPlayersCash = getAverageTeamPlayersCash;
+module.exports.getActivePlayerListLength = getActivePlayerListLength;

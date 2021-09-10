@@ -88,6 +88,21 @@ function getMannequinFrame(shopItem, cb){
 	});
 }
 
+function drawShopIcons(divId){
+	var listDiv = document.getElementById(divId);
+	if (!listDiv){return;}
+	var shopItems = listDiv.document.getElementsByClassName("shopItem");
+
+	shopItems.forEach(function(item){
+		var canvas = item.getElementsByClassName("iconCanvas");
+		if (canvas){
+			canvas = canvas[0];
+			
+		}
+	});
+
+}
+
 function drawShopIcon(shopItem, iconId){
     // console.log("GETTING CANVAS FOR: " + iconId);
     var zoom = 1; //Zoom config of all shop icons
@@ -355,12 +370,14 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 			layer.pattern = getPattern(teamCustomizations.shirtPattern);
 			break;
 		case "head":
+			if (teamCustomizations.hat == "deerHat")
+				return false;
 			layer.color = teamCustomizations.skinColor;
 			break;
 		case "shell":
 			break;
 		case "hair":
-			if (teamCustomizations.hair == "baldHair" || teamCustomizations.hat == "skiMaskHat")
+			if (teamCustomizations.hair == "baldHair" || teamCustomizations.hat == "skiMaskHat" || teamCustomizations.hat == "deerHat")
 				return false;
 			layer.color = teamCustomizations.hairColor;
 			if (teamCustomizations.hair != "cornrowsHair") {layer.pattern = getPattern("hair");}
