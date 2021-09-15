@@ -588,6 +588,10 @@ label#updateInfo {
 	background-color: #529eec;
 }
 
+.RWButton:disabled {
+	background-color: #acacac;
+}
+ss
 button:hover {
 	border-color: white;
 }
@@ -1018,7 +1022,6 @@ div#leftTradeSection {
     float: left;
     border-left: solid #404040 1px;
     height:473px;
-    overflow-y: auto;
 }
 
 .tradeTitle {
@@ -1032,6 +1035,7 @@ div#leftTradeSection {
     background-color: #20333f;
     display: block;
     height: 100%;
+    overflow-y: auto;
 }
 
 div#tradeBottomSection {
@@ -1048,6 +1052,11 @@ button#tradeAccept {
     height: 50px;
     font-size: 16px;
 }
+
+button#tradeAccept:disabled {
+	background-color: #acacac;
+}
+
 
 div#tradeTimerContainer {
     margin-top: 5px;
@@ -1419,6 +1428,42 @@ div#chat-window {
     user-select: none; /* Standard */
 }
 
+div#chat-window-trade {
+    float: left;
+    width: 50%;
+    background-color: #0000003b;
+    text-align: left;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+div#chat-text-trade {
+    padding-left: 5px;
+    height: 170px;
+    overflow: hidden;
+}
+
+form#chat-form-trade {
+    padding-left: 5px;
+    margin-block-end: 5px;
+}
+
+input#chat-input-trade {
+    width: 98%;
+    background: rgba(255, 255, 255, 0.18);
+    color: white;
+    text-shadow: rgb(68 68 68) 1px 0px 1px, rgb(68 68 68) 1px 0px 1px, rgb(68 68 68) 0px 1px 1px, rgb(68 68 68) 0px -1px 1px, rgb(68 68 68) -1px -1px 0px, rgb(68 68 68) 1px -1px 0px, rgb(68 68 68) -1px 1px 0px, rgb(68 68 68) 1px 1px 0px;
+}
+
+div#moneyOfferingSection {
+    background-color: #3b3b3b;
+    padding: 20px;
+    padding-bottom: 1px;
+    border-bottom: 1px white solid;
+}
+
 .chatElement{
 	white-space: nowrap;
 	font-size: 15px;
@@ -1717,6 +1762,7 @@ div#appearanceOptions {
     top: 0;
     padding:1px;    
     border: 1px solid transparent;
+    user-select: none;
 }
 
 .shopItem.active {

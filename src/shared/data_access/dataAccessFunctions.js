@@ -61,6 +61,14 @@ var getUser = function(cognitoSub,cb){
 		if (res && res[0]){
 			var user = res[0];
 			user.username = res[0].USERNAME;
+			user.customizationOptions = res[0].customizationOptions;
+			if (typeof user.customizationOptions === 'undefined'){
+				user.customizationOptions = defaultCustomizationOptions;
+				console.log("SETTING FIRST TIME CUSTOMIZATION OPTIONS");
+				console.log(user.customizationOptions);
+				updateUserCustomizationOptions(cognitoSub, customizationOptions);
+			}
+
 			if (typeof user.partyId === 'undefined'){
 				dbUserUpdate("set", user.cognitoSub, {partyId:""});
 			}
@@ -271,7 +279,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("September 2, 2021 16:00:00");
+	var thresholdDate = new Date("September 16, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -302,9 +310,9 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				  	continue;
 				}
 
-				if (customizationOptions.indexOf("goldMGWeapon") == -1){
-					customizationOptions.push("goldMGWeapon");
-					console.log("Pushing MG");
+				if (customizationOptions.indexOf("goldSGWeapon") == -1){
+					customizationOptions.push("goldSGWeapon");
+					console.log("Pushing SG");
 					updatey = true;
 				}
     
@@ -463,29 +471,7 @@ var getUserCustomizationOptions = function(cognitoSub,cb){ //GetCustomizationOpt
 	});
 }
 
-var getUserOwnedItems = function(cognitoSub, cb){
-	dataAccess.dbFindAwait("RW_USER", {cognitoSub:cognitoSub}, function(err,res){
-		if (res && res[0]){
-			var customizationOptions = res[0].customizationOptions;
-			if (typeof customizationOptions === 'undefined'){
-				console.log("ERROR - COULD NOT GET CUSTOMIZATION OPTIONS FOR " + cognitoSub);
-				customizationOptions = defaultCustomizationOptions;
-				console.log("SETTING FIRST TIME CUSTOMIZATION OPTIONS");
-				console.log(customizationOptions);
-				updateUserCustomizationOptions(cognitoSub, customizationOptions);
-			}
 
-			console.log("RETURNING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
-			console.log(customizationOptions);
-			cb({msg: "Successfully got customization options", result:customizationOptions});
-		}
-		else {
-			console.log("ERROR - COULD NOT FIND USER WHEN GETTING CUSTOMIZATION OPTIONS FOR " + cognitoSub);
-			cb({msg: "Failed to get customization options for [" + cognitoSub + "] from DB", result:false});
-		}
-	});
-
-}
 
 function transformToClientCustomizationOptions(customizationOptions, rating){ //customizationOptions = list of strings (id of shopList)
 	var items = getEmptyClientCustomizationOptions();
@@ -502,6 +488,11 @@ function transformToClientCustomizationOptions(customizationOptions, rating){ //
 		//Add dyanmic canvasValues (rank icon)
 		if (shopItem.canvasValue == "rank"){
 			shopItem.dynamicCanvasValue = getRankFromRating(rating).rank;
+		}
+
+		//Identify as default item
+		if (defaultCustomizationOptions.indexOf(shopItem.id) > -1){
+			shopItem.defaultItem = true;
 		}
 		
 		if (items[shopItem.category][shopItem.subCategory].filter(item => item.id  == shopItem.id).length > 0){continue;} //Do not add duplicates		
@@ -918,7 +909,7 @@ var upsertRequest = function(data,cb){
 					type:data.type,
 					timestamp:new Date()
 				};
-				//if (data.type == "trade" && data.ip){upsObj.ip = data.ip;}
+				if (data.targetUsername){upsObj.targetUsername = data.targetUsername;}
 				
 				dataAccess.dbUpdateAwait("RW_REQUEST", "ups", {cognitoSub:data.cognitoSub, targetCognitoSub:data.targetCognitoSub, type:data.type}, upsObj, async function(err, doc){
 					if (!err){
@@ -1001,21 +992,40 @@ var getRequests = function(cognitoSub, cb){
 }
 
 var completeTrade = function(trade, cb){ //tradeComplete
+	var finalRequestorCashDifference = parseInt(-trade.requestorCashOffered) + parseInt(trade.targetCashOffered);
+	var finalTargetCashDifference = parseInt(-trade.targetCashOffered) + parseInt(trade.requestorCashOffered);
 	if (trade && trade.requestorCognitoSub && trade.requestorItemsOwned && trade.targetCognitoSub && trade.targetItemsOwned && Array.isArray(trade.requestorItemsOwned) && Array.isArray(trade.targetItemsOwned)){
 		updateUserCustomizationOptionsAwait(trade.requestorCognitoSub, trade.requestorItemsOwned, function(requestorResult){
 			updateUserCustomizationOptionsAwait(trade.targetCognitoSub, trade.targetItemsOwned, function(targetResult){
-				if (targetResult && requestorResult){
-					cb(true);
-				}
-				else {
-					cb(false);
-				}
+				updateUserCash(trade.targetCognitoSub, finalTargetCashDifference, function(targetCashResult){
+					updateUserCash(trade.requestorCognitoSub, finalRequestorCashDifference, function(requestorCashResult){
+						if (targetResult && requestorResult && targetCashResult && requestorCashResult){
+							cb(trade.tradeId);
+						}
+						else {
+							cb(false);
+						}
+					});	
+				});	
 			});	
 		});
 	}
 	else {
 		cb(false);
 	}
+}
+
+var updateUserCash = function(cognitoSub, amount, cb){
+	dataAccess.dbUpdateAwait("RW_USER", "inc", {cognitoSub: cognitoSub}, {cash: amount}, async function(err, obj){
+		if (!err){
+			cb(true);
+		}
+		else {
+			msg = "Database error during purchase. Please try again. You should not have been charged any money.";
+			logg(msg);
+			cb(false);						
+		}
+	});	
 }
 
 
@@ -1218,7 +1228,7 @@ var getPublicServersFromDB = function(cb){
 
 var getAllServersFromDB = function(cb){
 	var servers = [];
-	dataAccess.dbFindAwait("RW_SERV", {}, function(err,res){
+	dataAccess.dbFindAwait("RW_SERV", {environment:process.env.Environment}, function(err,res){
 		if (res && res[0]){
 				
 			for (var i = 0; i < res.length; i++){
@@ -1259,7 +1269,7 @@ var getEmptyServersFromDB = function(cb){
 	});
 }
 
-//sync gameServerSync gameSync
+//sync gameServerSync gameSync upsertGameServer update game server
 var dbGameServerUpdate = function(obj, cognitoSubToRemoveFromIncoming = false) {
 	dataAccess.dbFindAwait("RW_SERV", {url:myUrl}, async function(err, res){ //!!! Sort by timestamp
 		var serverParam = {url:myUrl};
@@ -1376,7 +1386,6 @@ module.exports.getUserCustomizationOptions = getUserCustomizationOptions;
 module.exports.getUserSettings = getUserSettings;
 module.exports.setUserSettings = setUserSettings;
 module.exports.setUserSetting = setUserSetting;
-module.exports.defaultCustomizations = defaultCustomizations;
 module.exports.getShopItem = getShopItem;
 module.exports.getShopItems = getShopItems;
 module.exports.getUserShopList = getUserShopList;
@@ -1405,5 +1414,7 @@ module.exports.setHordeGlobalBest = setHordeGlobalBest;
 module.exports.getHordePersonalBest = getHordePersonalBest;
 module.exports.getHordeGlobalBest = getHordeGlobalBest;
 module.exports.giveUsersItemsByTimestamp = giveUsersItemsByTimestamp;
-module.exports.getUserOwnedItems = getUserOwnedItems;
 module.exports.completeTrade = completeTrade;
+module.exports.defaultCustomizations = defaultCustomizations;
+module.exports.fullShopList = fullShopList;
+module.exports.defaultCustomizationOptions = defaultCustomizationOptions;

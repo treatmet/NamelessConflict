@@ -37,8 +37,17 @@ app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
 logg("----------------------WEB SERVER STARTUP-----------------------");
 logg('Express server started on port ' + port + '.');
-logg("Environment: " + process.env.Environment);
+if (typeof process.env.Environment == 'undefined'){
+  process.env.Environment = "local";
+}
+if (typeof process.env.EBName == 'undefined'){
+  process.env.EBName = "local";
+}
 
+logg("Environment: " + process.env.Environment);
+logg("Beanstalk Name: " + process.env.EBName);
+
+logg("Running in " + process.env.Environment);
 if (process.env.Environment == "Test"){
 	isTest = true;
 }
@@ -75,8 +84,8 @@ function processArgs(){
 
 	isLocal = !hostname.toLowerCase().includes("compute");
   
-  if (isTest)
-    config.EBName = "SocketShot-Test";
+  config.EBName = process.env.EBName;
+  logg("ElasticBeastalk (EBName) is " + process.env.EBName);
 
 	if (isLocal){
 		logg("Updating app to run locally");
@@ -159,7 +168,7 @@ function getInstanceIdAndAddProcessesToLoadBalancer(){
 	request('http://169.254.169.254/latest/meta-data/instance-id', function (error, response, body) {
 		if (!error && response.statusCode === 200 && response.body) {
 			instanceId = response.body;
-			addGameServerToLoadBalancer(instanceId);
+      updateLoadBalancer(instanceId);
 		}
 		else {
 			log("AWS API ERROR -- Unable to Get Instance Id");
@@ -170,10 +179,10 @@ function getInstanceIdAndAddProcessesToLoadBalancer(){
 	});
 }
 
-function addGameServerToLoadBalancer(instanceId){
-	log("REGISTERING GAME SERVER(S)");
+function updateLoadBalancer(instanceId){
+	log("REGISTERING GAME SERVER(S) and Web Server on LoadBalancer:" + process.env.EBName);
 
-  getLoadBalancerArn(config.EBName, function(loadBalancerArn){
+  getLoadBalancerArn(process.env.EBName, function(loadBalancerArn){
     if (!loadBalancerArn){return;}
     getLBTargetGroups(loadBalancerArn, function(targetGroupData){
 
@@ -186,7 +195,7 @@ function addGameServerToLoadBalancer(instanceId){
 
       //Web process registration
       if (!targetGroupData.webTargetGroupArn){ //Check if Web Target Group is not created
-        createTargetGroup("web-server-tg", 80, function(createTargetGroupResult){
+        createTargetGroup("awseb-AWSEB-" + process.env.Environment, 80, function(createTargetGroupResult){
           if (!createTargetGroupResult){
             //Error logging handled in function
           }
@@ -234,9 +243,8 @@ function addGameServerToLoadBalancer(instanceId){
         });
       }
 
-
-      //ALSO NEED TO SKIP RULE CREATION IF THE TARGET GROUP ALREADY EXISTS!!!
-
+      //
+      registerServerParamRouting(loadBalancerArn, targetGroupData.specificServerTargetGroupArns);
 
       //Game processes registration      
       var portArray = [];
@@ -247,6 +255,26 @@ function addGameServerToLoadBalancer(instanceId){
 
     });
   });
+}
+
+function registerServerParamRouting(loadBalancerArn, existingTargetGroupArns){
+  log("registerServerParamRouting with load balancer:" + loadBalancerArn);
+  var port = 80;
+  upsertProcessToTargetGroup(existingTargetGroupArns, instanceId, port, "serv-", function(upsertResult){
+    get443ListenerArn(loadBalancerArn, function(listenerArn){            
+      checkRulesAndGetPriority(listenerArn, upsertResult.targetGroupArn, function(priority){ //Will return false if rule already exists pointing to this Target Group
+        if (listenerArn && upsertResult && priority){
+          createRuleWithRetries(instanceId, "0000", listenerArn, upsertResult.targetGroupArn, priority, function(createRuleResult){
+
+          });
+        }
+        else {
+          log("WARNING - Didn't get enough data to create Rule, or rule already exists (Need listenerArn:" + listenerArn + " targetGroupArn:" + upsertResult.targetGroupArn + " priority:" + priority + ")");
+        }
+      });
+    });          
+  });
+
 }
 
 async function addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, gameTargetGroupArns, portArray){
@@ -267,7 +295,7 @@ async function addProcessesToLoadBalancerRecursive(loadBalancerArn, instanceId, 
   var portToCheck = portArray[0];
   portArray.shift();
 
-  upsertProcessToGameServerTargetGroup(gameTargetGroupArns, instanceId, portToCheck, function(upsertResult){
+  upsertProcessToTargetGroup(gameTargetGroupArns, instanceId, portToCheck, "game-",  function(upsertResult){
     get443ListenerArn(loadBalancerArn, function(listenerArn){            
       checkRulesAndGetPriority(listenerArn, upsertResult.targetGroupArn, function(priority){ //Will return false if rule already exists pointing to this Target Group
         if (listenerArn && upsertResult && priority){
@@ -331,38 +359,38 @@ function checkRulesAndGetPriority(listenerArn, targetGroupArn, cb){
 }
 
 
-function upsertProcessToGameServerTargetGroup(gameTargetGroupArns, instanceId, portToCheck, cb){
-  portToCheck = parseInt(portToCheck);
+function upsertProcessToTargetGroup(targetGroupArns, instanceId, port, tgPrefix, cb){
+  port = parseInt(port);
   var targetGroupsChecked = 0;
   var presentInGameTargetGroup = false;
-  for (var tg = 0; tg < gameTargetGroupArns.length; tg++){
-    getTargetsInTargetGroup(gameTargetGroupArns[tg], function(targetGroupArn, targets){
+  for (var tg = 0; tg < targetGroupArns.length; tg++){
+    getTargetsInTargetGroup(targetGroupArns[tg], function(targetGroupArn, targets){
       log("TARGETS IN GAME SERVER targetGroupArn:" + targetGroupArn);
       logObj(targets);
       for (var t = 0; t < targets.length; t++){
-        if (targets[t].Id == instanceId && parseInt(targets[t].Port) == portToCheck){
+        if (targets[t].Id == instanceId && parseInt(targets[t].Port) == port){
           presentInGameTargetGroup = true;
-          log("Verified process " + portToCheck + " for instance " + instanceId + " has already been added to targetGroup " + targetGroupArn);
+          log("Verified process " + port + " for instance " + instanceId + " has already been added to targetGroup " + targetGroupArn);
           cb({targetGroupArn:targetGroupArn});
           break;
         }
         targetGroupsChecked++;
-        if (targetGroupsChecked >= gameTargetGroupArns.length && !presentInGameTargetGroup){
+        if (targetGroupsChecked >= targetGroupArns.length && !presentInGameTargetGroup){
           //Create Target Group, and add Process
-          log("Adding process on port " + portToCheck + " for instance " + instanceId + " to new Target Group");
-          createTargetGroup("game-" + instanceId.substring(2) + "-" + portToCheck.toString().substring(2), portToCheck, function(createTargetGroupResult){
+          log("Adding process on port " + port + " for instance " + instanceId + " to new Target Group");
+          createTargetGroup(tgPrefix + instanceId.substring(2) + "-" + port.toString(), port, function(createTargetGroupResult){
             if (!createTargetGroupResult){
               //Error logging handled in function
             }
             else {
-              log("Successfully Created Game Server Target Group!");
+              log("Successfully Created Target Group!");
               logObj("TargetGroupArn: " + createTargetGroupResult.TargetGroups[0].TargetGroupArn);    
               registerEC2ToTargetGroup(createTargetGroupResult.TargetGroups[0].TargetGroupArn, instanceId, function(registerResponse){
                 if (!registerResponse){
                   cb(false);
                 }
                 else {
-                  log("Successfully added Game Process to newly created Game Server Target Group!");
+                  log("Successfully added EC2 instance to newly created Game Server Target Group!");
                   logObj(registerResponse);
                   cb({targetGroupArn:createTargetGroupResult.TargetGroups[0].TargetGroupArn});
                   presentInGameTargetGroup = true;
@@ -375,20 +403,20 @@ function upsertProcessToGameServerTargetGroup(gameTargetGroupArns, instanceId, p
     });
   }    
   if (!presentInGameTargetGroup){ //Target group containing this server+process does not exist, create one
-    log("Adding process on port " + portToCheck + " for instance " + instanceId + " to new Target Group");
-    createTargetGroup("game-" + instanceId.substring(2) + "-" + portToCheck.toString().substring(2), portToCheck, function(createTargetGroupResult){
+    log("Adding process on port " + port + " for instance " + instanceId + " to new Target Group");
+    createTargetGroup(tgPrefix + instanceId.substring(2) + "-" + port.toString(), port, function(createTargetGroupResult){
       if (!createTargetGroupResult){
         //Error logging handled in function
       }
       else {
-        log("Successfully Created Web Server Target Group!");
+        log("Successfully Created Target Group!");
         logObj("TargetGroupArn: " + createTargetGroupResult.TargetGroups[0].TargetGroupArn);    
         registerEC2ToTargetGroup(createTargetGroupResult.TargetGroups[0].TargetGroupArn, instanceId, function(registerResponse){
           if (!registerResponse){
             cb(false);
           }
           else {
-            log("Successfully added Game Process to newly created Game Server Target Group!");
+            log("Successfully added EC2 instance to newly created Target Group!");
             logObj(registerResponse);
             cb({targetGroupArn:createTargetGroupResult.TargetGroups[0].TargetGroupArn});
             presentInGameTargetGroup = true;
@@ -435,15 +463,22 @@ function getLBTargetGroups(loadBalancerArn, cb){
     else {
       log("Got LoadBalancer Target Groups:");
       logObj(data.TargetGroups);
-      var targetGroupData = {gameTargetGroupArns:[]};
+      var targetGroupData = {
+        webTargetGroupArn:"",
+        specificServerTargetGroupArns:[],
+        gameTargetGroupArns:[]
+      };
       for (var l in data.TargetGroups){
         log("Name=" + data.TargetGroups[l].TargetGroupName + " TargetGroupArn=" + data.TargetGroups[l].TargetGroupArn);
 
-        if (data.TargetGroups[l].Port == 80){
+        if (data.TargetGroups[l].TargetGroupName.substring(0, 5) == "awseb"){
           targetGroupData.webTargetGroupArn = data.TargetGroups[l].TargetGroupArn;
         }
-        else {
+        else if (data.TargetGroups[l].Port >= 3000 && data.TargetGroups[l].Port <= 3100){
           targetGroupData.gameTargetGroupArns.push(data.TargetGroups[l].TargetGroupArn);
+        }
+        else if (data.TargetGroups[l].TargetGroupName.substring(0, 4) == "serv") {
+          targetGroupData.specificServerTargetGroupArns.push(data.TargetGroups[l].TargetGroupArn);
         }
       }
       cb(targetGroupData);
@@ -461,6 +496,7 @@ function getTargetsInTargetGroup(targetGroupArn, cb){
     if (err) {
       logg("AWS API ERROR -- Unable to Get Instances in target group: ");
       logg(util.format(err));
+      cb(false, false);
     }
     else {
       for (var i in instanceData.TargetHealthDescriptions){
@@ -527,14 +563,17 @@ function registerEC2ToTargetGroup(targetGroupArn, instanceId, cb){
 	});	
 }
 
-function createRuleWithRetries(instanceId, portToCheck, listenerArn, targetGroupArn, priority, cb){
-  createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, targetGroupArn, priority, function(createRuleResult){
+function createRuleWithRetries(instanceId, port, listenerArn, targetGroupArn, priority, cb){
+  if (port){
+    port = port.toString().substring(2);
+  }
+  createRule(instanceId.substring(2), port, listenerArn, targetGroupArn, priority, function(createRuleResult){
     if (createRuleResult){
       log("FIRST TRY - Successfully created rule");
       cb(createRuleResult.Rules[0].RuleArn);
     }
     else {
-      createRule(instanceId.substring(2), portToCheck.toString().substring(2), listenerArn, targetGroupArn, priority+1, function(createRuleResult){
+      createRule(instanceId.substring(2), port, listenerArn, targetGroupArn, priority+1, function(createRuleResult){
         if (createRuleResult){
           log("SECOND TRY - Successfully created rule");
           cb(createRuleResult.Rules[0].RuleArn);
@@ -557,32 +596,41 @@ function createRule(serverParam, processParam, listenerArn, targetGroupArn, prio
       }
     ], 
     Conditions: [
-      {
-        Field: "query-string",
-        QueryStringConfig: {
-          Values: [
-            {
-              Key: 'server',
-              Value: serverParam
-            }
-          ]
-        }
-      },
-      {
-        Field: "query-string",
-        QueryStringConfig: {
-          Values: [
-            {
-              Key: 'process',
-              Value: processParam
-            }
-          ]
-        }
-      }      
     ], 
     ListenerArn: listenerArn, 
     Priority: priority
   };
+
+  if (serverParam){
+    var serverCondition = {
+      Field: "query-string",
+      QueryStringConfig: {
+        Values: [
+          {
+            Key: 'server',
+            Value: serverParam
+          }
+        ]
+      }
+    };
+    params.Conditions.push(serverCondition);
+  }
+
+  if (processParam){
+    var processCondition = {
+      Field: "query-string",
+      QueryStringConfig: {
+        Values: [
+          {
+            Key: 'process',
+            Value: processParam
+          }
+        ]
+      }
+    };
+    params.Conditions.push(processCondition);
+  }
+
   elbv2.createRule(params, function(err, data) {
     if (err) {
       logg("AWS API ERROR -- Unable to Create Rule server=" + serverParam + "&process=" + processParam + " pointing to targetGroup " + targetGroupArn);

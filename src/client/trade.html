@@ -11,9 +11,7 @@
     
 <div style="display:none;" id="mainContent">
 	<div id="sectionTitles" style='display:none'>
-		<div id="sectionTitle1" class="sectionTitle">testuser's offerings</div>
-		<div id="sectionTitle2" class="sectionTitle">Your offerings</div>
-		<div id="sectionTitle3" class="sectionTitle">Your Stuff</div>
+
 	</div>
 
 	<!--PAGE COLUMNS-->
@@ -21,10 +19,9 @@
 		<div id="tradeOfferings" class="tradeOfferings">
 			<div id="leftPlayerTradeSection" class="tradeSection">
 				<div id="leftPlayerTradeTitle" class="tradeTitle">
-					testuser's offerings
+					Opponent's offerings
 				</div>
 				<div id="leftPlayerTradeList" class="tradeList">
-					<div id="customizeItem" class="shopItem" onclick="removeItemFromTradeClick(&quot;rankIcon&quot;)"><div class="shopIcon" id="rankIconT"><img class="equipIconRoulette" style="display:none" src="/src/client/img/shopIcons/roulette/questionO.png"><canvas class="equipIconCanvas" id="rankIconTCustomizeCtx" width="70" height="70"></canvas></div><div id="shopTitle" class="shopTitle">Rank</div><div id="rarityText" class="shopTitle" style="float:right; color:#ffffff"></div><br><div class="shopText">Show current rank</div></div>
 				</div>
 			</div>
 			<div id="rightPlayerTradeSection" class="tradeSection">
@@ -32,17 +29,26 @@
 					Your offerings
 				</div>
 				<div id="rightPlayerTradeList" class="tradeList">
-					<div id="customizeItem" class="shopItem" onclick="removeItemFromTradeClick(&quot;rankIcon&quot;)"><div class="shopIcon" id="rankIconT"><img class="equipIconRoulette" style="display:none" src="/src/client/img/shopIcons/roulette/questionO.png"><canvas class="equipIconCanvas" id="rankIconTCustomizeCtx" width="70" height="70"></canvas></div><div id="shopTitle" class="shopTitle">Rank</div><div id="rarityText" class="shopTitle" style="float:right; color:#ffffff"></div><br><div class="shopText">Show current rank</div></div>
 				</div>
 			</div>
 		</div>
 		<div id="tradeBottomSection">
-			<div id="tradeWarning">Warning: Review both sides before clicking Accept!</div>
-			<button id="tradeAccept" class="RWButton" style="" onclick="liveTradeAcceptClick()">Accept Trade</button>
-			<div id="tradeTimerContainer">
-				<div class="tradeText">Trade Accepted in:</div>
-				<div id="tradeTimer">5</div>
-				<div class="tradeText">Look over the trade!</div>
+			<div id="chat-window-trade">
+				<div id="chat-text-trade">
+					<div class="chatElement" style="font-weight:600">Welcome to the trade! Type here to chat.</div>
+				</div>
+				<form id="chat-form-trade">
+					<input id="chat-input-trade" type="text" maxlength="50" autocomplete="off">
+				</form>
+			</div>
+			<div id = "acceptButtonSection">
+				<div id="tradeWarning">Warning: All trades are final!</div>
+				<button id="tradeAccept" class="RWButton" disabled="" onclick="liveTradeAcceptClick()">Accept Trade</button>
+				<div id="tradeTimerContainer">
+					<div class="tradeText">Trade Accepted in:</div>
+					<div id="tradeTimer">5</div>
+					<div class="tradeText">Look over the trade!</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -53,9 +59,12 @@
 			</div>
 
 		<div id="appearanceOptions" style="display: none">
-
-
 		</div>	  
+		<div id="moneyOfferingSection">
+			<form id="offerMoneyForm">
+				<input id="offerMoneyInput" type="number" placeholder="$$$" maxlength="8" autocomplete="off"> <button id="offerMoneyButton" class="RWButton" onclick="offerMoney()">Offer Cash</button>
+			</form>
+		</div>
 	</div>
 
 </div>

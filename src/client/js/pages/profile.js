@@ -52,8 +52,7 @@ function checkViewedProfileIsFriendOrParty(){
 		if (data.friends == true){
 			hide("addFriendButton");
             show("removeFriendButton");
-            if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea")		
-			    show("inviteToTradeButton");
+		    show("inviteToTradeButton");
 		}
 		else {
 			hide("removeFriendButton");											
@@ -262,7 +261,7 @@ function listenForBinding(action, slot){
 var listeningSlot = false;
 document.onkeydown = function(event){
     if(event.keyCode === 27){ //Esc
-        removeConfirmationMessage();
+        removeConfirmationMessage("rarityTextShop");
         setAllKeybindingCells(currentSettings);
 	}
     else if (listeningSlot){
@@ -757,12 +756,13 @@ function inviteToPartyButtonClick() {
 }
 
 function inviteToTradeButtonClick() {
-	console.log("inviteToTradeButtonClick()");
+	console.log("inviteToTradeButtonClick() myIp:" + myIp);
 
 	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
 		const data = {
 			cognitoSub:cognitoSub,
-			username:username,
+            username:username,
+            targetUsername:viewedProfileName,
 			targetCognitoSub:getUrl().split('/user/')[1],
 			ip: myIp,
 			type:"trade"
@@ -812,7 +812,7 @@ function kickFromPartyButtonClick() {
 
 function toggleStatsSettings(divId) {
     var div = document.getElementById(divId);
-    removeConfirmationMessage();
+    removeConfirmationMessage("rarityTextShop");
 
     var tablinks = [ document.getElementById("statsTab"), document.getElementById("settingsTab") ]; 
     for (var i = 0; i < tablinks.length; i++) {
@@ -845,7 +845,7 @@ function toggleStatsSettings(divId) {
 
 function toggleEquipBuy(divId) {
     var div = document.getElementById(divId);
-    removeConfirmationMessage();
+    removeConfirmationMessage("rarityTextShop");
 
     var tablinks = [ document.getElementById("customizeTab"), document.getElementById("buyTab") ]; 
     for (var i = 0; i < tablinks.length; i++) {
@@ -939,10 +939,10 @@ function populateShopOptions(){
     var div = document.getElementById("shopOptions");
     var HTML = "";
     HTML += "<div id='shopTopBar'>";
-        HTML += "<div class='shopItem' id='refresh' style='width: 260px;' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
+        HTML += "<div class='shopItem' id='refreshShop' style='width: 260px;' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
         HTML += "<div class='shopIcon' id='default'><img src='/src/client/img/shopIcons/refresh.png'></div>";
         HTML += "<div id='shopTitle' style='color:#FFFFFF;' class='shopTitle'>Refresh Store Now</div><br><div class='shopText'>$" + numberWithCommas(options.timer.resetPrice) + "</div>";
-        HTML += "<div id='rarityText' class='shopTitle' style='float:right;'></div>";
+        HTML += "<div id='rarityTextShop' class='shopTitle' style='float:right;'></div>";
         HTML +=	"</div>";
         HTML += "<div id='refreshTimer'>" + getRefreshTimerTextHTML() + "</div>";
     HTML += "</div>";
@@ -958,10 +958,12 @@ function populateShopOptions(){
     div.innerHTML = HTML;
 
     //draw on icon canvases
-    for (const item in options.shop){
-        if (options.shop[item].category == "other"){continue;}
-        drawShopIcon(options.shop[item], options.shop[item].id + "ShopCtx");
-    }
+    drawShopIcons("shopOptions", options.shop)
+
+    // for (const item in options.shop){
+    //     if (options.shop[item].category == "other"){continue;}
+    //     drawShopIcon(options.shop[item], options.shop[item].id + "ShopCtx");
+    // }
 }
 
 
@@ -1014,13 +1016,16 @@ function isRank(value){
 }
 
 function shopClick(itemId, price){
-    var item = document.getElementById(itemId);
-    var rarityText = item.getElementById("rarityText");
+    console.log("Click Shop item");
+    var item = document.getElementById(itemId+"Shop");
+    console.log(item);
+    var rarityTextId = "rarityTextShop";
+    var rarityText = item.getElementById(rarityTextId);
     var confirmationMessage = "Confirm?";
 
     if (userCash >= price){
         if (rarityText.innerHTML != confirmationMessage){
-            removeConfirmationMessage();
+            removeConfirmationMessage(rarityTextId);
             rarityText.innerHTML = confirmationMessage;
             rarityText.style.color = "#FFF";
             item.style.backgroundColor = "#BBB";
@@ -1058,31 +1063,36 @@ function showQuestionMarksOverIcons(){
     }
 }
 
-function removeConfirmationMessage(){
+function removeConfirmationMessage(rarityTextId){
     rouletteOn = false;
     var shopItems = document.getElementsByClassName("shopItem");
-    for (var i = 0; i < shopItems.length; i++) {     
-        if (shopItems[i].id == "customizeItem")   
+    for (var i = 0; i < shopItems.length; i++) {   
+        
+        console.log("shopItems[i].class");
+        console.log(shopItems[i].className);
+        if (shopItems[i].className.indexOf("shopItem customizeItem") > -1)   
             continue;
         if (!shopItems[i].getElementById("shopTitle")){
             //alert("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
             logg("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
             continue;
         }
-        shopItems[i].getElementById("rarityText").style.color = shopItems[i].getElementById("shopTitle").style.color;
+        console.log("AVOUT TO ERROR");
+        console.log(shopItems[i]);
+        shopItems[i].getElementById(rarityTextId).style.color = shopItems[i].getElementById("shopTitle").style.color;
         shopItems[i].style.backgroundColor = "transparent";
 
         if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#0074e0"){
-            shopItems[i].getElementById("rarityText").innerHTML = "Rare";
+            shopItems[i].getElementById(rarityTextId).innerHTML = "Rare";
         }
         else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#b700d8"){
-            shopItems[i].getElementById("rarityText").innerHTML = "Epic";
+            shopItems[i].getElementById(rarityTextId).innerHTML = "Epic";
         }
         else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#ffd200"){
-            shopItems[i].getElementById("rarityText").innerHTML = "Legendary";
+            shopItems[i].getElementById(rarityTextId).innerHTML = "Legendary";
         }
         else {
-            shopItems[i].getElementById("rarityText").innerHTML = "";
+            shopItems[i].getElementById(rarityTextId).innerHTML = "";
         }
     }    
 }

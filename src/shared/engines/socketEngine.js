@@ -25,6 +25,7 @@ io.sockets.on('connection', function(socket){
 				socket.experience = userData.experience;
 				socket.username = userData.USERNAME;	
 				socket.emit('socketInfoUpdated', {url:myUrl, isWebServer:isWebServer});
+				dataAccessFunctions.updateServerUrlForUser(cognitoSub);
 			}
 			else {
 				socket.emit('socketInfoUpdated', {url:myUrl, isWebServer:isWebServer});

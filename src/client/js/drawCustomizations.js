@@ -88,25 +88,35 @@ function getMannequinFrame(shopItem, cb){
 	});
 }
 
-function drawShopIcons(divId){
-	var listDiv = document.getElementById(divId);
-	if (!listDiv){return;}
-	var shopItems = listDiv.document.getElementsByClassName("shopItem");
+function drawShopIcons(divId, itemList){
+	// console.log("itemList");
+	// console.log(itemList);
+	var shopItemDivs = $("#" + divId + " .shopItem");
 
-	shopItems.forEach(function(item){
-		var canvas = item.getElementsByClassName("iconCanvas");
-		if (canvas){
-			canvas = canvas[0];
-			
+	for (var x = 0; x < shopItemDivs.length; x++){
+		var canvas = shopItemDivs[x].getElementsByClassName("iconCanvas");
+		// console.log("canvas");
+		// console.log(canvas);
+		if (canvas.length > 0){
+			canvas = canvas[0]; //icon canvas
+
+			itemList.forEach(function(item){
+				// console.log("Item:");
+				// console.log(item);
+				// console.log("canvas:");
+				// console.log(canvas);
+				// console.log("Comparing " + item.id + "Canvas with " + canvas.id);
+				if (item.id + "Canvas" == canvas.id){
+					drawShopIcon(canvas, item);
+				}
+			});
 		}
-	});
+	}
 
 }
 
-function drawShopIcon(shopItem, iconId){
-    // console.log("GETTING CANVAS FOR: " + iconId);
+function drawShopIcon(canvas, shopItem){
     var zoom = 1; //Zoom config of all shop icons
-    var canvas = document.getElementById(iconId);
     if (!canvas){
         //logg("ERROR: CAN NOT FIND SHOP ICON:" + iconId); 
         return;

@@ -142,9 +142,7 @@ var gameStartAlpha = 0;
 var suddenDeathAlpha = 0;
 var energyRedAlpha = 1.0;
 
-var chatText = document.getElementById("chat-text");
-var chatInput = document.getElementById("chat-input");
-var chatForm = document.getElementById("chat-form");
+
 var chatStale = 0;
 var chatSpam = 0;
 const chatSpamGain = 120;
@@ -1373,11 +1371,13 @@ function showCanvas() {
 }
 
 //----------------Chat Functionality----------------
-
-for (var i=0; i<chatText.childNodes[i].length; i++){
-		chatText.childNodes[i].remove();
+var chatText = document.getElementById("chat-text");
+var chatInput = document.getElementById("chat-input");
+var chatForm = document.getElementById("chat-form");
+chatForm.onsubmit = function(e){
+	e.preventDefault();
 }
-chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to SocketShot!</div>';
+
 //chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome! Teams will be auto balanced next game.</div>';
 
 socket.on('addToChat', function(data, playerId){ //Player chat
@@ -1426,14 +1426,14 @@ function clearChat(){
 	}
 }
 
+clearChat();
+chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to SocketShot!</div>';
+
 socket.on('evalAnswer', function(data){
 	if (data)
 		logg(data);	
 });
 
-chatForm.onsubmit = function(e){
-	e.preventDefault();
-}
 
 socket.on('sfx', function(sfx){
 	sfxPlay(sfx);
@@ -2380,124 +2380,119 @@ function strokeAndFillText(text, x, y, width){
 
 function drawMapElementsOnMapCanvas(){
 	logg("Drawing map elements...");
-	m_canvas.width = mapWidth * zoom;
-	m_canvas.height = mapHeight * zoom;
+	m_canvas.width = mapWidth;
+	m_canvas.height = mapHeight;
 	mCtx.clearRect(0,0,m_canvas.width,m_canvas.height); //Clears previous frame
 
 	var tile = Img.tile;
 	log("MAP: " + map);
 
-	for (var y = 0; y < mapHeight * zoom; y+=tile.height * zoom){
-		for (var x = 0; x < mapWidth * zoom; x+=tile.width * zoom){
-			if (x + tile.width * zoom > mapWidth * zoom){
-				x = mapWidth * zoom - tile.width * zoom;
+	for (var y = 0; y < mapHeight ; y+=tile.height ){
+		for (var x = 0; x < mapWidth ; x+=tile.width ){
+			if (x + tile.width  > mapWidth ){
+				x = mapWidth  - tile.width ;
 			}
-			if (y + tile.height * zoom > mapHeight * zoom){				
-				y = mapHeight * zoom - tile.height * zoom;
+			if (y + tile.height  > mapHeight ){				
+				y = mapHeight  - tile.height ;
 			}				
 			if (map == "longest"){
-				if (y >= (mapHeight - tile.height) * zoom && x <= (tile.height - 75) * zoom){
-					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				if (y >= (mapHeight - tile.height)  && x <= (tile.height - 75) ){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
 				}
-				else if (y <= (tile.height - 75) * zoom && x >= (mapWidth - tile.width) * zoom){
-					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				else if (y <= (tile.height - 75)  && x >= (mapWidth - tile.width) ){
+					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
 				}
 				else {
-					drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+					drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
 				}				
 			}
 			else if (map == "thepit"){
-				if (y >= (tile.height * 3) * zoom && y <= (tile.height * 5) * zoom && x <= (tile.width) * zoom){
-					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				if (y >= (tile.height * 3)  && y <= (tile.height * 5)  && x <= (tile.width) ){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
 				}
-				else if (y >= (tile.height * 3) * zoom && y <= (tile.height * 5) * zoom && x >= (mapWidth - tile.width * 3) * zoom){
-					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				else if (y >= (tile.height * 3)  && y <= (tile.height * 5)  && x >= (mapWidth - tile.width * 3) ){
+					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
 				}
 				else {
-					drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+					drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
 				}				
 			}
 			else if (map == "crik"){
-				if (x >= (tile.width * 6) * zoom && x <= (tile.width * 6) * zoom && y >= (tile.height * 1) * zoom && y <= (tile.height * 5) * zoom){
-					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				if (x >= (tile.width * 6)  && x <= (tile.width * 6)  && y >= (tile.height * 1)  && y <= (tile.height * 5) ){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
 				}
-				else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (mapWidth - tile.width * 4) * zoom && x <= (mapWidth - tile.width * 2) * zoom){
-					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				else if (y >= (tile.height * 1)  && y <= (tile.height * 4)  && x >= (mapWidth - tile.width * 4)  && x <= (mapWidth - tile.width * 2) ){
+					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
 				}
-				else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (tile.width * 1) * zoom && x <= (tile.width * 3) * zoom){
-					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				else if (y >= (tile.height * 1)  && y <= (tile.height * 4)  && x >= (tile.width * 1)  && x <= (tile.width * 3) ){
+					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
 				}
 				else {
-					drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+					drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
 				}				
 			}
 			else if (map == "narrows"){
-				drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
-				// if (x >= (tile.width * 6) * zoom && x <= (tile.width * 6) * zoom && y >= (tile.height * 1) * zoom && y <= (tile.height * 5) * zoom){
-				// 	drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
+				// if (x >= (tile.width * 6)  && x <= (tile.width * 6)  && y >= (tile.height * 1)  && y <= (tile.height * 5) ){
+				// 	drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
 				// }
-				// else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (mapWidth - tile.width * 4) * zoom && x <= (mapWidth - tile.width * 2) * zoom){
-				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				// else if (y >= (tile.height * 1)  && y <= (tile.height * 4)  && x >= (mapWidth - tile.width * 4)  && x <= (mapWidth - tile.width * 2) ){
+				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
 				// }
-				// else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (tile.width * 1) * zoom && x <= (tile.width * 3) * zoom){
-				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				// else if (y >= (tile.height * 1)  && y <= (tile.height * 4)  && x >= (tile.width * 1)  && x <= (tile.width * 3) ){
+				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
 				// }
 				// else {
-				// 	drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+				// 	drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
 				// }				
 			}
 			else if (map == "longNarrows"){
-				drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
-				// if (x >= (tile.width * 6) * zoom && x <= (tile.width * 6) * zoom && y >= (tile.height * 1) * zoom && y <= (tile.height * 5) * zoom){
-				// 	drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
+				// if (x >= (tile.width * 6)  && x <= (tile.width * 6)  && y >= (tile.height * 1)  && y <= (tile.height * 5) ){
+				// 	drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
 				// }
-				// else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (mapWidth - tile.width * 4) * zoom && x <= (mapWidth - tile.width * 2) * zoom){
-				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				// else if (y >= (tile.height * 1)  && y <= (tile.height * 4)  && x >= (mapWidth - tile.width * 4)  && x <= (mapWidth - tile.width * 2) ){
+				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
 				// }
-				// else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (tile.width * 1) * zoom && x <= (tile.width * 3) * zoom){
-				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				// else if (y >= (tile.height * 1)  && y <= (tile.height * 4)  && x >= (tile.width * 1)  && x <= (tile.width * 3) ){
+				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
 				// }
 				// else {
-				// 	drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+				// 	drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
 				// }				
 			}
 			else if (map == "horde"){
-				if (y >= (mapHeight - tile.height*3) * zoom && y < (mapHeight - tile.height*3) && x <= 0){
-					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				if (y >= (mapHeight - tile.height*3)  && y < (mapHeight - tile.height*3) && x <= 0){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
 				}
-				else if (y >= (tile.height*2) * zoom && y <= (tile.height*2) && x >= mapWidth - tile.width*3){
-					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				else if (y >= (tile.height*2)  && y <= (tile.height*2) && x >= mapWidth - tile.width*3){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
 				}
-				else if (x >= (mapWidth - tile.width*3) * zoom && x < (mapWidth - tile.width*3) && y >= mapHeight - tile.height*3){
-					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				else if (x >= (mapWidth - tile.width*3)  && x < (mapWidth - tile.width*3) && y >= mapHeight - tile.height*3){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
 				}
-				else if (x >= (tile.width*2) * zoom && x <= (tile.width*2) && y <= 0){
-					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				else if (x >= (tile.width*2)  && x <= (tile.width*2) && y <= 0){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
 				}
 				else {
-					drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+					drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
 				}				
 			}
 			else {
-				if (y <= 300 * zoom && x <= 300 * zoom){
-					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width * zoom, tile.height * zoom);
+				if (y <= 300  && x <= 300 ){
+					drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
 				}
-				else if (y >= (mapHeight - 600) * zoom && x >= (mapWidth - 600) * zoom){
-					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width * zoom, tile.height * zoom);
+				else if (y >= (mapHeight - 600)  && x >= (mapWidth - 600) ){
+					drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
 				}
 				else {
-					drawImageOnMapCanvas(tile, x, y, tile.width * zoom, tile.height * zoom);
+					drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
 				}
 			}
 		}
 	}	
 }
 
-function drawMapCanvas(){
-	var drawX = centerX - myPlayer.x * zoom;
-	var drawY = centerY - myPlayer.y * zoom;
-	ctx.drawImage(m_canvas, drawX, drawY);
-}
 
 function drawBlackMarkets(){
 	if (shopEnabled){
@@ -2803,8 +2798,8 @@ function drawLegs(){
 function drawBlocksOnBlockCanvas(){
 	logg("Drawing block elements...");
 
-	block_canvas.width = (mapWidth + 150) * zoom; //+150 to offset the block border which is behind 0,0
-	block_canvas.height = (mapHeight + 150) * zoom;
+	block_canvas.width = (mapWidth + 150) ; //+150 to offset the block border which is behind 0,0
+	block_canvas.height = (mapHeight + 150) ;
 	
 	//normalShadow();
 	blockCtx.clearRect(0,0,block_canvas.width,block_canvas.height); //Clears previous frame
@@ -2838,18 +2833,21 @@ function drawBlocksOnBlockCanvas(){
 			blockCtx.globalAlpha = 0.3;
 		}
 		
-		drawImageOnBlockCanvas(imgBlock, Math.round((Block.list[i].x + 75) * zoom), Math.round((Block.list[i].y + 75) * zoom), Math.round(Block.list[i].width * zoom), Math.round(Block.list[i].height * zoom));				
+		drawImageOnBlockCanvas(imgBlock, Math.round((Block.list[i].x + 75) ), Math.round((Block.list[i].y + 75) ), Math.round(Block.list[i].width ), Math.round(Block.list[i].height ));				
 	}
 }
-
-
+function drawMapCanvas(){
+	var drawX = centerX - myPlayer.x * zoom;
+	var drawY = centerY - myPlayer.y * zoom;
+	ctx.drawImage(m_canvas, drawX, drawY, mapWidth * zoom, mapHeight * zoom);
+}
 
 var warpImageSwapper = 1;
 function drawBlockCanvas(){
 	//noShadow();
 	var drawX = centerX - (myPlayer.x + 75) * zoom;
 	var drawY = centerY - (myPlayer.y + 75) * zoom;
-	ctx.drawImage(block_canvas, drawX, drawY);
+	ctx.drawImage(block_canvas, drawX, drawY, (mapWidth+150) * zoom, (mapHeight+150) * zoom);
 	
 	//Draw warps every frame
 		warpImageSwapper++;
@@ -5678,16 +5676,35 @@ var fpsCounter = 0;
 var fpsInLastSecond = 0;
 var updatesInLastSecond = 0;
 
+function processDynamicZoom(){
+	if (zoom < targetZoom){
+		zoom += zoomRate;
+		if (zoom > targetZoom)
+			zoom = targetZoom;
+	}
+	else if (zoom > targetZoom){
+		zoom -= zoomRate;
+		if (zoom < targetZoom)
+			zoom = targetZoom;
+	}
+}
+
 //Client timer1 teimer1
-function drawEverything(){
-	// console.log(myPlayer.eliminationSpectate);
-	// console.log(shop.active);
+var targetZoom = zoom;
+var zoomRate = 0.1;
+function timer1Misc(){
 	if (chatSpam > 0)
 		chatSpam--;
+
+	processDynamicZoom();
+}
+
+function drawEverything(){
+	timer1Misc();
+
 	//Don't draw anything if the user hasn't entered the game with a player id and name
 	if (myPlayer.name == "" || !Player.list[myPlayer.id] || !clientInitialized)
 		return;
-
 	if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true)
 		updateSpectatingView();
 
@@ -5902,7 +5919,7 @@ setInterval(
 		if ((myPlayer.team == 0 || myPlayer.eliminationSpectate) && zoom != spectateZoom){
 			setZoom(spectateZoom);
 		}
-		else if (myPlayer.team != 0 && !myPlayer.eliminationSpectate && zoom != defaultZoom) {
+		else if (myPlayer.team != 0 && !myPlayer.eliminationSpectate && zoom < defaultZoom) {
 			setZoom(defaultZoom);
 		}
 
@@ -6619,13 +6636,25 @@ document.onkeydown = function(event){
 		keyPress(17, true);
 	}
 	
-	else if(hitKeyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing U Testing
+	else if(hitKeyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing U Testing testinButton
 		if (isLocal || myPlayer.eliminationSpectate || (myPlayer.team != 0) ){	
 			if (gametype == "elim")
 				shop.active = true;
+			if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){
+				zoomIn();
+			}
 		}
 	}
 }//end key down
+
+function zoomIn(){
+	if (targetZoom == defaultZoom){
+		targetZoom = 2;
+	}
+	else {
+		targetZoom = defaultZoom;
+	}
+}
 
 function keyPress(code, state){
 	//console.log("CODE" + code);

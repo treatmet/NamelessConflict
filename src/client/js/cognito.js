@@ -133,6 +133,8 @@ function assessPerformance(){
 socket.on('socketInfoUpdated', function(data){
 	log("socket info updated url:" +  data.url +" isWebServer:" + data.isWebServer);
 	isWebServer = data.isWebServer;
+	myIp = data.url.split(':')[0];
+	log("Updated myIp:" +  myIp);
 	if (isLoggedIn()){
 		loginSuccess();
 	}
@@ -143,9 +145,13 @@ socket.on('socketInfoUpdated', function(data){
 
 function updateCashHeaderDisplay(cash){
 	if (document.getElementById("cashHeaderValue")){
-		document.getElementById("cashHeaderValue").innerHTML = "$" + numberWithCommas(cash);
+		document.getElementById("cashHeaderValue").innerHTML = getCashFormat(cash);
 		show("cashHeaderDisplay");
 	}
+}
+
+function getCashFormat(cash){
+	return "$" + numberWithCommas(cash);
 }
 
 function updateProfileLink(){
@@ -202,8 +208,9 @@ socket.on('redirectToUrl', function(url){
 });
 
 function redirectToUrl(url){
-	if (!isWebServer){
-		console.log("ERROR - You were attempted to be summoned to another server/game, but you are in a game currently");
+	if (page == "game" || page == "trade"){
+		console.log("ERROR - You were attempted to be summoned to another server/game, but you are in a game/trade currently");
+		return;
 	}
 	url = url + getTokenUrlParams();
 	logg("Redirecting webpage to " + url);
@@ -1212,7 +1219,7 @@ function getCustomizationOptions(requestCognitoSub, cb){
 }
 
 
-function populateCustomizationOptions(){
+function populateCustomizationOptions(disableDefaultItems = false){
     var options = customizationOptions;
 
     var div = document.getElementById("appearanceOptions");
@@ -1222,6 +1229,7 @@ function populateCustomizationOptions(){
 		if (!document.getElementById(categoryDiv)){console.log("ERROR - DIV NOT CREATED"); continue;}
 		var categoryContentHTML = "";
 
+		var itemsInCategory = [];
         for (const subCategory in options.items[category]){
             var displaySubCategory = capitalizeFirstLetter(subCategory);
             if (subCategory == "type"){displaySubCategory = "";}
@@ -1233,6 +1241,7 @@ function populateCustomizationOptions(){
 				}
             );
             for (const item in options.items[category][subCategory]){
+				itemsInCategory.push(options.items[category][subCategory][item]);
                 var active = false;
 
 				if (typeof displayTeam != 'undefined'){
@@ -1256,43 +1265,48 @@ function populateCustomizationOptions(){
                 if (subCategory == "shotgun"){ options.items[category][subCategory][item].customizationCategory = "sgColor";}
 				options.items[category][subCategory][item].subCategory = subCategory;
 				var type = "customizationOptions";
-				if (page == "trade"){type = "tradeListOwned";}
-                categoryContentHTML += getShopItemHTML(options.items[category][subCategory][item], active, type);
+				if (page == "trade"){
+					type = "tradeListOwned";
+				}
+                categoryContentHTML += getShopItemHTML(options.items[category][subCategory][item], active, type, disableDefaultItems);
             }
         }
 		document.getElementById(categoryDiv).innerHTML = categoryContentHTML;
+		drawShopIcons(categoryDiv, itemsInCategory);
     }
 
     
     
 
-    //draw on icon canvases
-    for (const team in options){
-        if (team == "fullList"){continue;}
-        for (const category in options[team]){
-            for (const subCategory in options[team][category]){
-                for (const item in options[team][category][subCategory]){
-                    //Logic for not drawing if already drawn
-                    //if (document.getElementById(options[team][category][subCategory][item].id + "CustomizeCtx"))
-                        drawShopIcon(options[team][category][subCategory][item], options[team][category][subCategory][item].id + "CustomizeCtx");
-                }
-            }
-        }
-    }   
-	
+    // //draw on icon canvases
+    // for (const team in options){
+    //     if (team == "fullList"){continue;}
+    //     for (const category in options[team]){
+	// 		for (const subCategory in options[team][category]){
+    //             for (const item in options[team][category][subCategory]){
+    //                 //Logic for not drawing if already drawn
+    //                     drawShopIcon(options[team][category][subCategory][item] + "Canvas", options[team][category][subCategory][item]);
+    //             }
+    //         }
+    //     }
+    // }   
+}
+
+function getCanvasDiv(){
 }
 
 function getCategoryTabHTML(category){
     return '<button class="tablinks" id="' + category + '" onclick="showContent(\'' + category + '\')">' + capitalizeFirstLetter(category) + '</button>';
 }
 
-function getShopItemHTML(item, active, type){
+function getShopItemHTML(item, active, type, disableDefaultItems = false, cashValue = 0){
 	var isInShop = false;
 	if (type == "shop"){
 		isInShop = true;
 	}
 
-    var shopItemClass = "shopItem";
+	var shopItemClass = "shopItem";
+	if (type == "customizationOptions"){shopItemClass += " customizeItem"}
     var shopIconClass = "shopIcon";
     if (active){
         shopItemClass += " active";
@@ -1312,14 +1326,20 @@ function getShopItemHTML(item, active, type){
         if (!isInShop && ownedCount < 2){
             ownedHTML = "";
         }
-    }
+	}
 
-    const shopItemDivId = isInShop ? item.id : "customizeItem";
-    var HTML = "<div id='" + shopItemDivId + "' class='" + shopItemClass + "' " + getOnClickHTML(item, type) + ">";
+	var disabledStyle = "";
+	if (disableDefaultItems && item.defaultItem){
+		disabledStyle = "style='background-color: black;pointer-events: none;'";
+	}
+	
 
-    var iconCtxId = isInShop ? item.id + "ShopCtx" : item.id + "CustomizeCtx";
+	const shopItemDivId = item.id + capitalizeFirstLetter(type);
+    var HTML = "<div id='" + shopItemDivId + "' class='" + shopItemClass + "' " + getOnClickHTML(item, type) + " " + disabledStyle + ">";
+
+    var iconCtxId = item.id + "Canvas";
     if (item.category == "other"){
-        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><img src='/src/client/img/shopIcons/" + item.canvasValue + "'></div>";
+        HTML += "<div class='" + shopIconClass + "' id ='" + iconCtxId + "'><img src='/src/client/img/shopIcons/" + item.canvasValue + "'></div>";
     }
     else {
         var iconClassPrefix = isInShop ? "shop" : "equip";
@@ -1382,8 +1402,10 @@ function getShopItemHTML(item, active, type){
             HTML += "style='color:" + rarityColor + "'";
         HTML += ">" + item.title + "</div>";
     }    
-    //Rarity Text
-    HTML += "<div id='rarityText' class='shopTitle' style='float:right; color:" + rarityColor + "'>" + rarityText + "</div>";
+	//Rarity Text
+	var rarityTextId = "rarityText";
+	if (type == "shop"){rarityTextId = "rarityTextShop";}
+    HTML += "<div id='" + rarityTextId + "' class='shopTitle' style='float:right; color:" + rarityColor + "'>" + rarityText + "</div>";
 
     //Item category
     if (isInShop){

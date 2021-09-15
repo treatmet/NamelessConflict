@@ -7,7 +7,6 @@ global.fs = require('fs');
 global.util = require('util');
 
 global.config = require("../settings.json");
-
 //--------------------------------SERVER CONFIGURATION-----------------------------------------------------
 global.debug = true;
 global.httpOnlyCookies = false;

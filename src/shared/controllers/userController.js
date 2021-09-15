@@ -136,13 +136,13 @@ router.post('/requestResponse', async function (req, res) {
 								targetCognitoSub:requestDB.targetCognitoSub,
 								tradeId:req.body.id
 							}; 
-							console.log("TTTTTTTTTTTTTTTTTtradeModel");
-							console.log(tradeModel);
-							createTradeFromRequest(tradeModel, requestingUser.serverUrl, function(createTradeSuccess){
+							createTradeFromRequest(tradeModel, myUrl, function(createTradeSuccess){
 								if (createTradeSuccess){
-									var targetUrl = serverHomePage + "/trade/?tradeId=" + requestDB._id;
+									var targetUrl = "";
 									if (isLocal)
-										targetUrl = "http://" + requestingUser.serverUrl  + "/trade/?tradeId=" + requestDB._id; 
+										targetUrl = "http://" + myUrl  + "/trade/?tradeId=" + requestDB._id; 
+									else 
+										targetUrl = serverHomePage + "trade/?tradeId=" + requestDB._id + "&server=" + instanceId.substring(2) + "&process=00";
 									
 									//Redirect Both Users
 									var party = [
@@ -248,25 +248,41 @@ router.post('/registerForTrade', async function (req, res) {
 	console.log(req.body);	
 	
 	//Check if trade exists
-	if (tradingEngine.getTradeById(req.body.tradeId)){
+	var trade = tradingEngine.getTradeById(req.body.tradeId);
+	if (trade){
+		var opponentName = getTradeOpponentName(req.body.cognitoSub, trade);
 		var socket = SOCKET_LIST[getSocketIdFromCognitoSub(req.body.cognitoSub)];
 		var createResult = tradingEngine.createTradeSocketEvents(socket, req.body.cognitoSub, req.body.tradeId);
 		if (createResult.error){
 			res.status(200);
-			res.send({status:false, msg:createResult.msg});
+			res.send({status:false, msg:createResult.msg, opponentName:opponentName});
 		}
 		else {
 			res.status(200);
-			res.send({status:true, msg:"Successfully registered for existing trade"});
+			res.send({status:true, msg:"Successfully registered for existing trade", opponentName:opponentName});
 		}
 	}
 	else {
+		var msg = "You have no active trades on this server. Please create another Trade request.";
+		log(msg);
+		log("ERROR - Trade Not Found " + req.body.tradeId);
+		log("ERROR - FULL TRADE LIST:");
+		log(tradingEngine.getTradeList());
 		res.status(200);
-		res.send({status:false, msg:"You have no active trades on this server. Please create another Trade request."});
+		res.send({status:false, msg:msg});
 	}
-	
-
 });
+
+function getTradeOpponentName(cognitoSub, trade){
+	var opponentName = "";
+	if (trade.targetCognitoSub == cognitoSub){
+		return trade.requestorUsername;
+	}
+	else if (trade.requestorCognitoSub == cognitoSub){
+		return trade.targetUsername;
+	}
+	return opponentName;
+}
 
 router.post('/leaveParty', async function (req, res) {
 	log("LEAVE PARTY ENDPOINT CALLED WITH:");
@@ -363,13 +379,6 @@ router.post('/upsertRequest', async function (req, res) {
 		res.send({error:"Invalid Request type: " + req.body.type});
 	}
 });
-
-
-function getTradeUrl(tradeId){
-	var targetUrl = serverHomePage + "trade/?server=" + instanceId + "&tradeId=" + tradeId;
-	if (isLocal)
-		targetUrl = "http://" + serverHomePage  + "/trade" + "/?tradeId=" + tradeId; 
-}
 
 router.post('/getOnlineFriends', async function (req, res) {
 	//log("getOnlineFriends endpoint called with:");
@@ -482,7 +491,7 @@ router.post('/validateToken', async function (req, res) {
 		//Success
 		logg("Authentication SUCCESS!");
 		dataAccessFunctions.updateOnlineTimestampForUser(result.cognitoSub);
-		dataAccessFunctions.updateServerUrlForUser(result.cognitoSub);
+		//dataAccessFunctions.updateServerUrlForUser(result.cognitoSub); //This can be the wrong URL!!! Auth endpoint gets load balanced
 		res.status(200);
 		res.cookie("cog_a", result.access_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
 		res.cookie("cog_r", result.refresh_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
