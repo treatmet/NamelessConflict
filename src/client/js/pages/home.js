@@ -150,15 +150,27 @@ function getServerList(){
 			}
 			if ((data[j].instanceId == "local" && isLocal) || (data[j].instanceId != "local" && !isLocal)){
 				var buttonClassName = "serverSelectButton";
+				if (data[j].customServer){
+					buttonClassName += " customServerSelectButton"
+				}
+
+				console.log("data[j].gametype " + data[j].gametype);
 				if (data[j].gametype == "horde"){
-					buttonClassName = "hordeServerSelectButton"
+					buttonClassName += " hordeServerSelectButton"
 				}
 				else if (data[j].gametype == "elim"){
-					buttonClassName = "elimServerSelectButton"
+					buttonClassName += " elimServerSelectButton"
 				}
-				if (data[j].customServer){
-					buttonClassName = "customServerSelectButton"
+				else if (data[j].gametype == "slayer"){
+					buttonClassName += " slayerServerSelectButton"
 				}
+				else if (data[j].gametype == "ctf"){
+					buttonClassName += " ctfServerSelectButton"
+				}
+				else if (data[j].gametype == "ffa"){
+					buttonClassName += " ffaServerSelectButton"
+				}
+
 				serversHTML += '<div class="' + buttonClassName + ' RWButton" onclick="getJoinableServer({server:\'' + data[j].url + '\', privateServer:' + data[j].privateServer + '})">' + serverNameHtml + data[j].serverSubName + '<br><span style="font-size: 12;text-shadow: none;">' + data[j].currentPlayers + '/' + data[j].maxPlayers + ' Players</span></div>';
 			}
 		}		

@@ -47,6 +47,7 @@ global.startingCash = 50;
 //Post game Voting
 global.ctfVotes = 0;
 global.slayerVotes = 0;
+global.ffaVotes = 0;
 global.elimVotes = 0;
 global.thePitVotes = 0;
 global.longestVotes = 0;
@@ -139,8 +140,8 @@ global.damageScale = 1;
 	global.pistolSideDamage = 6; //Stacks on above
 	global.pistolBackDamage = 10; //Stacks AGAIN on above
 	global.DPDamage = 12;
-	global.DPSideDamage = DPDamage/2; //Stacks on above
-	global.DPBackDamage = DPDamage/2; //Stacks AGAIN on above
+	global.DPSideDamage = 8; //Stacks on above
+	global.DPBackDamage = 10; //Stacks AGAIN on above
 	global.mgDamage = 8; 
 	global.mgSideDamage = mgDamage/2; //Stacks on above
 	global.mgBackDamage = mgDamage/2; //Stacks AGAIN on above
@@ -173,6 +174,7 @@ global.SGFireRate = 50;
 global.laserFireRate = 50;
 global.laserMaxCharge = 150;
 
+global.PClipSize = 15;
 global.DPClipSize = 15;
 global.MGClipSize = 60;
 global.SGClipSize = 6;

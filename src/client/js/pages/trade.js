@@ -3,6 +3,7 @@ var tradeId = getUrlParam("tradeId");
 var customizationOptions = {};
 var yourOfferings = [];
 var opponentsOfferings = [];
+var opponentName = "";
 
 initializePage();
 function initializePage(){
@@ -50,7 +51,8 @@ function registerForTrade(){
         console.log(data);		
         
         if (data.status){
-            document.getElementById("leftPlayerTradeTitle").innerHTML = data.opponentName + "'s offerings";
+            opponentName = data.opponentName;
+            //setOpponentOfferingsTitle();
             //Successfully joined a trade that the server was expecting you to join
         }
         else {
@@ -58,6 +60,10 @@ function registerForTrade(){
             window.location.href = serverHomePage;
         }
 	});	
+}
+function setOpponentOfferingsTitle(){
+    document.getElementById("leftPlayerTradeTitle").innerHTML = opponentName + "'s offerings";
+    document.getElementById("leftPlayerTradeTitle").style.backgroundColor = "#2c2f31";
 }
 
 function addItemToTradeClick(itemId){
@@ -132,16 +138,33 @@ socket.on('updateTrade', function(trade){ //tradeUpdate
         document.getElementById("tradeTimer").innerHTML = "5";
     }
 
+    //Opponent stale
+    updateOpponentTitle(trade.opponentStale);
+
     //Enable/disable accept button
-    if (trade.yourItemsOffered.length > 0 || trade.opponentItemsOffered.length > 0 || trade.opponentCashOffered > 0 || trade.yourCashOffered > 0){
+    if (trade.yourItemsOffered.length > 0 || trade.opponentItemsOffered.length > 0 || trade.opponentCashOffered > 0 || trade.yourCashOffered > 0 || trade.opponentStale){
         document.getElementById("tradeAccept").disabled = false;
     }
     else {
-
         document.getElementById("tradeAccept").disabled = true;
         document.getElementById("tradeAccept").style.backgroundColor = "#acacac";
     }
 
+});
+
+function updateOpponentTitle(value){
+    if (value){
+        document.getElementById("leftPlayerTradeTitle").innerHTML = "Not Connected..."; 
+        document.getElementById("leftPlayerTradeTitle").style.backgroundColor = "#6c0000";
+
+    }
+    else {
+        setOpponentOfferingsTitle();
+    }
+}
+
+socket.on('staleOpponent', function(value){
+    updateOpponentTitle(value);
 });
 
 function getCashItem(cash){
@@ -176,8 +199,10 @@ var chatForm = document.getElementById("chat-form-trade");
 var offerMoneyForm = document.getElementById("offerMoneyForm");
 var offerMoneyInput = document.getElementById("offerMoneyInput");
 chatForm.onsubmit = function(e){
-    socket.emit('chat', {username:username, text:chatInput.value});
-    chatInput.value = "";
+    if (chatInput.value != ""){
+        socket.emit('chat', {username:username, text:chatInput.value});
+        chatInput.value = "";
+    }
 	e.preventDefault();
 }
 
@@ -203,6 +228,10 @@ function offerMoney(){
 
 socket.on('addMessageToChat', function(text, color = "#FFFFFF"){ //Server message
 	addToChat(text, color);
+});
+
+socket.on('tradePing', function(){ //Server message
+    socket.emit('tradePingResponse');
 });
 
 var maxChatMessages = 9;

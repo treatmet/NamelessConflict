@@ -723,9 +723,6 @@ function getPublicServersFromDB(cb){
         }
 		else if (res && res[0]){				
 			for (var i = 0; i < res.length; i++){
-				if (res[i].gametype == "ctf"){
-					res[i].gametype = "CTF";
-				}
 				servers.push(res[i]);
 			}					
         }

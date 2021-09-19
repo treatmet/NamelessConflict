@@ -939,7 +939,7 @@ var hexDigits = new Array
         ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); 
 
 
-function drawName(drawingCanvas, playerUsername, color, x, y, icon = false){
+function drawName(drawingCanvas, playerUsername, color, x, y, icon = false, stroke = false){
 	drawingCanvas.save();
         drawingCanvas.textAlign="center";
         drawingCanvas.font = 'bold 12px Electrolize';        
@@ -956,6 +956,12 @@ function drawName(drawingCanvas, playerUsername, color, x, y, icon = false){
 			x += icon.width/2;
 			drawIcon(drawingCanvas, icon, x - (icon.width) - txtWidth/2 - 1, y - (icon.height/2) - 4, icon.width, icon.height);
 		}
+		if (stroke){
+			drawingCanvas.strokeStyle = "#FFF";
+			ctx.lineWidth  = 1;
+			drawingCanvas.strokeText(playerUsername, x, y); 
+		}
+
 		drawingCanvas.fillText(playerUsername, x, y); 
 	drawingCanvas.restore();
 }

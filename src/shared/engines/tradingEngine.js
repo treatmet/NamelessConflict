@@ -1,8 +1,11 @@
 var dataAccessFunctions = require('../data_access/dataAccessFunctions.js');
+
 var tradeList = [];
 
 //Config
 var maxAcceptedTimer = 5;
+var staleTraderThreshold = 2000;
+var autoSendTradeUpdateInterval = 2000;
 
 var newTrade = function(requestorCognitoSub, targetCognitoSub, tradeId, cb){
 	console.log("CREATING NEW TRADE: " + tradeId);
@@ -20,11 +23,13 @@ var newTrade = function(requestorCognitoSub, targetCognitoSub, tradeId, cb){
 		tradeId: tradeId,
 		requestorCognitoSub: requestorCognitoSub,
 		targetCognitoSub: targetCognitoSub,
-		tradeActivityTimestamp: new Date(),
+		tradeActivityTimestamp: new Date().getTime(),
 		requestorItemsOffered: [],
 		targetItemsOffered: [],
 		requestorAccepted: false,
 		targetAccepted: false,
+		requestorPingTimestamp: new Date().getTime(),
+		targetPingTimestamp: new Date().getTime(),
 		acceptedTimer: maxAcceptedTimer
 	};
 
@@ -81,7 +86,7 @@ var createTradeSocketEvents = function(socket, cognitoSub, tradeId){
 		console.log("addItemToTrade");
 		console.log(tradeData);
 		if (!tradeData || tradeData.tradeId != trade.tradeId || tradeData.cognitoSub != cognitoSub || trade.locked){return;}
-		trade.tradeActivityTimestamp = new Date();
+		trade.tradeActivityTimestamp = new Date().getTime();
 
 		trade.requestorAccepted = false;
 		trade.targetAccepted = false;
@@ -113,7 +118,7 @@ var createTradeSocketEvents = function(socket, cognitoSub, tradeId){
 		console.log("removeItemFromTrade");
 		console.log(tradeData);
 		if (!tradeData || tradeData.tradeId != trade.tradeId || tradeData.cognitoSub != cognitoSub || trade.locked){return;}
-		trade.tradeActivityTimestamp = new Date();
+		trade.tradeActivityTimestamp = new Date().getTime();
 		
 		trade.requestorAccepted = false;
 		trade.targetAccepted = false;
@@ -168,6 +173,7 @@ var createTradeSocketEvents = function(socket, cognitoSub, tradeId){
 	});
 
 	socket.on("chat", function(obj){
+		trade.tradeActivityTimestamp = new Date().getTime();
 		var text = obj.username + ": " + obj.text;
 
 		var requestorSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.requestorCognitoSub)];
@@ -186,20 +192,101 @@ var createTradeSocketEvents = function(socket, cognitoSub, tradeId){
 
 	});
 
+	socket.on("tradePingResponse", function(){
+		if (isRequestor){
+			trade.requestorPingTimestamp = new Date().getTime();
+		}
+		else if (!isRequestor){
+			trade.targetPingTimestamp = new Date().getTime();
+		}
+	});
+
+
+	//-------------------------------------------------------------------------------------
+	if (isRequestor){
+		trade.requestorPingTimestamp = new Date().getTime();
+	}
+	else if (!isRequestor){
+		trade.targetPingTimestamp = new Date().getTime();
+	}
 	if (trade.requestorItemsOffered.length > 0 || trade.targetItemsOffered.length > 0){
 		sendTradeUpdate(trade);
 	}
 	return {error:false};	
 }
 
+function sendTradePing(trade){
+	var requestorSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.requestorCognitoSub)];
+	var targetSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.targetCognitoSub)];
+
+	if (requestorSocket){
+		requestorSocket.emit('tradePing');
+	}
+	if (targetSocket){
+		targetSocket.emit('tradePing');
+	}
+}
+
+function sendStaleTradersToClients(trade){
+	var staleTraders = getStaleTraders(trade);
+	var requestorSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.requestorCognitoSub)];
+	var targetSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.targetCognitoSub)];
+
+	if (requestorSocket){
+		requestorSocket.emit("staleOpponent", staleTraders.targetStale);
+	}
+
+	if (targetSocket){
+		targetSocket.emit("staleOpponent", staleTraders.requestorStale);
+	}
+
+}
+
+function getStaleTraders(trade){
+	var requestorStale = false;
+	var targetStale = false;
+	if (trade.requestorPingTimestamp < new Date().getTime() - staleTraderThreshold){
+		requestorStale = true;
+	}
+	if (trade.targetPingTimestamp < new Date().getTime() - staleTraderThreshold){
+		targetStale = true;
+	}
+
+	return {requestorStale:requestorStale, targetStale:targetStale};
+}
+
+
 function sendTradeUpdate(trade){
 	var requestorSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.requestorCognitoSub)];
 	var targetSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.targetCognitoSub)];
-	if (requestorSocket && targetSocket){
-		var requestorItemsOffered = dataAccessFunctions.getShopItems(trade.requestorItemsOffered);
-		var targetItemsOffered = dataAccessFunctions.getShopItems(trade.targetItemsOffered);
-		requestorSocket.emit("updateTrade", {yourItemsOffered:requestorItemsOffered, opponentItemsOffered:targetItemsOffered, yourCashOffered:trade.requestorCashOffered, opponentCashOffered:trade.targetCashOffered, yourAccepted:trade.requestorAccepted, opponentAccepted:trade.targetAccepted});
-		targetSocket.emit("updateTrade", {yourItemsOffered:targetItemsOffered, opponentItemsOffered:requestorItemsOffered, yourCashOffered:trade.targetCashOffered, opponentCashOffered:trade.requestorCashOffered, opponentAccepted:trade.requestorAccepted, yourAccepted:trade.targetAccepted});
+	var requestorItemsOffered = dataAccessFunctions.getShopItems(trade.requestorItemsOffered);
+	var targetItemsOffered = dataAccessFunctions.getShopItems(trade.targetItemsOffered);
+
+	var staleTraders = getStaleTraders(trade);
+
+	if (requestorSocket){
+		requestorSocket.emit("updateTrade", {
+			yourItemsOffered:requestorItemsOffered,
+			opponentItemsOffered:targetItemsOffered, 
+			yourCashOffered:trade.requestorCashOffered, 
+			opponentCashOffered:trade.targetCashOffered, 
+			yourAccepted:trade.requestorAccepted, 
+			opponentAccepted:trade.targetAccepted,
+			opponentStale:staleTraders.targetStale});
+	}
+	else {
+		logg("ERROR - Attempting to send Trade Upate on sockets that have disconnected!");
+	}
+
+	if (targetSocket){
+		targetSocket.emit("updateTrade", {
+			yourItemsOffered:targetItemsOffered, 
+			opponentItemsOffered:requestorItemsOffered, 
+			yourCashOffered:trade.targetCashOffered, 
+			opponentCashOffered:trade.requestorCashOffered, 
+			opponentAccepted:trade.requestorAccepted, 
+			yourAccepted:trade.targetAccepted,
+			opponentStale:staleTraders.requestorStale});
 	}
 	else {
 		logg("ERROR - Attempting to send Trade Upate on sockets that have disconnected!");
@@ -214,20 +301,30 @@ function sendTradeTimer(trade){
 		targetSocket.emit("tradeTimer", trade.acceptedTimer);
 	}
 	else {
-		logg("ERROR - Attempting to send Trade Timer on sockets that have disconnected!");
+		logg("ERROR - Attempting to send Trade Timer on sockets that have apparently disconnected!");
 	}
 }
 
 function sendTradeComplete(trade){
+	bootSockets(trade);
+}
+
+function bootSockets(trade){
 	var requestorSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.requestorCognitoSub)];
 	var targetSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.targetCognitoSub)];
-	if (requestorSocket && targetSocket){
+	if (requestorSocket){
 		requestorSocket.emit("redirect", serverHomePage + "user/" + trade.requestorCognitoSub + "/");
+	}
+	else {
+		logg("ERROR - Attempting to redirect sockets that have apparently disconnected!" + trade.requestorCognitoSub);
+	}
+	if (targetSocket){
 		targetSocket.emit("redirect", serverHomePage + "user/" + trade.targetCognitoSub + "/");
 	}
 	else {
-		logg("ERROR - Attempting to send Trade Complete on sockets that have disconnected!");
+		logg("ERROR - Attempting to redirect sockets that have apparently disconnected!" + trade.targetCognitoSub);
 	}
+
 }
 
 function getMyOwnedItems(isRequestor, trade){
@@ -278,6 +375,8 @@ function getMyOfferings(isRequestor, trade){
 
 // newTrade("5903ec8a-64de-4ab7-8936-706230667ca0", "0192fb49-632c-47ee-8928-0d716e05ffea", 123, function(){});
 
+
+
 //EVERY 1 SECOND
 setInterval( 
 	function(){
@@ -314,10 +413,14 @@ setInterval(
 
 			//Delete stale trades
 			var milisecondThresh = 120000;
-			if (new Date() - trade.tradeActivityTimestamp > milisecondThresh){
+			if (new Date().getTime() - trade.tradeActivityTimestamp > milisecondThresh){
 				console.log("DELETING STALE TRADE" + tradeList[i].tradeId);
+				bootSockets(trade);
 				tradeList.splice(i, 1);
 			}
+
+			sendTradePing(trade);
+			sendStaleTradersToClients(trade);
 		}
 	},
 	1000/1 //Ticks per second

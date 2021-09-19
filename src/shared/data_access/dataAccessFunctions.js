@@ -335,8 +335,8 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 					continue;
 				}
 				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
-				console.log("SAFETYS ON");
-				continue;
+					console.log("SAFETYS ON");
+					continue;
 				}
 
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
@@ -1207,14 +1207,6 @@ var getPublicServersFromDB = function(cb){
 		if (res && res[0]){
 				
 			for (var i = 0; i < res.length; i++){
-
-				if (res[i].gametype == "ctf"){
-					res[i].gametype = "CTF";
-				}
-				else if (res[i].gametype == "slayer"){
-					res[i].gametype = "Deathmatch";
-				}
-
 				servers.push(res[i]);
 			}		
 			
@@ -1232,14 +1224,6 @@ var getAllServersFromDB = function(cb){
 		if (res && res[0]){
 				
 			for (var i = 0; i < res.length; i++){
-
-				if (res[i].gametype == "ctf"){
-					res[i].gametype = "CTF";
-				}
-				else if (res[i].gametype == "slayer"){
-					res[i].gametype = "Deathmatch";
-				}
-
 				servers.push(res[i]);
 			}		
 			
