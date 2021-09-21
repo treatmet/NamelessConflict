@@ -1728,3 +1728,9 @@ div#appearanceOptions {
     width: 100%;
     height: 100%;
 }
+
+div#privacyContent {
+    margin: 10px;
+    overflow-y: auto;
+    height: 85%;
+}

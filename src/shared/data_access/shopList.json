@@ -1747,7 +1747,6 @@
 		"price": 0,
 		"team":0,
 		"rarity":2,
-		"hideFromShop":true,		
 		"canvasValue":"#2a2a2a"
 	},	
 	{
@@ -1827,7 +1826,6 @@
 		"price": 0,
 		"team":0,
 		"rarity":2,
-		"hideFromShop":true,		
 		"canvasValue":"#2a2a2a"
 	},	
 	{
@@ -1907,7 +1905,6 @@
 		"price": 0,
 		"team":0,
 		"rarity":2,
-		"hideFromShop":true,		
 		"canvasValue":"#2a2a2a"
 	},	
 	{
@@ -1998,7 +1995,6 @@
 		"price": 0,
 		"team":0,
 		"rarity":2,
-		"hideFromShop":true,		
 		"canvasValue":"#2a2a2a"
 	},	
 	{

@@ -136,9 +136,6 @@ function toggleLeaderboard(divId){
 
 function getServerList(){
 	$.post('/getServerList', {}, function(data,status){
-		console.log("Get server list response:");
-		console.log(data);		
-
 		var serversHTML = "";
 
 		serversHTML += '<div class="serverSelectButton customServerButton" onclick="getAndShowCustomServerHTML()">+Create Custom Server</div>';
@@ -150,6 +147,10 @@ function getServerList(){
 			}
 			if ((data[j].instanceId == "local" && isLocal) || (data[j].instanceId != "local" && !isLocal)){
 				var buttonClassName = "serverSelectButton";
+				if (data[j].customServer){
+					buttonClassName += " customServerSelectButton"
+				}
+
 				if (data[j].gametype == "horde"){
 					buttonClassName = "hordeServerSelectButton"
 				}
