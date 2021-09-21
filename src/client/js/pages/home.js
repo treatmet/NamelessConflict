@@ -136,9 +136,6 @@ function toggleLeaderboard(divId){
 
 function getServerList(){
 	$.post('/getServerList', {}, function(data,status){
-		console.log("Get server list response:");
-		console.log(data);		
-
 		var serversHTML = "";
 
 		serversHTML += '<div class="serverSelectButton customServerButton" onclick="getAndShowCustomServerHTML()">+Create Custom Server</div>';
@@ -154,7 +151,6 @@ function getServerList(){
 					buttonClassName += " customServerSelectButton"
 				}
 
-				console.log("data[j].gametype " + data[j].gametype);
 				if (data[j].gametype == "horde"){
 					buttonClassName += " hordeServerSelectButton"
 				}

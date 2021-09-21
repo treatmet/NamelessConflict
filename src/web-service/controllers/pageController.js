@@ -56,6 +56,15 @@ router.get('/trade', function(req, res) {
 	res.send(pageContent);
 });
 
+//Privacy page
+router.get('/privacy', function(req, res) {
+	var pageData = {};
+	var pageContent = getClientFile('privacy.html');
+	pageData["header"] = getClientFile('header.html');		
+	pageContent = replaceValues(pageData, pageContent);	
+	res.send(pageContent);
+});
+
 //Player Search
 router.get('/search/:searchText', function(req, res) {
 	var pageData = {};

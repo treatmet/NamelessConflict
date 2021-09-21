@@ -89,8 +89,6 @@ global.bootOnAfk = true;
 global.AfkFramesAllowed = 60 * 60; //seconds (translated to frames) //timeout
 
 //Player config
-global.timeInGameRankingThresh = 15; //seconds
-global.abandonLimit = 5; //seconds
 global.framesOfAiming = 60;
 global.boostAmount = 19;
 global.playerMaxSpeed = 5;
@@ -107,10 +105,11 @@ global.elimRespawnTimeLimit = 2 * 60; //seconds (translated to frames)
 global.bagDrag = 0.85;
 global.playerMaxHealth = 175;
 global.assistDamageThreshold = 30;
-global.ratingCalcThresh = 200; //Rating threshold for team rating evaluation
 global.grappleSpeed = 20;
 global.grappleStrength = 3;
 global.grappleLength = 5 * 75; //Tiles * 75
+
+
 /*
 {rank:"bronze1",rating:0},
 {rank:"bronze2",rating:100},
@@ -233,6 +232,11 @@ global.pushStrength = 15; //Push block strength
 //Rating config
 global.matchWinLossRatingBonus = 30;
 global.enemySkillDifferenceDivider = 30;
+global.ratingCalcThresh = 200; //Rating threshold for team rating evaluation
+global.minWinPointsGained = 5;
+global.timeInGameRankingThresh = 30; //seconds
+global.abandonLimit = 5; //seconds
+
 
 //----------------------SERVER GLOBAL VARIABLES---------------------------------
 global.myIP = "";

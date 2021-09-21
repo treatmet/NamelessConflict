@@ -91,7 +91,7 @@ var screenShakeScale = 0.5;
 var drawDistance = 10; 
 var playerCenterOffset = 4;
 var noPlayerBorders = false;
-var timeInGameRankingThresh = 15; //seconds
+var timeInGameRankingThresh = 30; //seconds
 
 var camOffSet = 450;//Offset is how many pixels away from the center the camera will go when aiming, greater value means player closer to edge of screen
 var diagCamOffSet = 325;
@@ -3936,13 +3936,13 @@ function drawPlayerTags(){
 
 				if (Player.list[i].health > 0 && Player.list[i].team != 0 && !(Player.list[i].cloakEngaged == true && !sameTeam)){
 					var nameColor = Player.list[i].customizations[Player.list[i].team].nameColor;
-					if (myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true && Player.list[i].id != myPlayer.id){
+					if (gametype != "ffa" && myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true && Player.list[i].id != myPlayer.id){
 						nameColor = Player.list[i].team == 1 ? "#9e0b0f" : "#2e3192";
 					}
 					
 					var stroke = false;
 					if (gametype == "ffa"){
-						playerUsername += " > " + Player.list[i].kills;
+						playerUsername += " - " + Player.list[i].kills;
 						if (leaderIds && leaderIds.find(id => id == Player.list[i].id)){
 							nameColor = nameFlashingColor;
 							stroke = true;
@@ -4105,6 +4105,7 @@ function drawShop(){
 			shop.purchaseEffectTimer--;
 		}
 
+		ctx.font = '14px Electrolize';	
 		ctx.fillStyle="#19BE44";
 		ctx.fillText("$"+shop.price1, 160 + teamBlackMarketXOffset, 349 + inventoryYoffset);
 		ctx.fillText("$"+shop.price2, 229 + teamBlackMarketXOffset, 349 + inventoryYoffset);
@@ -4113,7 +4114,7 @@ function drawShop(){
 		ctx.fillText("$"+shop.price5, 436 + teamBlackMarketXOffset, 349 + inventoryYoffset);
 		ctx.fillText("$"+shop.price6, 505 + teamBlackMarketXOffset, 349 + inventoryYoffset);
 		
-		ctx.font = '24px Electrolize';	
+		ctx.font = '24px Electrolize';
 		var textCenteredX = 332.5;
 		ctx.fillText("$"+myPlayer.cash, textCenteredX + teamBlackMarketXOffset, 690);		
 		ctx.fillStyle="#FFFFFF";
@@ -4455,39 +4456,38 @@ function drawHUD(){
 		}
 
 
-		ctx.globalAlpha = 1;
-
+		//Magazine round images
 		var clipCount = "0";
 		var ammoCount = "0";
 		var img = Img.ammo9mm;
 		var ammoWidth = 0;
 		if (Player.list[myPlayer.id].weapon == 1){
 			clipCount = Player.list[myPlayer.id].PClip;
-			ammoWidth = 136 - ((15 - Player.list[myPlayer.id].PClip) * 9);
+			ammoWidth = Player.list[myPlayer.id].PClip * 9;
 			img = Img.ammo9mm;
 		}
 		else if (Player.list[myPlayer.id].weapon == 2){
 			clipCount = Player.list[myPlayer.id].DPClip;
 			ammoCount = Player.list[myPlayer.id].DPAmmo;		
-			ammoWidth = 180 - ((20 - Player.list[myPlayer.id].DPClip) * 9) + 1;
+			ammoWidth = Player.list[myPlayer.id].DPClip * 9;
 			img = Img.ammoDP;
 		}
 		else if (Player.list[myPlayer.id].weapon == 3){
 			clipCount = Player.list[myPlayer.id].MGClip;
 			ammoCount = Player.list[myPlayer.id].MGAmmo;		
-			ammoWidth = 182 - ((30 - Player.list[myPlayer.id].MGClip) * 6);
+			ammoWidth = Player.list[myPlayer.id].MGClip * 6;
 			img = Img.ammoMG;
 		}
 		else if (Player.list[myPlayer.id].weapon == 4){
 			clipCount = Player.list[myPlayer.id].SGClip;
 			ammoCount = Player.list[myPlayer.id].SGAmmo;		
-			ammoWidth = 190 - ((12 - Player.list[myPlayer.id].SGClip) * 16); //Was 135, 11
+			ammoWidth = Player.list[myPlayer.id].SGClip * 16; //Was 135, 11
 	 		img = Img.ammoSG;
 		}
 		else if (Player.list[myPlayer.id].weapon == 5){
 			clipCount = Player.list[myPlayer.id].laserClip;
 			ammoCount = "xx";		
-			ammoWidth = (Player.list[myPlayer.id].laserClip * 52); //Final number is bullet width
+			ammoWidth = Player.list[myPlayer.id].laserClip * 52; //Final number is bullet width
 			img = Img.ammoLZ;
 		}
  		ctx.drawImage(img, 600 - ammoWidth, 0, ammoWidth, 80, canvasWidth - ammoWidth - 205 - iconWidth, canvasHeight - 86 - liftBottomHUD, ammoWidth, 80);
@@ -5241,7 +5241,7 @@ function getGameStartText(){
 		text = "CAPTURE THE BAG!"
 	}
 	else if (gametype == "slayer"){
-		text = "KILLFEST!"
+		text = "TEAM KILLFEST!"
 	}
 	else if (gametype == "ffa"){
 		text = "FREE FOR ALL!"
