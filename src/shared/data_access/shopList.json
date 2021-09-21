@@ -45,6 +45,17 @@
 		"canvasValue":"cowboyHat"
 	},	
 	{
+		"id":"deerHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Deer Head",
+		"text":"You are fawntastic! For real, doe.",
+		"price": 0,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"deerHat"
+	},	
+	{
 		"id":"magaCapHat",
         "category":"hat",
 		"subCategory":"type",
@@ -207,7 +218,7 @@
 		"text":"Thug life",
 		"price": 0,
 		"team":0,
-		"rarity":3,
+		"rarity":2,
 		"canvasValue":"sunglassesHat"
 	},
 	{

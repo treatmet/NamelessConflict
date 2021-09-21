@@ -1,6 +1,7 @@
 var dataAccess = require('../data_access/dataAccess.js');
 var dataAccessFunctions = require('../data_access/dataAccessFunctions.js');
 var authenticationEngine = require('../engines/authenticationEngine.js');
+var tradingEngine = require('../engines/tradingEngine.js');
 
 const express = require('express');
 const router = express.Router();
@@ -9,12 +10,12 @@ const  totemize = require('totemize');
 const request = require('request-promise');
 router.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
-router.get('/getSharedCode', function(req, res) {
-	var pathToFile = path.join(__dirname, "../../shared/engines", "smallFile.js")
-	res.send(
-		fs.readFileSync(pathToFile)
-	);
-});
+// router.get('/getSharedCode', function(req, res) {
+// 	var pathToFile = path.join(__dirname, "../../shared/engines", "smallFile.js")
+// 	res.send(
+// 		fs.readFileSync(pathToFile)
+// 	);
+// });
 
 router.post('/getPlayerRelationship', async function (req, res) {
 	//log("Get player Relationship endpoint called with:");
@@ -119,7 +120,10 @@ router.post('/requestResponse', async function (req, res) {
 					res.status(200);
 					res.send({msg:"Joined player's party"});	
 				}				
-				else if(req.body.type == "trade") {
+				else if(req.body.type == "trade") { //Accept
+
+				//Should cancel all other outgoing trade requests from this user (so they dont get redirected again)!!!
+
 					dataAccessFunctions.getUser(requestDB.cognitoSub, function(requestingUser){
 						dataAccessFunctions.getUser(requestDB.targetCognitoSub, function(targetUser){
 
@@ -127,37 +131,37 @@ router.post('/requestResponse', async function (req, res) {
 								logg("ERROR (/requestResponse) - Did not retrieve users from DB");
 								return;
 							}
+							var tradeModel = {
+								requestorCognitoSub:requestDB.cognitoSub,
+								targetCognitoSub:requestDB.targetCognitoSub,
+								tradeId:req.body.id
+							}; 
+							createTradeFromRequest(tradeModel, myUrl, function(createTradeSuccess){
+								if (createTradeSuccess){
+									var targetUrl = "";
+									if (isLocal)
+										targetUrl = "http://" + myUrl  + "/trade/?tradeId=" + requestDB._id; 
+									else 
+										targetUrl = serverHomePage + "trade/?tradeId=" + requestDB._id + "&server=" + instanceId.substring(2) + "&process=00";
+									
+									//Redirect Both Users
+									var party = [
+										{cognitoSub:requestingUser.cognitoSub, serverUrl:requestingUser.serverUrl},
+										{cognitoSub:targetUser.cognitoSub, serverUrl:targetUser.serverUrl},
+									];
+									sendUsersToServer(party, targetUrl, true);
 
-							var targetUrl = requestingUser.serverUrl + "/user/";
-							if (isLocal)
-								targetUrl = "http://" + requestingUser.serverUrl  + "/user/"; 
-							
-							//Redirect Requesting User
-							var options = {
-								method: 'POST',
-								uri: 'http://' + requestingUser.serverUrl + '/sendUserToUrl',
-								form: {
-									cognitoSub: requestDB.cognitoSub,
-									targetUrl: targetUrl + requestingUser.cognitoSub
+									//Return data to targetUser (the one accepting the trade request)
+									res.status(200);
+									res.send({error:false, msg:"Successfully initiated trade, you should be redirected shortly..."});									
+								}	
+								else {
+									res.status(200);
+									res.send({error:"Failed to create trade. Please try requesting a trade again."});	
 								}
-							};
-							logg("Attempting to summon User [" + requestingUser + "] on server [" + requestingUser.serverUrl + "]...");
-							request(options)
-								.then(function (parsedBody) {
-									// POST succeeded...
-									logg("SUCCESSFUL request for party member!");
-								})
-								.catch(function (err) {
-									// POST failed...
-									logg("ERROR summoning party member! Classic...");
-									logObj(err);
-							});
-
-							//Return data to targetUser (the one accepting the trade request)
-							res.status(200);
-							res.send({error:false, url:targetUrl + targetUser.cognitoSub});	
-						});
-					});					
+							}); //Create trade
+						}); //Get second user from DB
+					});	//Get first user from DB				
 				}				
 			}
 		}
@@ -170,6 +174,115 @@ router.post('/requestResponse', async function (req, res) {
 		}
 	});
 });
+
+function createTradeFromRequest(tradeModel, serverUrl, cb){
+	var createTradeOptions = {
+		method: 'POST',
+		uri: 'http://' + serverUrl + '/createTrade',
+		form: {
+			tradeModel: tradeModel
+		}
+	};	
+	
+	request(createTradeOptions)
+		.then(function (parsedBody) {
+			// POST succeeded...
+			logg("SUCCESSFUL trade creation!");
+			cb(true);
+			
+		})
+		.catch(function (err) {
+			// POST failed...
+			logg("ERROR creating trade!");
+			logObj(err);
+			cb(false);
+	});
+}
+
+router.post('/createTrade', async function (req, res) {
+	log("createTrade ENDPOINT CALLED WITH:");
+	console.log(req.body);
+	tradingEngine.newTrade(req.body.tradeModel.requestorCognitoSub, req.body.tradeModel.targetCognitoSub, req.body.tradeModel.tradeId, function(tradeId){
+		res.status(200);
+		res.send({msg:"Created Trade"});	
+	});
+});
+
+/*//Delete trade requsts
+	if (deleteOutgoingTradeRequests)
+		dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {cognitoSub:party[p].cognitoSub, type:"trade"}, {}, async function(err, dbRes){}); //Remove any mirrored requests (where both users request each other, but then one clicks accept)				
+
+*/
+
+function sendUsersToServer(party, targetUrl, deleteOutgoingTradeRequests = false) {
+	logg("function sendUsersToServer with this party:");
+	console.log(party);
+
+	for (var p = 0; p < party.length; p++){
+		//if (party[p].typeOf == 'undefined'){continue;}
+		var options = {
+			method: 'POST',
+			uri: 'http://' + party[p].serverUrl + '/sendUserToUrl',
+			form: {
+				cognitoSub: party[p].cognitoSub,
+				targetUrl: targetUrl
+			}
+		};
+		 
+		logg("Attempting to summon party member [" + party[p].cognitoSub + "] on server [" + party[p].serverUrl + "]...");
+		request(options)
+			.then(function (parsedBody) {
+				// POST succeeded...
+				logg("SUCCESSFUL request for party member!");
+			})
+			.catch(function (err) {
+				// POST failed...
+				logg("ERROR summoning party member! Classic...");
+				logObj(err);
+		});
+	}
+}
+
+router.post('/registerForTrade', async function (req, res) {
+	log("registerForTrade ENDPOINT CALLED WITH:");
+	console.log(req.body);	
+	
+	//Check if trade exists
+	var trade = tradingEngine.getTradeById(req.body.tradeId);
+	if (trade){
+		var opponentName = getTradeOpponentName(req.body.cognitoSub, trade);
+		var socket = SOCKET_LIST[getSocketIdFromCognitoSub(req.body.cognitoSub)];
+		var createResult = tradingEngine.createTradeSocketEvents(socket, req.body.cognitoSub, req.body.tradeId);
+		if (createResult.error){
+			res.status(200);
+			res.send({status:false, msg:createResult.msg, opponentName:opponentName});
+		}
+		else {
+			res.status(200);
+			res.send({status:true, msg:"Successfully registered for existing trade", opponentName:opponentName});
+		}
+	}
+	else {
+		var msg = "You have no active trades on this server. Please create another Trade request.";
+		log(msg);
+		log("ERROR - Trade Not Found " + req.body.tradeId);
+		log("ERROR - FULL TRADE LIST:");
+		log(tradingEngine.getTradeList());
+		res.status(200);
+		res.send({status:false, msg:msg});
+	}
+});
+
+function getTradeOpponentName(cognitoSub, trade){
+	var opponentName = "";
+	if (trade.targetCognitoSub == cognitoSub){
+		return trade.requestorUsername;
+	}
+	else if (trade.requestorCognitoSub == cognitoSub){
+		return trade.targetUsername;
+	}
+	return opponentName;
+}
 
 router.post('/leaveParty', async function (req, res) {
 	log("LEAVE PARTY ENDPOINT CALLED WITH:");
@@ -187,7 +300,9 @@ router.post('/leaveParty', async function (req, res) {
 			res.send({msg:"Left Party " + req.body.partyId});
 		});	
 	}
-});
+})
+
+
 
 router.post('/removeFriend', async function (req, res) {
 	log("REMOVE FRIEND ENDPOINT CALLED WITH:");
@@ -204,6 +319,8 @@ router.post('/removeFriend', async function (req, res) {
 		targetCognitoSub:getUrl().split('/user/')[1],
 		type:"party"
 	};	*/
+	
+var requireFriendsForTrade = false;
 router.post('/upsertRequest', async function (req, res) {
 	log("ADD REQUEST ENDPOINT CALLED WITH:");
 	console.log("--BODY");
@@ -234,12 +351,19 @@ router.post('/upsertRequest', async function (req, res) {
 	}
 	else if (req.body.type == "trade"){
 		dataAccess.dbFindAwait("RW_FRIEND", {cognitoSub:req.body.targetCognitoSub, friendCognitoSub:req.body.cognitoSub}, function(err,friendRes){ //Make sure they're not already a friend
-			if (friendRes[0]){
+			if (friendRes[0] || !requireFriendsForTrade){
 				dataAccessFunctions.upsertRequest(req.body, function(dbResults){
-					var msg = "Trade requested";
-					console.log(msg);
-					res.status(200);
-					res.send({error:false, msg:msg});
+					if (dbResults.status == true){
+						var msg = "Trade requested";
+						console.log(msg);
+						res.status(200);
+						res.send({error:false, msg:msg});
+					}
+					else if(dbResults.tradeId){
+						var msg = "Trade already exists";
+						res.status(200);
+						res.send({error:false, msg:msg});
+					}
 				});
 			}
 			else {
@@ -249,8 +373,6 @@ router.post('/upsertRequest', async function (req, res) {
 				res.send({error:true, msg:msg});	
 			}
 		});
-
-
 	}
 	else {
 		res.status(200);
@@ -369,7 +491,7 @@ router.post('/validateToken', async function (req, res) {
 		//Success
 		logg("Authentication SUCCESS!");
 		dataAccessFunctions.updateOnlineTimestampForUser(result.cognitoSub);
-		dataAccessFunctions.updateServerUrlForUser(result.cognitoSub);
+		//dataAccessFunctions.updateServerUrlForUser(result.cognitoSub); //This can be the wrong URL!!! Auth endpoint gets load balanced
 		res.status(200);
 		res.cookie("cog_a", result.access_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years
 		res.cookie("cog_r", result.refresh_token, { maxAge: 300000000000, httpOnly: httpOnlyCookies }); //maxAge: about 10 years

@@ -10,15 +10,14 @@ var sprayBloodOntoTarget = function(shootingDir, targetX, targetY, targetId) {
 }
 
 var organicDiagLeniency = 13;
-var checkIfInLineOfShot = function(shooter, target, shot){
+var checkIfInLineOfShot = function(shooter, target, shot){ //hitDetection hit detection
 	var distFromDiag = 0;
 	//&& target.team != shooter.team //Take off friendly fire
 	let shotType; 
 	if (shot.weapon == 1 || shot.weapon == 2 || shot.weapon == 3 || shot.weapon == 5){shotType = 1;} //Straight shot with depth
 	else if (shot.weapon == 4){shotType = 2;} //SG
 
-	if (target.health){
-	}
+	var shotWidth = 0;
 
 	var range = bulletRange;
 	if (shot.weapon == 4) {range = SGRange;}
@@ -30,6 +29,7 @@ var checkIfInLineOfShot = function(shooter, target, shot){
 			if (target.id != shooter.id && target.health > 0){ //Organic targets
 				var allowableMargin = 31;
 				if (shooter.weapon == 5){allowableMargin = 60;}
+				else if (shooter.weapon == 2){allowableMargin = 36;}
 
 				if (shooter.shootingDir == 1){
 					if (target.x > shooter.x + shot.x - allowableMargin &&

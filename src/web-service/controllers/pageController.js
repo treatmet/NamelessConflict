@@ -56,7 +56,7 @@ router.get('/trade', function(req, res) {
 	res.send(pageContent);
 });
 
-//Trade page
+//Privacy page
 router.get('/privacy', function(req, res) {
 	var pageData = {};
 	var pageContent = getClientFile('privacy.html');

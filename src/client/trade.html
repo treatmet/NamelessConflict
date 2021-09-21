@@ -1,0 +1,83 @@
+<head>
+</head>
+
+<body style="margin: 0px;overflow-y: hidden;overflow-x: hidden;">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MM3TQ3F"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+	<!-- End Google Tag Manager (noscript) -->
+	
+	{{header}}
+    
+<div style="display:none;" id="mainContent">
+	<div id="sectionTitles" style='display:none'>
+
+	</div>
+
+	<!--PAGE COLUMNS-->
+	<div id="leftTradeSection">
+		<div id="tradeOfferings" class="tradeOfferings">
+			<div id="leftPlayerTradeSection" class="tradeSection">
+				<div id="leftPlayerTradeTitle" class="tradeTitle">
+					Not Connected...
+				</div>
+				<div id="leftPlayerTradeList" class="tradeList">
+				</div>
+			</div>
+			<div id="rightPlayerTradeSection" class="tradeSection">
+				<div id="rightPlayerTradeTitle" class="tradeTitle">
+					Your offerings
+				</div>
+				<div id="rightPlayerTradeList" class="tradeList">
+				</div>
+			</div>
+		</div>
+		<div id="tradeBottomSection">
+			<div id="chat-window-trade">
+				<div id="chat-text-trade">
+					<div class="chatElement" style="font-weight:600">Welcome to the trade! Type here to chat.</div>
+				</div>
+				<form id="chat-form-trade">
+					<input id="chat-input-trade" type="text" maxlength="50" autocomplete="off">
+				</form>
+			</div>
+			<div id = "acceptButtonSection">
+				<div id="tradeWarning">Warning: All trades are final!</div>
+				<button id="tradeAccept" class="RWButton" disabled="" onclick="liveTradeAcceptClick()">Accept Trade</button>
+				<div id="tradeTimerContainer">
+					<div class="tradeText">Trade Accepted in:</div>
+					<div id="tradeTimer">5</div>
+					<div class="tradeText">Look over the trade!</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="customizationColumn" class="columnSection">
+			<div id="yourStuffTitle" class="tradeTitle">
+				Your Stuff
+			</div>
+
+		<div id="appearanceOptions" style="display: none">
+		</div>	  
+		<div id="moneyOfferingSection">
+			<form id="offerMoneyForm">
+				<input id="offerMoneyInput" type="number" placeholder="$$$" maxlength="8" autocomplete="off"> <button id="offerMoneyButton" class="RWButton" onclick="offerMoney()">Offer Cash</button>
+			</form>
+		</div>
+	</div>
+
+</div>
+
+<div id="bottom"></div>
+
+<div id="code" style="margin: auto; width: 200px;">
+	<script src="/src/client/js/util.js"></script>
+	<script src="/src/client/js/cognito.js"></script>
+	<script src="/src/client/js/drawCustomizations.js"></script>
+	<script src="/src/client/js/pages/trade.js"></script>		
+</div>
+
+
+
+</body></html>

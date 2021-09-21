@@ -88,6 +88,77 @@ function getMannequinFrame(shopItem, cb){
 	});
 }
 
+function drawShopIcons(divId, itemList){
+	// console.log("itemList");
+	// console.log(itemList);
+	var shopItemDivs = $("#" + divId + " .shopItem");
+
+	for (var x = 0; x < shopItemDivs.length; x++){
+		var canvas = shopItemDivs[x].getElementsByClassName("iconCanvas");
+		// console.log("canvas");
+		// console.log(canvas);
+		if (canvas.length > 0){
+			canvas = canvas[0]; //icon canvas
+
+			itemList.forEach(function(item){
+				// console.log("Item:");
+				// console.log(item);
+				// console.log("canvas:");
+				// console.log(canvas);
+				// console.log("Comparing " + item.id + "Canvas with " + canvas.id);
+				if (item.id + "Canvas" == canvas.id){
+					drawShopIcon(canvas, item);
+				}
+			});
+		}
+	}
+
+}
+
+function drawShopIcon(canvas, shopItem){
+    var zoom = 1; //Zoom config of all shop icons
+    if (!canvas){
+        //logg("ERROR: CAN NOT FIND SHOP ICON:" + iconId); 
+        return;
+    }
+    canvas.width = 70;
+    canvas.height = 70;
+    var ctx = canvas.getContext("2d", { alpha: false });
+
+    ctx.fillStyle="#37665a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var drawY = 25;
+    if (shopItem.category == "name"){
+        drawName(ctx, username, shopItem.canvasValue, canvas.width/2, drawY);
+    }
+    else if (shopItem.category == "icon"){
+        if (shopItem.canvasValue == "rank"){
+            shopItem.canvasValue = shopItem.dynamicCanvasValue;
+        }
+        getUserIconImg(shopItem.canvasValue, false, function(iconImg, team){
+            drawIcon(ctx, iconImg, canvas.width/2 - 10, drawY, 20, 20);   
+        });                             
+    }
+    else {
+        getMannequinFrame(shopItem, function(image){
+            var shiftDistForIconX = -11;
+            var shiftDistForIconY = -11;
+            if (shopItem.category == "boost"){
+                shiftDistForIconX = -1;
+                shiftDistForIconY = -3;
+            }
+            var mannequinLayer = {
+                img:image,
+                x: shiftDistForIconX,
+                y: shiftDistForIconY                
+            };
+            drawOnCanvas(ctx, mannequinLayer, zoom, false);
+        });
+    }
+}
+
+
 function getMannequinCustomizations(shopItem){
 	var customizations = {
 		nameColor: "#000",
@@ -309,12 +380,14 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 			layer.pattern = getPattern(teamCustomizations.shirtPattern);
 			break;
 		case "head":
+			if (teamCustomizations.hat == "deerHat")
+				return false;
 			layer.color = teamCustomizations.skinColor;
 			break;
 		case "shell":
 			break;
 		case "hair":
-			if (teamCustomizations.hair == "baldHair" || teamCustomizations.hat == "skiMaskHat")
+			if (teamCustomizations.hair == "baldHair" || teamCustomizations.hat == "skiMaskHat" || teamCustomizations.hat == "deerHat")
 				return false;
 			layer.color = teamCustomizations.hairColor;
 			if (teamCustomizations.hair != "cornrowsHair") {layer.pattern = getPattern("hair");}

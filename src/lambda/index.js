@@ -3,8 +3,8 @@ global.mongoDbLocation = process.env.mongoDbLocation;
 global.s3LoggingBucket = process.env.s3LoggingBucket;
 global.EBName = process.env.EBName;
 global.serverHealthCheckTimestampThreshold = process.env.serverHealthCheckTimestampThreshold; 
-global.stalePartyRequestThreshold = parseInt(process.env.stalePartyRequestThresholdDays); //30 (Days)
-global.staleFriendRequestThreshold = parseInt(process.env.staleFriendRequestThresholdSeconds); //300 (Seconds)
+global.stalePartyRequestThreshold = parseInt(process.env.stalePartyRequestThresholdSeconds); //300 (Seconds)
+global.staleFriendRequestThreshold = parseInt(process.env.staleFriendRequestThresholdDays); //300 (Days)
 global.AWSRegion = process.env.AWSRegion;
 global.minimumPlayableServers = parseInt(process.env.minimumPlayableServers);
 global.serversPerInstance = 4;
@@ -44,8 +44,8 @@ if (!EBName){
         s3LoggingBucket = localConfig.s3LoggingBucket;
         EBName = localConfig.EBName;
         serverHealthCheckTimestampThreshold = localConfig.serverHealthCheckTimestampThreshold; 
-        stalePartyRequestThreshold = localConfig.stalePartyRequestThresholdDays; //30 (Days)
-        staleFriendRequestThreshold = localConfig.staleFriendRequestThresholdSeconds; //300 (Seconds)
+        stalePartyRequestThreshold = localConfig.stalePartyRequestThresholdSeconds; //300 (Seconds)
+        staleFriendRequestThreshold = localConfig.staleFriendRequestThresholdDays; //300 (Days)
         minimumPlayableServers = localConfig.minimumPlayableServers;
         AWSRegion = localConfig.AWSRegion;
     }
@@ -99,17 +99,23 @@ function executeFunction(event, context, callback){
             callback(null, "All tasks finished!");
     });
     //Update instance count
-    getEnvironmentInfo(function(EBinfo, DBres, EBConfig, ASGInfo){
-        log("Got EnvironmentInfo! (6) About to calculateTargetInstanceCount");
-        calculateTargetInstanceCount(EBinfo, DBres, EBConfig, ASGInfo, function(targetInstanceCount){
-            updateInstanceCount(targetInstanceCount, function(){
-                completedTasks.push("updateInstanceCount");
-                if (checkIfTasksAreComplete())
-                    callback(null, "All tasks finished!");                        
-            });        
+    if (updateEB == 0){
+        completedTasks.push("updateInstanceCount");
+        if (checkIfTasksAreComplete())
+            callback(null, "All tasks finished!");      
+    }
+    else {
+        getEnvironmentInfo(function(EBinfo, DBres, EBConfig, ASGInfo){
+            log("Got EnvironmentInfo! (6) About to calculateTargetInstanceCount");
+            calculateTargetInstanceCount(EBinfo, DBres, EBConfig, ASGInfo, function(targetInstanceCount){
+                updateInstanceCount(targetInstanceCount, function(){
+                    completedTasks.push("updateInstanceCount");
+                    if (checkIfTasksAreComplete())
+                        callback(null, "All tasks finished!");                        
+                });        
+            });
         });
-    });
-
+    }
 }
 
 
@@ -596,13 +602,15 @@ function removeStaleRequests(cb){
     log(logID + " " + "removing stale friend requests and party requets...");
 	removeStaleFriendRequests(function(fsuccess){
         removeStalePartyRequests(function(psuccess){
-            cb();
+            removeStaleTradeRequests(function(tsuccess){
+                cb();
+            });
         });
     });
 }
 
 function removeStaleFriendRequests(cb){
-    var miliInterval = (staleFriendRequestThreshold * 1000 * 60 * 60 * 24);
+    var miliInterval = (staleFriendRequestThreshold * 1000 * 60 * 60 * 24); //Convert days to miliseconds
 	var thresholdDate = new Date(Date.now() - miliInterval);
 	var searchParams = { type:"friend", timestamp:{ $lt: thresholdDate } };
 
@@ -619,7 +627,7 @@ function removeStaleFriendRequests(cb){
 }
 
 function removeStalePartyRequests(cb){
-	var miliInterval = (stalePartyRequestThreshold * 1000);
+	var miliInterval = (stalePartyRequestThreshold * 1000); //Convert seconds to miliseconds
 	var thresholdDate = new Date(Date.now() - miliInterval);
 	var searchParams = { type:"party", timestamp:{ $lt: thresholdDate } };
 	
@@ -630,6 +638,23 @@ function removeStalePartyRequests(cb){
 		}
         else {
             log(logID + " " + "removed " + res + " stale party requests");
+            cb(true);
+        }
+	});
+}
+
+function removeStaleTradeRequests(cb){
+	var miliInterval = (stalePartyRequestThreshold * 1000); //Convert to seconds //Use new variable if necessary
+	var thresholdDate = new Date(Date.now() - miliInterval);
+	var searchParams = { type:"trade", timestamp:{ $lt: thresholdDate } };
+	
+	dataAccess.dbUpdateAwait("RW_REQUEST", "rem", searchParams, {}, async function(err, res){
+		if (err){
+			log(logID + " " + "DB ERROR - removeStaleTradeRequests() - RW_REQUEST.remove: " + err);
+            cb(false);
+		}
+        else {
+            log(logID + " " + "removed " + res + " stale trade requests");
             cb(true);
         }
 	});
@@ -649,12 +674,7 @@ function removeStaleServers(cb){
 }
 
 function updateInstanceCount(targetCount, cb){
-    if (updateEB == 0){
-        log(logID + " " + "WARNING! CURRENTLY CONFIGURED TO SKIP BEANSTALK UPDATE. Would have updated to " + targetCount);
-        cb();
-        return;        
-    }
-    else if (targetCount === false){
+    if (targetCount === false){
         log(logID + " " + "No need to scale EB at this time...");
         cb();
         return;        
@@ -703,9 +723,6 @@ function getPublicServersFromDB(cb){
         }
 		else if (res && res[0]){				
 			for (var i = 0; i < res.length; i++){
-				if (res[i].gametype == "ctf"){
-					res[i].gametype = "CTF";
-				}
 				servers.push(res[i]);
 			}					
         }

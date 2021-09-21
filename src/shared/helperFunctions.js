@@ -85,10 +85,13 @@ global.getCurrentPlayersFromUsers = function(users){
 }
 
 global.removeDuplicates = function(array){
-	array = array.filter((item, index) => { //SELECT //WHERE
-		return array.indexOf(item) === index;
-	});
-	return array;
+	if (Array.isArray(array)){
+		array = array.filter((item, index) => { //SELECT //WHERE
+			return array.indexOf(item) === index;
+		});
+		return array;
+	}
+	return false;
 }
 
 global.removeIndexesFromArray = function(array, indexes){
@@ -399,9 +402,30 @@ global.getObjectiveText = function(){
 		objectiveText = "Capture the enemy's bag to win!";
 	else if (gametype == "elim")
 		objectiveText = "Eliminate the other team to win!";
+	else if (gametype == "ffa")
+		objectiveText = "FREE FOR ALL!! Kill other players to win!";
 	return objectiveText;
 }
 
 global.sleep = function(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
-  }
+}
+
+global.getPlaceFormat = function(i){
+	var text = "";
+
+	if (i == 1){
+		text = iShift + "st PLACE!"
+	}
+	else if (i == 2){
+		text = iShift + "nd PLACE"
+	}
+	else if (i == 3){
+		text = iShift + "rd PLACE"
+	}
+	else {
+		text = iShift + "th PLACE"
+	}
+
+	return text;
+}

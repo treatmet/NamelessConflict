@@ -52,8 +52,7 @@ function checkViewedProfileIsFriendOrParty(){
 		if (data.friends == true){
 			hide("addFriendButton");
             show("removeFriendButton");
-            if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea")		
-			    show("inviteToTradeButton");
+		    show("inviteToTradeButton");
 		}
 		else {
 			hide("removeFriendButton");											
@@ -136,15 +135,16 @@ function showSelfProfileOptions(){
         show("shopCustomizeToggle");			
         show("statsOptionsToggle");			
         showSecondaySectionTitles();
-        show("appearanceOptions");
-        $.get( '/getUserCustomizationOptions', {cognitoSub:viewedProfileCognitoSub}, function(data) {
-            logg("GET CUSTOMIZATION OPTIONS RESPONSE:");
-            console.log(data);
-            if (data.result)
-                customizationOptions = data.result;
-
-            populateCustomizationOptions();
-            $.get( '/getUserShopList', {cognitoSub:viewedProfileCognitoSub}, function(data) {
+		
+		getCustomizationOptions(viewedProfileCognitoSub, function(data){
+            customizationOptions = data.result;
+			
+			createCustomizationOptionDivs();
+			populateCustomizationOptions();
+			showContent("hat");	
+            populateShopCompletion();
+            
+			$.get( '/getUserShopList', {cognitoSub:viewedProfileCognitoSub}, function(data) {
                 logg("GET SHOP LIST RESPONSE:");
                 console.log(data);
                 if (data.result){
@@ -158,11 +158,11 @@ function showSelfProfileOptions(){
                         toggleStatsSettings('settingsTab');
                         showEditUserForm();
                     }        
-                    showContent("hat");
+                    
                 }
                 populateShopOptions();
-            });
-        });    
+            });			
+		});
         $.get( '/getUserSettings', {cognitoSub:viewedProfileCognitoSub}, function(data) {
             logg("GET SETTINGS RESPONSE:");
             console.log(data);
@@ -261,7 +261,7 @@ function listenForBinding(action, slot){
 var listeningSlot = false;
 document.onkeydown = function(event){
     if(event.keyCode === 27){ //Esc
-        removeConfirmationMessage();
+        removeConfirmationMessage("rarityTextShop");
         setAllKeybindingCells(currentSettings);
 	}
     else if (listeningSlot){
@@ -332,7 +332,6 @@ function setDefault(action){
     setAllKeybindingCells(currentSettings);
 }
 
-
 function keycodeToChar(code){    
     var char = keycodeToCharRef[code];
     if (!char)
@@ -340,10 +339,6 @@ function keycodeToChar(code){
 
     return char;
 }
-
-function charToKeyCode(){
-}
-
 
 function drawProfileCustomizations(){
     drawCustomization(currentCustomizations[displayTeam], displayAnimation, displayTeam, 0, function(drawnFrameTorso, id){
@@ -353,13 +348,12 @@ function drawProfileCustomizations(){
     });
 }
 
-
 function displayAppearanceFrame(image, zoom = 1, secondImage = false){
     var ctx = document.getElementById("ctx").getContext("2d", { alpha: false });
     var canvas = document.getElementById("ctx");
 
     var backgroundImg = new Image();
-    backgroundImg.src = "/src/client/img/factory-floor.png";
+    backgroundImg.src = "/src/client/img/map/tile.png";
 
     loadImages([backgroundImg.src], function(){
         var backgroundLayer = {
@@ -389,50 +383,6 @@ function displayAppearanceFrame(image, zoom = 1, secondImage = false){
 	});
 }
 
-function drawShopIcon(shopItem, iconId){
-    // console.log("GETTING CANVAS FOR: " + iconId);
-    var zoom = 1; //Zoom config of all shop icons
-    var canvas = document.getElementById(iconId);
-    if (!canvas){
-        //logg("ERROR: CAN NOT FIND SHOP ICON:" + iconId); 
-        return;
-    }
-    canvas.width = 70;
-    canvas.height = 70;
-    var ctx = canvas.getContext("2d", { alpha: false });
-
-    ctx.fillStyle="#37665a";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    var drawY = 25;
-    if (shopItem.category == "name"){
-        drawName(ctx, username, shopItem.canvasValue, canvas.width/2, drawY);
-    }
-    else if (shopItem.category == "icon"){
-        if (shopItem.canvasValue == "rank"){
-            shopItem.canvasValue = viewedProfileRank;
-        }
-        getUserIconImg(shopItem.canvasValue, false, function(iconImg, team){
-            drawIcon(ctx, iconImg, canvas.width/2 - 10, drawY, 20, 20);   
-        });                             
-    }
-    else {
-        getMannequinFrame(shopItem, function(image){
-            var shiftDistForIconX = -11;
-            var shiftDistForIconY = -11;
-            if (shopItem.category == "boost"){
-                shiftDistForIconX = -1;
-                shiftDistForIconY = -3;
-            }
-            var mannequinLayer = {
-                img:image,
-                x: shiftDistForIconX,
-                y: shiftDistForIconY                
-            };
-            drawOnCanvas(ctx, mannequinLayer, zoom, false);
-        });
-    }
-}
 
 
 
@@ -806,13 +756,15 @@ function inviteToPartyButtonClick() {
 }
 
 function inviteToTradeButtonClick() {
-	console.log("inviteToTradeButtonClick()");
+	console.log("inviteToTradeButtonClick() myIp:" + myIp);
 
 	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
 		const data = {
 			cognitoSub:cognitoSub,
-			username:username,
+            username:username,
+            targetUsername:viewedProfileName,
 			targetCognitoSub:getUrl().split('/user/')[1],
+			ip: myIp,
 			type:"trade"
 		};		
 		upsertRequest(data);
@@ -820,15 +772,20 @@ function inviteToTradeButtonClick() {
 }
 
 function upsertRequest(data){
-	$.post('/upsertRequest', data, function(data,status){
-	if (data){
+	$.post('/upsertRequest', data, function(response,status){
+	if (response){
 		console.log("upsertRequest response:");
-        console.log(data);
-		if (data.error){
-			alert(data.msg);
+        console.log(response);
+		if (response.error){
+			alert(response.msg);
 		}
 		else {
-			window.location.reload();
+			if (data.type == "trade" && response.url){
+				window.location = response.url;
+			}
+			else {
+				window.location.reload();
+			}
 		}
 	}
 	});
@@ -855,7 +812,7 @@ function kickFromPartyButtonClick() {
 
 function toggleStatsSettings(divId) {
     var div = document.getElementById(divId);
-    removeConfirmationMessage();
+    removeConfirmationMessage("rarityTextShop");
 
     var tablinks = [ document.getElementById("statsTab"), document.getElementById("settingsTab") ]; 
     for (var i = 0; i < tablinks.length; i++) {
@@ -888,7 +845,7 @@ function toggleStatsSettings(divId) {
 
 function toggleEquipBuy(divId) {
     var div = document.getElementById(divId);
-    removeConfirmationMessage();
+    removeConfirmationMessage("rarityTextShop");
 
     var tablinks = [ document.getElementById("customizeTab"), document.getElementById("buyTab") ]; 
     for (var i = 0; i < tablinks.length; i++) {
@@ -917,22 +874,6 @@ function toggleEquipBuy(divId) {
     else {
         log("DETECTED NONEXISTANT DIV");
     }    
-}
-
-
-function showContent(divId) {
-    var div = document.getElementById(divId);
-    var tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (var i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-    tablinks = document.getElementsByClassName("tablinks");
-    for (var i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    document.getElementById(divId + "Div").style.display = "block";
-    div.className += " active";
 }
 
 function selectTeam(event, team) {
@@ -977,77 +918,17 @@ function cycleAppearance(){
     drawProfileCustomizations();
 }
 
-function populateCustomizationOptions(){
-    var options = customizationOptions;
-
-    if (options && options.completion && options.completion.percent){
+function populateShopCompletion(){
+    if (customizationOptions && customizationOptions.completion && customizationOptions.completion.percent){
         var percentage = document.getElementById("shopCompletionPercentage");
         var exclusives = document.getElementById("shopCompletionExclusives");
         if (percentage){
-            percentage.innerHTML = options.completion.percent + "%"
+            percentage.innerHTML = customizationOptions.completion.percent + "%"
         }
         if (exclusives){
-            exclusives.innerHTML = "+" + options.completion.exclusives;
+            exclusives.innerHTML = "+" + customizationOptions.completion.exclusives;
         }
     }
-
-    for (const category in options[displayTeam]){
-        var HTML = "";
-        var div = document.getElementById(category + "Div");
-        if (typeof div === 'undefined')
-            continue;
-
-        for (const subCategory in options[displayTeam][category]){
-            var displaySubCategory = capitalizeFirstLetter(subCategory);
-
-            if (subCategory == "type")
-                displaySubCategory = "";
-
-            HTML += "<div class='shopCategory'>" + displaySubCategory + "</div>"
-
-            for (const item in options[displayTeam][category][subCategory]){
-
-                options[displayTeam][category][subCategory] = options[displayTeam][category][subCategory].sort(
-                    function (item1, item2){
-                        return item1.rarity - item2.rarity;
-                    }
-                );
-
-                var active = false;
-                if (currentCustomizations[displayTeam][category + displaySubCategory] == options[displayTeam][category][subCategory][item].canvasValue ||
-                (options[displayTeam][category][subCategory][item].canvasValue == "rank" && currentCustomizations[displayTeam][category + displaySubCategory] == viewedProfileRank) ||
-                (subCategory == "pistol" && currentCustomizations[displayTeam]["pistolColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
-                (subCategory == "dualPistols" && currentCustomizations[displayTeam]["dpColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
-                (subCategory == "machineGun" && currentCustomizations[displayTeam]["mgColor"] == options[displayTeam][category][subCategory][item].canvasValue) ||
-                (subCategory == "shotgun" && currentCustomizations[displayTeam]["sgColor"] == options[displayTeam][category][subCategory][item].canvasValue)
-                ){
-                    active = true;
-                }
-               
-                options[displayTeam][category][subCategory][item].customizationCategory = category + displaySubCategory;
-                if (subCategory == "pistol"){ options[displayTeam][category][subCategory][item].customizationCategory = "pistolColor";}
-                if (subCategory == "dualPistols"){ options[displayTeam][category][subCategory][item].customizationCategory = "dpColor";}
-                if (subCategory == "machineGun"){ options[displayTeam][category][subCategory][item].customizationCategory = "mgColor";}
-                if (subCategory == "shotgun"){ options[displayTeam][category][subCategory][item].customizationCategory = "sgColor";}
-                options[displayTeam][category][subCategory][item].subCategory = subCategory;
-                HTML += getShopItemHTML(options[displayTeam][category][subCategory][item], active, false);
-            }
-        }
-        div.innerHTML = HTML;
-    }
-    //draw on icon canvases
-    for (const team in options){
-        if (team == "fullList"){continue;}
-        for (const category in options[team]){
-            for (const subCategory in options[team][category]){
-                for (const item in options[team][category][subCategory]){
-                    //Logic for not drawing if already drawn
-                    //if (document.getElementById(options[team][category][subCategory][item].id + "CustomizeCtx"))
-                        drawShopIcon(options[team][category][subCategory][item], options[team][category][subCategory][item].id + "CustomizeCtx");
-                }
-            }
-        }
-    }        
 }
 
 function populateShopOptions(){
@@ -1058,10 +939,10 @@ function populateShopOptions(){
     var div = document.getElementById("shopOptions");
     var HTML = "";
     HTML += "<div id='shopTopBar'>";
-        HTML += "<div class='shopItem' id='refresh' style='width: 260px;' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
+        HTML += "<div class='shopItem' id='refreshShop' style='width: 260px;' onclick='shopClick(\"refresh\", " + options.timer.resetPrice + ")'>";
         HTML += "<div class='shopIcon' id='default'><img src='/src/client/img/shopIcons/refresh.png'></div>";
         HTML += "<div id='shopTitle' style='color:#FFFFFF;' class='shopTitle'>Refresh Store Now</div><br><div class='shopText'>$" + numberWithCommas(options.timer.resetPrice) + "</div>";
-        HTML += "<div id='rarityText' class='shopTitle' style='float:right;'></div>";
+        HTML += "<div id='rarityTextShop' class='shopTitle' style='float:right;'></div>";
         HTML +=	"</div>";
         HTML += "<div id='refreshTimer'>" + getRefreshTimerTextHTML() + "</div>";
     HTML += "</div>";
@@ -1069,7 +950,7 @@ function populateShopOptions(){
     HTML += "<div id='shopMainContent'>";
     HTML += "<div class='shopCategory' style='margin-top: 10px;'>Store</div>";
     for (const item in options.shop){
-        HTML += getShopItemHTML(options.shop[item], false, true);
+        HTML += getShopItemHTML(options.shop[item], false, "shop");
     }
 
     HTML += "</div>"; 
@@ -1077,158 +958,12 @@ function populateShopOptions(){
     div.innerHTML = HTML;
 
     //draw on icon canvases
-    for (const item in options.shop){
-        if (options.shop[item].category == "other"){continue;}
-        drawShopIcon(options.shop[item], options.shop[item].id + "ShopCtx");
-    }
-}
+    drawShopIcons("shopOptions", options.shop)
 
-function getShopItemHTML(item, active, isInShop){
-    var shopItemClass = "shopItem";
-    var shopIconClass = "shopIcon";
-    if (active){
-        shopItemClass += " active";
-        shopIconClass += " active";
-    }
-
-    var ownedHTML = "";
-    var ownedCount = getItemOwnedCount(item.id);
-    if (ownedCount > 0){
-        if (isInShop){
-            ownedHTML += " | ";
-        }
-        ownedHTML += "[" + ownedCount + " owned]";
-        if (!isInShop && item.text){ //No need for break if no description subtext
-            ownedHTML = "<br>" + ownedHTML;
-        }
-        if (!isInShop && ownedCount < 2){
-            ownedHTML = "";
-        }
-    }
-
-    var displayCategory = "";
-    if (item.category){
-        if (item.category != "other"){
-            displayCategory += capitalizeFirstLetter(item.category);
-            if (item.subCategory != "type"){
-                displayCategory += (" " + capitalizeFirstLetter(item.subCategory));
-            }
-        }
-    }
-
-    var onClickHTML = "";
-    if (isInShop){
-        onClickHTML = "onclick='shopClick(\"" + item.id + "\"," + item.price + ")'";
-    }
-    else {
-        onClickHTML = "onclick='customizationSelect(\"" + item.canvasValue + "\", \"" + displayTeam + "\",\"" + item.customizationCategory + "\")'";
-    }
-    const shopItemDivId = isInShop ? item.id : "customizeItem";
-    var HTML = "<div id='" + shopItemDivId + "' class='" + shopItemClass + "' " + onClickHTML + ">";
-
-    var iconCtxId = isInShop ? item.id + "ShopCtx" : item.id + "CustomizeCtx";
-    if (item.category == "other"){
-        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'><img src='/src/client/img/shopIcons/" + item.canvasValue + "'></div>";
-    }
-    else {
-        var iconClassPrefix = isInShop ? "shop" : "equip";
-        HTML += "<div class='" + shopIconClass + "' id ='" + item.id + "'>";
-        HTML += "<img class='" + iconClassPrefix + "IconRoulette' style='display:none' src='/src/client/img/shopIcons/roulette/questionO.png'>";
-        HTML += "<canvas class='" + iconClassPrefix + "IconCanvas' id='" + iconCtxId + "'></canvas>";
-        HTML += "</div>";
-    }
-    
-
-    //Rarity appearance configuration
-    const showRarityImg = isInShop ? true : false;
-    const showRarityTitleColor = isInShop ? true : false;
-
-    
-    var rarityImg;
-    var rarityText;
-    var rarityColor;
-    switch(item.rarity){
-        case 0:
-            rarityImg = false;
-            rarityText = "";
-            rarityColor = "#ffffff";
-            break;
-        case 1:
-            rarityImg = "rarities/rare.png";
-            rarityText = "Rare";
-            rarityColor = "#0074e0";
-            break;
-        case 2:
-            rarityImg = "rarities/epic.png";
-            rarityText = "Epic";
-            rarityColor = "#b700d8";                
-            break;
-        case 3:
-            rarityImg = "rarities/legendary.png";
-            rarityText = "Legendary";
-            rarityColor = "#ffd200";
-            break;
-        case 4:
-            rarityImg = "rarities/legendary.png";
-            rarityText = "Legendary";
-            rarityColor = "#ffd200";
-            break;
-        default:            
-            break;
-    }
-
-    if (item.hideFromShop){
-        rarityText = "[Exclusive]";   
-        rarityColor = "#ff3600";
-    }
-
-    if (rarityImg && showRarityImg)
-        HTML += "<div class='shopIconOverlay' id ='" + item.id + "''><img src='/src/client/img/shopIcons/" + rarityImg + "'></div>";
-
-    //Item Title
-    if (item.title){
-        HTML += "<div id='shopTitle' class='shopTitle' ";
-        if (showRarityTitleColor)  
-            HTML += "style='color:" + rarityColor + "'";
-        HTML += ">" + item.title + "</div>";
-    }    
-    //Rarity Text
-    HTML += "<div id='rarityText' class='shopTitle' style='float:right; color:" + rarityColor + "'>" + rarityText + "</div>";
-
-    //Item category
-    if (isInShop){
-        HTML += "<br>";
-        if (displayCategory.length > 0)
-            HTML += "<div id='shopTextCategory' class='shopText'>" + displayCategory + "</div>";
-        //Team item text
-        if (item.team){
-            switch(item.team){
-                case 1:
-                    HTML += "<div class='shopText' style='color: #bf1f1f;'>| Red team item</div>";
-                    break;
-                case 2:
-                    HTML += "<div class='shopText' style='color: #476aeb;'>| Blue team item</div>";
-                    break;
-                default:
-                    break;
-            }       
-        }
-        HTML += "<br>";
-    }
-
-    //Price + Owned
-    if (item.price && isInShop)
-        HTML += "<div id='shopTextPrice' class='shopText'>$" + numberWithCommas(item.price) + ownedHTML + "</div>";
-    HTML += "<br>";
-    if (item.text && !isInShop){
-        HTML += "<div class='shopText'>" + item.text + ownedHTML + "</div>";
-    }
-
-
-
-    HTML += "</div>"; 
-
-    return HTML;
+    // for (const item in options.shop){
+    //     if (options.shop[item].category == "other"){continue;}
+    //     drawShopIcon(options.shop[item], options.shop[item].id + "ShopCtx");
+    // }
 }
 
 
@@ -1281,13 +1016,16 @@ function isRank(value){
 }
 
 function shopClick(itemId, price){
-    var item = document.getElementById(itemId);
-    var rarityText = item.getElementById("rarityText");
+    console.log("Click Shop item");
+    var item = document.getElementById(itemId+"Shop");
+    console.log(item);
+    var rarityTextId = "rarityTextShop";
+    var rarityText = item.getElementById(rarityTextId);
     var confirmationMessage = "Confirm?";
 
     if (userCash >= price){
         if (rarityText.innerHTML != confirmationMessage){
-            removeConfirmationMessage();
+            removeConfirmationMessage(rarityTextId);
             rarityText.innerHTML = confirmationMessage;
             rarityText.style.color = "#FFF";
             item.style.backgroundColor = "#BBB";
@@ -1325,31 +1063,36 @@ function showQuestionMarksOverIcons(){
     }
 }
 
-function removeConfirmationMessage(){
+function removeConfirmationMessage(rarityTextId){
     rouletteOn = false;
     var shopItems = document.getElementsByClassName("shopItem");
-    for (var i = 0; i < shopItems.length; i++) {     
-        if (shopItems[i].id == "customizeItem")   
+    for (var i = 0; i < shopItems.length; i++) {   
+        
+        console.log("shopItems[i].class");
+        console.log(shopItems[i].className);
+        if (shopItems[i].className.indexOf("shopItem customizeItem") > -1)   
             continue;
         if (!shopItems[i].getElementById("shopTitle")){
             //alert("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
             logg("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
             continue;
         }
-        shopItems[i].getElementById("rarityText").style.color = shopItems[i].getElementById("shopTitle").style.color;
+        console.log("AVOUT TO ERROR");
+        console.log(shopItems[i]);
+        shopItems[i].getElementById(rarityTextId).style.color = shopItems[i].getElementById("shopTitle").style.color;
         shopItems[i].style.backgroundColor = "transparent";
 
         if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#0074e0"){
-            shopItems[i].getElementById("rarityText").innerHTML = "Rare";
+            shopItems[i].getElementById(rarityTextId).innerHTML = "Rare";
         }
         else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#b700d8"){
-            shopItems[i].getElementById("rarityText").innerHTML = "Epic";
+            shopItems[i].getElementById(rarityTextId).innerHTML = "Epic";
         }
         else if (rgb2hex(shopItems[i].getElementById("shopTitle").style.color) == "#ffd200"){
-            shopItems[i].getElementById("rarityText").innerHTML = "Legendary";
+            shopItems[i].getElementById(rarityTextId).innerHTML = "Legendary";
         }
         else {
-            shopItems[i].getElementById("rarityText").innerHTML = "";
+            shopItems[i].getElementById(rarityTextId).innerHTML = "";
         }
     }    
 }
@@ -1382,7 +1125,7 @@ function getRefreshTimerTextHTML(){
     return '<div id="refreshTimerText">⟳ in </div><div id="refreshTimerTimer">' + secondsToTimer(shopRefreshTimer) + '</div>';
 }
 
-function getItemOwnedCount(itemId){
+/* function getItemOwnedCount(itemId){
     var count = 0;
     if (!customizationOptions.fullList)
         return count;
@@ -1394,7 +1137,7 @@ function getItemOwnedCount(itemId){
 
 	return count;
 }
-
+ */
 
 
 setInterval( 
@@ -1417,8 +1160,6 @@ setInterval(
         if (viewedProfileCognitoSub == cognitoSub){
             var shopIconRoulettes = document.getElementsByClassName("shopIconRoulette");
             var shopIconCanvases = document.getElementsByClassName("shopIconCanvas");
-
-            var unlockable = document.getElementById("lightningBoost");
 
             if (rouletteOn){
                 for (var c in shopIconCanvases){

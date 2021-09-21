@@ -43,7 +43,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		returns:0,
 		captures:0,	
 		rating:0,
-		experience:0
+		experience:0,
+		ticksSinceLastPing:0
 	}
 		
 	//Initialize Player
@@ -70,6 +71,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	self.engine = function(){	
 		self.processChargingLaser();
 		self.processGrapple();
+
+		//PING
+		self.ticksSinceLastPing++;
+
 		//Invincibility in Shop
 		if (invincibleInShop){
 			if (self.team == 1 && self.x == 0 && self.y < 200 && self.health < 100){
@@ -634,13 +639,14 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.reloading--;
 			if (self.reloading <= 0) {
 				if (self.weapon == 1){
-					self.PClip = 15;
+					self.PClip = self.PClip <= 0 ? PClipSize : PClipSize + 1; //chamber bonus
 					updatePlayerList.push({id:self.id,property:"PClip",value:self.PClip});
 				}
 				else if (self.weapon == 2){
 					var clipNeeds = DPClipSize - self.DPClip;
+					if (clipNeeds < DPClipSize){clipNeeds++;} //chamber bonus
 					if (self.DPAmmo >= clipNeeds){
-						self.DPClip = DPClipSize;
+						self.DPClip += clipNeeds;
 						self.DPAmmo -= clipNeeds;
 					}
 					else {
@@ -652,8 +658,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				}
 				else if (self.weapon == 3){
 					var clipNeeds = MGClipSize - self.MGClip;
+					if (clipNeeds < MGClipSize){clipNeeds++;} //chamber bonus
 					if (self.MGAmmo >= clipNeeds){
-						self.MGClip = MGClipSize;
+						self.MGClip += clipNeeds;
 						self.MGAmmo -= clipNeeds;
 					}
 					else {
@@ -777,7 +784,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 		self.pushSpeed = pushSpeed;
 		self.pushDir = direction;
-		if (player.team != self.team && !bagSlam){
+		var sameTeam = player.team == self.team ? true : false;
+		if (gametype == "ffa"){sameTeam = false;}
+		if (!sameTeam && !bagSlam){
 			self.health -= boostDamage;
 		}
 		//player.pushSpeed = pushSpeed;
@@ -787,7 +796,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 	
 		//Assassinations
-		if (player.team != self.team && bagSlam == false && entityHelpers.getDirDif(player.walkingDir, self.shootingDir) <= 1){
+		if (!sameTeam && bagSlam == false && entityHelpers.getDirDif(player.walkingDir, self.shootingDir) <= 1){
 			self.health = 0;			
 		}
 
@@ -1059,7 +1068,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 		
-		if (self.team != shooter.team){
+		if (self.team != shooter.team || gametype == "ffa"){
 			self.lastEnemyToHit = shooter.id; //For betrayal/Suicide detection
 		}
 		
@@ -1069,7 +1078,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.stagger = staggerTime;		
 		self.healDelay += healDelayTime;
 		if (self.healDelay > healDelayTime){self.healDelay = healDelayTime;} //Ceiling on healDelay
-		if (self.team != shooter.team){
+		if (self.team != shooter.team || gametype == "ffa"){
 			playerEvent(shooter.id, "hit");
 		}
 		if (self.cloakEngaged){
@@ -1085,7 +1094,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
 		else if (shooter.weapon == 5){ damageInflicted = 175;} //Damage for Laser
 		
-		if (self.team != shooter.team){
+		if (self.team != shooter.team || gametype == "ffa"){
 			var shooterDirDif = entityHelpers.getDirDif(self.shootingDir, shootingDir);
 			if (shooterDirDif <= 2){
 				//self is NOT facing shooter (within 3 angles)
@@ -1102,16 +1111,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGBackDamage; } //Damage for SG
 			}
 		}			
-		else if (self.team == shooter.team){
+		else if (self.team == shooter.team && gametype != "ffa"){
 			damageInflicted *= friendlyFireDamageScale;
-			if (shooter.weapon == 5){damageInflicted *= friendlyFireDamageScale;} //Again
-			if (gametype == "horde" || (pregame && pregameIsHorde)){damageInflicted = 0;}
+			if (shooter.weapon == 5){damageInflicted *= friendlyFireDamageScale;} //Again			
 		}
 		
 		damageInflicted = damageInflicted * damageScale; //Scale damage
+		if (gametype == "horde" || (pregame && pregameIsHorde)){damageInflicted = 0;}
 
 		//Calculate Assists
-		if (self.team != shooter.team){
+		if (self.team != shooter.team && gametype != "ffa"){
 			if (!self.damageDealers){
 				self.damageDealers = [];
 			}
@@ -1144,8 +1153,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 
 		if (shooter.id != 0){
-			if (self.team != shooter.team || (self.lastEnemyToHit && self.lastEnemyToHit != 0)){
-				if ((self.lastEnemyToHit && self.lastEnemyToHit != 0) && self.team == shooter.team){
+			if (self.team != shooter.team || self.lastEnemyToHit || gametype == "ffa"){ //Someone gets credit for the kill
+				if ((self.lastEnemyToHit && self.lastEnemyToHit != 0) && self.team == shooter.team && gametype != "ffa"){ //Killed by teammate, but kill goes to last enemy to hit
 					if (getPlayerById(self.lastEnemyToHit))
 						shooter = getPlayerById(self.lastEnemyToHit); //Give kill credit to last enemy that hit the player (if killed by own team or self)
 				}
@@ -1701,6 +1710,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			
 			//ping
 			socket.on('pingServer', function(socketId){
+				if (Player.list[socketId]){
+					Player.list[socketId].ticksSinceLastPing = 0;
+				}
 				socket.emit('pingResponse', socketId);
 			});
 
@@ -1767,6 +1779,10 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						slayerVotes++;
 						voteGametypeIds.push(socketId);
 					}
+					else if (vote == "ffa"){
+						ffaVotes++;
+						voteGametypeIds.push(socketId);
+					}
 					else if (vote == "elim"){
 						elimVotes++;
 						voteGametypeIds.push(socketId);
@@ -1820,6 +1836,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 				if (getPlayerById(data[0])){
 					if (data[1].substring(0,2) == "./"){
 						evalServer(socket, data[1].substring(2));
+					}
+					else if (data[1].substring(0,1) == "/"){
+						evalServer(socket, data[1].substring(1));
 					}
 					else {
 						if (gametype == "elim" && getPlayerById(data[0]).health <= 0 && getPlayerById(data[0]).team != 0 && !roundOver && !gameOver){
@@ -1956,6 +1975,11 @@ function evalServer(socket, data){
 
 			var teamToChangeTo = false;
 			if (getPlayerById(socket.id).team == 0){
+				console.log("TEAM IS ZERO");
+				if (getActivePlayerListLength() >= maxPlayers){
+					socket.emit('addToChat', "Can't change teams. Game is full!");
+					return;
+				}
 				if (gameEngine.getMoreTeam1Players() >= 1){
 					teamToChangeTo = 2;
 				}
@@ -1964,7 +1988,7 @@ function evalServer(socket, data){
 				}
 			}
 			console.log("TEAM TO CHANGE TO:" + teamToChangeTo);
-			if (customServer || changeHelpsBalance || getPlayerById(socket.id).cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){
+			if (isLocal || customServer || changeHelpsBalance || getPlayerById(socket.id).cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){
 				gameEngine.changeTeams(socket.id, teamToChangeTo);
 			}
 			else {
@@ -1995,7 +2019,7 @@ function evalServer(socket, data){
 		else {
 			bootOnAfk = true;
 		}
-		socket.emit('addToChat', 'Boot on AFK set to ' + bootOnAfk);
+		socket.emit('addToChat', 'Boot on AFK set to ' + bootOnAfk + " [" + AfkFramesAllowed + "]");
 	}
 	else if (data == "boostDown" || data == "boostD" || data == "boostd"){
 		boostAmount -= 2;
@@ -2096,6 +2120,10 @@ function evalServer(socket, data){
 	else if (data == "hordet"){
 		gametype = "horde";
 		map = "horde";
+		gameEngine.restartGame();
+	}
+	else if (data == "ffa"){
+		gametype = "ffa";
 		gameEngine.restartGame();
 	}
 	else if (data == "timet" || data == "timelimit" || data == "notime"){
@@ -2404,25 +2432,32 @@ function evalServer(socket, data){
 	
 }
 
-function reload(playerId){
-	if (!Player.list[playerId])
-		return;
-
+function checkForEmptyWeaponAndSwap(playerId){
+	
 	if ((Player.list[playerId].weapon == 3 && Player.list[playerId].MGClip <= 0 && Player.list[playerId].MGAmmo <= 0)){			
-			gunCycle(Player.list[playerId], false);
-			updatePlayerList.push({id:playerId,property:"weapon",value:Player.list[playerId].weapon});		
-			return;
+		gunCycle(Player.list[playerId], false);
+		updatePlayerList.push({id:playerId,property:"weapon",value:Player.list[playerId].weapon});		
+		return true;
 	}
 	else if ((Player.list[playerId].weapon == 2 && Player.list[playerId].DPClip <= 0 && Player.list[playerId].DPAmmo <= 0)){
 			gunCycle(Player.list[playerId], false);
 			updatePlayerList.push({id:playerId,property:"weapon",value:Player.list[playerId].weapon});		
-			return;
+			return true;
 	}
 	else if ((Player.list[playerId].weapon == 4 && Player.list[playerId].SGClip <= 0 && Player.list[playerId].SGAmmo <= 0)){
 			gunCycle(Player.list[playerId], false);
 			updatePlayerList.push({id:playerId,property:"weapon",value:Player.list[playerId].weapon});		
-			return;
+			return true;
 	}
+	return false;
+}
+
+function reload(playerId){
+	if (!Player.list[playerId])
+		return;
+
+	if (checkForEmptyWeaponAndSwap(playerId)){return;}
+
 	if (Player.list[playerId].weapon == 1 && Player.list[playerId].PClip >= 15){return;}
 	else if ((Player.list[playerId].weapon == 3 && Player.list[playerId].MGClip >= MGClipSize) || (Player.list[playerId].weapon == 3 && Player.list[playerId].MGAmmo <= 0)){return;}
 	else if ((Player.list[playerId].weapon == 2 && Player.list[playerId].DPClip >= DPClipSize) || (Player.list[playerId].weapon == 2 && Player.list[playerId].DPAmmo <= 0)){return;}
@@ -2853,10 +2888,19 @@ function runPlayerEngines(){
 	}		
 }
 
-var getPlayerListLength = function(){
+var getPlayerListLength = function(){ //getPlayerListCount //getPlayerCount
 	var length = 0;
 	for (var i in Player.list){
 		length++;
+	}		
+	return length;	
+}
+
+var getActivePlayerListLength = function(){ //getPlayerListCount //getPlayerCount
+	var length = 0;
+	for (var i in Player.list){
+		if (Player.list[i].team != 0)
+			length++;
 	}		
 	return length;	
 }
@@ -2941,3 +2985,4 @@ module.exports.getTeamSize = getTeamSize;
 module.exports.getTeamPlayerList = getTeamPlayerList;
 module.exports.getEligiblePlayerList = getEligiblePlayerList;
 module.exports.getAverageTeamPlayersCash = getAverageTeamPlayersCash;
+module.exports.getActivePlayerListLength = getActivePlayerListLength;

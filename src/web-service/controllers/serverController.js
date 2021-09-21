@@ -90,7 +90,7 @@ router.post('/getJoinableServer', async function (req, res) {
 				}
 				else { //Join approved
 					log("SENDING PARTY TO SERVER: " + msg);				
-					sendPartyToGameServer(party, joinableServer);
+					sendUsersToServer(party, joinableServer);
 					res.send({msg:msg, server:joinableServer});
 				}
 			}); //End getJoinableServer
@@ -245,7 +245,7 @@ var getJoinableServer = function(options, cb){
 						incomingUsers = removeCognitoSubFromArray(incomingUsers, options.party[p].cognitoSub); //Before merging arrays, remove duplicate cognitoSubs from incomingUser
 					}
 					
-					incomingUsers.push.apply(incomingUsers, options.party); //Merge 2 arrays mergeArrays merge arrays append arrays			
+					incomingUsers.push.apply(incomingUsers, options.party); //Merge 2 arrays mergeArrays merge arrays append arrays combine arrays combineArrays two arrays	
 					var obj = {incomingUsers:incomingUsers};
 					var selectedServer = i;
 					dataAccess.dbUpdateAwait("RW_SERV", "set", {url: serv[selectedServer].url}, obj, async function(err2, res){
@@ -271,8 +271,8 @@ var getJoinableServer = function(options, cb){
 	});
 }
 
-function sendPartyToGameServer(party, targetUrl) {
-	logg("function sendPartyToGameServer with this party:");
+function sendUsersToServer(party, targetUrl) {
+	logg("function sendUsersToServer with this party:");
 	console.log(party);
 	for (var p = 0; p < party.length; p++){
 		var options = {
@@ -326,8 +326,8 @@ var customSettingsList = [
 	{name:"gameMinutesLength", desc:"Game Length in Minutes [0 is no time limit]", type:2, default:5, standard:true},
 	{name:"scoreToWin", desc:"Score to win [0 is no score limit]", type:2, default:0, standard:true},
 	{name:"map", desc:"Map [1=Hall, 2=Warehouse, 3=Bunkers, 4=Narrowed, 5=LongNarrowed]", type:2, default:1, standard:true},
-	{name:"gametype", desc:"Gametype [1=capture, 2=deathmatch, 3=invasion 4=elimination]", type:2, default:1, standard:true},
-	{name:"maxPlayers", desc:"Max Team Size", type:2, default:7, standard:true},
+	{name:"gametype", desc:"Gametype [1=Capture, 2=Deathmatch, 3=Invasion 4=Elimination 5=FreeForAll]", type:2, default:1, standard:true},
+	{name:"maxPlayers", desc:"Max Players", type:2, default:7, standard:true},
 	{name:"voteGametype", desc:"Allow voting for gametype after match", type:1, default:true, standard:true},
 	{name:"voteMap", desc:"Allow voting for map after match", type:1, default:true, standard:true},
 	{name:"startingWeapon", desc:"Starting Weapon [1: Pistol, 2:DP, 3:MG, 4:SG, 5:Laser]", type:2, default:1},
@@ -495,6 +495,9 @@ function processCustomGameServerUpdateRequest(settings){
 				case "4":
 					settings[s].value = "'elim'";
 					break;
+				case "5":
+					settings[s].value = "'ffa'";
+					break;
 				default:								
 					settings[s].value = "'ctf'";
 				break;
@@ -505,7 +508,7 @@ function processCustomGameServerUpdateRequest(settings){
 				settings[s].value = 14;
 				continue;
 			} 
-			settings[s].value = parseFloat(settings[s].value) * 2;
+			settings[s].value = parseFloat(settings[s].value);
 			settings[s].value = Math.round(settings[s].value);
 		}
 		else if (settings[s].name == "startingWeapon"){
