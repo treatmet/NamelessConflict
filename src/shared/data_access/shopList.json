@@ -45,6 +45,83 @@
 		"canvasValue":"cowboyHat"
 	},	
 	{
+		"id":"spaceHelmetHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Space Helmet",
+		"text":"Don't take it off or you'll end up like Arnold on Magic School Bus.",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"spaceHelmetHat"
+	},	
+	{
+		"id":"purpleBowHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Purple Bow",
+		"text":"A pretty purple bow",
+		"price": 0,
+		"team":2,
+		"rarity":1,
+		"canvasValue":"purpleBowHat"
+	},	
+	{
+		"id":"blueBowHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Blue Bow",
+		"text":"A pretty blue bow",
+		"price": 0,
+		"team":2,
+		"rarity":1,
+		"canvasValue":"blueBowHat"
+	},	
+	{
+		"id":"greenBowHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Green Bow",
+		"text":"A pretty green bow",
+		"price": 0,
+		"team":2,
+		"rarity":1,
+		"canvasValue":"greenBowHat"
+	},	
+	{
+		"id":"yellowBowHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Yellow Bow",
+		"text":"A pretty yellow bow",
+		"price": 0,
+		"team":1,
+		"rarity":1,
+		"canvasValue":"yellowBowHat"
+	},	
+	{
+		"id":"orangeBowHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Orange Bow",
+		"text":"A pretty orange bow",
+		"price": 0,
+		"team":1,
+		"rarity":1,
+		"canvasValue":"orangeBowHat"
+	},	
+	{
+		"id":"redBowHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Red Bow",
+		"text":"A pretty red bow",
+		"price": 0,
+		"team":1,
+		"rarity":1,
+		"canvasValue":"redBowHat"
+	},	
+	{
 		"id":"deerHat",
         "category":"hat",
 		"subCategory":"type",

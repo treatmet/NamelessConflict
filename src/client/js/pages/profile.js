@@ -1068,8 +1068,6 @@ function removeConfirmationMessage(rarityTextId){
     var shopItems = document.getElementsByClassName("shopItem");
     for (var i = 0; i < shopItems.length; i++) {   
         
-        console.log("shopItems[i].class");
-        console.log(shopItems[i].className);
         if (shopItems[i].className.indexOf("shopItem customizeItem") > -1)   
             continue;
         if (!shopItems[i].getElementById("shopTitle")){
@@ -1077,8 +1075,6 @@ function removeConfirmationMessage(rarityTextId){
             logg("Something went wrong when loading the item shop. Please refresh the page if you wish to shop.");
             continue;
         }
-        console.log("AVOUT TO ERROR");
-        console.log(shopItems[i]);
         shopItems[i].getElementById(rarityTextId).style.color = shopItems[i].getElementById("shopTitle").style.color;
         shopItems[i].style.backgroundColor = "transparent";
 

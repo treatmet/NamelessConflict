@@ -66,7 +66,7 @@ var getUser = function(cognitoSub,cb){
 				user.customizationOptions = defaultCustomizationOptions;
 				console.log("SETTING FIRST TIME CUSTOMIZATION OPTIONS");
 				console.log(user.customizationOptions);
-				updateUserCustomizationOptions(cognitoSub, customizationOptions);
+				updateUserCustomizationOptions(cognitoSub, user.customizationOptions);
 			}
 
 			if (typeof user.partyId === 'undefined'){
@@ -253,7 +253,8 @@ var addUser = function(cognitoSub, username, cb){ //createUser create User add m
 	});
 }
 
-var dbUserUpdate = function(action, cognitoSub, obj) {
+var dbUserUpdate = function(action, cognitoSub, obj) { //updateUser
+	if (obj._id){delete obj._id;}
 	dataAccess.dbUpdateAwait("RW_USER", action, {cognitoSub: cognitoSub}, obj, async function(err, obj){
 	});		
 }
@@ -330,14 +331,22 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 					customizationOptions:customizationOptions
 				};
 
-				if (!updatey){
-					console.log("Nothing to update...");
-					continue;
-				}
+				// if (!updatey){
+				// 	console.log("Nothing to update...");
+				// 	continue;
+				// }
 				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
 					console.log("SAFETYS ON");
 					continue;
 				}
+				// if (resy[k]._id == "60776761f660555073ed3168"){ //Get User
+				// 	console.log("UPDATE!!!!!!!!!!!!!!!");
+				// 	delete resy[k]._id;
+				// 	delete resy[k].USERNAME;
+				// 	delete resy[k].cognitoSub;
+				// 	dbUserUpdate("ups", "1bd31e42-7885-415a-a022-e8e2ee9e254d", resy[k]);
+				// 	break;
+				// }
 
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});			
@@ -613,11 +622,12 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 				});
 			}
 
-			//shopList[0] = "deerHat";
-			// shopList[1] = "alertIcon";
-			// shopList[2] = "birdIcon";
-			// shopList[3] = "bulbIcon";
-			// shopList[4] = "cloverIcon";
+			//manual hardcode
+			// shopList[0] = "spaceHelmetHat";
+			// shopList[1] = "redBowHat";
+			// shopList[2] = "blueBowHat";
+			// shopList[3] = "orangeBowHat";
+			// shopList[4] = "greenBowHat";
 
 			var clientShopList = transformToClientShop(shopList, nextMidnight);
 
