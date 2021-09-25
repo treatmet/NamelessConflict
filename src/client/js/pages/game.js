@@ -88,7 +88,7 @@ var version = "v 0.5.0"; //Scalable + customizations
 
 const spectateMoveSpeed = 10;
 var screenShakeScale = 0.5;
-var drawDistance = 10; 
+var drawDistance = 5; 
 var playerCenterOffset = 4;
 var noPlayerBorders = false;
 var timeInGameRankingThresh = 30; //seconds
@@ -713,6 +713,10 @@ Img.boostInstructions = new Image();
 Img.boostInstructions.src = "/src/client/img/boostInstructions.png";
 Img.teamInstructions = new Image();
 Img.teamInstructions.src = "/src/client/img/teamInstructions.png";
+Img.allyDamageWarningRed = new Image();
+Img.allyDamageWarningRed.src = "/src/client/img/allyDamageWarningRed.png";
+Img.allyDamageWarningBlue = new Image();
+Img.allyDamageWarningBlue.src = "/src/client/img/allyDamageWarningBlue.png";
 
 
 
@@ -1840,7 +1844,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		} 				
 	}
 	if (miscPack.roundOver === true){
-		if (myPlayer.team){
+		if (myPlayer.team && ! gameOver){
 			shop.active = true;
 		}
 		roundOver = true;
@@ -1868,6 +1872,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 	if (miscPack.gameOver){
 		gameOver = miscPack.gameOver.gameIsOver;
 		if (miscPack.gameOver.gameIsOver == true){
+			shop.active = false;
 			endGame();
 			showUnset("voteMenu");
 
@@ -2322,12 +2327,21 @@ function screenShake(){
 
 //////////////// DRAW FUNCTIONS /////////////////////////////////////////////////////
 function drawImage(img, x, y, width = 0, height = 0){
-	if (width == 0 || height == 0){
+	if (width == 0 || height == 0 || typeof width == 'undefined'){
 		ctx.drawImage(img, Math.round(x), Math.round(y));
 	}
 	else {
 		ctx.drawImage(img, Math.round(x), Math.round(y), Math.round(width), Math.round(height));
 	}
+}
+
+function drawImageTrans(img, x, y, width = 0, height = 0){
+	if (width == 0){width = img.width;}
+	if (height == 0){height = img.height;}
+	ctx.save();
+	ctx.translate(centerX - myPlayer.x * zoom + x * zoom, centerY - myPlayer.y * zoom + y * zoom); //Center camera on controlled player
+		drawImage(img, 0, 0, width * zoom, height * zoom);
+	ctx.restore();
 }
 
 function drawImageCtx(context, img, x, y, width = 0, height = 0){
@@ -2374,6 +2388,7 @@ function strokeAndFillText(text, x, y, width){
 }
 
 function drawMapElementsOnMapCanvas(){
+	return;
 	logg("Drawing map elements...");
 	m_canvas.width = mapWidth;
 	m_canvas.height = mapHeight;
@@ -2428,33 +2443,9 @@ function drawMapElementsOnMapCanvas(){
 			}
 			else if (map == "narrows"){
 				drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
-				// if (x >= (tile.width * 6)  && x <= (tile.width * 6)  && y >= (tile.height * 1)  && y <= (tile.height * 5) ){
-				// 	drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
-				// }
-				// else if (y >= (tile.height * 1)  && y <= (tile.height * 4)  && x >= (mapWidth - tile.width * 4)  && x <= (mapWidth - tile.width * 2) ){
-				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
-				// }
-				// else if (y >= (tile.height * 1)  && y <= (tile.height * 4)  && x >= (tile.width * 1)  && x <= (tile.width * 3) ){
-				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
-				// }
-				// else {
-				// 	drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
-				// }				
 			}
 			else if (map == "longNarrows"){
 				drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
-				// if (x >= (tile.width * 6)  && x <= (tile.width * 6)  && y >= (tile.height * 1)  && y <= (tile.height * 5) ){
-				// 	drawImageOnMapCanvas(Img.tileWhite, x, y, tile.width , tile.height );
-				// }
-				// else if (y >= (tile.height * 1)  && y <= (tile.height * 4)  && x >= (mapWidth - tile.width * 4)  && x <= (mapWidth - tile.width * 2) ){
-				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
-				// }
-				// else if (y >= (tile.height * 1)  && y <= (tile.height * 4)  && x >= (tile.width * 1)  && x <= (tile.width * 3) ){
-				// 	drawImageOnMapCanvas(Img.tileBlack, x, y, tile.width , tile.height );
-				// }
-				// else {
-				// 	drawImageOnMapCanvas(tile, x, y, tile.width , tile.height );
-				// }				
 			}
 			else if (map == "horde"){
 				if (y >= (mapHeight - tile.height*3)  && y < (mapHeight - tile.height*3) && x <= 0){
@@ -2488,6 +2479,106 @@ function drawMapElementsOnMapCanvas(){
 	}	
 }
 
+
+function drawMap() {
+	
+	if (reallyLowGraphicsMode){
+		ctx.fillStyle = '#585858';
+		ctx.fillRect(centerX - myPlayer.x * zoom, centerY - myPlayer.y * zoom, mapWidth * zoom, mapHeight * zoom);
+	}
+	else {
+		var tile = Img.tile;
+		
+		for (var y = 0; y < mapHeight * zoom; y+=tile.height * zoom){
+			for (var x = 0; x < mapWidth * zoom; x+=tile.width * zoom){
+				if (x + tile.width * zoom > mapWidth * zoom){
+					x = mapWidth * zoom - tile.width * zoom;
+				}
+				if (y + tile.height * zoom > mapHeight * zoom){				
+					y = mapHeight * zoom - tile.height * zoom;
+				}
+
+				//if (!isObjVisible({x:x, y:y, width:tile.width, height:tile.height})){continue;}
+
+				var drawX = ((centerX - myPlayer.x * zoom)+x);
+				var drawY = ((centerY - myPlayer.y * zoom)+y);
+				
+				if (drawX + Img.tile.width * zoom + drawDistance > 0 && drawX - drawDistance < canvasWidth && drawY > -Img.tile.height * zoom - drawDistance && drawY < canvasHeight + drawDistance){
+					if (map == "longest"){
+						if (y >= (mapHeight - tile.height) * zoom && x <= (tile.height - 75) * zoom){
+							drawImage(Img.tileWhite, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else if (y <= (tile.height - 75) * zoom && x >= (mapWidth - tile.width) * zoom){
+							drawImage(Img.tileBlack, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else {
+							drawImage(tile, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}				
+					}
+					else if (map == "thepit"){
+						if (y >= (tile.height * 3) * zoom && y <= (tile.height * 5) * zoom && x <= (tile.width) * zoom){
+							drawImage(Img.tileWhite, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else if (y >= (tile.height * 3) * zoom && y <= (tile.height * 5) * zoom && x >= (mapWidth - tile.width * 3) * zoom){
+							drawImage(Img.tileBlack, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else {
+							drawImage(tile, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}				
+					}
+					else if (map == "crik"){
+						if (x >= (tile.width * 6) * zoom && x <= (tile.width * 6) * zoom && y >= (tile.height * 1)* zoom  && y <= (tile.height * 5) * zoom ){
+							drawImage(Img.tileWhite, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else if (y >= (tile.height * 1) * zoom && y <= (tile.height * 4) * zoom && x >= (mapWidth - tile.width * 4) * zoom && x <= (mapWidth - tile.width * 2) * zoom ){
+							drawImage(Img.tileBlack, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else if (y >= (tile.height * 1)* zoom  && y <= (tile.height * 4) * zoom && x >= (tile.width * 1) * zoom && x <= (tile.width * 3) * zoom ){
+							drawImage(Img.tileBlack, drawX, drawY, tile.width * zoom, tile.height * zoom );
+						}
+						else {
+							drawImage(tile, drawX, drawY, tile.width  * zoom, tile.height * zoom );
+						}				
+					}
+					else if (map == "narrows"){
+						drawImage(tile, drawX, drawY, tile.width * zoom, tile.height * zoom);
+					}
+					else if (map == "longNarrows"){
+						drawImage(tile, drawX, drawY, tile.width * zoom, tile.height * zoom);
+					}
+					else if (map == "horde"){
+						if (y >= (mapHeight - tile.height*3) * zoom && y < (mapHeight - tile.height*3) * zoom && x <= 0){
+							drawImage(Img.tileWhite, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else if (y >= (tile.height*2) * zoom && y <= (tile.height*2) * zoom && x >= (mapWidth - tile.width*3) * zoom){
+							drawImage(Img.tileWhite, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else if (x >= (mapWidth - tile.width*3) * zoom && x < (mapWidth - tile.width*3) * zoom && y >= (mapHeight - tile.height*3) * zoom){
+							drawImage(Img.tileWhite, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else if (x >= (tile.width*2) * zoom && x <= (tile.width*2) * zoom && y <= 0){
+							drawImage(Img.tileWhite, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else {
+							drawImage(tile, drawX, drawY, tile.width * zoom , tile.height * zoom);
+						}				
+					}
+					else {
+						if (y <= 300 * zoom && x <= 300 * zoom){
+							drawImage(Img.tileWhite, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else if (y >= (mapHeight - 600) * zoom && x >= (mapWidth - 600) * zoom){
+							drawImage(Img.tileBlack, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+						else {
+							drawImage(tile, drawX, drawY, tile.width * zoom, tile.height * zoom);
+						}
+					}
+				}
+			}
+		}
+	}	
+}
 
 function drawBlackMarkets(){
 	if (shopEnabled){
@@ -2733,7 +2824,7 @@ function drawLegs(){
 				continue; //If not moving, don't draw legs
 			}
 		
-			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 - drawDistance < cameraY + canvasHeight){
+			if (isObjVisible(Player.list[i], true)){
 				var legs = Player.list[i].images[1].legs;
 				if (Player.list[i].team == 2){legs = Player.list[i].images[2].legs;}
 				
@@ -2793,6 +2884,7 @@ function drawLegs(){
 }
 
 function drawBlocksOnBlockCanvas(){
+	return;
 	logg("Drawing block elements...");
 
 	block_canvas.width = (mapWidth + 150) ; //+150 to offset the block border which is behind 0,0
@@ -2833,6 +2925,104 @@ function drawBlocksOnBlockCanvas(){
 		drawImageOnBlockCanvas(imgBlock, Math.round((Block.list[i].x + 75) ), Math.round((Block.list[i].y + 75) ), Math.round(Block.list[i].width ), Math.round(Block.list[i].height ));				
 	}
 }
+
+function isObjVisible(obj, centerOrigin = false){
+
+	if (!obj.width){obj.width = 47;}
+	if (!obj.height){obj.height = 47;}
+
+	if (centerOrigin){
+
+/* 		var rightSide = (obj.x + obj.width/2) * zoom + drawDistance;
+		console.log("rightSide" + rightSide + "must be greater than leftBound(cameraX):" + cameraX);
+		var leftSide = (obj.x - obj.width/2) * zoom - drawDistance;
+		var rightCam = cameraX + canvasWidth * zoom;
+		console.log("leftSide" + leftSide + "must be less than rightBound(cameraX+width):" + rightCam);
+ */
+		if ((obj.x + obj.width/2) * zoom + drawDistance > cameraX
+			&& (obj.x - obj.width/2) * zoom - drawDistance < cameraX + canvasWidth 
+			&& (obj.y + obj.width/2) * zoom + drawDistance > cameraY 
+			&& (obj.y - obj.width/2) * zoom - drawDistance < cameraY + canvasHeight){
+				return true;
+		}
+	}
+	else {
+		if (centerX - myPlayer.x * zoom + obj.x * zoom > -obj.width * zoom - drawDistance //
+			&& centerX - myPlayer.x * zoom + obj.x * zoom < canvasWidth + drawDistance
+			&& centerY - myPlayer.y * zoom + obj.y * zoom > -obj.height * zoom - drawDistance
+			&& centerY - myPlayer.y * zoom + obj.y * zoom < canvasHeight + drawDistance){
+			return true;
+		}
+	}
+	return false;
+}
+
+function drawBlocks(){
+	warpImageSwapper++;
+	if (warpImageSwapper > 8){
+		warpImageSwapper = 1;
+	}
+
+	for (var i in Block.list) {
+		if (isObjVisible(Block.list[i])){
+			var imgBlock = Img.block;
+
+			ctx.save();
+				if (Block.list[i].type == "normal"){
+					if (reallyLowGraphicsMode == true){
+						ctx.fillStyle = '#1f1f1f';
+						ctx.fillRect(centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom);
+					}
+				}
+				if (Block.list[i].type == "red"){
+					imgBlock = Img.redBlock;
+					if (reallyLowGraphicsMode == true){
+						ctx.fillStyle = '#341f1f';
+						ctx.fillRect(centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom);
+					}
+				}
+				else if (Block.list[i].type == "blue"){
+					imgBlock = Img.blueBlock;
+					if (reallyLowGraphicsMode == true){
+						ctx.fillStyle = '#212a36';
+						ctx.fillRect(centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom);
+					}
+				}
+				else if (Block.list[i].type == "pushUp"){
+					imgBlock = Img.pushUpBlock;
+					ctx.globalAlpha = 0.3;
+				}
+				else if (Block.list[i].type == "pushRight"){
+					imgBlock = Img.pushRightBlock;
+					ctx.globalAlpha = 0.3;
+				}
+				else if (Block.list[i].type == "pushDown"){
+					imgBlock = Img.pushDownBlock;
+					ctx.globalAlpha = 0.3;
+				}
+				else if (Block.list[i].type == "pushLeft"){
+					imgBlock = Img.pushLeftBlock;
+					ctx.globalAlpha = 0.3;
+				}				
+				else if (Block.list[i].type == "warp"){
+					if (warpImageSwapper == 1 || warpImageSwapper == 2)
+						imgBlock = Img.warp1;
+					else if (warpImageSwapper == 3 || warpImageSwapper == 4)
+						imgBlock = Img.warp2;
+					else if (warpImageSwapper == 5 || warpImageSwapper == 6)
+						imgBlock = Img.warp3;
+					else if (warpImageSwapper == 7 || warpImageSwapper == 8)
+						imgBlock = Img.warp4;
+				}
+
+				if (reallyLowGraphicsMode == false || Block.list[i].type.includes("push") || Block.list[i].type.includes("warp")){
+					drawImage(imgBlock, centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom);				
+				}
+			ctx.restore();
+		}
+	}
+}
+
 function drawMapCanvas(){
 	var drawX = centerX - myPlayer.x * zoom;
 	var drawY = centerY - myPlayer.y * zoom;
@@ -2993,7 +3183,7 @@ function drawTorsos(){
 		const team = Player.list[i].team;
 		if (!Player.list[i] || !Player.list[i].images){continue;}
 		if (Player.list[i].health > 0 && team != 0){
-			if (Player.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){
+			if (isObjVisible(Player.list[i], true)){
 				normalShadow();
 				let img;
 				try {
@@ -3211,7 +3401,7 @@ function drawThugs(){
 		if (Thug.list[i].health > 0){
 			if (Thug.list[i].engine)
 				Thug.list[i].engine();
-			if (Thug.list[i].x * zoom + 47 * zoom + drawDistance > cameraX && Thug.list[i].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Thug.list[i].y * zoom + 47 * zoom + drawDistance > cameraY && Thug.list[i].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){				
+			if (isObjVisible(Thug.list[i], true)){				
 				ctx.save();
                 ctx.translate(centerX + Thug.list[i].x * zoom - myPlayer.x * zoom, centerY + Thug.list[i].y * zoom - myPlayer.y * zoom); //Center camera on controlled player
 				ctx.rotate(Thug.list[i].rotation);
@@ -3516,6 +3706,7 @@ function drawPersonalInstructions(){
 	else if (personalInstructions["team"].life > 0 && myPlayer.health > 0){
 		instructionName = "team";
 		personalInstructions[instructionName].life--;
+		if (gametype == "ffa" && !(pregame && pregameIsHorde)){personalInstructions["team"].life = 0;}
 	}
 
 	if (instructionName){
@@ -3977,6 +4168,7 @@ function activateShop(active){
 function drawShop(){
 	calculateShopMechanics();
 	if (shop.active){
+		ctx.textAlign = 'center';
 		
 		if (showStatOverlay == true){showStatOverlay = false;}
 
@@ -4309,6 +4501,7 @@ function drawSpectatingInfo(){
 		ctx.fillStyle="#FFFFFF";
 		ctx.font = 'bold 30px Electrolize';
 		ctx.lineWidth = 4;
+		ctx.textAlign = "center";
 		strokeAndFillText(spectatingText,canvasWidth/2,775);
 		//strokeAndFillText("Waiting for current game to finish. You will join the next game.",canvasWidth/2,100);		
 		ctx.font = 'bold 15px Electrolize';
@@ -5959,6 +6152,7 @@ var zoomRate = 0.1;
 function timer1Misc(){
 	if (chatSpam > 0)
 		chatSpam--;
+	
 
 	processDynamicZoom();
 }
@@ -5977,7 +6171,8 @@ function drawEverything(){
 	ctx.fillStyle = "#101010";
 	ctx.fillRect(0, 0, canvasWidth, canvasHeight); 	
 	
-	drawMapCanvas();
+	//drawMapCanvas();
+	drawMap();
 	//drawBlackMarkets();
 	drawMissingBags();
 	drawBodies();	
@@ -5985,7 +6180,8 @@ function drawEverything(){
 	drawLaser();
 	//drawBlockLasers();
 	drawGrapples();
-	drawBlockCanvas();	
+	//drawBlockCanvas();	
+	drawBlocks();
 	drawLaserCanonLaser();
 	drawWallBodies();
 	drawPickups();
@@ -6002,6 +6198,7 @@ function drawEverything(){
 
 	
 	drawPersonalInstructions();
+	drawAllyDamageWarning();
 	drawShop();	
 	drawUILayer();
 	fpsCounter++;
@@ -6246,24 +6443,24 @@ setInterval(
 			waitingOnPing = true;
 			socket.emit('pingServer', myPlayer.id);
 		}
-
 	},
 	2000 //2 seconds
 );
 
+//triggerPerformance
 function checkPreviousPingsAndShowPerfInstructions(stopwatch = false){
 	previousPing = ping; //Last ping
 	//logg("ping:" + ping + " previousPing:" + previousPing + " stopwatch:" + stopwatch);
 
 	if (ping >= 999 && previousPing >= 999 && !triggeredPerformanceTips && countdownToRedrawGraphics == -1){
 		logg("PERFORMANCE ERROR: ping:" + ping + " previousPing:" + previousPing + ". Disconnecting and triggering performance tips.");
-		show("unplayableHeader");
 		triggeredPerformanceTips = true;
+		reallyLowGraphicsToggle(true);
+		addToChat("Unplayable conditions detected!! Enabled low graphics.");
 
-		//document.getElementById("closePerfInstructions").innerHTML = '<a href="' + serverHomePage + '" style="font-size: 16px;">I verify I have followed these instructions, and am ready to reload the game.</a>'
-		//disconnect(); //Force disconnect
-
+/* 		show("unplayableHeader");
 		show("performanceInstructions");
+ */	
 	}
 }
 
@@ -6296,6 +6493,39 @@ function compareKills(a,b) {
 socket.on('sendLog', function(msg){
 	log("SERVER: " + msg);
 });
+
+socket.on('allyDamageWarning', function(data){
+	allyDamageWarningPlayerId = data.playerId;
+	allyDamageWarningTimestamp = Date.now();
+});
+
+var allyDamageWarningPlayerId = "";
+var allyDamageWarningTimestamp = Date.now();
+var allyDamageWarningMS = 5000;
+function drawAllyDamageWarning(){
+	if (allyDamageWarningTimestamp + allyDamageWarningMS < Date.now() || allyDamageWarningPlayerId == ""){return;}
+	var blinkInterval = 70;
+	if (allyDamageWarningTimestamp < Date.now() - blinkInterval && allyDamageWarningTimestamp > Date.now() - blinkInterval*2){return;}
+	if (allyDamageWarningTimestamp < Date.now() - blinkInterval*3 && allyDamageWarningTimestamp > Date.now() - blinkInterval*4){return;}
+	if (allyDamageWarningTimestamp < Date.now() - blinkInterval*5 && allyDamageWarningTimestamp > Date.now() - blinkInterval*6){return;}
+	if (allyDamageWarningTimestamp < Date.now() - blinkInterval*7 && allyDamageWarningTimestamp > Date.now() - blinkInterval*8){return;}
+	//if (allyDamageWarningTimestamp < Date.now() - blinkInterval*9 && allyDamageWarningTimestamp > Date.now() - blinkInterval*10){return;}
+	//if (allyDamageWarningTimestamp < Date.now() - blinkInterval*11 && allyDamageWarningTimestamp > Date.now() - blinkInterval*12){return;}
+
+	var player = Player.list[allyDamageWarningPlayerId];
+	var image = Img.allyDamageWarningRed;
+	if (myPlayer.team == 2){
+		image = Img.allyDamageWarningBlue;
+	}
+	if (typeof player != 'undefined'){
+		//drawImage(image, 50, 50);
+		noShadow();
+		var newWidth = image.width * 1.5;
+		var newHeight = image.height * 1.5;
+		drawImageTrans(image, player.x - newWidth/2, player.y - 140, newWidth, newHeight);
+	}
+}
+
 
 socket.on('endGameProgressResults', function(endGameProgressResults){
 	endGameProgressResultsFunction(endGameProgressResults);
@@ -6352,8 +6582,9 @@ function sprayBloodOntoTargetFunction(data){
 		else if (getDirDif(data.shootingDir, Player.list[data.targetId].shootingDir) >= 3){
 			scale = 0.6;
 		}
-
 	}
+
+	//triggerTeamWarning(Player.list[data.targetId].team);
 	Blood(data.targetX, data.targetY, data.shootingDir, scale);	
 	if (data.targetId == myPlayer.id){ screenShakeCounter = 8; } 
 	if (!mute){

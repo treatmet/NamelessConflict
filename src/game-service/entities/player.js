@@ -44,7 +44,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		captures:0,	
 		rating:0,
 		experience:0,
-		ticksSinceLastPing:0
+		ticksSinceLastPing:0,
+		cumulativeAllyDamage:0
 	}
 		
 	//Initialize Player
@@ -1092,9 +1093,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		else if (shooter.weapon == 2){ damageInflicted += DPDamage; } //Double damage for double pistols
 		else if (shooter.weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
 		else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
-		else if (shooter.weapon == 5){ damageInflicted = 175;} //Damage for Laser
+		else if (shooter.weapon == 5){ damageInflicted = LaserDamage;} //Damage for Laser
 		
 		if (self.team != shooter.team || gametype == "ffa"){
+			shooter.cumulativeAllyDamage = 0;
 			var shooterDirDif = entityHelpers.getDirDif(self.shootingDir, shootingDir);
 			if (shooterDirDif <= 2){
 				//self is NOT facing shooter (within 3 angles)
@@ -1113,7 +1115,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}			
 		else if (self.team == shooter.team && gametype != "ffa"){
 			damageInflicted *= friendlyFireDamageScale;
-			if (shooter.weapon == 5){damageInflicted *= friendlyFireDamageScale;} //Again			
+			if (shooter.weapon == 5){damageInflicted = 15;}			
+			shooter.processAllyDamage(damageInflicted, self.id);			
 		}
 		
 		damageInflicted = damageInflicted * damageScale; //Scale damage
@@ -1132,7 +1135,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 
-		self.health -= Math.floor(damageInflicted);
+		self.health -= Math.floor(damageInflicted); //damageValue
 
 		updatePlayerList.push({id:self.id,property:"health",value:self.health});
 					
@@ -1145,6 +1148,14 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (self.health <= 0){
 			self.kill(shooter);
 		}			
+	}
+
+	self.processAllyDamage = function(damageInflicted, victimId){
+		self.cumulativeAllyDamage += damageInflicted;
+		if (self.cumulativeAllyDamage >= allyDamageWarningThreshold){
+			socket.emit('allyDamageWarning', {playerId:victimId});
+			self.cumulativeAllyDamage = 0;
+		}
 	}
 
 	self.kill = function(shooter){

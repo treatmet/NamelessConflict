@@ -151,7 +151,9 @@ global.damageScale = 1;
 	global.friendlyFireDamageScale = 0.5;
 	global.boostDamage = 34;
 	global.cloakBonusDamage = 20;
-	
+
+global.allyDamageWarningThreshold = 25;
+
 global.startingWeapon = 1;
 global.bulletRange = 19 * 75;
 global.laserRange = 22 * 75;

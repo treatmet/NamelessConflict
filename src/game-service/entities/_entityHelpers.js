@@ -321,7 +321,6 @@ var getHitTarget = function(hitTargets){
 			distFromDiag = hitTargets[j].distFromDiag;
 			hitTarget.dist = hitTargets[j].dist;
 			hitTarget.distFromDiag = hitTargets[j].distFromDiag;
-
 		}
 	}
 	return hitTarget;		

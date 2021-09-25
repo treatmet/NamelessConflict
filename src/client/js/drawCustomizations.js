@@ -294,6 +294,8 @@ async function drawCustomizations(customizations, id, cb){		//!!! We don't need 
 		//log("Images loaded");
 		for (var t = 0; t < teams.length; t++){
 			for (var a = 0; a < animations.length; a++){
+				await sleep(50);
+
 				//Replace invalid images
 				for (var l = 0; l < layers[teams[t]][animations[a]].length; l++){						
 					for (var p = 0; p < invalidSrcPaths.length; p++){

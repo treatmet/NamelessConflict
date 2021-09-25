@@ -537,11 +537,11 @@ function getPerformanceInstrucitons(){
 	return html;
 }
 
-function reallyLowGraphicsToggle(){
+function reallyLowGraphicsToggle(setting = false){
 	if (typeof reallyLowGraphicsMode === 'undefined')
 		return;
 		
-	if (reallyLowGraphicsMode){
+	if (reallyLowGraphicsMode && !setting){
 		setCookie("lowGraphics", "false");
 		reallyLowGraphicsMode = false;
 		bodyLimit = 16;
