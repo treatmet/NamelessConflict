@@ -859,6 +859,9 @@ div#serverSelection {
 .customServerButton {
 	border: 2px rgb(255, 255, 255) solid;
 }
+.customServerButton:hover {
+	border: 2px rgb(157, 157, 157) solid;
+}
 
 .customServerSetting {
     padding-bottom: 10px;

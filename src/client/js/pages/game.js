@@ -58,8 +58,8 @@ function voteEndgame(voteType, voteSelection){
 
 socket.on('votesUpdate', function(votesData){
 	document.getElementById("voteCTF").innerHTML = "CTF - [" + votesData.ctfVotes + "]";
-	document.getElementById("voteDeathmatch").innerHTML = "Killfest - [" + votesData.slayerVotes + "]";	
-	document.getElementById("voteFFA").innerHTML = "FreeForAll - [" + votesData.ffaVotes + "]";	
+	document.getElementById("voteDeathmatch").innerHTML = "Team Killfest - [" + votesData.slayerVotes + "]";	
+	document.getElementById("voteFFA").innerHTML = "FreeForAll Killfest - [" + votesData.ffaVotes + "]";	
 	document.getElementById("voteElimination").innerHTML = "Elimination - [" + votesData.elimVotes + "]";	
 	document.getElementById("voteLongest").innerHTML = "Hallway - [" + votesData.longestVotes + "]";
 	document.getElementById("voteThePit").innerHTML = "Warehouse - [" + votesData.thePitVotes + "]";	
@@ -4128,7 +4128,10 @@ function drawPlayerTags(){
 				if (Player.list[i].health > 0 && Player.list[i].team != 0 && !(Player.list[i].cloakEngaged == true && !sameTeam)){
 					var nameColor = Player.list[i].customizations[Player.list[i].team].nameColor;
 					if (gametype != "ffa" && myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true && Player.list[i].id != myPlayer.id){
-						nameColor = Player.list[i].team == 1 ? "#9e0b0f" : "#2e3192";
+						nameColor = Player.list[i].team == 1 ? "#9d0000" : "#00259d";
+					}
+					if (gametype == "ffa" && (nameColor == "#9d0000" || nameColor == "#00259d")){
+						nameColor = "black";
 					}
 					
 					var stroke = false;
