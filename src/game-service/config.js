@@ -139,8 +139,8 @@ global.damageScale = 1;
 	global.pistolSideDamage = 6; //Stacks on above
 	global.pistolBackDamage = 10; //Stacks AGAIN on above
 	global.DPDamage = 12;
-	global.DPSideDamage = 8; //Stacks on above
-	global.DPBackDamage = 10; //Stacks AGAIN on above
+	global.DPSideDamage = DPDamage/2; //Stacks on above
+	global.DPBackDamage = DPDamage/2; //Stacks AGAIN on above
 	global.mgDamage = 8; 
 	global.mgSideDamage = mgDamage/2; //Stacks on above
 	global.mgBackDamage = mgDamage/2; //Stacks AGAIN on above
@@ -151,7 +151,9 @@ global.damageScale = 1;
 	global.friendlyFireDamageScale = 0.5;
 	global.boostDamage = 34;
 	global.cloakBonusDamage = 20;
-	
+
+global.allyDamageWarningThreshold = 25;
+
 global.startingWeapon = 1;
 global.bulletRange = 19 * 75;
 global.laserRange = 22 * 75;

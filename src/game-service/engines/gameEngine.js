@@ -62,7 +62,7 @@ var resetGameSettingsToStandard = function(){
 	SGDamage = 30;
 	SGSideDamage = SGDamage/2;
 	SGBackDamage = SGDamage/2;
-	LaserDamage = 250;
+	LaserDamage = 175;
 	friendlyFireDamageScale = 0.5;
 	boostDamage = 34;
 	cloakBonusDamage = 20;
@@ -1218,7 +1218,7 @@ function rebalanceTeams(rebalanceOnScore = false){
 		}
 	}
 }
-function initializeNewGame(){
+function initializeNewGame(){ //startGame gameStart
 	gameOver = false;
 	roundOver = false;
 	pregame = false;
@@ -1243,7 +1243,13 @@ function initializeNewGame(){
 		gameMinutesLength = 0;
 		gameSecondsLength = 0;
 	}
-
+/* 	if (gametype == "ffa"){
+		timeInGameRankingThresh = 280;
+	}
+	else {
+		timeInGameRankingThresh = 30;
+	}
+ */
 	minutesLeft = gameMinutesLength;
 	secondsLeft = gameSecondsLength;
 
@@ -1960,7 +1966,7 @@ function getServerSubName(){
 		serverSubName += " Capture]";
 	}
 	else if (gametype == "slayer"){
-		serverSubName += " Deathmatch]";
+		serverSubName += " Team Killfest]";
 	}
 	else if (gametype == "elim"){
 		serverSubName += " Elimination]";
