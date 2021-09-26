@@ -88,7 +88,7 @@ var version = "v 0.5.0"; //Scalable + customizations
 
 const spectateMoveSpeed = 10;
 var screenShakeScale = 0.5;
-var drawDistance = 5; 
+var drawDistance = 10; 
 var playerCenterOffset = 4;
 var noPlayerBorders = false;
 var timeInGameRankingThresh = 30; //seconds
@@ -2484,7 +2484,8 @@ function drawMap() {
 	
 	if (reallyLowGraphicsMode){
 		ctx.fillStyle = '#585858';
-		ctx.fillRect(centerX - myPlayer.x * zoom, centerY - myPlayer.y * zoom, mapWidth * zoom, mapHeight * zoom);
+		drawRect(centerX - myPlayer.x * zoom, centerY - myPlayer.y * zoom, mapWidth * zoom, mapHeight * zoom);
+		drawGrid();
 	}
 	else {
 		var tile = Img.tile;
@@ -2971,21 +2972,21 @@ function drawBlocks(){
 				if (Block.list[i].type == "normal"){
 					if (reallyLowGraphicsMode == true){
 						ctx.fillStyle = '#1f1f1f';
-						ctx.fillRect(centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom);
+						drawRect(centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom, 2);
 					}
 				}
 				if (Block.list[i].type == "red"){
 					imgBlock = Img.redBlock;
 					if (reallyLowGraphicsMode == true){
 						ctx.fillStyle = '#341f1f';
-						ctx.fillRect(centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom);
+						drawRect(centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom, 2);
 					}
 				}
 				else if (Block.list[i].type == "blue"){
 					imgBlock = Img.blueBlock;
 					if (reallyLowGraphicsMode == true){
 						ctx.fillStyle = '#212a36';
-						ctx.fillRect(centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom);
+						drawRect(centerX - myPlayer.x * zoom + Block.list[i].x * zoom, centerY - myPlayer.y * zoom + Block.list[i].y * zoom, Block.list[i].width * zoom, Block.list[i].height * zoom, 2);
 					}
 				}
 				else if (Block.list[i].type == "pushUp"){
@@ -4133,6 +4134,7 @@ function drawPlayerTags(){
 					if (gametype == "ffa" && (nameColor == "#9d0000" || nameColor == "#00259d")){
 						nameColor = "black";
 					}
+
 					
 					var stroke = false;
 					if (gametype == "ffa"){
@@ -4627,11 +4629,11 @@ function drawHUD(){
 			//Weapon selected highlight
 			ctx.globalAlpha = 0.3;
 			ctx.fillStyle="#FFFFFF";						
-			if (Player.list[myPlayer.id].weapon == 1){ ctx.fillRect(canvasWidth - 248 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75 - 10, Img.weapon1Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 2){ ctx.fillRect(canvasWidth - 203 - iconWidth,canvasHeight - 130 - liftBottomHUD,Img.weapon2Key.width*0.75 - 10,Img.weapon2Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 3){ ctx.fillRect(canvasWidth - 161 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 4){ ctx.fillRect(canvasWidth - 108 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
-			else if (Player.list[myPlayer.id].weapon == 5){ ctx.fillRect(canvasWidth - 55 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
+			if (Player.list[myPlayer.id].weapon == 1){ drawRect(canvasWidth - 248 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon1Key.width*0.75 - 10, Img.weapon1Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 2){ drawRect(canvasWidth - 203 - iconWidth,canvasHeight - 130 - liftBottomHUD,Img.weapon2Key.width*0.75 - 10,Img.weapon2Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 3){ drawRect(canvasWidth - 161 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon3Key.width*0.75, Img.weapon3Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 4){ drawRect(canvasWidth - 108 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
+			else if (Player.list[myPlayer.id].weapon == 5){ drawRect(canvasWidth - 55 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75); }
 			ctx.globalAlpha = 1.0;
 
 			//Weapon keys
@@ -4815,7 +4817,7 @@ function drawChat(){
 	if (chatInput.style.display == "inline"){
 		ctx.globalAlpha = 0.3;
 		ctx.fillStyle="#000"; //black
-		ctx.fillRect(0, canvasHeight - 205, 310, 205);
+		drawRect(0, canvasHeight - 205, 310, 205);
 		ctx.globalAlpha = 1;
 
 		//QuickChat keys
@@ -4865,7 +4867,7 @@ function drawTopScoreboard(){
 					ctx.fillStyle="#000000";
 				}
 				ctx.fillStyle="#2e3192"; //blue
-				ctx.fillRect((canvasWidth/2 - 25) + 70,0,50,50);
+				drawRect((canvasWidth/2 - 25) + 70,0,50,50);
 				if (pcMode == 2){
 					ctx.fillStyle="#9e0b0f"; //red
 				}
@@ -4873,7 +4875,7 @@ function drawTopScoreboard(){
 					ctx.fillStyle="#FFFFFF";
 				}
 				ctx.fillStyle="#9e0b0f"; //red
-				ctx.fillRect((canvasWidth/2 - 25) - 70,0,50,50);
+				drawRect((canvasWidth/2 - 25) - 70,0,50,50);
 				ctx.globalAlpha = 1.0;
 			}
 
@@ -5056,7 +5058,7 @@ function drawPostGameProgress(){
 			else if (postGameProgressBlackBoxY > postGameProgressBlackBoxTargetY){
 				postGameProgressBlackBoxY = postGameProgressBlackBoxTargetY;
 			}
-			ctx.fillRect(0, postGameProgressBlackBoxY + postGameProgressY, canvasWidth, 130); //drawrect draw rectangle
+			drawRect(0, postGameProgressBlackBoxY + postGameProgressY, canvasWidth, 130); //drawrect draw rectangle
 		}
 		//4 Large rank icon behind name
 		if (postGameProgressPlayerNameY == postGameProgressPlayerNameTargetY) {
@@ -5085,11 +5087,11 @@ function drawPostGameProgress(){
 				postGameProgressRatingBarY = postGameProgressRatingBarTargetY;
 			}
 			ctx.fillStyle="#000"; //Border rect
-			ctx.fillRect(canvasWidth/2 - postGameBarWidth/2 - 1, postGameProgressRatingBarY - 1 + postGameProgressY, postGameBarWidth + 2, postGameBarHeight + 2); //drawrect draw rectangle
+			drawRect(canvasWidth/2 - postGameBarWidth/2 - 1, postGameProgressRatingBarY - 1 + postGameProgressY, postGameBarWidth + 2, postGameBarHeight + 2); //drawrect draw rectangle
 			ctx.fillStyle="#7d7d7d"; //Unfilled grey
-			ctx.fillRect(canvasWidth/2 - postGameBarWidth/2, postGameProgressRatingBarY + postGameProgressY, postGameBarWidth, postGameBarHeight); //drawrect draw rectangle
+			drawRect(canvasWidth/2 - postGameBarWidth/2, postGameProgressRatingBarY + postGameProgressY, postGameBarWidth, postGameBarHeight); //drawrect draw rectangle
 			ctx.fillStyle="#ffde00"; //Experience Yellow
-			ctx.fillRect(canvasWidth/2 - postGameBarWidth/2, postGameProgressRatingBarY + postGameProgressY, (postGameBarWidth * postGameProgressInfo.ratingPercentageToNext), postGameBarHeight); //drawrect draw rectangle
+			drawRect(canvasWidth/2 - postGameBarWidth/2, postGameProgressRatingBarY + postGameProgressY, (postGameBarWidth * postGameProgressInfo.ratingPercentageToNext), postGameBarHeight); //drawrect draw rectangle
 			
 			ctx.textAlign="left";
 			ctx.font = 'bold 11px Electrolize';
@@ -5189,7 +5191,7 @@ function drawPostGameProgress(){
 			}
 		
 			ctx.fillStyle = postGameProgressInfo.ratingDif >= 0 ? "#FFF" : "#cc0000";
-			ctx.fillRect((canvasWidth/2 - postGameBarWidth/2) + (postGameBarWidth * postGameProgressInfo.ratingPercentageToNext),
+			drawRect((canvasWidth/2 - postGameBarWidth/2) + (postGameBarWidth * postGameProgressInfo.ratingPercentageToNext),
 			postGameProgressRatingBarY + postGameProgressY,
 			(postGameBarWidth * getProgressBarPercentage(postGameProgressInfo.rankFloor + postGameProgressRatingTicks, postGameProgressInfo.rankFloor, postGameProgressInfo.rankCeiling)),
 			postGameBarHeight);
@@ -5228,7 +5230,7 @@ function drawPostGameProgress(){
 					postGameProgressRankUpDown = false;
 				}
 				ctx.fillStyle = "#000";
-				ctx.fillRect(0, 230 - rankUpRectHeight/2, canvasWidth, rankUpRectHeight); //drawrect draw rectangle
+				drawRect(0, 230 - rankUpRectHeight/2, canvasWidth, rankUpRectHeight); //drawrect draw rectangle
 				drawImage(postGameProgressInfo.nextRankIcon, canvasWidth - postGameProgressRankUpXOffset - postGameProgressInfo.nextRankIcon.width/2, 85);								
 				ctx.textAlign="center";
 				ctx.fillStyle="#FFFFFF";
@@ -5273,11 +5275,11 @@ function drawPostGameProgress(){
 				postGameProgressExpBarY = postGameProgressExpBarTargetY;
 			}
 			ctx.fillStyle="#000"; //Border rect
-			ctx.fillRect(canvasWidth/2 - postGameBarWidth/2 - 1, postGameProgressExpBarY - 1 + postGameProgressY, postGameBarWidth + 2, postGameBarHeight + 2); //drawrect draw rectangle
+			drawRect(canvasWidth/2 - postGameBarWidth/2 - 1, postGameProgressExpBarY - 1 + postGameProgressY, postGameBarWidth + 2, postGameBarHeight + 2); //drawrect draw rectangle
 			ctx.fillStyle="#7d7d7d"; //unfilled grey
-			ctx.fillRect(canvasWidth/2 - postGameBarWidth/2, postGameProgressExpBarY + postGameProgressY, postGameBarWidth, postGameBarHeight); //drawrect draw rectangle
+			drawRect(canvasWidth/2 - postGameBarWidth/2, postGameProgressExpBarY + postGameProgressY, postGameBarWidth, postGameBarHeight); //drawrect draw rectangle
 			ctx.fillStyle="#0eb80e"; //Experience green
-			ctx.fillRect(canvasWidth/2 - postGameBarWidth/2, postGameProgressExpBarY + postGameProgressY, (postGameBarWidth * postGameProgressInfo.expPercentageToNext), postGameBarHeight); //drawrect draw rectangle
+			drawRect(canvasWidth/2 - postGameBarWidth/2, postGameProgressExpBarY + postGameProgressY, (postGameBarWidth * postGameProgressInfo.expPercentageToNext), postGameBarHeight); //drawrect draw rectangle
 			
 			ctx.textAlign="left";
 			ctx.font = 'bold 11px Electrolize';
@@ -5331,7 +5333,7 @@ function drawPostGameProgress(){
 			}
 		
 			ctx.fillStyle = "#FFF";
-			ctx.fillRect((canvasWidth/2 - postGameBarWidth/2) + (postGameBarWidth * postGameProgressInfo.expPercentageToNext),
+			drawRect((canvasWidth/2 - postGameBarWidth/2) + (postGameBarWidth * postGameProgressInfo.expPercentageToNext),
 			postGameProgressExpBarY + postGameProgressY,
 			(postGameBarWidth * getProgressBarPercentage(postGameProgressInfo.expFloor + postGameProgressExpTicks, postGameProgressInfo.expFloor, postGameProgressInfo.expCeiling)),
 			postGameBarHeight);
@@ -5880,11 +5882,11 @@ function drawTeamBanners(teamScoreBoard){
 		}
 
 		ctx.fillStyle=drawnTopTeamColor; //red/white
-		ctx.fillRect(scoreBoardX, scoreBoardY + scoreBoardMargin, teamBannerWidth, teamBannerHeight); //drawrect draw rectangle
+		drawRect(scoreBoardX, scoreBoardY + scoreBoardMargin, teamBannerWidth, teamBannerHeight); //drawrect draw rectangle
 		
 		if (teamScoreBoard){
 			ctx.fillStyle="#2e3192"; //blue/black
-			ctx.fillRect(scoreBoardX, scoreBoardY + (scoreBoardHeight/2) + scoreBoardMargin/2, teamBannerWidth, teamBannerHeight);
+			drawRect(scoreBoardX, scoreBoardY + (scoreBoardHeight/2) + scoreBoardMargin/2, teamBannerWidth, teamBannerHeight);
 		}
 
 		ctx.fillStyle="#FFFFFF";
@@ -6161,6 +6163,8 @@ function timer1Misc(){
 }
 
 function drawEverything(){
+	ctx.clearRect(0,0,canvasWidth,canvasHeight); //Clears previous frame
+
 	timer1Misc();
 
 	//Don't draw anything if the user hasn't entered the game with a player id and name
@@ -6172,7 +6176,7 @@ function drawEverything(){
 	updateCamera();	
 	noShadow();
 	ctx.fillStyle = "#101010";
-	ctx.fillRect(0, 0, canvasWidth, canvasHeight); 	
+	drawRect(0, 0, canvasWidth, canvasHeight); 	
 	
 	//drawMapCanvas();
 	drawMap();
@@ -7284,8 +7288,44 @@ function getNewTip(){
 }
 
 
-
 //Handy handy functions
+function drawRect(x, y, width, height, strokeWidth = 0, strokeColor = "black"){
+	var newX = x;
+	var newY = y;
+	var newWidth = width;
+	var newHeight = height;
+	if (newX < -2){newX = -2; newWidth = newWidth - (newX - x);}
+	if (newX + newWidth > canvasWidth){newWidth = canvasWidth - newX;}
+	if (newY < -2){newY = -2; newHeight = newHeight - (newY - y);}
+	if (newY + newHeight > canvasHeight){newHeight = canvasHeight - newY;}
+
+	ctx.fillRect(Math.round(newX), Math.round(newY), Math.round(newWidth), Math.round(newHeight));
+	if (strokeWidth){
+		ctx.lineWidth = strokeWidth;
+		ctx.strokeStyle = strokeColor;
+		noShadow();
+		ctx.strokeRect(Math.round(newX), Math.round(newY), Math.round(newWidth), Math.round(newHeight));
+	}
+}
+
+
+function drawGrid(){
+	if (myPlayer.team == 0){return;}
+	for (var x = 0; x <= mapWidth*zoom; x += 75*zoom) { //Draw Vertial (Y) lines
+		if (x-cameraX < 0 || x-cameraX > canvasWidth){continue;}
+        ctx.moveTo(Math.round(x-cameraX), Math.round(0-cameraY));
+		ctx.lineTo(Math.round(x-cameraX), Math.round(mapHeight*zoom - cameraY));
+    }
+    for (var y = 0; y <= mapHeight*zoom; y += 75*zoom) {
+		if (y-cameraY < 0 || y-cameraY > canvasHeight){continue;}
+        ctx.moveTo(Math.round(0-cameraX), Math.round(y-cameraY));
+		ctx.lineTo(Math.round(mapWidth*zoom-cameraX), Math.round(y-cameraY));
+    }
+    ctx.strokeStyle = "#6b6b6b";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+}
+
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
 	if (typeof stroke === 'undefined') {
 	  stroke = true;
