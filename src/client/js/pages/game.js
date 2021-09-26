@@ -2777,7 +2777,7 @@ function drawWallBodies(){
 }
 
 function drawMissingBags(){
-	if (gametype != "ctf")
+	if (gametype != "ctf" || (pregame && pregameIsHorde))
 		return;
 	if (bagRed.x != bagRed.homeX || bagRed.y != bagRed.homeY){
 		if (centerX - myPlayer.x * zoom + bagRed.homeX * zoom - Img.bagMissing.width/2 * zoom > -Img.bagMissing.width * zoom - drawDistance && centerX - myPlayer.x * zoom + bagRed.homeX * zoom - Img.bagMissing.width/2 * zoom < canvasWidth + drawDistance && centerY - myPlayer.y * zoom + bagRed.homeY * zoom - Img.bagMissing.height/2 * zoom > -Img.bagMissing.height * zoom - drawDistance && centerY - myPlayer.y * zoom + bagRed.homeY * zoom - Img.bagMissing.height/2 * zoom < canvasHeight + drawDistance){
@@ -4528,13 +4528,13 @@ function updateSpectatingView(){ //updates spectating camera
 	}
 
 	if (!shop.active){
-		if (myPlayer.pressingS)
+		if (myPlayer.pressingS && (cameraY+canvasHeight/2) < mapHeight*zoom)
 			myPlayer.y += spectateMoveSpeed;
-		if (myPlayer.pressingW)
+		if (myPlayer.pressingW && (cameraY+canvasHeight/2) > 0)
 			myPlayer.y -= spectateMoveSpeed;
-		if (myPlayer.pressingA)
+		if (myPlayer.pressingA && (cameraX+canvasWidth/2) > 0)
 			myPlayer.x -= spectateMoveSpeed;
-		if (myPlayer.pressingD)
+		if (myPlayer.pressingD && (cameraX+canvasWidth/2) < mapWidth*zoom)
 			myPlayer.x += spectateMoveSpeed;
 	}
 
@@ -6842,7 +6842,7 @@ document.onkeydown = function(event){
 		}
 	}
 
-	if(hitKeyCode === 87 && chatInput.style.display == "none"){ //W
+	if(hitKeyCode === 87 && chatInput.style.display == "none"){ //W 
 		if (!myPlayer.pressingW && !shop.active){
 			keyPress(87, true);
 		}
@@ -6852,7 +6852,7 @@ document.onkeydown = function(event){
 			spectatingPlayerId = "";
 		}
 	}
-	else if(hitKeyCode === 68 && chatInput.style.display == "none"){ //D
+	else if(hitKeyCode === 68 && chatInput.style.display == "none"){ //D 
 		if (!myPlayer.pressingD && !shop.active){
 			keyPress(68, true);
 		}
@@ -6862,7 +6862,7 @@ document.onkeydown = function(event){
 			spectatingPlayerId = "";
 		}
 	}
-	else if(hitKeyCode === 83 && chatInput.style.display == "none"){ //S
+	else if(hitKeyCode === 83 && chatInput.style.display == "none"){ //S 
 		if (!myPlayer.pressingS && !shop.active){
 			keyPress(83, true);
 		}
@@ -6872,7 +6872,7 @@ document.onkeydown = function(event){
 			spectatingPlayerId = "";
 		}
 	}
-	else if(hitKeyCode === 65 && chatInput.style.display == "none"){ //A
+	else if(hitKeyCode === 65 && chatInput.style.display == "none"){ //A 
 		if (!myPlayer.pressingA && !shop.active){
 			keyPress(65, true);
 		}
@@ -7030,32 +7030,32 @@ document.onkeydown = function(event){
 			myPlayer.pressingSpace = true;
 		}
 	}		
-	else if(hitKeyCode === 81 && chatInput.style.display == "none"){ //Q
+	else if(hitKeyCode === 81 && chatInput.style.display == "none"){ //Q 
 		keyPress(81, true);
 	}	
-	else if(hitKeyCode === 69 && chatInput.style.display == "none"){ //E
+	else if(hitKeyCode === 69 && chatInput.style.display == "none"){ //E 
 		keyPress(69, true);
 	}	
-	else if(hitKeyCode === 82 && chatInput.style.display == "none" && !shop.active){ //R
+	else if(hitKeyCode === 82 && chatInput.style.display == "none" && !shop.active){ //R 
 		keyPress(82, true);
 	}
-	else if(hitKeyCode === 16 && chatInput.style.display == "none"){ //Shift
+	else if(hitKeyCode === 16 && chatInput.style.display == "none"){ //Shift 
 		myPlayer.pressingShift = true;
 		keyPress(16, true);
 	}
-	else if(hitKeyCode === 49 && chatInput.style.display == "none"){ //1
+	else if(hitKeyCode === 49 && chatInput.style.display == "none"){ //1 
 		keyPress(49, true);
 	}	
-	else if(hitKeyCode === 50 && chatInput.style.display == "none"){ //2
+	else if(hitKeyCode === 50 && chatInput.style.display == "none"){ //2 
 		keyPress(50, true);
 	}	
-	else if(hitKeyCode === 51 && chatInput.style.display == "none"){ //3
+	else if(hitKeyCode === 51 && chatInput.style.display == "none"){ //3 
 		keyPress(51, true);
 	}	
-	else if(hitKeyCode === 52 && chatInput.style.display == "none"){ //4
+	else if(hitKeyCode === 52 && chatInput.style.display == "none"){ //4 
 		keyPress(52, true);
-	}	
-	else if(hitKeyCode === 53 && chatInput.style.display == "none"){ //5
+	}	 
+	else if(hitKeyCode === 53 && chatInput.style.display == "none"){ //5 
 		keyPress(53, true);
 	}	
 	
