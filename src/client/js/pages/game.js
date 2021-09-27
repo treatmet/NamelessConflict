@@ -1913,7 +1913,6 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			document.getElementById("voteThePit").disabled = false;				
 			document.getElementById("voteNarrows").disabled = false;				
 			document.getElementById("voteLongNarrows").disabled = false;				
-			document.getElementById("voteLongNarrows").style.display = "none"; //Need to fix map!!!
 			document.getElementById("voteRebalanceYes").disabled = false;				
 			document.getElementById("voteRebalanceNo").disabled = false;				
 		}
@@ -4962,7 +4961,7 @@ function drawTopScoreboard(){
 			var blackScoreY = (blackScoreHeight + (blackScoreHeight/2 + 16))/2;	
 			if (gameOver){
 				blackScoreX = 375;
-				blackScoreY = 445;
+				blackScoreY = 452;
 			}
 			strokeAndFillText(blackScore,blackScoreX,blackScoreY);
 		}
