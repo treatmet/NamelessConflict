@@ -280,7 +280,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("September 16, 2021 16:00:00");
+	var thresholdDate = new Date("September 23, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -311,9 +311,9 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				  	continue;
 				}
 
-				if (customizationOptions.indexOf("goldSGWeapon") == -1){
-					customizationOptions.push("goldSGWeapon");
-					console.log("Pushing SG");
+				if (customizationOptions.indexOf("goldDPWeapon") == -1){
+					customizationOptions.push("goldDPWeapon");
+					console.log("Pushing DP");
 					updatey = true;
 				}
     
@@ -331,10 +331,10 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 					customizationOptions:customizationOptions
 				};
 
-				// if (!updatey){
-				// 	console.log("Nothing to update...");
-				// 	continue;
-				// }
+				if (!updatey){
+					console.log("Nothing to update...");
+					continue;
+				}
 				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
 					console.log("SAFETYS ON");
 					continue;

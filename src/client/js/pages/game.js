@@ -97,8 +97,8 @@ var camOffSet = 450;//Offset is how many pixels away from the center the camera 
 var diagCamOffSet = 325;
 var camMaxSpeed = 300;
 var camAccelerationMultiplier = 1.9;
-const spectateZoom = 0.5;
 var defaultZoom = 0.75;
+const spectateZoom = 0.5;
 var zoom = defaultZoom;
 
 const maxCloakStrength = 0.98; //minCloak
@@ -1018,6 +1018,8 @@ function updateOrderedPlayerList(){
 }
 
 function getNextOrderedPlayer(playerId, previous){ //previous is a bool designating if requesting previous player (true) or next player (false)
+	updateOrderedPlayerList();
+	if (spectatingPlayerId == "" && orderedPlayerList[0]){spectatingPlayerId = orderedPlayerList[0].id; return;}
 	for (var p = 0; p < orderedPlayerList.length; p++){
 		if (orderedPlayerList[p].id == playerId){
 			if (previous){
@@ -1286,9 +1288,9 @@ socket.on('signInResponse', function(data){
 		log("Sign into server successful - INITIALIZING GRAPHICS");
 		if (getCookie("lowGraphics") == "true"){
 			log("Setting low graphics to true from cookie");
-			reallyLowGraphicsMode = true;
+			reallyLowGraphicsToggle(true);
 		} else {
-			reallyLowGraphicsMode = false;
+			reallyLowGraphicsToggle(false);
 		}
 
 		myPlayer.id = data.id;
@@ -1593,6 +1595,17 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 					}
 				}
 			});
+		}
+
+		//Set Zoom on spec/join
+		if (playerDataPack[i].property == "team"){	
+			if (playerDataPack[i].value == 0){
+				setZoom(spectateZoom);
+			}
+			else {
+				setZoom(defaultZoom);
+			}
+
 		}
 ////////////Put future client updates after this line /////////////////
 		//Play bagGrab SFX if holdingBag switched to true for someone OR their "returns" count increased
@@ -4842,7 +4855,7 @@ function getAliveTeamPlayersCount(team){
 
 	for (var p in Player.list){
 		//console.log(team + " Players team is " + Player.list[p].team + " and health is " + Player.list[p].health);
-		if (Player.list[p].team == team && Player.list[p].health >= 0){
+		if (Player.list[p].team == team && Player.list[p].health > 0){
 			count++;
 		}
 	}
@@ -4916,7 +4929,7 @@ function drawTopScoreboard(){
 			}
 		}
 
-		//Eminimation players remaining
+		//Eminimation players remaining elimPlayerCount
 		ctx.fillStyle="#FFFFFF";
 		ctx.font = '22px Electrolize';
 		ctx.lineWidth=4;
@@ -6005,7 +6018,7 @@ function sortPlayers(isTeamGame){
 				team2.push(Player.list[a]);
 			}
 		}
-		else {
+		else if (Player.list[a].team != 0){
 			team1.push(Player.list[a]);
 		}
 	}
@@ -6163,8 +6176,6 @@ function timer1Misc(){
 }
 
 function drawEverything(){
-	ctx.clearRect(0,0,canvasWidth,canvasHeight); //Clears previous frame
-
 	timer1Misc();
 
 	//Don't draw anything if the user hasn't entered the game with a player id and name
@@ -6401,12 +6412,6 @@ setInterval(
 			if (!customServer && !pregame)
 				Thug.list = [];
 		}
-		if ((myPlayer.team == 0 || myPlayer.eliminationSpectate) && zoom != spectateZoom){
-			setZoom(spectateZoom);
-		}
-		else if (myPlayer.team != 0 && !myPlayer.eliminationSpectate && zoom < defaultZoom) {
-			setZoom(defaultZoom);
-		}
 
 		fpsInLastSecond = fpsCounter;
 		fpsCounter = 0;
@@ -6462,12 +6467,10 @@ function checkPreviousPingsAndShowPerfInstructions(stopwatch = false){
 	if (ping >= 999 && previousPing >= 999 && !triggeredPerformanceTips && countdownToRedrawGraphics == -1){
 		logg("PERFORMANCE ERROR: ping:" + ping + " previousPing:" + previousPing + ". Disconnecting and triggering performance tips.");
 		triggeredPerformanceTips = true;
-		reallyLowGraphicsToggle(true);
-		addToChat("Unplayable conditions detected!! Enabled low graphics.");
-
-/* 		show("unplayableHeader");
-		show("performanceInstructions");
- */	
+		if (!reallyLowGraphicsMode){
+			reallyLowGraphicsToggle(true);
+			addToChat("Unplayable conditions detected!! Enabled low graphics.");
+		}
 	}
 }
 
@@ -6920,11 +6923,12 @@ document.onkeydown = function(event){
 			}
 			if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true && !shop.active){
 				spectatePlayers = true;
-				if (spectatingPlayerId == "bagRed"){
-					spectatingPlayerId = "";
-				}
-				else {
-					spectatingPlayerId = "bagBlue";
+				var count = 0;
+				getNextOrderedPlayer(spectatingPlayerId, false);	
+				while (Player.list[spectatingPlayerId] && Player.list[spectatingPlayerId].health <= 0){
+					getNextOrderedPlayer(spectatingPlayerId, false);
+					count++;
+					if (count > getNumPlayersInGame() + 1){spectatingPlayerId = ""; break;}	
 				}
 			}
 		}
@@ -6942,7 +6946,6 @@ document.onkeydown = function(event){
 				var count = 0;
 				getNextOrderedPlayer(spectatingPlayerId, false);	
 				while (Player.list[spectatingPlayerId] && Player.list[spectatingPlayerId].health <= 0){
-					console.log("count " + count);
 					getNextOrderedPlayer(spectatingPlayerId, false);
 					count++;
 					if (count > getNumPlayersInGame() + 1){spectatingPlayerId = ""; break;}	
@@ -6965,13 +6968,14 @@ document.onkeydown = function(event){
 			}	
 			if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true && !shop.active){
 				spectatePlayers = true;
-				if (spectatingPlayerId == "bagBlue"){
-					spectatingPlayerId = "";
+				var count = 0;
+				getNextOrderedPlayer(spectatingPlayerId, true);	
+				while (Player.list[spectatingPlayerId] && Player.list[spectatingPlayerId].health <= 0){
+					getNextOrderedPlayer(spectatingPlayerId, true);
+					count++;
+					if (count > getNumPlayersInGame() + 1){spectatingPlayerId = ""; break;}	
 				}
-				else {
-					spectatingPlayerId = "bagRed";
-				}
-			}	
+			}
 		}
 	}	//Quick Chat
 	else if (event.keyCode == 38 && chatInput.style.display != "none" && chatInput.value == ""){ //Up 
@@ -7176,6 +7180,7 @@ document.onkeydown = function(event){
 			if (gametype == "elim")
 				shop.active = true;
 			if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){
+				//targetZoom -= zoomRate;
 				zoomIn();
 			}
 		}
@@ -7308,9 +7313,8 @@ function drawRect(x, y, width, height, strokeWidth = 0, strokeColor = "black"){
 	}
 }
 
-
 function drawGrid(){
-	if (myPlayer.team == 0){return;}
+	ctx.beginPath();
 	for (var x = 0; x <= mapWidth*zoom; x += 75*zoom) { //Draw Vertial (Y) lines
 		if (x-cameraX < 0 || x-cameraX > canvasWidth){continue;}
         ctx.moveTo(Math.round(x-cameraX), Math.round(0-cameraY));
@@ -7368,7 +7372,6 @@ var getNumPlayersInGame = function(){
 		if (playerList[p].team != 0)
 			totalPlayers++;
 	}
-	console.log(totalPlayers + "players");
 	return totalPlayers;
 }
 

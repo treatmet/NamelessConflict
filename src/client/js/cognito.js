@@ -531,7 +531,7 @@ function getPerformanceInstrucitons(){
 	html +=  '</div><br><br>';
 	html +=  '3. Close other browser tabs; Close other CPU intensive applications<br><br>';
 	if (page == "game")
-		html +=  '4. Use Low Graphics mode: <button id="lowGraphcsModeButton" style="background-color: #818181;" class="RWButton" onclick="reallyLowGraphicsToggle()">Low Graphics Mode</button><br><br>';
+		html +=  '4. Use Low Graphics mode: <button id="lowGraphcsModeButton" style="background-color: #818181;" class="RWButton" onclick="reallyLowGraphicsToggle()">Low Graphics Mode [Off]</button><br><br>';
 	html +=  '5. Connect to internet with ethernet cable instead of wifi<br><br>';
 	html +=  '<div id="closePerfInstructions"><a href="#" style="font-size: 16px;" onclick=\'hide("performanceInstructions")\'>Click here to close these instructions</a></div>';
 	return html;
@@ -546,7 +546,11 @@ function reallyLowGraphicsToggle(setting = false){
 		reallyLowGraphicsMode = false;
 		bodyLimit = 16;
 		document.getElementById("lowGraphcsModeButton").innerHTML = 'Low Graphics Mode [OFF]';
-		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#818181";
+		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#529eec";
+		if (document.getElementById("lowGraphcsModeButtonSide")){
+			document.getElementById("lowGraphcsModeButtonSide").innerHTML = 'Low Graphics Mode [OFF]';
+			document.getElementById("lowGraphcsModeButtonSide").style.backgroundColor = "#529eec";
+		}
 	}
 	else {
 		reallyLowGraphicsMode = true;
@@ -554,13 +558,22 @@ function reallyLowGraphicsToggle(setting = false){
 		bodyLimit = 2;
 		Body.list = [];
 		document.getElementById("lowGraphcsModeButton").innerHTML = 'Low Graphics Mode [ON]';
-		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#529eec";
+		document.getElementById("lowGraphcsModeButton").style.backgroundColor = "#3a71a8";
+		if (document.getElementById("lowGraphcsModeButtonSide")){
+			document.getElementById("lowGraphcsModeButtonSide").innerHTML = 'Low Graphics Mode [ON]';
+			document.getElementById("lowGraphcsModeButtonSide").style.backgroundColor = "#3a71a8";
+		}
 	}
 }
 
 function showPerformanceInstructionsHeader(){
-	document.getElementById('performanceInstructions').innerHTML = getPerformanceInstrucitons();
-	show('performanceInstructions');
+	if (document.getElementById('performanceInstructions') && (document.getElementById('performanceInstructions').style.display == '' || document.getElementById('performanceInstructions').style.display == 'none')){
+		document.getElementById('performanceInstructions').innerHTML = getPerformanceInstrucitons();
+		show('performanceInstructions');
+	}
+	else {
+		hide('performanceInstructions');
+	}
 }
 
 function friendAcceptClick(id){

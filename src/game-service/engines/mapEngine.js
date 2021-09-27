@@ -1,6 +1,7 @@
 var pickup = require('../entities/pickup.js');
 var block = require('../entities/block.js');
 
+//buildMap generateMap
 var initializePickups = function(map){
 	pickup.clearPickupList();
 	
@@ -145,7 +146,7 @@ var initializePickups = function(map){
 		}
 		pickup.createPickup(Math.random(), 33, 85, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 27, 42, 1, 50, 10); //MD
-		pickup.createPickup(Math.random(), 27, 42, 1, 50, 10); //MD
+		pickup.createPickup(Math.random(), 27, 46, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 21, 3, 1, 50, 10); //MD
 
 	}	
@@ -500,7 +501,7 @@ var initializeBlocks = function(map){
 		block.createBlock(0, 62, 20, 1, "normal");	
 		block.createBlock(23, 62, 18, 1, "normal");	
 		block.createBlock(40, 49, 1, 14, "normal");	
-		block.createBlock(25, 59, 15, 4, "normal");	
+		block.createBlock(25, 59, 16, 4, "normal");	
 
 		block.createBlock(11, 54, 2, 3.9, "blue");	
 		block.createBlock(11, 56, 6, 2, "blue");	
@@ -527,7 +528,7 @@ var initializeBlocks = function(map){
 		spawnYminWhite = 1*75;
 		spawnYmaxWhite = 20*75;
 
-		spawnXminBlack = 1*75;
+		spawnXminBlack = 3*75;
 		spawnXmaxBlack = 46*75;
 		spawnYminBlack = 67*75;
 		spawnYmaxBlack = mapHeight - 75;
@@ -585,9 +586,8 @@ var initializeBlocks = function(map){
 		block.createBlock(9, 26, 10, 35, "normal");
 		block.createBlock(6, 13, 1, 60, "normal");
 		block.createBlock(9, 26, 1, 47, "normal");
-		block.createBlock(13.1, 64, 6, 2.9, "normal");
+		block.createBlock(13.1, 64, 5.8, 3, "normal");
 		block.createBlock(13, 64, 3, 5, "normal");
-		block.createBlock(13, 64, 6, 3, "normal");
 
 		//center map
 		block.createBlock(18, 20, 1, 47, "normal");	//rails

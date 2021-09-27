@@ -60,7 +60,7 @@ global.removeCognitoSubFromArray = function(incomingUsers, cognitoSub){
 	return updatedIncomingUsers;
 }
 
-global.getSocketIdFromCognitoSub = function(cognitoSub){
+global.getSocketIdFromCognitoSub = function(cognitoSub){ //byCognitoSub
 	for(var s in SOCKET_LIST){
 		if (SOCKET_LIST[s].cognitoSub == cognitoSub){
 			return 	SOCKET_LIST[s].id;
@@ -411,21 +411,3 @@ global.sleep = function(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-global.getPlaceFormat = function(i){
-	var text = "";
-
-	if (i == 1){
-		text = iShift + "st PLACE!"
-	}
-	else if (i == 2){
-		text = iShift + "nd PLACE"
-	}
-	else if (i == 3){
-		text = iShift + "rd PLACE"
-	}
-	else {
-		text = iShift + "th PLACE"
-	}
-
-	return text;
-}

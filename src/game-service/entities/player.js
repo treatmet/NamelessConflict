@@ -1914,6 +1914,9 @@ function evalServer(socket, data){
 	else if (data == "startt" || data == "restartt"){
 		gameEngine.restartGame();
 	}
+	else if (data == "spawn" || data == "respawn"){
+		gameEngine.spawnSafely(getPlayerById(socket.id));
+	}
 	else if (data == "me"){
 		logg("BANNED: " + getPlayerById(socket.id).cognitoSub);
 		bannedCognitoSubs.push({cognitoSub:getPlayerById(socket.id).cognitoSub, reason:"asking for it"});
@@ -1973,7 +1976,7 @@ function evalServer(socket, data){
 		if (gametype == "horde" || (pregame && pregameIsHorde)){
 			var playerList = getPlayerList();
 			for (var p in playerList){
-				playerList[p].team = 2;
+				gameEngine.changeTeams(playerList[p].id, 2);
 			}
 		}
 		else {
@@ -2008,8 +2011,15 @@ function evalServer(socket, data){
 		}
 	}
 	else if (data == "spectate" || data == "spec"){
-		abandonMatch(socket.id);
-		gameEngine.changeTeams(socket.id, 0);
+		if (getPlayerById(socket.id).team == 0){
+			var team = 1;
+			if (gametype == "horde" || (pregame && pregameIsHorde)){team = 2;}
+			gameEngine.changeTeams(socket.id, team);
+		}
+		else {
+			abandonMatch(socket.id);
+			gameEngine.changeTeams(socket.id, 0);
+		}
 	}
 	else if (data == "boostUp" || data == "boostU" || data == "boostu"){
 		boostAmount += 2;
@@ -2935,6 +2945,7 @@ var getHighestPlayerHordeKills = function(){
 }
 
 var isSafeCoords = function(potentialX, potentialY, team){
+	if (gametype == "ffa"){team = 99;}
 	for (var i in Player.list){
 		if (Player.list[i].team != team && Player.list[i].health > 0 && potentialX >= Player.list[i].x - threatSpawnRange && potentialX <= Player.list[i].x + threatSpawnRange && potentialY >= Player.list[i].y - threatSpawnRange && potentialY <= Player.list[i].y + threatSpawnRange){																		
 			return false;

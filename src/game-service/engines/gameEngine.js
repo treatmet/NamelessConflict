@@ -120,7 +120,7 @@ var resetGameSettingsToStandard = function(){
 
 var changeTeams = function(playerId, requestedTeam = false){
 	var playerList = player.getPlayerList();
-	 console.log("change teams: " + playerList[playerId]);
+	 console.log("change teams: " + playerList[playerId].id);
 	 console.log("requestedTeam:" + requestedTeam);
 	if (playerList[playerId]){
 		if (playerList[playerId].holdingBag){
@@ -136,14 +136,15 @@ var changeTeams = function(playerId, requestedTeam = false){
 			playerList[playerId].holdingBag = false;
 			updatePlayerList.push({id:playerList[playerId].id,property:"holdingBag",value:playerList[playerId].holdingBag});				
 		}
-		if (requestedTeam === 0){
+		if (requestedTeam === 0 && playerList[playerId].team != 0){
 			playerList[playerId].team = 0;
 			playerList[playerId].manualSpectate = true;
 			playerList[playerId].health = 0;
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});			
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"health",value:playerList[playerId].health});			
 		}
-		else if (playerList[playerId].team == 1 || requestedTeam == 2){
+		else if ((requestedTeam == 2 || requestedTeam == false) && playerList[playerId].team != 2){
+			console.log("CHANGING TO TEAM 2");
 			playerList[playerId].team = 2;
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
@@ -151,7 +152,8 @@ var changeTeams = function(playerId, requestedTeam = false){
 				playerList[playerId].respawn(true);			
 			}
 		}
-		else {
+		else if ((requestedTeam == 1 || requestedTeam == false) && playerList[playerId].team != 1){
+			console.log("CHANGING TO TEAM 1");
 			playerList[playerId].team = 1;
 			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
@@ -492,7 +494,7 @@ function getNumTeamPlayersInGame(){ //getCurrentPlayers in game actual players
 	return totalPlayers;
 }
 
-function spawnSafely(entity){
+var spawnSafely = function(entity){
 	var coords = getSafeCoordinates(entity.team);
 	entity.x = coords.x;
 	entity.y = coords.y;
@@ -1763,6 +1765,7 @@ var nextSecond = Date.now() + secondLengthMs;
 var sloppyTimerWindowMs = 16;
 secondIntervalLoop();
 function secondIntervalLoop(){
+
 	var now = Date.now();
 
 	if (previousSecond + secondLengthMs - sloppyTimerWindowMs <= now){
