@@ -206,7 +206,7 @@ function getEligibleTeamCount(playerList, team){
 	return 0;
 }
 
-function calculateAvgRating(playerList, includeNoobs){
+function calculateAvgRating(playerList, includeNoobs, excludePlayer = false){
 	var players = 0;
 	var playersTotalScore = 0;
 
@@ -217,7 +217,7 @@ function calculateAvgRating(playerList, includeNoobs){
 	
 	for (var i in playerList){
 		if (!playerList[i].rating){playerList[i].rating = 0;}
-		if (playerList[i].rating < ratingCalcThresh && !includeNoobs){
+		if ((playerList[i].timeInGame < timeInGameRankingThresh) || (playerList[i].rating < ratingCalcThresh && !includeNoobs) || (excludePlayer && excludePlayer == playerList[i].id)){
 			continue;
 		}
 
@@ -307,9 +307,9 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 			var ptsGained = 0;
 
 			if (gametype == "ffa" && eligiblePlayerList.length > 1){
-				var playersAverageRating = averageRating.players;
+				var playersAverageRating = calculateAvgRating(eligiblePlayerListUpdated, true, player.id).players;
 				if (player.rating < ratingCalcThresh){
-					playersAverageRating = averageRatingPlusNoobs.players;
+					playersAverageRating = calculateAvgRating(eligiblePlayerListUpdated, false, player.id).players;
 				}
 				var teamSkillDifferencePoints = (playersAverageRating - player.rating)/enemySkillDifferenceDivider;
 
@@ -327,7 +327,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 					player.cashEarnedThisGame+=loseCash; 	
 				}
 				else { //Placed top half, or middle
-					if (ptsGained < 3 || playersAverageRating === -1){console.log("win min(" + ptsGained + ") or playersAverageRating was -1"); ptsGained = 3;}		
+					if (ptsGained < minWinPointsGained || playersAverageRating === -1){console.log("win min(" + ptsGained + ") or playersAverageRating was -1"); ptsGained = minWinPointsGained;}		
 					if (ptsGained > 25){console.log("win max(" + ptsGained + ")"); ptsGained = 25;} //Gain cap		
 					player.cashEarnedThisGame+=loseCash; 
 				}
@@ -353,7 +353,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 					gamesWonInc++;
 					console.log("matchWinLossBonus: " + matchWinLossRatingBonus);
 					ptsGained += Math.round(matchWinLossRatingBonus + teamSkillDifferencePoints);
-					if (ptsGained < 3 || enemyAverageRating === -1){console.log("win min(" + ptsGained + ") or enemyAverageRating was -1"); ptsGained = 3;}		
+					if (ptsGained < minWinPointsGained || enemyAverageRating === -1){console.log("win min(" + ptsGained + ") or enemyAverageRating was -1"); ptsGained = minWinPointsGained;}		
 					if (ptsGained > 25){console.log("win max(" + ptsGained + ")"); ptsGained = 25;} //Gain cap		
 					logg(player.name + " had " + player.rating + " pts, and beat a team with " + enemyAverageRating + " pts. He gained " + ptsGained);
 					player.cashEarnedThisGame+=winCash; 
@@ -386,7 +386,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 
 			//Eligible for rank up/down this game?
 			log("player.timeInGame: " + player.timeInGame);
-			if (player.timeInGame < timeInGameRankingThresh || customServer){
+			if ((player.timeInGame < timeInGameRankingThresh && !isLocal) || customServer){
 				logg("Player ineligible for rank influence this game");
 				ptsGained = 0;				
 			}
@@ -1245,13 +1245,13 @@ function initializeNewGame(){ //startGame gameStart
 		gameMinutesLength = 0;
 		gameSecondsLength = 0;
 	}
-/* 	if (gametype == "ffa"){
-		timeInGameRankingThresh = 280;
+ 	if (gametype == "ffa" && gameMinutesLength > 0){
+		timeInGameRankingThresh = gameMinutesLength - 15;
 	}
 	else {
 		timeInGameRankingThresh = 30;
 	}
- */
+
 	minutesLeft = gameMinutesLength;
 	secondsLeft = gameSecondsLength;
 
@@ -1942,9 +1942,6 @@ function incrementTimeInGameForPlayers(){
 			playerList[p].timeInGame = 0;
 		}
 		playerList[p].timeInGame++;
-		if (playerList[p].timeInGame == timeInGameRankingThresh){ //1 time trigger
-
-		}
 	}
 }
 

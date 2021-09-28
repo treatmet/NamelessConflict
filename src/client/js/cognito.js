@@ -537,11 +537,21 @@ function getPerformanceInstrucitons(){
 	return html;
 }
 
-function reallyLowGraphicsToggle(setting = false){
+function reallyLowGraphicsToggle(setting){
 	if (typeof reallyLowGraphicsMode === 'undefined')
 		return;
+
+	if (typeof setting === 'undefined'){
+		if (reallyLowGraphicsMode){
+			setting = false;
+		}
+		else {
+			setting = true;
+		}
+	}
 		
-	if (reallyLowGraphicsMode && !setting){
+	if (setting === false){
+		console.log("Setting to low graphics FALSE");
 		setCookie("lowGraphics", "false");
 		reallyLowGraphicsMode = false;
 		bodyLimit = 16;
@@ -553,6 +563,7 @@ function reallyLowGraphicsToggle(setting = false){
 		}
 	}
 	else {
+		console.log("Setting to low graphics TRUE");
 		reallyLowGraphicsMode = true;
 		setCookie("lowGraphics", "true");
 		bodyLimit = 2;

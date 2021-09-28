@@ -1219,10 +1219,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		playerEvent(self.id, "death");
 		
 		
-		//Create Body
+		//Create Body createBody
 		if (self.pushSpeed > pushMaxSpeed){ self.pushSpeed = pushMaxSpeed; }
 		
-		updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, playerId:self.id});
+		updateEffectList.push({type:5, killerPlayerId:shooter.id, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, playerId:self.id});
 		self.hasBattery = 1;
 		//Drop Ammo/Pickups drop pickups
 		var drops = 0;

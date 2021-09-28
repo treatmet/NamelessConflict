@@ -1150,7 +1150,7 @@ var Block = function(id){
 	}
 	Block.list[id] = self;
 }
-Block.list = [];
+Block.list = []; //var Block.list
 
 checkBlockCollision = function(obj){
 	if (!obj){return false;}
@@ -1286,6 +1286,7 @@ socket.on('signInResponse', function(data){
 	if(data.success){
 		///////////////////////// INITIALIZE ////////////////////////		
 		log("Sign into server successful - INITIALIZING GRAPHICS");
+		console.log("lowGraphics:" +getCookie("lowGraphics"));
 		if (getCookie("lowGraphics") == "true"){
 			log("Setting low graphics to true from cookie");
 			reallyLowGraphicsToggle(true);
@@ -1847,7 +1848,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			Smash(Player.list[id].x, Player.list[id].y);	
 		}
 		else if (updateEffectPack[i].type == 5){ //body
-			createBody(updateEffectPack[i].targetX, updateEffectPack[i].targetY, updateEffectPack[i].pushSpeed, updateEffectPack[i].shootingDir, id);
+			createBody(updateEffectPack[i].killerPlayerId, updateEffectPack[i].pushSpeed, updateEffectPack[i].shootingDir, id);
 		}
 		else if (updateEffectPack[i].type == 7){ //chat
 			if (!Player.list[id])
@@ -2684,10 +2685,11 @@ function drawBodies(){
 		
 		//Check for body collision with block 
 		var bodyBlockOffset = 14;
+		body.onBlock = false;
 		for (var i in Block.list){
 			if (body.x + bodyBlockOffset >= Block.list[i].x && body.x - bodyBlockOffset <= Block.list[i].x + Block.list[i].width && body.y + bodyBlockOffset >= Block.list[i].y && body.y - bodyBlockOffset <= Block.list[i].y + Block.list[i].height){												
 				if (Block.list[i].type == "normal" || Block.list[i].type == "red" || Block.list[i].type == "blue"){
-					body.onWall = true;
+					body.onBlock = Block.list[i].id;
 					bodyOnWallLegsYOffset = 12;
 					continue;
 				}
@@ -2721,7 +2723,7 @@ function drawWallBodies(){
 	noShadow();
 	for (var b in Body.list) {
 		var body = Body.list[b];		
-		if (body.onWall == true){
+		if (body.onBlock){
 			
 			var rotate = 1;	
 			var img = Img.bodyWhiteWall1;
@@ -2739,36 +2741,35 @@ function drawWallBodies(){
 			}
 			
 			var bodyBlockOffset = 14;
-			for (var i in Block.list){
-				if (body.x + bodyBlockOffset >= Block.list[i].x && body.x - bodyBlockOffset <= Block.list[i].x + Block.list[i].width && body.y + bodyBlockOffset >= Block.list[i].y && body.y - bodyBlockOffset <= Block.list[i].y + Block.list[i].height){												
+			var i = body.onBlock;
 
-					var overlapTop = Math.abs(Block.list[i].y - body.y);  
-					var overlapBottom = Math.abs((Block.list[i].y + Block.list[i].height) - body.y);
-					var overlapLeft = Math.abs(body.x - Block.list[i].x);
-					var overlapRight = Math.abs((Block.list[i].x + Block.list[i].width) - body.x);			
-					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){ //Hitting top of block
-						body.y = Block.list[i].y - bodyBlockOffset;
-						rotate = getRotation(1);
-					}
-					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){//Hitting bottom of block
-						body.y = Block.list[i].y + Block.list[i].height + bodyBlockOffset;
-						rotate = getRotation(5);
-					}
-					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){//hitting left of block
-						body.x = Block.list[i].x - bodyBlockOffset;
-						rotate = getRotation(7);
-					}
-					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){//Hitting right of block
-						body.x = Block.list[i].x + Block.list[i].width + bodyBlockOffset;
-						rotate = getRotation(3);
-					}
-				}// End check if player is overlapping block
-				else {
-					body.onWall = false;
-					continue;
-				}
-			}//End Block.list loop		
-			
+			var overlapTop = Math.abs(Block.list[i].y - body.y);  
+			var overlapBottom = Math.abs((Block.list[i].y + Block.list[i].height) - body.y);
+			var overlapLeft = Math.abs(body.x - Block.list[i].x);
+			var overlapRight = Math.abs((Block.list[i].x + Block.list[i].width) - body.x);			
+			var angle = 0;
+			if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){ //Hitting top of block
+				body.y = Block.list[i].y - bodyBlockOffset;
+				angle = 1;
+			}
+			else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){//Hitting bottom of block
+				body.y = Block.list[i].y + Block.list[i].height + bodyBlockOffset;
+				angle = 5;
+			}
+			else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){//hitting left of block
+				body.x = Block.list[i].x - bodyBlockOffset;
+				angle = 7;
+			}
+			else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){//Hitting right of block
+				body.x = Block.list[i].x + Block.list[i].width + bodyBlockOffset;
+				angle = 3;
+			}
+
+			if (getDirDif(angle, body.direction) > 5 || getDirDif(angle, body.direction) < 3){
+				continue;
+			}
+			rotate = getRotation(angle);
+
 			if (centerX - Player.list[myPlayer.id].x * zoom + body.x * zoom > -75 * zoom - drawDistance && centerX - Player.list[myPlayer.id].x * zoom + body.x * zoom < 20 * zoom + canvasWidth + drawDistance && centerY - Player.list[myPlayer.id].y * zoom + body.y * zoom > -75 * zoom - drawDistance && centerY - Player.list[myPlayer.id].y * zoom + body.y * zoom < 20 * zoom + canvasHeight + drawDistance){		
 				ctx.save();
                 ctx.translate(centerX + body.x * zoom - myPlayer.x * zoom, centerY + body.y * zoom - myPlayer.y * zoom); //Center camera on controlled player
@@ -3300,7 +3301,7 @@ function drawTorsos(){
 					if (Player.list[i].triggerTapLimitTimer > 0){					
 						Player.list[i].triggerTapLimitTimer--;
 						if (Player.list[i].weapon == 4){
-							if (Player.list[i].triggerTapLimitTimer == 30){
+							if (Player.list[i].triggerTapLimitTimer == 30 && !mute){
 								sfxSGEquip.play();
 							}
 							if (Player.list[i].triggerTapLimitTimer > 30)
@@ -4370,7 +4371,7 @@ function drawUILayer(){
 const indicatorEdgeOffset = 60;
 const scaleBubbleSize = false;
 function drawIndicators(){ //playerIndicators
-	if (!myPlayer.team || reallyLowGraphicsMode || gametype == "ffa"){return;}
+	if (!myPlayer.team || gametype == "ffa"){return;}
 	noShadow();
 
 	//Ally indicators
@@ -5195,7 +5196,7 @@ function drawPostGameProgress(){
 					}
 					postGameProgressRatingTicks = Math.round(postGameProgressRatingTicks * 10) / 10;
 				}
-				else if (postGameProgressRatingTicks == postGameProgressInfo.ratingDif){
+				else if (postGameProgressRatingTicks >= postGameProgressInfo.ratingDif){
 					postGameProgressStopRatingTicks = true;
 					sfxProgressBar.stop();
 					sfxProgressBarReverse.stop();
@@ -6705,7 +6706,7 @@ function shootUpdateFunction(shotData){
 
 	if (newShot == true){
 		if (shotData.weapon == 3){
-			if (shotData.playerId == myPlayer.id){
+			if (shotData.playerId == myPlayer.id && !mute){
 				sfxMGMine.volume(vol * .35);
 				sfxMGMine.play();
 				if (Player.list[shotData.playerId].MGClip <= 7){
@@ -6731,7 +6732,7 @@ function shootUpdateFunction(shotData){
 				sfxDP.play();	
 			}
 		}
-		else if (shotData.weapon == 1) {
+		else if (shotData.weapon == 1 && !mute) {
 			if (shotData.playerId == myPlayer.id){				
 				sfxPistolMine.volume(vol);
 				sfxPistolMine.play();
@@ -6744,7 +6745,7 @@ function shootUpdateFunction(shotData){
 				sfxPistol.play();	
 			}
 		}
-		else if (shotData.weapon == 5) {
+		else if (shotData.weapon == 5 && !mute) {
 			sfxLaserDischarge.volume(vol * 0.8);
 			sfxLaserDischarge.play();
 			if (dist1 < 1000){
@@ -6783,25 +6784,29 @@ Shot.list = [];
 
 
 
-// ---------------------------------- CREATE BODY -----------------------------
-function createBody(targetX, targetY, pushSpeed, shootingDir, playerId){
+// ---------------------------------- CREATE BODY ----------------------------- //newBody
+function createBody(killerPlayerId, pushSpeed, shootingDir, playerId){
+	var bodyPlayer = Player.list[playerId];
+	if (!bodyPlayer){return;}
+
 	if (Body.list.length >= bodyLimit){
 		Body.list.splice(0, 1);
 	}	
-	Body(targetX, targetY, shootingDir, playerId, pushSpeed);	
+	Body(bodyPlayer.x, bodyPlayer.y, shootingDir, playerId, pushSpeed);	
 
 	if (!mute){
-		var dx1 = myPlayer.x - targetX;
-		var dy1 = myPlayer.y - targetY;
+		var dx1 = myPlayer.x - bodyPlayer.x;
+		var dy1 = myPlayer.y - bodyPlayer.y;
 		var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
 		var vol = (Math.round((1 - (dist1 / 1000)) * 100)/100) + .0; //Boost vol with this last num
 		if (vol > 1)
 			vol = 1;
 		else if (vol < 0 && vol >= -.1)
 			vol = 0.01;
-		if (vol < -.1 || mute)
+		if (vol < -.1)
 			vol = 0;
-	
+		
+		if (vol <= 0.6 && myPlayer.id == killerPlayerId){vol = 0.8;}
 		sfxKill.volume(vol);
 		sfxKill.play();	
 	}	
@@ -7188,7 +7193,7 @@ document.onkeydown = function(event){
 
 function zoomIn(){
 	if (targetZoom == defaultZoom){
-		targetZoom = 2;
+		targetZoom = 1.5;
 	}
 	else {
 		targetZoom = defaultZoom;
@@ -7375,7 +7380,7 @@ var getNumPlayersInGame = function(){
 }
 
 
-function getDirDif(shootingDirA, shootingDirB){
+function getDirDif(shootingDirA, shootingDirB){ //getRotationDifference getDirectionDifference
 	var shootingDirAPlus = shootingDirA + 8;
 	var shootingDirAMinus = shootingDirA - 8;
 
