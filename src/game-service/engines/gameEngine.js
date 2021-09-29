@@ -1868,8 +1868,7 @@ var secondIntervalFunction = function(){
 		if (player.getPlayerListLength() > 0){
 			if (!isEveryoneDead()){
 				spawnHordeThugs();
-				if (hordeKills > 5)
-					spawnHordeThugs();
+				spawnHordeThugs();
 				spawnHordePickup();
 			}
 		}

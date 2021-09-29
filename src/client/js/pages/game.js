@@ -57,7 +57,7 @@ function voteEndgame(voteType, voteSelection){
 }
 
 socket.on('votesUpdate', function(votesData){
-	document.getElementById("voteCTF").innerHTML = "CTF - [" + votesData.ctfVotes + "]";
+	document.getElementById("voteCTF").innerHTML = "Capture - [" + votesData.ctfVotes + "]";
 	document.getElementById("voteDeathmatch").innerHTML = "Team Killfest - [" + votesData.slayerVotes + "]";	
 	document.getElementById("voteFFA").innerHTML = "FreeForAll Killfest - [" + votesData.ffaVotes + "]";	
 	document.getElementById("voteElimination").innerHTML = "Elimination - [" + votesData.elimVotes + "]";	
@@ -1060,7 +1060,7 @@ socket.on('removePlayer', function(id){
 	}
 });
 
-//-----------------------------THUG INITIALIZATION-------------------------------
+//-----------------------------THUG INITIALIZATION------------------------------- //newThug createThug
 var Thug = function(id){
 	var self = {
 		id:id,
@@ -1130,13 +1130,17 @@ var Thug = function(id){
 Thug.list = {};
 
 socket.on('removeThug', function(id){
+	removeThug(id);
+});
+
+function removeThug(id){
 	if (id == "all"){
 		Thug.list = [];
 	}
 	else if (Thug.list[id]){
 		delete Thug.list[id];
 	}
-});
+}
 
 //-----------------------------BLOCK INITIALIZATION-------------------------------
 var Block = function(id){
@@ -1599,7 +1603,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		}
 
 		//Set Zoom on spec/join
-		if (playerDataPack[i].property == "team"){	
+		if (playerDataPack[i].property == "team" && playerDataPack[i].id == myPlayer.id){	
 			if (playerDataPack[i].value == 0){
 				setZoom(spectateZoom);
 			}
@@ -1980,6 +1984,7 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 	log("FULL GAME STATUS RECIEVED");
 	sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack, miscPack);
 	clientInitialized = true;
+	BGinit();
 });
 var pickupCount = 0;
 function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack, miscPack){
@@ -2019,7 +2024,7 @@ function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack,
 			Thug.list[thugPack[i].id] = thugPack[i];
 		}
 		else {
-			var thug = Thug(thugPack[i].id);
+			Thug(thugPack[i].id);
 			Thug.list[thugPack[i].id] = thugPack[i];
 		}
 	}
@@ -6188,6 +6193,8 @@ function drawEverything(){
 	noShadow();
 	ctx.fillStyle = "#101010";
 	drawRect(0, 0, canvasWidth, canvasHeight); 	
+	BGanim();
+
 	
 	//drawMapCanvas();
 	drawMap();
@@ -6222,6 +6229,191 @@ function drawEverything(){
 	fpsCounter++;
 }
 
+
+var bgCanvas = document.createElement('canvas');
+var bgCtx = bgCanvas.getContext("2d", { alpha: false });
+bgCanvas.width = canvasWidth;
+bgCanvas.height = canvasHeight;
+
+var w = canvasWidth,
+    h = canvasHeight,
+    
+    minDist = 10,
+    maxDist = 30,
+    initialWidth = 10,
+    maxLines = 50,
+    initialLines = 4,
+    speed = 1,
+    
+    lines = [],
+    frame = 0,
+    timeSinceLast = 0,
+    
+    dirs = [
+   // straight x, y velocity
+      [ 0, 1 ],
+      [ 1, 0 ],
+      [ 0, -1 ],
+    	[ -1, 0 ],
+   // diagonals, 0.7 = sin(PI/4) = cos(PI/4)
+      [ .7, .7 ],
+      [ .7, -.7 ],
+      [ -.7, .7 ],
+      [ -.7, -.7]
+    ]
+
+function BGinit() {
+
+  
+  lines.length = 0;
+  
+  for( var i = 0; i < initialLines; ++i )
+    lines.push( new Line( { 
+      
+		x: Math.random() * bgCanvas.width,
+		y: Math.random() * bgCanvas.height,
+		vx: 0,
+		vy: 0,
+		width: initialWidth
+	  } ) );
+  
+  bgCtx.fillStyle = '#101010';
+  bgCtx.fillRect( 0, 0, w, h );
+  
+  // if you want a cookie ;)
+  // bgCtx.lineCap = 'round';
+}
+
+var colorLimit = 60;
+function getColor( x ) {
+	var frameAdj = frame + 180;
+	if (map == "thepit") {frameAdj = frame - 30;}
+	else if (map == "crik") {frameAdj = frame + 90;}
+	if (map == "narrows") {frameAdj = frame + 250;}
+	if (map == "longNarrows") {frameAdj = frame + 290;}
+
+  return 'hsl( hue, 80%, 50% )'.replace(
+  	'hue', Math.round(frameAdj)
+  );
+}
+
+var fadeEveryMax = 8;
+var fadeEvery = fadeEveryMax;
+
+function BGanim() {
+	if (reallyLowGraphicsMode){return;}
+
+  frame+=0.1;
+  if (frame > colorLimit){frame = 0;}
+  
+  if (fadeEvery == 0){
+	bgCtx.shadowBlur = 0;
+	bgCtx.fillStyle = 'rgba(0,0,0, 0.03)';
+	bgCtx.fillRect( 0, 0, w, h );
+	fadeEvery = fadeEveryMax;
+  }  
+  fadeEvery--;
+
+  bgCtx.shadowBlur = .5;
+  
+  for( var i = 0; i < lines.length; ++i ) 
+    
+    if( lines[ i ].step() ) { // if true it's dead
+      
+      lines.splice( i, 1 );
+      --i;
+      
+    }
+  
+  // spawn new
+  
+  ++timeSinceLast
+  
+  if( lines.length < maxLines && timeSinceLast > 10 && Math.random() < .5 ) {
+    
+    timeSinceLast = 0;
+    
+    lines.push( new Line( { // starting parent line, just a pseudo line
+      
+		x: Math.random() * bgCanvas.width,
+		y: Math.random() * bgCanvas.height,
+		vx: 0,
+		vy: 0,
+		width: initialWidth
+	  } ) );
+    
+	
+	}
+	ctx.drawImage(bgCanvas, 0, 0);
+}
+
+function Line( parent ) {
+  
+  this.x = parent.x | 0;
+  this.y = parent.y | 0;
+  this.color = getColor(this.x);
+  this.width = parent.width / 1.25;
+  
+  do {
+    
+    var dir = dirs[ ( Math.random() * dirs.length ) | 0 ];
+    this.vx = dir[ 0 ];
+    this.vy = dir[ 1 ];
+    
+  } while ( 
+    ( this.vx === -parent.vx && this.vy === -parent.vy ) || ( this.vx === parent.vx && this.vy === parent.vy) );
+  
+  this.vx *= speed;
+  this.vy *= speed;
+  
+  this.dist = ( Math.random() * ( maxDist - minDist ) + minDist );
+
+}
+
+
+
+Line.prototype.step = function() {
+  
+  var dead = false;
+  
+  var prevX = this.x,
+      prevY = this.y;
+  
+  this.x += this.vx;
+  this.y += this.vy;
+  
+  --this.dist;
+  
+  // kill if out of screen
+  if( this.x < 0 || this.x > w || this.y < 0 || this.y > h )
+    dead = true;
+  
+  // make children :D
+  if( this.dist <= 0 && this.width > 1 ) {
+    
+    // keep yo self, sometimes
+    this.dist = Math.random() * ( maxDist - minDist ) + minDist;
+    
+    // add 2 children
+    if( lines.length < maxLines ) lines.push( new Line( this ) );
+    if( lines.length < maxLines && Math.random() < .5 ) lines.push( new Line( this ) );
+    
+    // kill the poor thing
+    if( Math.random() < .05 ) dead = true;
+  }
+  
+  bgCtx.strokeStyle = bgCtx.shadowColor = this.color;
+  bgCtx.beginPath();
+  bgCtx.lineWidth = this.width;
+  bgCtx.moveTo( this.x, this.y );
+  bgCtx.lineTo( prevX, prevY );
+  bgCtx.stroke();
+  
+  if( dead ) return true
+}
+
+
+
 function drawGrapples(){
 	for (var p in Player.list){
 		if (!Player.list[p].grapple || typeof Player.list[p].grapple.x === 'undefined'){return;}
@@ -6229,10 +6421,10 @@ function drawGrapples(){
 		processGrapple(Player.list[p]);
 
 		//console.log("GRAAAAAAAAAAPES");
-		ctx.save();
-		ctx.translate(centerX - myPlayer.x * zoom + Player.list[p].x * zoom, centerY - myPlayer.y * zoom + Player.list[p].y * zoom); //Center camera on controlled player
-		ctx.rotate(180 * Math.PI / 180);
-		ctx.rotate((Math.atan2(Player.list[p].y - Player.list[p].grapple.y, Player.list[p].x - Player.list[p].grapple.x) - (90 * Math.PI / 180) ));
+		bgCtx.save();
+		bgCtx.translate(centerX - myPlayer.x * zoom + Player.list[p].x * zoom, centerY - myPlayer.y * zoom + Player.list[p].y * zoom); //Center camera on controlled player
+		bgCtx.rotate(180 * Math.PI / 180);
+		bgCtx.rotate((Math.atan2(Player.list[p].y - Player.list[p].grapple.y, Player.list[p].x - Player.list[p].grapple.x) - (90 * Math.PI / 180) ));
 			//drawImage(Img.shot,(-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
 			var grappleDist = getDistance(Player.list[p].grapple, Player.list[p]);
 			var x = {
@@ -6243,7 +6435,7 @@ function drawGrapples(){
 			}
 			drawImage(Img.grappleChain, -Img.grappleChain.width/2 * zoom, 0, Img.grappleChain.width * zoom, grappleDist * zoom);
 
-		ctx.restore();
+		bgCtx.restore();
 	}
 }
 
@@ -6787,7 +6979,15 @@ Shot.list = [];
 // ---------------------------------- CREATE BODY ----------------------------- //newBody
 function createBody(killerPlayerId, pushSpeed, shootingDir, playerId){
 	var bodyPlayer = Player.list[playerId];
-	if (!bodyPlayer){return;}
+	if (!bodyPlayer){
+		bodyPlayer = Thug.list[playerId];
+		if (!bodyPlayer){
+			return;
+		}
+		else {
+			removeThug(playerId);
+		}
+	}
 
 	if (Body.list.length >= bodyLimit){
 		Body.list.splice(0, 1);
@@ -7587,6 +7787,7 @@ function mouseIsOnCanvas(){
 var threshold = 0.4;
 var update=()=>{
     if (mouseDown != 0 && !(gameOver && !mouseIsOnCanvas())) {
+    //if (mouseDown != 0 && mouseIsOnCanvas()) {
 
         if (Math.cos(mouseangle) < -threshold){
 			if (!myPlayer.pressingLeft)

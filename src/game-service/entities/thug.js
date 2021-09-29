@@ -328,14 +328,11 @@ var Thug = function(team, x, y){
 			}
 		}
 		
-		//Create Body
+		//Create Body createBody
 		if (self.pushSpeed > pushMaxSpeed){ self.pushSpeed = pushMaxSpeed; }
-		updateEffectList.push({type:5, targetX:self.x, targetY:self.y, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, playerId:self.id});
+		updateEffectList.push({type:5, killerPlayerId:shooter.id, pushSpeed:self.pushSpeed, shootingDir:shooter.shootingDir, playerId:self.id});
 
 		if (gametype == "horde" || (pregame && pregameIsHorde)){
-			for(var i in SOCKET_LIST){
-				SOCKET_LIST[i].emit('removeThug', self.id);
-			}	
 			delete Thug.list[self.id];
 		}
 	}

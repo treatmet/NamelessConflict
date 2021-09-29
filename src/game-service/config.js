@@ -135,9 +135,9 @@ global.cloakDeinitializeSpeed = 0.1;
 
 //Weapons config
 global.damageScale = 1;
-	global.pistolDamage = 10;
-	global.pistolSideDamage = 6; //Stacks on above
-	global.pistolBackDamage = 10; //Stacks AGAIN on above
+	global.pistolDamage = 12;
+	global.pistolSideDamage = pistolDamage/2 +2; //Stacks on above
+	global.pistolBackDamage = pistolDamage/2 +4; //Stacks AGAIN on above
 	global.DPDamage = 12;
 	global.DPSideDamage = DPDamage/2; //Stacks on above
 	global.DPBackDamage = DPDamage/2; //Stacks AGAIN on above
@@ -148,7 +148,7 @@ global.damageScale = 1;
 	global.SGSideDamage = SGDamage/2;
 	global.SGBackDamage = SGDamage/2;
 	global.LaserDamage = 250;
-	global.friendlyFireDamageScale = 0.5;
+	global.friendlyFireDamageScale = 0.25;
 	global.boostDamage = 34;
 	global.cloakBonusDamage = 20;
 
@@ -225,7 +225,7 @@ global.hordeThugHealth = 15;
 global.thugDamage = 50;
 global.thugSpeed = 3;
 global.thugAttackDelay = 30;
-global.maxThugs = 35;
+global.maxThugs = 50;
 
 //Map Config
 global.threatSpawnRange = 500;

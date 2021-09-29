@@ -1902,7 +1902,7 @@ function evalServer(socket, data){
 			allowServerCommands = true;
 			return;
 		}		
-		if (data != "team" && data != "spectate" && data != "spec" && getPlayerById(socket.id).cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){
+		if (data != "team" && data != "spectate" && data != "spec" && data != "kill" && getPlayerById(socket.id).cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){
 			return;
 		}
 	}
