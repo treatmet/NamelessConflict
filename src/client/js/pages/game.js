@@ -441,8 +441,8 @@ Img.quickChatKeys = new Image();
 Img.quickChatKeys.src = "/src/client/img/quickChatKeys.png";
 Img.redDeath = new Image();
 Img.redDeath.src = "/src/client/img/red-death.png";
-Img.block = new Image();
-Img.block.src = "/src/client/img/map/block.png";
+Img.bg = new Image();
+Img.bg.src = "/src/client/img/map/bg-sample.jpg";
 Img.redBlock = new Image();
 Img.redBlock.src = "/src/client/img/map/blockRed.png";
 Img.blueBlock = new Image();
@@ -6193,7 +6193,8 @@ function drawEverything(){
 	noShadow();
 	ctx.fillStyle = "#101010";
 	drawRect(0, 0, canvasWidth, canvasHeight); 	
-	BGanim();
+	drawBG();
+	//BGanim();
 
 	
 	//drawMapCanvas();
@@ -6227,6 +6228,10 @@ function drawEverything(){
 	drawShop();	
 	drawUILayer();
 	fpsCounter++;
+}
+
+function drawBG(){
+
 }
 
 
@@ -6777,13 +6782,19 @@ socket.on('sprayBloodOntoTarget', function(data){
 
 function sprayBloodOntoTargetFunction(data){
 	var scale = 1;
-	if (Player.list[data.targetId]){
+	if (Player.list[data.targetId] && (Player.list[data.targetId].team != myPlayer.team || gametype == "ffa")){
 		if (getDirDif(data.shootingDir, Player.list[data.targetId].shootingDir) <= 1){
 			scale = 1.5;
 		}
 		else if (getDirDif(data.shootingDir, Player.list[data.targetId].shootingDir) >= 3){
 			scale = 0.6;
 		}
+		else {
+			scale = 1;
+		}
+	}
+	else if (Player.list[data.targetId] && (Player.list[data.targetId].team == myPlayer.team && gametype != "ffa")){
+
 	}
 
 	//triggerTeamWarning(Player.list[data.targetId].team);
@@ -6814,7 +6825,11 @@ function sprayBloodOntoTargetFunction(data){
 	}
 }
 
+//newBlood createBlood
 var Blood = function(x, y, direction, scale = 1){
+	if (reallyLowGraphicsMode){
+		return;
+	}
 	var self = {
 		id:Math.random(),
 		x:x,
