@@ -6193,7 +6193,7 @@ function drawEverything(){
 	noShadow();
 	ctx.fillStyle = "#101010";
 	drawRect(0, 0, canvasWidth, canvasHeight); 	
-	BGanim();
+	//BGanim();
 
 	
 	//drawMapCanvas();
