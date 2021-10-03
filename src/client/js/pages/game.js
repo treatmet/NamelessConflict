@@ -6193,8 +6193,7 @@ function drawEverything(){
 	noShadow();
 	ctx.fillStyle = "#101010";
 	drawRect(0, 0, canvasWidth, canvasHeight); 	
-	drawBG();
-	//BGanim();
+	BGanim();
 
 	
 	//drawMapCanvas();
@@ -6228,10 +6227,6 @@ function drawEverything(){
 	drawShop();	
 	drawUILayer();
 	fpsCounter++;
-}
-
-function drawBG(){
-
 }
 
 
