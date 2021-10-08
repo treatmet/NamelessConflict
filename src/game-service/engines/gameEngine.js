@@ -322,11 +322,13 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 				console.log("pts gained before cap: " + ptsGained);
 
 				if (placement > eligiblePlayerList.length/2){ //Placed bottom half
+					gamesLostInc++;
 					if (ptsGained > -1 || playersAverageRating === -1){console.log("loss min(" + ptsGained + ") or playersAverageRating was -1"); ptsGained = -1; }		
 					if (ptsGained < -20){console.log("loss max(" + ptsGained + ")"); ptsGained = -20;} //Loss cap	
 					player.cashEarnedThisGame+=loseCash; 	
 				}
 				else { //Placed top half, or middle
+					gamesWonInc++;
 					if (ptsGained < minWinPointsGained || playersAverageRating === -1){console.log("win min(" + ptsGained + ") or playersAverageRating was -1"); ptsGained = minWinPointsGained;}		
 					if (ptsGained > 25){console.log("win max(" + ptsGained + ")"); ptsGained = 25;} //Gain cap		
 					player.cashEarnedThisGame+=loseCash; 
@@ -385,8 +387,13 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 			}
 
 			//Eligible for rank up/down this game?
-			log("player.timeInGame: " + player.timeInGame);
-			if ((player.timeInGame < timeInGameRankingThresh && !isLocal) || customServer){
+			if (gametype == "ffa"){
+				var timeElapsed = (gameMinutesLength * 60 + gameSecondsLength) - (minutesLeft * 60 + secondsLeft);
+				timeInGameRankingThresh = timeElapsed * 0.90;
+				console.log("FFA! Time elapsed is " + timeElapsed + ". So time required to play is " + timeInGameRankingThresh);
+			}
+			log("player.timeInGame: " + player.timeInGame + " have they played longer than " + timeInGameRankingThresh);
+			if ((player.timeInGame < timeInGameRankingThresh) || customServer){
 				logg("Player ineligible for rank influence this game");
 				ptsGained = 0;				
 			}
@@ -427,7 +434,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 				updateParams = {kills:player.kills, assists:player.assists, deaths:player.deaths, captures:player.captures, steals:player.steals, returns:player.returns, cash: player.cashEarnedThisGame, experience: player.cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
 				socket.emit('endGameProgressResults', endGameProgressResults);
 			}
-			else {
+			else if ((player.timeInGame < timeInGameRankingThresh) && !customServer){
 				updateParams = {gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
 				logg("Hitting cognito sub with a hard L for abandoning");
 				player.cashEarnedThisGame = 0;
@@ -1024,23 +1031,26 @@ function tabulateVotes(){
 		gametype = "ffa";
 	}
 	
-	if (thePitVotes > longestVotes && thePitVotes > crikVotes && thePitVotes > narrowsVotes && thePitVotes > longNarrowsVotes){
+	if (thePitVotes > longestVotes && thePitVotes > crikVotes && thePitVotes > narrowsVotes && thePitVotes > longNarrowsVotes && thePitVotes > whirlpoolVotes){
 		map = "thepit";
 	}
-	else if (longestVotes > thePitVotes && longestVotes > crikVotes && longestVotes > narrowsVotes && longestVotes > longNarrowsVotes){
+	else if (longestVotes > thePitVotes && longestVotes > crikVotes && longestVotes > narrowsVotes && longestVotes > longNarrowsVotes && longNarrowsVotes > whirlpoolVotes){
 		map = "longest";
 	}
-	else if (crikVotes > thePitVotes && crikVotes > longestVotes && crikVotes > narrowsVotes && crikVotes > longNarrowsVotes){
+	else if (crikVotes > thePitVotes && crikVotes > longestVotes && crikVotes > narrowsVotes && crikVotes > longNarrowsVotes && crikVotes > whirlpoolVotes){
 		map = "crik";
 	}
-	else if (narrowsVotes > thePitVotes && narrowsVotes > longestVotes && narrowsVotes > crikVotes && narrowsVotes > longNarrowsVotes){
+	else if (narrowsVotes > thePitVotes && narrowsVotes > longestVotes && narrowsVotes > crikVotes && narrowsVotes > longNarrowsVotes && narrowsVotes > whirlpoolVotes){
 		map = "narrows";
 	}
-	else if (longNarrowsVotes > thePitVotes && longNarrowsVotes > longestVotes && longNarrowsVotes > crikVotes && longNarrowsVotes > narrowsVotes){
+	else if (longNarrowsVotes > thePitVotes && longNarrowsVotes > longestVotes && longNarrowsVotes > crikVotes && longNarrowsVotes > narrowsVotes && longNarrowsVotes > whirlpoolVotes){
 		map = "longNarrows";
 	}
+	else if (whirlpoolVotes > thePitVotes && whirlpoolVotes > longestVotes && whirlpoolVotes > crikVotes && whirlpoolVotes > narrowsVotes && whirlpoolVotes > longNarrowsVotes){
+		map = "whirlpool";
+	}
 	
-	if (voteRebalanceTeamsYes > voteRebalanceTeamsNo){
+	if (voteRebalanceTeamsYes >= voteRebalanceTeamsNo){
 		rebalanceTeams(true);
 	}
 	else {
@@ -1053,6 +1063,7 @@ function tabulateVotes(){
 	elimVotes = 0;
 	thePitVotes = 0;
 	longestVotes = 0;
+	whirlpoolVotes = 0;
 	narrowsVotes = 0;
 	longNarrowsVotes = 0;
 	crikVotes = 0;
@@ -1245,12 +1256,7 @@ function initializeNewGame(){ //startGame gameStart
 		gameMinutesLength = 0;
 		gameSecondsLength = 0;
 	}
- 	if (gametype == "ffa" && gameMinutesLength > 0){
-		timeInGameRankingThresh = gameMinutesLength - 15;
-	}
-	else {
-		timeInGameRankingThresh = 30;
-	}
+	timeInGameRankingThresh = 60;
 
 	minutesLeft = gameMinutesLength;
 	secondsLeft = gameSecondsLength;
@@ -1304,6 +1310,7 @@ function initializeNewGame(){ //startGame gameStart
 		playerList[i].returns = 0;
 		playerList[i].captures = 0;			
 		playerList[i].timeInGame = 0;		
+		playerList[i].energyExhausted = false;		
 		//playerList[i].eligibleForRank = true;	
 		updatePlayerList.push({id:playerList[i].id,property:"cash",value:playerList[i].cash});
 		updatePlayerList.push({id:playerList[i].id,property:"cashEarnedThisGame",value:playerList[i].cashEarnedThisGame});
@@ -1485,7 +1492,7 @@ var joinGame = function(cognitoSub, username, team, partyId){
 	socket.emit('signInResponse',{success:true,id:socket.id, mapWidth:mapWidth, mapHeight:mapHeight, whiteScore:whiteScore, blackScore:blackScore});
 }
 
-function spawnHordeThugs(){
+function spawnHordeThugs(){ //spawnThug
 		if (personalHordeMode){
 			hordeKills = player.getHighestPlayerHordeKills();
 		}
@@ -1509,7 +1516,7 @@ function spawnHordeThugs(){
 				spawnY = mapHeight - 8 * 75;
 		}
 
-		var killsScaling = Math.round((500 - hordeKills)/100); //5
+		var killsScaling = Math.round((500 - hordeKills)/100); //1-5
 		if (killsScaling < 1){killsScaling = 1;}
 		
 		var spawnFrequenceyRng = randomInt(1,killsScaling);
@@ -1822,6 +1829,7 @@ var secondIntervalFunction = function(){
 				elimVotes:elimVotes,
 				thePitVotes:thePitVotes,
 				longestVotes:longestVotes, 
+				whirlpoolVotes:whirlpoolVotes, 
 				crikVotes:crikVotes,
 				narrowsVotes:narrowsVotes,
 				longNarrowsVotes:longNarrowsVotes,

@@ -502,7 +502,7 @@ function getLBGameServerTargetGroups(loadBalancerArn, cb){
             var targetGroupData = [];
             for (var l in data.TargetGroups){
                 log(logID + " " + "Name=" + data.TargetGroups[l].TargetGroupName + " TargetGroupArn=" + data.TargetGroups[l].TargetGroupArn);
-                if (data.TargetGroups[l].Port != 80){ //Skip the unchanging WebServer Target Group
+                if (data.TargetGroups[l].TargetGroupName.substring(0, 5) != "awseb"){ //Skip the unchanging WebServer Target Group
                     targetGroupData.push(data.TargetGroups[l].TargetGroupArn);
                 }
             }

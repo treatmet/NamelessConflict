@@ -97,6 +97,10 @@
 			"value": true
 		},
 		{
+			"key": "profanityFilter",
+			"value": true
+		},
+		{
 			"key": "tutorialCompleted",
 			"value": false
 		}
@@ -112,7 +116,7 @@
 		},
 		{
 			"key": 40,
-			"value": "[Team] Cloaked enemy nearby!"
+			"value": "[Team] HELP!"
 		},
 		{
 			"key": 37,

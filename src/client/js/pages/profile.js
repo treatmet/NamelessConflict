@@ -191,11 +191,18 @@ function buildDisplaySettings(displaySettings){
     var HTML = "";
 
     var forceTeamNameColors = displaySettings.find(setting => setting.key == "forceTeamNameColors");
+    var profanityFilter = displaySettings.find(setting => setting.key == "profanityFilter");
     if (forceTeamNameColors){
         var settingValue = forceTeamNameColors.value == true ? 'checked' : '';
         console.log(settingValue);
         HTML += "<input type='checkbox' class='settingsCheckbox' id='forceTeamNameColors' name='forceTeamNameColors' value='forceTeamNameColors' onclick='forceTeamNameColorsClicked()' " + settingValue + "><label for='forceTeamNameColors'> Force Team Name Colors</label><br></br>";
     }
+
+    var profanityFilterCheckboxValue = 'checked';
+    if (profanityFilter && profanityFilter.value == false){
+        profanityFilterCheckboxValue = '';
+    }
+    HTML += "<input type='checkbox' class='settingsCheckbox' id='profanityFilter' name='profanityFilter' value='profanityFilter' onclick='profanityFilterClicked()' " + profanityFilterCheckboxValue + "><label for='profanityFilter'> Enable Profanity Filter</label><br></br>";
     
     
     settingsList.innerHTML = HTML;
@@ -207,6 +214,28 @@ function forceTeamNameColorsClicked(){
     if (forceTeamNameColors && document.getElementById("forceTeamNameColors")){
         forceTeamNameColors.value = document.getElementById("forceTeamNameColors").checked;
     }
+}
+
+function profanityFilterClicked(){
+    flagUnsavedSettings(true);
+    if (!document.getElementById("profanityFilter")){return;}
+
+    var profanityFilter = currentSettings.display.find(setting => setting.key == "profanityFilter");
+    if (typeof profanityFilter === 'undefined'){
+        currentSettings.display.push(newSetting("profanityFilter", document.getElementById("profanityFilter").checked))
+        profanityFilter = currentSettings.display.find(setting => setting.key == "profanityFilter");
+    }
+
+    if (profanityFilter){
+        profanityFilter.value = document.getElementById("profanityFilter").checked;
+    }
+}
+
+function newSetting(key, value){
+    return {
+        "key":key,
+        "value":value
+    };
 }
 
 function buildKeybindingsTable(data){

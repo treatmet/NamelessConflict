@@ -8,7 +8,7 @@ var Thug = function(team, x, y){
 
 	if (gametype == "horde" || (pregame && pregameIsHorde)){
 		myThugSpeed = thugSpeed - 1 + Math.round(hordeKills/30)/10;
-		if (myThugSpeed > 4) {myThugSpeed = 4;}
+		if (myThugSpeed > 5) {myThugSpeed = 5;}
 		var speedVariance = 2 - randomInt(1,3);
 		if (speedVariance > 0 && hordeKills < 50){speedVariance = 0;}
 		if (myThugSpeed < 1.5) {myThugSpeed = 1.5;}

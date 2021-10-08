@@ -280,7 +280,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("September 23, 2021 16:00:00");
+	var thresholdDate = new Date("October 7, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -306,14 +306,14 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 					console.log("ERROR - no customizationOptions");
 					continue;
 				}
-				if (!customizations || !customizations["1"] || !customizations["2"] ){
-				  	console.log("ERROR - no customizations");
-				  	continue;
-				}
+				// if (!customizations || !customizations["1"] || !customizations["2"] ){
+				//   	console.log("ERROR - no customizations");
+				//   	continue;
+				// }
 
-				if (customizationOptions.indexOf("goldDPWeapon") == -1){
-					customizationOptions.push("goldDPWeapon");
-					console.log("Pushing DP");
+				if (customizationOptions.indexOf("ivoryPistolWeapon") == -1){
+					customizationOptions.push("ivoryPistolWeapon");
+					console.log("Pushing ivoryPistolWeapon");
 					updatey = true;
 				}
     
@@ -623,7 +623,7 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 			}
 
 			//manual hardcode
-			// shopList[0] = "spaceHelmetHat";
+			//shopList[0] = "ivoryPistolWeapon";
 			// shopList[1] = "redBowHat";
 			// shopList[2] = "blueBowHat";
 			// shopList[3] = "orangeBowHat";

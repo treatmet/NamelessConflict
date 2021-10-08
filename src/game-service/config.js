@@ -51,6 +51,7 @@ global.ffaVotes = 0;
 global.elimVotes = 0;
 global.thePitVotes = 0;
 global.longestVotes = 0;
+global.whirlpoolVotes = 0;
 global.crikVotes = 0;
 global.narrowsVotes = 0;
 global.longNarrowsVotes = 0;
@@ -229,14 +230,14 @@ global.maxThugs = 50;
 
 //Map Config
 global.threatSpawnRange = 500;
-global.pushStrength = 15; //Push block strength
+global.pushStrength = 14; //Push block strength
 
 //Rating config
 global.matchWinLossRatingBonus = 30;
 global.enemySkillDifferenceDivider = 30;
 global.ratingCalcThresh = 200; //Rating threshold for team rating evaluation
 global.minWinPointsGained = 5;
-global.timeInGameRankingThresh = 30; //seconds
+global.timeInGameRankingThresh = 60; //seconds
 global.abandonLimit = 5; //seconds
 
 

@@ -30,12 +30,12 @@ var initializePickups = function(map){
 		}
 	}
 	else if (map == "longest"){
-		bagRed.homeX = 3*75;
+		bagRed.homeX = 3*75; //Exact coordinates
 		bagRed.homeY = 19*75;
 		bagBlue.homeX = 36*75;
 		bagBlue.homeY = 3*75;
 		if (gametype != "elim"){
-			pickup.createPickup(Math.random(), 16, 11, 5, 75, 60); //Body Armor
+			pickup.createPickup(Math.random(), 16, 11, 5, 75, 60); //Body Armor //put in coordinates for bottom right corner of pickup
 			pickup.createPickup(Math.random(), 24, 12, 5, 75, 60); //Body Armor
 			pickup.createPickup(Math.random(), 13, 2, 3, MGClipSize*2, 45); //MG
 			pickup.createPickup(Math.random(), 27, 21, 3, MGClipSize*2, 45); //MG
@@ -148,6 +148,40 @@ var initializePickups = function(map){
 		pickup.createPickup(Math.random(), 27, 42, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 27, 46, 1, 50, 10); //MD
 		pickup.createPickup(Math.random(), 21, 3, 1, 50, 10); //MD
+
+	}	
+	else if (map == "whirlpool"){
+		bagRed.homeX = 10*75;
+		bagRed.homeY = 18*75;
+		bagBlue.homeX = 48*75;
+		bagBlue.homeY = 18*75;
+		if (gametype != "elim"){
+
+
+			//red left
+			pickup.createPickup(Math.random(), 10, 12, 2, DPClipSize*2, 25); //DP
+			pickup.createPickup(Math.random(), 12, 26, 2, DPClipSize*2, 25); //DP		
+			pickup.createPickup(Math.random(), 25, 7, 2, DPClipSize*2, 25); //DP
+			pickup.createPickup(Math.random(), 17, 30, 2, DPClipSize*2, 25); //DP		
+			pickup.createPickup(Math.random(), 20, 10, 3, MGClipSize*2, 45); //MG
+			pickup.createPickup(Math.random(), 18, 21, 4, SGClipSize*2, 40); //SG
+			pickup.createPickup(Math.random(), 24, 25, 6, 10, 60); //Laser
+
+			pickup.createPickup(Math.random(), 29.5, 18.5, 5, 75, 60); //Body Armor
+
+			//blue right
+			pickup.createPickup(Math.random(), 47, 11, 2, DPClipSize*2, 25); //DP
+			pickup.createPickup(Math.random(), 42, 7, 2, DPClipSize*2, 25); //DP		
+			pickup.createPickup(Math.random(), 49, 25, 2, DPClipSize*2, 25); //DP
+			pickup.createPickup(Math.random(), 34, 30, 2, DPClipSize*2, 25); //DP		
+			pickup.createPickup(Math.random(), 39, 27, 3, MGClipSize*2, 45); //MG
+			pickup.createPickup(Math.random(), 41, 16, 4, SGClipSize*2, 40); //SG
+			pickup.createPickup(Math.random(), 35, 12, 6, 10, 60); //Laser
+		}
+		pickup.createPickup(Math.random(), 6, 5, 1, 50, 10); //MD
+		pickup.createPickup(Math.random(), 6, 32, 1, 50, 10); //MD
+		pickup.createPickup(Math.random(), 53, 5, 1, 50, 10); //MD
+		pickup.createPickup(Math.random(), 53, 32, 1, 50, 10); //MD
 
 	}	
 	else if (map == "close"){
@@ -629,6 +663,143 @@ var initializeBlocks = function(map){
 		// block.createBlock(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
 		// block.createBlock(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
 	}	
+	else if (map == "whirlpool"){
+		mapWidth = 58*75;
+		mapHeight = 36*75;
+		
+		//Spawn areas
+		spawnXminBlack = 40 * 75;
+		spawnXmaxBlack = 54 * 75;
+		spawnYminBlack = 3 * 75;
+		spawnYmaxBlack = 33 * 75;
+		
+		spawnXminWhite = 4 * 75;
+		spawnXmaxWhite = 18 * 75;
+		spawnYminWhite = 3 * 75;
+		spawnYmaxWhite = 33 * 75;
+		
+		//push blocks
+		block.createBlock(0.9, -0.1, 9.1, 2.2, "pushRight");
+		block.createBlock(10, -0.1, 9, 2.2, "pushRight");
+		block.createBlock(19, -0.1, 9, 2.2, "pushRight");
+		block.createBlock(28, -0.1, 9, 2.2, "pushRight");
+		block.createBlock(37, -0.1, 9, 2.2, "pushRight");
+		block.createBlock(46, -0.1, 9, 2.2, "pushRight");
+
+		block.createBlock(54.9, 0, 2.2, 5, "pushDown");
+		block.createBlock(54.9, 5, 2.2, 6, "pushDown");
+		block.createBlock(54.9, 11, 2.2, 6, "pushDown");
+		block.createBlock(54.9, 19, 2.2, 7, "pushDown");
+		block.createBlock(54.9, 26, 2.2, 8, "pushDown");
+
+		block.createBlock(3, 33.9, 9, 2.2, "pushLeft");
+		block.createBlock(12, 33.9, 9, 2.2, "pushLeft");
+		block.createBlock(21, 33.9, 9, 2.2, "pushLeft");
+		block.createBlock(30, 33.9, 9, 2.2, "pushLeft");
+		block.createBlock(39, 33.9, 9, 2.2, "pushLeft");
+		block.createBlock(48, 33.9, 9.1, 2.2, "pushLeft");
+
+		block.createBlock(0.9, 2, 2.2, 5, "pushUp");
+		block.createBlock(0.9, 7, 2.2, 5, "pushUp");
+		block.createBlock(0.9, 12, 2.2, 5, "pushUp");
+		block.createBlock(0.9, 19, 2.2, 5, "pushUp");
+		block.createBlock(0.9, 24, 2.2, 6, "pushUp");
+		block.createBlock(0.9, 30, 2.2, 6, "pushUp");
+
+		block.createBlock(3, 16.9, 1, 2.2, "pushLeft");
+		block.createBlock(54, 16.9, 1, 2.2, "pushRight");
+
+		//Outside walls
+		block.createBlock(0, 0, 1, mapHeight/75, "normal"); //left wall
+		block.createBlock(3, 2, 1, 15, "normal");			
+		block.createBlock(3, 19, 1, 15, "normal");			
+
+		block.createBlock(3, 2, 25, 1, "normal");//Top wall	
+		block.createBlock(30.1, 2, 23.9, 1, "normal");			
+		block.createBlock(30, 1, 1, 2, "normal");			
+
+		block.createBlock(54, 2, 1, 15, "normal"); //right wall			
+		block.createBlock(54, 19, 1, 15, "normal");			
+		block.createBlock(57, -0.5, 1, mapHeight/75 + 1, "normal");			
+
+		block.createBlock(3, 33, 24.9, 1, "normal");//bottom wall
+		block.createBlock(30, 33, 24, 1, "normal");		
+		block.createBlock(27, 33, 1, 2, "normal");		
+		
+		block.createBlock(0, -0.6, (mapWidth)/75, 1/2, "normal");	//Top
+		block.createBlock(0, mapHeight/75 - 0.1, (mapWidth)/75, 1/2, "normal"); //Bottom
+
+
+
+		//Red Left
+		block.createBlock(12, 4, 4, 1, "red");			
+		block.createBlock(12, 4, 1, 4, "red");			
+
+		block.createBlock(22, 5, 4, 1, "red");			
+		block.createBlock(25, 5, 1, 4, "red");			
+
+		block.createBlock(18, 10, 4, 1, "red");			
+		block.createBlock(18, 7, 1, 4, "red");			
+
+		block.createBlock(8, 12, 4, 1, "red");			
+		block.createBlock(8, 9, 1, 4, "red");			
+
+		block.createBlock(7, 15, 5, 1, "red"); //base			
+		block.createBlock(11, 15, 1, 6, "red");			
+		block.createBlock(7, 20, 5, 1, "red");			
+
+		block.createBlock(16, 15, 4, 1, "red");			
+
+		block.createBlock(23, 16, 4, 1, "red");			
+		block.createBlock(26, 13, 1, 4, "red");			
+
+		block.createBlock(15, 19, 3.9, 1, "red");			
+		block.createBlock(18, 19, 1, 4, "red");			
+
+		block.createBlock(9, 26, 4, 1, "red");			
+		block.createBlock(12, 23, 1, 4, "red");			
+
+		block.createBlock(21, 25, 4, 1, "red");			
+		block.createBlock(24, 22, 1, 4, "red");			
+
+		block.createBlock(15, 30, 4, 1, "red");			
+		block.createBlock(15, 27, 1, 4, "red");			
+
+		//Blue Right
+		block.createBlock(39, 5, 3.9, 1, "blue");			
+		block.createBlock(42, 5, 1, 4, "blue");			
+
+		block.createBlock(45, 9, 4, 1, "blue");			
+		block.createBlock(45, 9, 1, 4, "blue");			
+
+		block.createBlock(33.1, 10, 3.9, 1, "blue");			
+		block.createBlock(33, 10, 1, 4, "blue");			
+
+		block.createBlock(39, 16, 4, 1, "blue");			
+		block.createBlock(39, 13, 1, 4, "blue");			
+
+		block.createBlock(46, 15, 5, 1, "blue"); //base			
+		block.createBlock(46, 15, 1, 6, "blue");			
+		block.createBlock(46, 20, 5, 1, "blue");			
+
+		block.createBlock(38, 20, 4, 1, "blue");			
+
+		block.createBlock(31, 19, 4, 1, "blue");			
+		block.createBlock(31, 19, 1, 4, "blue");			
+
+		block.createBlock(46, 23, 3.9, 1, "blue");			
+		block.createBlock(49, 23, 1, 4, "blue");			
+
+		block.createBlock(36, 25, 4, 1, "blue");			
+		block.createBlock(39, 25, 1, 4, "blue");			
+
+		block.createBlock(32, 30, 4, 1, "blue");			
+		block.createBlock(32, 27, 1, 4, "blue");			
+
+		block.createBlock(42, 31, 4, 1, "blue");			
+		block.createBlock(45, 28, 1, 4, "blue");			
+
+	}
 	else if (map == "close"){
 		mapWidth = 8*75;
 		mapHeight = 8*75;

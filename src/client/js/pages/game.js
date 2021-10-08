@@ -48,6 +48,7 @@ function voteEndgame(voteType, voteSelection){
 		document.getElementById("voteThePit").disabled = true;		
 		document.getElementById("voteNarrows").disabled = true;		
 		document.getElementById("voteLongNarrows").disabled = true;		
+		document.getElementById("voteWhirlpool").disabled = true;		
 	}
 	else if (voteType == "rebalance"){
 		document.getElementById("voteRebalanceYes").disabled = true;
@@ -62,6 +63,7 @@ socket.on('votesUpdate', function(votesData){
 	document.getElementById("voteFFA").innerHTML = "FreeForAll Killfest - [" + votesData.ffaVotes + "]";	
 	document.getElementById("voteElimination").innerHTML = "Elimination - [" + votesData.elimVotes + "]";	
 	document.getElementById("voteLongest").innerHTML = "Hallway - [" + votesData.longestVotes + "]";
+	document.getElementById("voteWhirlpool").innerHTML = "Whirlpool - [" + votesData.whirlpoolVotes + "]";
 	document.getElementById("voteThePit").innerHTML = "Warehouse - [" + votesData.thePitVotes + "]";	
 	document.getElementById("voteCrik").innerHTML = "Bunkers - [" + votesData.crikVotes + "]";
 	document.getElementById("voteNarrows").innerHTML = "Narrowed - [" + votesData.narrowsVotes + "]";	
@@ -91,7 +93,7 @@ var screenShakeScale = 0.5;
 var drawDistance = 10; 
 var playerCenterOffset = 4;
 var noPlayerBorders = false;
-var timeInGameRankingThresh = 30; //seconds
+var timeInGameRankingThresh = 60; //seconds
 
 var camOffSet = 450;//Offset is how many pixels away from the center the camera will go when aiming, greater value means player closer to edge of screen
 var diagCamOffSet = 325;
@@ -106,7 +108,7 @@ const maxAlliedCloakOpacity = .2;
 var dualBoostXOffset = 15;
 var grappleSpeed = 20;
 
-var pushStrength = 15;
+var pushStrength = 14;
 
 var shopEnabled = false;
 
@@ -897,7 +899,7 @@ sfxMenuMove.volume(.5);
 var sfxWhoosh = new Howl({src: ['/src/client/sfx/whoosh.mp3']});
 sfxWhoosh.volume(.25);
 var sfxPunch = new Howl({src: ['/src/client/sfx/punch.mp3']});
-var sfxWarning = new Howl({src: ['/src/client/sfx/warning.mp3']});
+var sfxWarning = new Howl({src: ['/src/client/sfx/warning.mp3']}); //energyWarning
 sfxWarning.on('fade', function(){
 	sfxWarning.stop();
 });
@@ -1516,10 +1518,11 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			shop.active = false;
 		}
 
-		var warningVol = 0.15
+		var warningVol = 0.2
 		//Play Charging/Decharge sounds
 		if (playerDataPack[i].id == myPlayer.id && !mute){
 			if (playerDataPack[i].property == "energy" && playerDataPack[i].value == 0){
+				myPlayer.energyExhausted = true;
 				sfxDecharge.play();
 				sfxCharge.fade(.3, 0, 100);
 
@@ -1553,8 +1556,15 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		}
 								
 		//Add blue border for armor
-		if (playerDataPack[i].property == "health" && playerDataPack[i].value == 175){
-			determineBorderStyle();
+		if (playerDataPack[i].property == "health"){
+			if (playerDataPack[i].value == 175){
+				determineBorderStyle();
+			}
+			if (playerDataPack[i].value <= 0){ //death event
+				if (myPlayer.energy > 100){
+					myPlayer.energy = 100;
+				}
+			}
 		}
 
 		//Laser charging sounds
@@ -1914,6 +1924,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			document.getElementById("voteFFA").disabled = false;	
 			document.getElementById("voteElimination").disabled = false;	
 			document.getElementById("voteLongest").disabled = false;
+			document.getElementById("voteWhirlpool").disabled = false;
 			document.getElementById("voteCrik").disabled = false;
 			document.getElementById("voteThePit").disabled = false;				
 			document.getElementById("voteNarrows").disabled = false;				
@@ -2563,6 +2574,9 @@ function drawMap() {
 						drawImage(tile, drawX, drawY, tile.width * zoom, tile.height * zoom);
 					}
 					else if (map == "longNarrows"){
+						drawImage(tile, drawX, drawY, tile.width * zoom, tile.height * zoom);
+					}
+					else if (map == "whirlpool"){
 						drawImage(tile, drawX, drawY, tile.width * zoom, tile.height * zoom);
 					}
 					else if (map == "horde"){
@@ -4002,42 +4016,6 @@ if (gpu.tier == 0){
 }
 
 
-function drawBlood(){
-	if (reallyLowGraphicsMode)
-		return;
-
-	noShadow();	
-	for (var i in Blood.list) {
-		var blood = Blood.list[i];
-		var rotate = getRotation(blood.direction);
-		
-		var bloodRand = blood.bloodRand;
-		var imgBlood = Img.blood1;
-		if (bloodRand == 2){imgBlood = Img.blood2;}
-		else if (bloodRand == 3){imgBlood = Img.blood3;}
-		else if (bloodRand == 4){imgBlood = Img.blood4;}
-		var minusAlpha = (Number(Math.round(((blood.width - 100) / 150)+'e1')+'e-1'));
-		if (minusAlpha > 1){minusAlpha = 1;}
-		
-		if (Blood.list[i].x * zoom + 100 * zoom + drawDistance > cameraX && Blood.list[i].x * zoom - 100 * zoom - drawDistance < cameraX + canvasWidth && Blood.list[i].y * zoom + 100 * zoom + drawDistance > cameraY && Blood.list[i].y * zoom - 100 - drawDistance < cameraY + canvasHeight){
-			ctx.save();
-            ctx.translate(centerX + blood.x * zoom - myPlayer.x * zoom, centerY + blood.y * zoom - myPlayer.y * zoom); //Center camera on controlled player
-			ctx.rotate(rotate);
-			ctx.globalAlpha = 1 - minusAlpha;
-				drawImage(imgBlood, -(blood.width*blood.scale)/2 * zoom, (-blood.height*blood.scale+25) * zoom, blood.width*blood.scale * zoom, blood.height*blood.scale * zoom);
-			//ctx.rotate(-rotate);
-			//ctx.translate(-(centerX + blood.x * zoom - myPlayer.x * zoom), -(centerY + blood.y * zoom - myPlayer.y * zoom)); //Center camera on controlled player
-            ctx.restore();
-		}
-		
-		blood.width = blood.width + 21 * 1.2;
-		blood.height = blood.height + 24.25 * 1.2;
-		if (blood.width >= 350){
-			delete Blood.list[blood.id];	
-		}
-	}
-	ctx.globalAlpha = 1;
-}
 	
 function drawSmashes(){
 	for (var i in Smash.list) {
@@ -4758,8 +4736,9 @@ function drawHUD(){
 		var imgEnergyEyeIcon = Img.energyEyeIcon;
 
 		if (usingEnergy > 0){usingEnergy--;}
+		if (myPlayer.energy >= 100){myPlayer.energyExhausted = false;}
 
-   		if (myPlayer.drawnEnergy <= 25){
+   		if (myPlayer.drawnEnergy <= 25 || myPlayer.energyExhausted){
 			if (myPlayer.drawnEnergy <= 0){
 				imgEnergyIcon = Img.energyIconX;
 				imgEnergyBoostIcon = "";
@@ -6822,24 +6801,78 @@ function sprayBloodOntoTargetFunction(data){
 
 //newBlood createBlood
 var Blood = function(x, y, direction, scale = 1){
+	var width = 21;
+	var height = 24.25;
+	
 	if (reallyLowGraphicsMode){
-		return;
+		if (Blood.list.length > 5){return;}
+		width = width *= 8;
+		height = height *= 8;
 	}
+
 	var self = {
 		id:Math.random(),
 		x:x,
 		y:y,
 		//width:84, full size
 		//height:97, full size
-		width:21,
-		height:24.25,
+		width:width,
+		height:height,
 		direction:direction,
+		age:0,
 		scale:scale,
 		bloodRand:Math.floor((Math.random() * 4) + 1),
 	}	
 	Blood.list[self.id] = self;		
 }
 Blood.list = {};
+
+
+function drawBlood(){
+	noShadow();	
+	for (var i in Blood.list) {
+		var blood = Blood.list[i];
+		blood.age++;
+		var rotate = getRotation(blood.direction);
+		
+		var bloodRand = blood.bloodRand;
+		var imgBlood = Img.blood1;
+		if (bloodRand == 2){imgBlood = Img.blood2;}
+		else if (bloodRand == 3){imgBlood = Img.blood3;}
+		else if (bloodRand == 4){imgBlood = Img.blood4;}
+		var minusAlpha = 0;
+		var bloodMotion = 0;
+		if (!reallyLowGraphicsMode) {
+			minusAlpha = (Number(Math.round(((blood.width - 100) / 150)+'e1')+'e-1'));
+			minusAlpha += 0.1;
+			if (minusAlpha > 1){minusAlpha = 1;}
+		}
+		else {
+			bloodMotion = -40 + blood.age*12;
+		}
+		
+		if (Blood.list[i].x * zoom + 100 * zoom + drawDistance > cameraX && Blood.list[i].x * zoom - 100 * zoom - drawDistance < cameraX + canvasWidth && Blood.list[i].y * zoom + 100 * zoom + drawDistance > cameraY && Blood.list[i].y * zoom - 100 - drawDistance < cameraY + canvasHeight){
+			ctx.save();
+            ctx.translate(centerX + blood.x * zoom - myPlayer.x * zoom, centerY + blood.y * zoom - myPlayer.y * zoom); //Center camera on controlled player
+			ctx.rotate(rotate);
+			ctx.globalAlpha = 1 - minusAlpha;
+				drawImage(imgBlood, -(blood.width*blood.scale)/2 * zoom, (-blood.height*blood.scale+25 - bloodMotion) * zoom, blood.width*blood.scale * zoom, blood.height*blood.scale * zoom);
+			//ctx.rotate(-rotate);
+			//ctx.translate(-(centerX + blood.x * zoom - myPlayer.x * zoom), -(centerY + blood.y * zoom - myPlayer.y * zoom)); //Center camera on controlled player
+            ctx.restore();
+		}
+		
+		if (!reallyLowGraphicsMode){
+			blood.width = blood.width + 21 * 1.2;
+			blood.height = blood.height + 24.25 * 1.2;
+		}
+		var bloodAgeThresh = reallyLowGraphicsMode ? 10 : 20;
+		if (blood.age >= bloodAgeThresh){
+			delete Blood.list[blood.id];	
+		}
+	}
+	ctx.globalAlpha = 1;
+}
 
 var Smash = function(x, y){
 	var self = {
@@ -7237,10 +7270,10 @@ document.onkeydown = function(event){
 		if (!myPlayer.pressingSpace){
 			keyPress(32, true);
 			if ((myPlayer.pressingW || myPlayer.pressingD || myPlayer.pressingS || myPlayer.pressingA) && Player.list[myPlayer.id].boosting == 0 && !mute){
-				if (!Player.list[myPlayer.id].holdingBag && Player.list[myPlayer.id].energy >= 1){
+				if (!Player.list[myPlayer.id].holdingBag && !myPlayer.energyExhausted){
 					//Boosting!
 				}				
-				else if (!Player.list[myPlayer.id].holdingBag && Player.list[myPlayer.id].energy <= 0 && !sfxBoostEmpty.playing())
+				else if (!Player.list[myPlayer.id].holdingBag && myPlayer.energyExhausted && !sfxBoostEmpty.playing())
 					sfxBoostEmpty.play();
 				else if (Player.list[myPlayer.id].holdingBag)
 					sfxWhoosh.play();

@@ -588,10 +588,16 @@ label#updateInfo {
 	background-color: #529eec;
 }
 
+.RWButtonSmall {
+    font-size: 9px;
+}
+
 .RWButton:disabled {
 	background-color: #acacac;
 }
-ss
+
+
+
 button:hover {
 	border-color: white;
 }

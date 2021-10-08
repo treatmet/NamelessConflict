@@ -1872,6 +1872,18 @@
 		"canvasValue":"#ff2860"
 	},	
 	{
+		"id":"ivoryPistolWeapon",
+        "category":"weapons",
+		"subCategory":"pistol",
+		"title":"Ivory Pistol",
+		"text":"Pistol made from dismembered endangered animals",
+		"price": 500000,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":false,
+		"canvasValue":"#fffef8"
+	},	
+	{
 		"id":"goldPistolWeapon",
         "category":"weapons",
 		"subCategory":"pistol",
