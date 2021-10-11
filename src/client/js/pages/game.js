@@ -542,85 +542,11 @@ Img.boostLightning2.src = "/src/client/img/dynamic/boost/lightning2.png";
 
 Img.blackPlayerPistol = new Image();
 Img.blackPlayerPistol.src = "/src/client/img/blackPlayerPistolNaked.png";
-Img.blackPlayerPistolReloading1 = new Image();
-Img.blackPlayerPistolReloading1.src = "/src/client/img/blackPlayerPistolReloading1.png";
-Img.blackPlayerPistolReloading2 = new Image();
-Img.blackPlayerPistolReloading2.src = "/src/client/img/blackPlayerPistolReloading2.png";
-Img.blackPlayerPistolReloading3 = new Image();
-Img.blackPlayerPistolReloading3.src = "/src/client/img/blackPlayerPistolReloading3.png";
-Img.blackPlayerPistolReloading4 = new Image();
-Img.blackPlayerPistolReloading4.src = "/src/client/img/blackPlayerPistolReloading4.png";
-Img.blackPlayerDP = new Image();
-Img.blackPlayerDP.src = "/src/client/img/blackPlayerDP.png";
-Img.blackPlayerDPReloading1 = new Image();
-Img.blackPlayerDPReloading1.src = "/src/client/img/blackPlayerDPReloading1.png";
-Img.blackPlayerDPReloading2 = new Image();
-Img.blackPlayerDPReloading2.src = "/src/client/img/blackPlayerDPReloading2.png";
-Img.blackPlayerDPReloading3 = new Image();
-Img.blackPlayerDPReloading3.src = "/src/client/img/blackPlayerDPReloading3.png";
-Img.blackPlayerMGReloading1 = new Image();
-Img.blackPlayerMGReloading1.src = "/src/client/img/blackPlayerMGReloading1.png";
-Img.blackPlayerMGReloading2 = new Image();
-Img.blackPlayerMGReloading2.src = "/src/client/img/blackPlayerMGReloading2.png";
-Img.blackPlayerMGReloading3 = new Image();
-Img.blackPlayerMGReloading3.src = "/src/client/img/blackPlayerMGReloading3.png";
-Img.blackPlayerMGReloading4 = new Image();
-Img.blackPlayerMGReloading4.src = "/src/client/img/blackPlayerMGReloading4.png";
-Img.blackPlayerMGReloading5 = new Image();
-Img.blackPlayerMGReloading5.src = "/src/client/img/blackPlayerMGReloading5.png";
+
 
 Img.whitePlayerPistol = new Image();
 Img.whitePlayerPistol.src = "/src/client/img/whitePlayerPistolNaked.png";
-Img.whitePlayerPistolReloading1 = new Image();
-Img.whitePlayerPistolReloading1.src = "/src/client/img/whitePlayerPistolReloading1.png";
-Img.whitePlayerPistolReloading2 = new Image();
-Img.whitePlayerPistolReloading2.src = "/src/client/img/whitePlayerPistolReloading2.png";
-Img.whitePlayerPistolReloading3 = new Image();
-Img.whitePlayerPistolReloading3.src = "/src/client/img/whitePlayerPistolReloading3.png";
-Img.whitePlayerPistolReloading4 = new Image();
-Img.whitePlayerPistolReloading4.src = "/src/client/img/whitePlayerPistolReloading4.png";
-Img.whitePlayerDP = new Image();
-Img.whitePlayerDP.src = "/src/client/img/whitePlayerDP.png";
-Img.whitePlayerDPReloading1 = new Image();
-Img.whitePlayerDPReloading1.src = "/src/client/img/whitePlayerDPReloading1.png";
-Img.whitePlayerDPReloading2 = new Image();
-Img.whitePlayerDPReloading2.src = "/src/client/img/whitePlayerDPReloading2.png";
-Img.whitePlayerDPReloading3 = new Image();
-Img.whitePlayerDPReloading3.src = "/src/client/img/whitePlayerDPReloading3.png";
-Img.whitePlayerMGReloading1 = new Image();
-Img.whitePlayerMGReloading1.src = "/src/client/img/whitePlayerMGReloading1.png";
-Img.whitePlayerMGReloading2 = new Image();
-Img.whitePlayerMGReloading2.src = "/src/client/img/whitePlayerMGReloading2.png";
-Img.whitePlayerMGReloading3 = new Image();
-Img.whitePlayerMGReloading3.src = "/src/client/img/whitePlayerMGReloading3.png";
-Img.whitePlayerMGReloading4 = new Image();
-Img.whitePlayerMGReloading4.src = "/src/client/img/whitePlayerMGReloading4.png";
-Img.whitePlayerMGReloading5 = new Image();
-Img.whitePlayerMGReloading5.src = "/src/client/img/whitePlayerMGReloading5.png";
-Img.blackPlayerMG = new Image();
-Img.blackPlayerMG.src = "/src/client/img/blackPlayerMG.png";
-Img.whitePlayerMG = new Image();
-Img.whitePlayerMG.src = "/src/client/img/whitePlayerMG.png";
-Img.whitePlayerSG = new Image();
-Img.whitePlayerSG.src = "/src/client/img/whitePlayerSG.png";
-Img.whitePlayerSGCock = new Image();
-Img.whitePlayerSGCock.src = "/src/client/img/whitePlayerSGCock.png";
-Img.whitePlayerSGReloading1 = new Image();
-Img.whitePlayerSGReloading1.src = "/src/client/img/whitePlayerSGReloading1.png";
-Img.whitePlayerSGReloading2 = new Image();
-Img.whitePlayerSGReloading2.src = "/src/client/img/whitePlayerSGReloading2.png";
-Img.whitePlayerSGReloading3 = new Image();
-Img.whitePlayerSGReloading3.src = "/src/client/img/whitePlayerSGReloading3.png";
-Img.blackPlayerSG = new Image();
-Img.blackPlayerSG.src = "/src/client/img/blackPlayerSG.png";
-Img.blackPlayerSGCock = new Image();
-Img.blackPlayerSGCock.src = "/src/client/img/blackPlayerSGCock.png";
-Img.blackPlayerSGReloading1 = new Image();
-Img.blackPlayerSGReloading1.src = "/src/client/img/blackPlayerSGReloading1.png";
-Img.blackPlayerSGReloading2 = new Image();
-Img.blackPlayerSGReloading2.src = "/src/client/img/blackPlayerSGReloading2.png";
-Img.blackPlayerSGReloading3 = new Image();
-Img.blackPlayerSGReloading3.src = "/src/client/img/blackPlayerSGReloading3.png";
+
 
 Img.shot = new Image();
 Img.shot.src = "/src/client/img/shot-streak2.png";
@@ -724,12 +650,8 @@ Img.allyDamageWarningBlue.src = "/src/client/img/allyDamageWarningBlue.png";
 
 Img.blackPlayerLegs = new Image();
 Img.blackPlayerLegs.src = "/src/client/img/blackPlayerLegs.png";
-Img.whitePlayerLegs = new Image();
-Img.whitePlayerLegs.src = "/src/client/img/whitePlayerLegs.png";
 Img.blackPlayerLegs2 = new Image();
 Img.blackPlayerLegs2.src = "/src/client/img/blackPlayerLegs2.png";
-Img.whitePlayerLegs2 = new Image();
-Img.whitePlayerLegs2.src = "/src/client/img/whitePlayerLegs2.png";
 	
 Img.blood1 = new Image();
 Img.blood1.src = "/src/client/img/blood1.png";
@@ -2261,7 +2183,7 @@ function updateCamera(){
 
 	var lookAhead = false;
 	if ((myPlayer.pressingShift)){
-		lookAhead = true;
+		//lookAhead = true; //!!!Binoculars
 	}
 	if (pressingArrowKey() && myPlayer.weapon == 5){
 		lookAhead = true;
@@ -2865,13 +2787,7 @@ function drawLegs(){
 					legs = Img.blackPlayerLegs;
 				}
 				//This is for calculating where to put the legs according to the weapon wielded by the torso
-				var width = Img.whitePlayerPistol.width;
-				if (Player.list[i].weapon == 2){
-					width = Img.whitePlayerDP.width;
-				}
-				else if (Player.list[i].weapon == 3){
-					width = Img.whitePlayerMG.width;
-				}
+				var width = 94;
 				
 				//Draw legs a little different if walking perpendicular to shooting dir
 				var torsoTwist = Player.list[i].shootingDir - Player.list[i].walkingDir;
@@ -3332,6 +3248,12 @@ function drawTorsos(){
 						}
 					}
 					
+					if (Player.list[i].throwingObject === -1){
+						img = Player.list[i].images[team].throw1;
+					}
+					else if (Player.list[i].throwingObject > 0){
+						img = Player.list[i].images[team].throw2;
+					}
 
 
 					if (typeof img == 'undefined'){ //Load default images if animation frames not yet drawn
@@ -3549,6 +3471,7 @@ function drawShots(){
 var laserOn = true;
 const laserOffset = 2;
 function drawLaser(){
+	return; //!!!Grenades
 	if (myPlayer.pressingShift && !shop.active && Player.list[myPlayer.id].reloading <= 0 && myPlayer.health > 0){
 		if (laserOn == false){
 			laserOn = true;
@@ -6844,7 +6767,7 @@ function drawBlood(){
 		var bloodMotion = 0;
 		if (!reallyLowGraphicsMode) {
 			minusAlpha = (Number(Math.round(((blood.width - 100) / 150)+'e1')+'e-1'));
-			minusAlpha += 0.1;
+			minusAlpha -= 0.2;
 			if (minusAlpha > 1){minusAlpha = 1;}
 		}
 		else {
@@ -6866,7 +6789,7 @@ function drawBlood(){
 			blood.width = blood.width + 21 * 1.2;
 			blood.height = blood.height + 24.25 * 1.2;
 		}
-		var bloodAgeThresh = reallyLowGraphicsMode ? 10 : 20;
+		var bloodAgeThresh = reallyLowGraphicsMode ? 10 : 60;
 		if (blood.age >= bloodAgeThresh){
 			delete Blood.list[blood.id];	
 		}

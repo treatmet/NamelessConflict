@@ -23,6 +23,8 @@ const animations = [
 	"legs",
 	"boost",
 	"body1",
+	"throw1",
+	"throw2",
 	"Laser", //@
 	"bodyWall"
 ];
@@ -294,7 +296,7 @@ async function drawCustomizations(customizations, id, cb){		//!!! We don't need 
 		//log("Images loaded");
 		for (var t = 0; t < teams.length; t++){
 			for (var a = 0; a < animations.length; a++){
-				await sleep(50);
+				await sleep(10);
 
 				//Replace invalid images
 				for (var l = 0; l < layers[teams[t]][animations[a]].length; l++){						
@@ -306,7 +308,7 @@ async function drawCustomizations(customizations, id, cb){		//!!! We don't need 
 				}
 				// var loggy = new Date() - getCustStart;
 				// console.log("Drawing layered images " + loggy + " " + animations[a]);
-				await sleep(3);
+				await sleep(2);
 				playerAnimations[teams[t]][animations[a]] = drawLayeredImage(layers[teams[t]][animations[a]]);
 			}
 		}
@@ -647,6 +649,22 @@ function getLayerOrder(animationFrame){
 							{layer:"head", x:-2, y:1},
 							{layer:"hair", x:-2, y:1},
 							{layer:"hat", x:-2, y:1}];
+			break;
+		case "throw1":
+			layerOrder = [{layer: "arms", animationVariant:animationFrame, x:0, y:0},
+							{layer:"hands", animationVariant:animationFrame, x:0, y:0},
+							{layer: "torso", animationVariant:animationFrame, x:0, y:0},
+							{layer:"head", x:0, y:2},
+							{layer:"hair", x:0, y:2},
+							{layer:"hat", x:0, y:2}];
+			break;
+		case "throw2":
+			layerOrder = [{layer: "arms", animationVariant:animationFrame, x:0, y:0},
+							{layer:"hands", animationVariant:animationFrame, x:0, y:0},
+							{layer: "torso", animationVariant:animationFrame, x:0, y:0},
+							{layer:"head", x:-3, y:-7},
+							{layer:"hair", x:-3, y:-7},
+							{layer:"hat", x:-3, y:-7}];
 			break;
 		case "legs":
 			layerOrder = [{layer: "legs", x:0, y:0},

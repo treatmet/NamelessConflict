@@ -42,7 +42,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		shootingDir:1,
 		customizations: customizations,
 		settings: settings,
-		//eligibleForRank:!isGameInFullSwing(),
+		throwingObject:0,
 
 		cash:(gametype == "elim" ? startingCash : 0),
 		cashEarnedThisGame:0,
@@ -87,17 +87,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		//PING
 		self.ticksSinceLastPing++;
 
-		//Invincibility in Shop
-		if (invincibleInShop){
-			if (self.team == 1 && self.x == 0 && self.y < 200 && self.health < 100){
-				self.health = 100;
-				updatePlayerList.push({id:self.id,property:"health",value:self.health});
-			}
-			else if (self.team == 2 && self.x == mapWidth && self.y > mapHeight - 200 && self.health < 100){
-				self.health = 100;
-				updatePlayerList.push({id:self.id,property:"health",value:self.health});
-			}		
-		}		
+
 		/////////////////////////// DEATH /////////////////////		
 		//Drop bag
 		if (self.health <= 0 && self.holdingBag == true){
@@ -129,6 +119,21 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 		if (self.health <= 0){return false;}
 
+
+		//THROWING
+		if (self.throwingObject > 0){
+			if (self.throwingObject === 1){
+				console.log("TROW DAT SHIT");
+				self.updatePropAndSend("throwingObject", 0);
+			}
+			else {
+				self.throwingObject--;
+			}
+		}
+		else if (self.throwingObject === 0 && self.pressingShift){
+			self.pullGrenade();
+		}
+
 		
 		////////////SHOOTING///////////////////
 	
@@ -136,7 +141,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			var discharge = false;
 			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === false){				
 				if (self.shootingDir != 1){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing)
 							discharge = true;
 					}
@@ -146,7 +151,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === true && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
 				if (self.shootingDir != 2){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 1 || self.shootingDir == 3)) //doubleshots
 							discharge = true;
 					}
@@ -156,7 +161,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
 				if (self.shootingDir != 3){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing) //doubleshots
 							discharge = true;
 					}			
@@ -166,7 +171,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === true && self.pressingLeft === false){				
 				if (self.shootingDir != 4){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 3 || self.shootingDir == 5)) //doubleshots
 							discharge = true;
 					}
@@ -176,7 +181,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === false){				
 				if (self.shootingDir != 5){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing) //doubleshots
 							discharge = true;
 					}
@@ -186,7 +191,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === true){				
 				if (self.shootingDir != 6){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 5 || self.shootingDir == 7)) //doubleshots
 							discharge = true;
 					}
@@ -196,7 +201,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
 				if (self.shootingDir != 7){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing) //doubleshots
 							discharge = true;
 					}
@@ -206,7 +211,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
 				if (self.shootingDir != 8){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 7 || self.shootingDir == 1)) //doubleshots
 							discharge = true;
 					}			
@@ -221,7 +226,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 
 		//Auto shooting for holding down button
-		if (self.firing <= 0 && !self.pressingShift && self.fireRate <= 0 && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight) && self.weapon != 5){
+		if (self.firing <= 0 && !self.pressingShift && self.throwingObject === 0 && self.fireRate <= 0 && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight) && self.weapon != 5){
 			Discharge(self);
 		}
 		if (self.fireRate > 0){
@@ -444,7 +449,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}	
 
 		//default to shootingdir = walkingdir unless otherwise specified!
-		if (!self.pressingShift && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
+		if (!self.pressingShift && self.throwingObject === 0 && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
 			if (self.shootingDir != self.walkingDir){
 				self.shootingDir = self.walkingDir;
 				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
@@ -716,6 +721,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 	}//End engine()
 
+	self.pullGrenade = function(){
+		self.updatePropAndSend("throwingObject", -1);
+		self.updatePropAndSend("reloading", 0);
+	}
+
+	self.throwGrenade = function(){
+		if (self.throwingObject === -1){
+			self.updatePropAndSend("throwingObject", 25);		
+		}
+	}
+
 	self.shootGrapple = function(){
 		console.log("SHOT");
 		self.updatePropAndSend("grapple", {
@@ -823,7 +839,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.processChargingLaser = function(){	//processLaser
-		if (self.weapon == 5 && self.laserClip > 0 && self.pressingArrowKey()){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
+		if (self.weapon == 5 && self.laserClip > 0 && self.pressingArrowKey() && self.throwingObject === 0){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
 			if (self.chargingLaser < laserMaxCharge && self.fireRate <= 0){
 				self.chargingLaser++;
 				if (self.chargingLaser == 1){ //Only send laser to client when first charing up to initiate sfx
@@ -1284,10 +1300,14 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		playerEvent(self.id, event);
 	}
 
-	self.updatePropAndSend = function(propName, value){
+	self.updatePropAndSend = function(propName, value, singlePlayer = false){
 		if (self[propName] != value){
 			self[propName] = value;
-			updatePlayerList.push({id:self.id,property:propName,value:value});	
+			if (!singlePlayer)
+				updatePlayerList.push({id:self.id,property:propName,value:value});	
+			else {
+				updatePlayerList.push({id:self.id,property:propName,value:value, single:true});	
+			}
 		}
 	}
 
@@ -1479,12 +1499,8 @@ function gunCycle(player, forwards){
 	updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
 }
 
-function gunSwap(player){
-	if (player.reloading > 0){
-		player.reloading = 0;
-		updatePlayerList.push({id:player.id,property:"reloading",value:player.reloading});				
-	}
-
+function gunSwap(player, weapon = false){
+	player.updatePropAndSend("reloading", 0);
 
 	if (player.weapon == 1){
 		if (player.SGAmmo > 0 || player.SGClip > 0){
@@ -1639,6 +1655,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 
 					else if (data.inputId == 16){ //Shift
 						player.pressingShift = data.state;
+						if (data.state == false){
+							player.throwGrenade();
+						}
 					}
 					else if (data.inputId == 49){ //1
 						if (player.weapon != 1){
@@ -2504,8 +2523,9 @@ function checkForEmptyWeaponAndSwap(playerId){
 }
 
 function reload(playerId){
-	if (!Player.list[playerId])
-		return;
+	if (!Player.list[playerId]){return;}		
+	if (Player.list[playerId].throwingObject != 0){return;}
+		
 
 	if (checkForEmptyWeaponAndSwap(playerId)){return;}
 
