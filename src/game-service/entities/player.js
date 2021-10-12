@@ -1,6 +1,7 @@
 var gameEngine = require('../engines/gameEngine.js');
 var thug = require('./thug.js');
 var block = require('./block.js');
+var grenade = require('./grenade.js');
 var pickup = require('./pickup.js');
 var entityHelpers = require('./_entityHelpers.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
@@ -476,6 +477,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				var ay1 = dy1/dist1;
 				if (dist1 < 40){				
 					if (self.boosting > 0){  //melee boost collision bash smash
+						self.updatePropAndSend("throwingObject", 20);
 						Player.list[i].getSlammed(self.id, self.walkingDir);
 					}					
 					self.x += ax1 / (dist1 / 70); //Higher number is greater push
@@ -722,13 +724,57 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}//End engine()
 
 	self.pullGrenade = function(){
-		self.updatePropAndSend("throwingObject", -1);
-		self.updatePropAndSend("reloading", 0);
+		if (self.throwingObject == 0 && self.energy > 0){
+			self.updatePropAndSend("energy", self.energy - grenadeEnergyCost);
+			self.updatePropAndSend("throwingObject", -1);
+			self.updatePropAndSend("reloading", 0);
+			grenade.create(self.team, self.id);
+		}		
 	}
 
 	self.throwGrenade = function(){
 		if (self.throwingObject === -1){
 			self.updatePropAndSend("throwingObject", 25);		
+			var myNade = grenade.getPlayerNade(self.id);
+			if (myNade){
+				myNade.updatePropAndSend("holdingPlayerId", false);
+				switch (self.shootingDir){
+					case 1:
+						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed);
+						break;
+					case 2:
+						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed*(2/3));
+						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed*(2/3));
+						break;
+					case 3:
+						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed);
+						break;
+					case 4:
+						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed*(2/3));
+						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed*(2/3));
+						break;
+					case 5:
+						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed);
+						break;
+					case 6:
+						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed*(2/3));
+						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed*(2/3));
+						break;
+					case 7:
+						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed);
+						break;
+					case 8:
+						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed*(2/3));
+						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed*(2/3));
+						break;
+					default:
+						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed);
+						break;						
+				}
+
+
+
+			}
 		}
 	}
 

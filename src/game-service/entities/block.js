@@ -80,7 +80,7 @@ var isSafeCoords = function(potentialX, potentialY){
 	return true;
 }
 
-module.exports.checkCollision = function(obj){
+var checkCollision = function(obj, isBouncable = false){
 	if (!obj){return false;}
 	var blockList = Block.list;
 	var extendTopOfBlock = 0;
@@ -126,9 +126,11 @@ module.exports.checkCollision = function(obj){
 				if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){	
 					obj.y = blockList[i].y - (1 + extendTopOfBlock);
 					if (typeof obj.speedX != 'undefined'){
-						if (obj.speedY > 0){obj.speedY = 0;}
+						if (obj.speedY > 0){
+							if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
+							else {obj.speedY = 0;}
+						}
 					}
-
 					if (obj.y < 0)
 						obj.y = 0;
 					posUpdated = true;
@@ -136,7 +138,10 @@ module.exports.checkCollision = function(obj){
 				else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
 					obj.y = blockList[i].y + blockList[i].height + (1 + extendBottomOfBlock);
 					if (typeof obj.speedX != 'undefined'){
-						if (obj.speedY < 0){obj.speedY = 0;}
+						if (obj.speedY < 0){
+							if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
+							else {obj.speedY = 0;}
+						}
 					}
 
 					if (obj.y > mapHeight)
@@ -146,7 +151,10 @@ module.exports.checkCollision = function(obj){
 				else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
 					obj.x = blockList[i].x - (1 + extendLeftOfBlock);
 					if (typeof obj.speedX != 'undefined'){
-						if (obj.speedX > 0){obj.speedX = 0;}
+						if (obj.speedX > 0){
+							if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
+							else {obj.speedX = 0;}
+						}
 					}
 
 					if (obj.x < 0)
@@ -156,7 +164,10 @@ module.exports.checkCollision = function(obj){
 				else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
 					obj.x = blockList[i].x + blockList[i].width + (1 + extendRightOfBlock);
 					if (typeof obj.speedX != 'undefined'){
-						if (obj.speedX < 0){obj.speedX = 0;}
+						if (obj.speedX < 0){
+							if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
+							else {obj.speedX = 0;}
+						}
 					}
 
 					if (obj.x > mapWidth)
@@ -228,3 +239,4 @@ module.exports.getBlockById = getBlockById;
 module.exports.createBlock = createBlock;
 module.exports.clearBlockList = clearBlockList;
 module.exports.isSafeCoords = isSafeCoords;
+module.exports.checkCollision = checkCollision;

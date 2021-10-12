@@ -2,9 +2,11 @@ var pickup = require('../entities/pickup.js');
 var block = require('../entities/block.js');
 var thug = require('../entities/thug.js');
 var player = require('../entities/player.js');
+var grenade = require('../entities/grenade.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
 var dataAccess = require('../../shared/data_access/dataAccess.js');
 var mapEngine = require('./mapEngine.js');
+
 const { request } = require('express');
 const { ElastiCache } = require('aws-sdk');
 
@@ -1656,6 +1658,7 @@ var gameLoop = function(){
 		return;
 	
 	player.runPlayerEngines();
+	grenade.runEngines();
 	thug.runThugEngines();
 		
 	if (gametype == "ctf"){
@@ -1704,11 +1707,12 @@ var gameLoop = function(){
 		// }
 
 		//send update
-		socket.emit('update', myUpdatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
+		socket.emit('update', myUpdatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateGrenadeList, updateMisc);
 	}
 
 	//console.log("Sent " + msSinceLastTick + "ms after last tick. Emit took " + msSinceEmit + "ms");
 	updatePlayerList = [];
+	updateGrenadeList = [];
 	updateThugList = [];
 	updatePickupList = [];
 	updateNotificationList = [];

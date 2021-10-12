@@ -89,7 +89,7 @@ global.maxPlayers = 14;
 global.bootOnAfk = true;
 global.AfkFramesAllowed = 60 * 60; //seconds (translated to frames) //timeout
 
-//Player config
+//Player config player settings
 global.framesOfAiming = 60;
 global.boostAmount = 19;
 global.playerMaxSpeed = 5;
@@ -109,7 +109,10 @@ global.assistDamageThreshold = 30;
 global.grappleSpeed = 20;
 global.grappleStrength = 3;
 global.grappleLength = 5 * 75; //Tiles * 75
-
+global.grenadeEnergyCost = 25;
+global.grenadeTimer = 3 * 60; //Seconds (translated to frames)
+global.grenadeThrowSpeed = 15;
+global.grenadeDrag = 1;
 
 /*
 {rank:"bronze1",rating:0},
@@ -315,6 +318,7 @@ global.updateThugList = [];
 global.updateNotificationList = [];
 global.updatePickupList = [];
 global.updateEffectList = [];
+global.updateGrenadeList = [];
 global.updateMisc = {};
 
 global.SOCKET_LIST = [];

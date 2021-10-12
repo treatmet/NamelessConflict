@@ -113,12 +113,17 @@ var pushStrength = 14;
 var shopEnabled = false;
 
 //Player Config
+var grenadeTimer = 3 * 60; //Seconds (translated to frames)
+var grenadeThrowSpeed = 18;
+var grenadeDrag = 0.2;
 var SGTriggerTapLimitTimer = 50;
 var hordeKills = 0;
 var hordeGlobalBest = 0;
 var hordePersonalBest = 0;
 var hordeGlobalBestNames = "RTPM3";
 
+var blockPushSpeed = 4;
+var speedCap = 45;
 var legSwingSpeed = 1;
 var maxLegHeight = 116;
 
@@ -629,6 +634,9 @@ Img.pickupMD.src = "/src/client/img/MDammo.png";
 Img.pickupMD2 = new Image();
 Img.pickupMD2.src = "/src/client/img/MDammo2.png";
 
+Img.grenade = new Image();
+Img.grenade.src = "/src/client/img/grenade.png";
+
 Img.pressShiftInstructions = new Image();
 Img.pressShiftInstructions.src = "/src/client/img/pressShiftInstructions.png";
 Img.wasdInstructions = new Image();
@@ -919,11 +927,19 @@ var Player = function(id){
 		settings: false,
 		images:{ 1:{}, 2:{} }
 	}
+
+
+
+
 	Player.list[id] = self;
 }
 Player.list = [];
-var orderedPlayerList = [];
 
+var getPlayerById = function(id){
+    return Player.list[id];
+}
+
+var orderedPlayerList = [];
 function updateOrderedPlayerList(){
 	var blackPlayers = [];
 	var whitePlayers = [];		
@@ -1080,7 +1096,7 @@ var Block = function(id){
 }
 Block.list = []; //var Block.list
 
-checkBlockCollision = function(obj){
+checkBlockCollision = function(obj, isBouncable = false){
 	if (!obj){return false;}
 	var blockList = Block.list;
 	var extendTopOfBlock = 0;
@@ -1106,6 +1122,14 @@ checkBlockCollision = function(obj){
 				break;
 		}
 	}
+
+	if (obj.homeX){
+		extendTopOfBlock = 10;
+		extendRightOfBlock = 10;
+		extendBottomOfBlock = 10;
+		extendLeftOfBlock = 10;
+	}
+
 	var posUpdated = false;
 	for (var i in blockList){
 		if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
@@ -1117,56 +1141,111 @@ checkBlockCollision = function(obj){
 				var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - obj.x);			
 				if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){	
 					obj.y = blockList[i].y - (1 + extendTopOfBlock);
+					if (typeof obj.speedX != 'undefined'){
+						if (obj.speedY > 0){
+							if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
+							else {obj.speedY = 0;}
+						}
+					}
 					if (obj.y < 0)
 						obj.y = 0;
 					posUpdated = true;
 				}
 				else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
 					obj.y = blockList[i].y + blockList[i].height + (1 + extendBottomOfBlock);
+					if (typeof obj.speedX != 'undefined'){
+						if (obj.speedY < 0){
+							if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
+							else {obj.speedY = 0;}
+						}
+					}
+
 					if (obj.y > mapHeight)
 						obj.y = mapHeight;
 					posUpdated = true;
 				}
 				else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
 					obj.x = blockList[i].x - (1 + extendLeftOfBlock);
+					if (typeof obj.speedX != 'undefined'){
+						if (obj.speedX > 0){
+							if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
+							else {obj.speedX = 0;}
+						}
+					}
+
 					if (obj.x < 0)
 						obj.x = 0;
 					posUpdated = true;
 				}
 				else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
 					obj.x = blockList[i].x + blockList[i].width + (1 + extendRightOfBlock);
+					if (typeof obj.speedX != 'undefined'){
+						if (obj.speedX < 0){
+							if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
+							else {obj.speedX = 0;}
+						}
+					}
+
 					if (obj.x > mapWidth)
 						obj.x = mapWidth;
 					posUpdated = true;
 				}
 			}
 			else if (blockList[i].type == "pushUp"){
-				obj.y -= pushStrength;
-				if (obj.y < blockList[i].y){obj.y = blockList[i].y;}
+				if (typeof obj.speedX == 'undefined'){
+					obj.y -= pushStrength;
+				}
+				else {
+					obj.speedY -= blockPushSpeed;
+					if (obj.speedY < -speedCap*0.75){obj.speedY = -speedCap*0.75;}
+				}
 				posUpdated = true;
 			}
 			else if (blockList[i].type == "pushRight"){
-				obj.x += pushStrength;
-				if (obj.x > blockList[i].x + blockList[i].width){obj.x = blockList[i].x + blockList[i].width;}
+				if (typeof obj.speedX == 'undefined'){
+					obj.x += pushStrength;
+				}
+				else {
+					obj.speedX += blockPushSpeed;
+					if (obj.speedX > speedCap*0.75){obj.speedX = speedCap*0.75;}
+
+				}
 				posUpdated = true;
 			}
 			else if (blockList[i].type == "pushDown"){
-				obj.y += pushStrength;
-				if (obj.y > blockList[i].y + blockList[i].height){obj.y = blockList[i].y + blockList[i].height;}
+				if (typeof obj.speedX == 'undefined'){
+					obj.y += pushStrength;
+				}
+				else {
+					obj.speedY += blockPushSpeed;
+					if (obj.speedY > speedCap*0.75){obj.speedY = speedCap*0.75;}
+				}
 				posUpdated = true;
 			}
 			else if (blockList[i].type == "pushLeft"){
-				obj.x -= pushStrength;
-				if (obj.x < blockList[i].x){obj.x = blockList[i].x;}
+				if (typeof obj.speedX == 'undefined'){
+					obj.x -= pushStrength;
+				}
+				else {
+					obj.speedX -= blockPushSpeed;
+					if (obj.speedX < -speedCap*0.75){obj.speedX = -speedCap*0.75;}
+				}
 				posUpdated = true;
 			}
-
-			if (posUpdated){
-				return true;
+			else if (blockList[i].type == "warp"){
+				obj.x = blockList[i].warpX;
+				posUpdated = true;
+				obj.y = blockList[i].warpY;
+				posUpdated = true;
+				if (SOCKET_LIST[obj.id])
+					SOCKET_LIST[obj.id].emit('sfx', "sfxWarp");
 			}
-
 		}// End check if player is overlapping block
 	}//End blockList loop	
+
+	if (posUpdated){
+		return true;
+	}
 }
 
 var Pickup = function(id){
@@ -1421,13 +1500,13 @@ function getRotation(direction){
 ////////////////////////////////////////////////////////////////////////////////////
 
 var clientInitialized = false;
-socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, miscPack){
+socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, updateGrenadePack, miscPack){
 	if (clientInitialized){
-		updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, miscPack);
+		updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, updateGrenadePack, miscPack);
 	}
 });
 
-function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, miscPack){
+function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, updateGrenadePack, miscPack){
 	var debugUpdates = false;
 	clientTimeoutTicker = clientTimeoutSeconds;
 	for (var i = 0; i < playerDataPack.length; i++) {
@@ -1646,10 +1725,6 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				sfxGrappleShot.stop();
 			}
 		}
-
-
-
-
 	}//END Player loop
 
 	for (var i = 0; i < pickupDataPack.length; i++) {
@@ -1793,6 +1868,25 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			Player.list[id].chatDecay = 300;
 		} 				
 	}
+
+	//Grenade updates
+	for (var i = 0; i < updateGrenadePack.length; i++) {
+		console.log("updateGrenadePack[i]");
+		console.log(updateGrenadePack[i]);
+		if (updateGrenadePack[i].property == "entity"){
+			console.log("Creating nade NATCH");
+			Grenade(updateGrenadePack[i].id, updateGrenadePack[i].value.grenadeTimer, updateGrenadePack[i].value.team, updateGrenadePack[i].value.holdingPlayerId);
+		}
+		else {
+			if (!Grenade.list[updateGrenadePack[i].id]){
+				console.log("Creating nade because missing ID:" + updateGrenadePack[i].id);
+				Grenade(updateGrenadePack[i].id);
+			}
+			Grenade.list[updateGrenadePack[i].id][updateGrenadePack[i].property] = updateGrenadePack[i].value;
+		}
+	}
+
+	//MISC PACK
 	if (miscPack.roundOver === true){
 		if (myPlayer.team && ! gameOver){
 			shop.active = true;
@@ -1917,7 +2011,7 @@ socket.on('sendFullGameStatus',function(playerPack, thugPack, pickupPack, blockP
 	log("FULL GAME STATUS RECIEVED");
 	sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack, miscPack);
 	clientInitialized = true;
-	BGinit();
+	//BGinit();
 });
 var pickupCount = 0;
 function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack, miscPack){
@@ -6102,6 +6196,7 @@ function drawEverything(){
 	drawMap();
 	//drawBlackMarkets();
 	drawMissingBags();
+
 	drawBodies();	
 	drawLegs();
 	drawLaser();
@@ -6113,6 +6208,8 @@ function drawEverything(){
 	drawWallBodies();
 	drawPickups();
 	drawBags();
+	drawGrenades();
+
 	drawThugs();
 	drawBoosts();
 	drawTorsos();
@@ -6123,7 +6220,6 @@ function drawEverything(){
 	drawPlayerTags();
 	drawNotifications();
 
-	
 	drawPersonalInstructions();
 	drawAllyDamageWarning();
 	drawShop();	
@@ -6131,38 +6227,139 @@ function drawEverything(){
 	fpsCounter++;
 }
 
+//new Grenade create Grenade newGrenade createGrenade
+var Grenade = function(id, grenadeTimer = 3*60, team = 0, holdingPlayerId = false){
+	console.log("CREATE NADE");
+	var self = {
+		id:id,
+		team:team,
+		speedX:0,
+		speedY:0,
+		x:0,
+		y:0,
+		timer:grenadeTimer,
+		holdingPlayerId:holdingPlayerId
+	}
 
-var bgCanvas = document.createElement('canvas');
-var bgCtx = bgCanvas.getContext("2d", { alpha: false });
-bgCanvas.width = canvasWidth;
-bgCanvas.height = canvasHeight;
+	self.engine = function(){	
+		if (self.timer > 0){
+			self.timer--;
+		}
+		if (self.timer <= 0){
+			delete Grenade.list[self.id];
+		}
+		else {
+			self.move();
+		}
 
-var w = canvasWidth,
-    h = canvasHeight,
+	}//End engine()
+
+
+	self.move = function(){
+		var posUpdated = false;
+
+		console.log("self.holdingPlayerId" + self.holdingPlayerId);
+		if (self.holdingPlayerId){
+			self.speedX = 0;
+			self.speedY = 0;
+			if (getPlayerById(self.holdingPlayerId)){
+				self.x = getPlayerById(self.holdingPlayerId).x;
+				self.y = getPlayerById(self.holdingPlayerId).y;
+			}
+		}
+		else {
+			if (self.speedY != 0){
+				posUpdated = true;
+				self.y += self.speedY;
+			}
+			if (self.speedX != 0){
+				posUpdated = true;
+				self.x += self.speedX;
+			}	
+			if (checkBlockCollision(self, true)){
+				posUpdated = true;
+			}
+			self.calculateDrag();
+		}
+	}
+
+	self.calculateDrag = function(){
+		if (self.speedX > 0){
+			self.speedX -= grenadeDrag;
+			if (self.speedX < 0){self.speedX = 0;}
+		}
+		if (self.speedX < 0){
+			self.speedX += grenadeDrag;
+			if (self.speedX > 0){self.speedX = 0;}
+		}
+		if (self.speedY > 0){
+			self.speedY -= grenadeDrag;
+			if (self.speedY < 0){self.speedY = 0;}
+		}
+		if (self.speedY < 0){
+			self.speedY += grenadeDrag;
+			if (self.speedY > 0){self.speedY = 0;}
+		}
+	}
+
+
+	Grenade.list[id] = self;
+	
+	return self;
+} //End Player function
+Grenade.list = {};
+
+
+function drawGrenades(){
+	console.log(getGrenadeListLength());
+	for (var g in Grenade.list){
+		var grenade = Grenade.list[g];
+
+		grenade.engine();
+		console.log("DRAWING " + grenade.id + " timer:" + grenade.timer + " " + grenade.x + " " + grenade.y);
+		drawImageTrans(Img.grenade, grenade.x, grenade.y);
+	}
+}
+
+function getGrenadeListLength(){
+	var count = 0;
+	for (var g in Grenade.list){
+		count++;
+	}
+	return count;
+}
+
+// var bgCanvas = document.createElement('canvas');
+// var bgCtx = bgCanvas.getContext("2d", { alpha: false });
+// bgCanvas.width = canvasWidth;
+// bgCanvas.height = canvasHeight;
+
+// var w = canvasWidth,
+//     h = canvasHeight,
     
-    minDist = 10,
-    maxDist = 30,
-    initialWidth = 10,
-    maxLines = 50,
-    initialLines = 4,
-    speed = 1,
+//     minDist = 10,
+//     maxDist = 30,
+//     initialWidth = 10,
+//     maxLines = 50,
+//     initialLines = 4,
+//     speed = 1,
     
-    lines = [],
-    frame = 0,
-    timeSinceLast = 0,
+//     lines = [],
+//     frame = 0,
+//     timeSinceLast = 0,
     
-    dirs = [
-   // straight x, y velocity
-      [ 0, 1 ],
-      [ 1, 0 ],
-      [ 0, -1 ],
-    	[ -1, 0 ],
-   // diagonals, 0.7 = sin(PI/4) = cos(PI/4)
-      [ .7, .7 ],
-      [ .7, -.7 ],
-      [ -.7, .7 ],
-      [ -.7, -.7]
-    ]
+//     dirs = [
+//    // straight x, y velocity
+//       [ 0, 1 ],
+//       [ 1, 0 ],
+//       [ 0, -1 ],
+//     	[ -1, 0 ],
+//    // diagonals, 0.7 = sin(PI/4) = cos(PI/4)
+//       [ .7, .7 ],
+//       [ .7, -.7 ],
+//       [ -.7, .7 ],
+//       [ -.7, -.7]
+//     ]
 
 function BGinit() {
 
