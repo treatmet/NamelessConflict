@@ -6354,6 +6354,7 @@ class Explosion{
 		this.id = Math.random();
 		this.x = x,
 		this.y = y,
+		this.beams = 36;
 		this.ray = []
 		this.rayrange = explosionSize
 		this.globalangle = Math.PI;
@@ -6368,7 +6369,7 @@ class Explosion{
 		explosions[this.id].ctx = explosions[this.id].canvas.getContext("2d");
 		explosions[this.id].x = this.x;
 		explosions[this.id].y = this.y;
-		explosions[this.id].timer = 15;
+		explosions[this.id].timer = 20;
 
 
 		this.draw();
@@ -6376,13 +6377,12 @@ class Explosion{
 
 	beam(){
 		this.currentangle  = this.gapangle/2
-		var beams = 1000;
-		for(let k = 0; k<beams; k++){
+		for(let k = 0; k<=this.beams; k++){
 
-			this.currentangle+=(this.gapangle/(beams/2))
+			this.currentangle+=(this.gapangle/(this.beams/2))
 			let ray = new Circle(this.x, this.y, 1, "white",((this.rayrange * (Math.cos(this.globalangle+this.currentangle))))/this.rayrange*2, ((this.rayrange * (Math.sin(this.globalangle+this.currentangle))))/this.rayrange*2 )
    
-		ray.collided = 0
+		ray.collided = false;
 		ray.lifespan = this.rayrange-1
 		this.ray.push(ray)
 
@@ -6390,15 +6390,12 @@ class Explosion{
 
 		for(let f = 0; f<this.rayrange/2; f++){
 			for(let t = 0; t<this.ray.length; t++){
-				if(this.ray[t].collided == 1){
-					
-				}
-				else {
+				if(this.ray[t].collided == false){
 					this.ray[t].move()
 
 					this.ray[t].lifespan--
 					if(this.ray[t].lifespan <= 0){
-						this.collided = 1
+						this.collided = true;
 					}
 					for(var b in this.obstacles){
 						var block = this.obstacles[b];
@@ -6406,13 +6403,13 @@ class Explosion{
 							if(this.ray[t].y > block.y){
 								if(this.ray[t].x < block.x+block.width){
 									if(this.ray[t].y < block.y+block.height){
-										this.ray[t].collided = 1
+										this.ray[t].collided = true;
 									}
 								}
 							}
 						}
 						if(intersects(block, this.ray[t])){
-							this.ray[t].collided = 1
+							this.ray[t].collided = true;
 						}
 					}
 				}
@@ -6422,7 +6419,6 @@ class Explosion{
 	}
 
 	draw(){
-		console.log("DRAWING EXPLOSION");
 		this.beam()
 		explosions[this.id].ctx.beginPath();
 		explosions[this.id].ctx.moveTo(explosionSize, explosionSize);
