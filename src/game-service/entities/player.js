@@ -734,7 +734,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 	self.throwGrenade = function(){
 		if (self.throwingObject === -1){
-			self.updatePropAndSend("throwingObject", 25);		
+			self.updatePropAndSend("throwingObject", 30);		
 			var myNade = grenade.getPlayerNade(self.id);
 			if (myNade){
 				myNade.updatePropAndSend("holdingPlayerId", false);
