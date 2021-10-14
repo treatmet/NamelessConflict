@@ -393,6 +393,43 @@ global.getLevelFromExperience = function(experience){
 	};
 }
 
+
+global.isPointIntersectingRect = function(point, rect, margin = 0){ //collision detection
+	if (!rect){return false;}
+	if (!point){return false;}
+
+	if(point.x > rect.x - margin){
+		if(point.y > rect.y - margin){
+			if(point.x < rect.x+rect.width + margin){
+				if(point.y < rect.y+rect.height + margin){
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+global.isPointIntersectingBody = function(point, body, margin = 0){ //margin is body "width"
+	if (!body){return false;}
+	if (!point){return false;}
+	if (typeof body.width === 'undefined'){body.width = 0;}
+	if (typeof body.height === 'undefined'){body.height = 0;}
+
+	if(point.x > body.x - body.width/2 - margin){
+		if(point.y > body.y - body.height/2 - margin){
+			if(point.x < body.x+body.width/2 + margin){
+				if(point.y < body.y+body.height/2 + margin){
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
 global.getObjectiveText = function(){
 	var objectiveText = "Kill enemy players to win!";
 	if (customServer && pregame)

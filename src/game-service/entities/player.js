@@ -728,7 +728,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.updatePropAndSend("energy", self.energy - grenadeEnergyCost);
 			self.updatePropAndSend("throwingObject", -1);
 			self.updatePropAndSend("reloading", 0);
-			grenade.create(self.team, self.id);
+			grenade.create(self.id, self.id, self.x, self.y);
 		}		
 	}
 
@@ -1119,11 +1119,11 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 
-	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX){
-		if (self.health <= 0)
-			return;
+	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX, weapon = false){
+		if (self.health <= 0){return;}
+		if (!weapon){weapon = shooter.weapon;}
 
-		if (shooter.weapon != 4 && shooter.weapon != 5){
+		if (shooter.weapon != 4 && shooter.weapon != 5 && weapon != 6){
 			var shotData = {};
 			shotData.id = Math.random();
 			shotData.playerId = shooter.id;
@@ -1169,29 +1169,31 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		else if (shooter.weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
 		else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
 		else if (shooter.weapon == 5){ damageInflicted = LaserDamage;} //Damage for Laser
-		
-		if (self.team != shooter.team || gametype == "ffa"){
-			shooter.cumulativeAllyDamage = 0;
-			var shooterDirDif = entityHelpers.getDirDif(self.shootingDir, shootingDir);
-			if (shooterDirDif <= 2){
-				//self is NOT facing shooter (within 3 angles)
-				if (shooter.weapon == 1){ damageInflicted += pistolSideDamage; } //Single Pistol
-				else if (shooter.weapon == 2){ damageInflicted += DPSideDamage; } //Double damage for double pistols
-				else if (shooter.weapon == 3){ damageInflicted += mgSideDamage; } //Damage for MG
-				else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGSideDamage; } //Damage for SG
+		else if (weapon == 6){ damageInflicted += -(targetDistance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;} //Damage for Grenade
+		if (weapon != 6){
+			if (self.team != shooter.team || gametype == "ffa"){
+				shooter.cumulativeAllyDamage = 0;
+				var shooterDirDif = entityHelpers.getDirDif(self.shootingDir, shootingDir);
+				if (shooterDirDif <= 2){
+					//self is NOT facing shooter (within 3 angles)
+					if (shooter.weapon == 1){ damageInflicted += pistolSideDamage; } //Single Pistol
+					else if (shooter.weapon == 2){ damageInflicted += DPSideDamage; } //Double damage for double pistols
+					else if (shooter.weapon == 3){ damageInflicted += mgSideDamage; } //Damage for MG
+					else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGSideDamage; } //Damage for SG
+				}
+				if (shooterDirDif <= 1){
+					//Back Damage
+					if (shooter.weapon == 1){ damageInflicted += pistolBackDamage; } //Single Pistol
+					else if (shooter.weapon == 2){ damageInflicted += DPBackDamage; } //Double damage for double pistols
+					else if (shooter.weapon == 3){ damageInflicted += mgBackDamage; } //Damage for MG
+					else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGBackDamage; } //Damage for SG
+				}
+			}			
+			else if (self.team == shooter.team && gametype != "ffa"){
+				damageInflicted *= friendlyFireDamageScale;
+				if (shooter.weapon == 5){damageInflicted = 15;}			
+				shooter.processAllyDamage(damageInflicted, self.id);			
 			}
-			if (shooterDirDif <= 1){
-				//Back Damage
-				if (shooter.weapon == 1){ damageInflicted += pistolBackDamage; } //Single Pistol
-				else if (shooter.weapon == 2){ damageInflicted += DPBackDamage; } //Double damage for double pistols
-				else if (shooter.weapon == 3){ damageInflicted += mgBackDamage; } //Damage for MG
-				else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGBackDamage; } //Damage for SG
-			}
-		}			
-		else if (self.team == shooter.team && gametype != "ffa"){
-			damageInflicted *= friendlyFireDamageScale;
-			if (shooter.weapon == 5){damageInflicted = 15;}			
-			shooter.processAllyDamage(damageInflicted, self.id);			
 		}
 		
 		damageInflicted = damageInflicted * damageScale; //Scale damage
@@ -1211,6 +1213,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 
 		self.health -= Math.floor(damageInflicted); //damageValue
+		console.log("HIT FROM NADE? " + damageInflicted);
 
 		updatePlayerList.push({id:self.id,property:"health",value:self.health});
 					

@@ -6330,6 +6330,8 @@ class Circle{
 		this.color = color
 		this.xmom = xmom
 		this.ymom = ymom
+		this.lifespan = explosionSize;
+		this.collided = false;
 	}       
 	 draw(){
 		 console.log("Drawing circle");
@@ -6338,12 +6340,13 @@ class Circle{
 		ctx.beginPath();
 		ctx.arc(this.x, this.y, this.radius, 0, (Math.PI*2), true)
 		ctx.fillStyle = this.color
-	   ctx.fill()
+	  	 ctx.fill()
 		ctx.stroke(); 
 	}
 	move(){
 		this.x += this.xmom
 		this.y += this.ymom
+		this.lifespan--
 	}
 }
 
@@ -6354,9 +6357,8 @@ class Explosion{
 		this.id = Math.random();
 		this.x = x,
 		this.y = y,
-		this.beams = 36;
+		this.beams = 45;
 		this.ray = []
-		this.rayrange = explosionSize
 		this.globalangle = Math.PI;
 		this.gapangle = Math.PI;
 		this.currentangle = 0
@@ -6378,25 +6380,16 @@ class Explosion{
 	beam(){
 		this.currentangle  = this.gapangle/2
 		for(let k = 0; k<=this.beams; k++){
-
 			this.currentangle+=(this.gapangle/(this.beams/2))
-			let ray = new Circle(this.x, this.y, 1, "white",((this.rayrange * (Math.cos(this.globalangle+this.currentangle))))/this.rayrange*2, ((this.rayrange * (Math.sin(this.globalangle+this.currentangle))))/this.rayrange*2 )
-   
-		ray.collided = false;
-		ray.lifespan = this.rayrange-1
-		this.ray.push(ray)
-
+			let ray = new Circle(this.x, this.y, 1, "white",((explosionSize * (Math.cos(this.globalangle+this.currentangle))))/explosionSize*2, ((explosionSize * (Math.sin(this.globalangle+this.currentangle))))/explosionSize*2 )
+			this.ray.push(ray);
 		}
 
-		for(let f = 0; f<this.rayrange/2; f++){
+		for(let f = 0; f<explosionSize/2; f++){
 			for(let t = 0; t<this.ray.length; t++){
 				if(this.ray[t].collided == false){
 					this.ray[t].move()
 
-					this.ray[t].lifespan--
-					if(this.ray[t].lifespan <= 0){
-						this.collided = true;
-					}
 					for(var b in this.obstacles){
 						var block = this.obstacles[b];
 						if(this.ray[t].x > block.x){
@@ -6404,13 +6397,15 @@ class Explosion{
 								if(this.ray[t].x < block.x+block.width){
 									if(this.ray[t].y < block.y+block.height){
 										this.ray[t].collided = true;
+										break;
 									}
 								}
 							}
 						}
-						if(intersects(block, this.ray[t])){
-							this.ray[t].collided = true;
-						}
+						// if(intersects(block, this.ray[t])){
+						// 	this.ray[t].collided = true;
+						// 	break;
+						// }
 					}
 				}
 			}
@@ -6433,7 +6428,6 @@ class Explosion{
 		explosions[this.id].ctx.fill();
 		this.ray =[];
 	}
-
 }
 
 function intersects(circle, left) {
@@ -6446,7 +6440,6 @@ function drawExplosions(){
 	//console.log("explosions:" + getObjectLength(explosions));
 	noShadow();
 	for (var e in explosions){
-		console.log("explosions:" + getObjectLength(explosions));
 	
 		drawImageTrans(explosions[e].canvas, explosions[e].x - explosionSize, explosions[e].y - explosionSize, explosions[e].canvas.width, explosions[e].canvas.height);
 		//drawImageTrans(explosions[e].canvas, explosions[e].x, explosions[e].y, explosions[e].width, explosions[e].height);

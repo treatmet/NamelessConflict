@@ -113,6 +113,10 @@ global.grenadeEnergyCost = 25;
 global.grenadeTimer = 3 * 60; //Seconds (translated to frames)
 global.grenadeThrowSpeed = 15;
 global.grenadeDrag = 1;
+global.grenadeExplosionSize = 400;
+global.grenadeDamage = 100;
+global.grenadeDamageScale = 1;
+global.grenadePower = 10;
 
 /*
 {rank:"bronze1",rating:0},
