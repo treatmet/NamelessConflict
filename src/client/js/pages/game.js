@@ -324,6 +324,7 @@ var targetCenterX = canvasWidth/2; //450
 var targetCenterY = canvasWidth/2; //450
 var cameraX = 0; //This defines the upper-left XY coord of the camera. For camera center, add canvasWidth/2 and canvasHeight/2
 var cameraY = 0;
+var grenadesEnabled = false;
 
 var screenShakeCounter = 0;
 
@@ -2285,8 +2286,8 @@ function purchase(){
 function updateCamera(){	
 
 	var lookAhead = false;
-	if ((myPlayer.pressingShift)){
-		//lookAhead = true; //!!!Binoculars
+	if ((myPlayer.pressingShift) && !grenadesEnabled){
+		lookAhead = true;
 	}
 	if (pressingArrowKey() && myPlayer.weapon == 5 && !Player.list[myPlayer.id].throwingObject){
 		lookAhead = true;
@@ -3591,7 +3592,7 @@ function drawShots(){
 var laserOn = true;
 const laserOffset = 2;
 function drawLaser(){
-	return; //!!!Grenades
+	if (grenadesEnabled){return;} //!!!Grenades
 	if (myPlayer.pressingShift && !shop.active && Player.list[myPlayer.id].reloading <= 0 && myPlayer.health > 0){
 		if (laserOn == false){
 			laserOn = true;

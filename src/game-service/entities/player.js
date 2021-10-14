@@ -131,7 +131,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 		else if (self.throwingObject === 0 && self.pressingShift){
-			self.pullGrenade();
+			//self.pullGrenade();
 		}
 
 		
@@ -1725,9 +1725,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 
 					else if (data.inputId == 16){ //Shift
 						player.pressingShift = data.state;
-						if (data.state == false){
-							player.throwGrenade();
-						}
+						// if (data.state == false){
+						// 	player.throwGrenade();
+						// }
 					}
 					else if (data.inputId == 49){ //1
 						if (player.weapon != 1){
