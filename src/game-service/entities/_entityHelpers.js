@@ -341,7 +341,27 @@ var getDirDif = function(shootingDirA, shootingDirB){
 	}
 }
 
+var calculateDrag = function(entity, drag){
+	if (typeof entity == 'undefined' || typeof entity.speedX == 'undefined' || typeof entity.speedY == 'undefined')	{
+		return;
+	}
+
+	var fullVelocity = Math.sqrt( Math.pow(entity.speedX,2) + Math.pow(entity.speedY,2) );
+	if (fullVelocity <= 0.5){
+		entity.speedX = 0;
+		entity.speedY = 0;
+		return;
+	}
+
+	var speedXRatio = entity.speedX / fullVelocity;
+	var speedYRatio = entity.speedY / fullVelocity;
+	entity.speedX -= speedXRatio * drag;  
+	entity.speedY -= speedYRatio * drag;  
+
+}
+
 module.exports.sprayBloodOntoTarget = sprayBloodOntoTarget;
 module.exports.checkIfInLineOfShot = checkIfInLineOfShot;
 module.exports.getHitTarget = getHitTarget;
 module.exports.getDirDif = getDirDif;
+module.exports.calculateDrag = calculateDrag;

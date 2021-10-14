@@ -115,6 +115,28 @@ var checkCollision = function(obj, isBouncable = false){
 	}
 
 	var posUpdated = false;
+
+	if (obj.y < 0){
+		obj.y = 0 + 30;
+		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
+		posUpdated = true
+	}
+	else if (obj.y > mapHeight){
+		obj.y = mapHeight - 30;
+		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
+		posUpdated = true
+	}
+	else if (obj.x < 0){
+		obj.x = 0 + 30;
+		if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
+		posUpdated = true
+	}
+	else if (obj.x > mapWidth){
+		obj.x = mapWidth - 30;
+		if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
+		posUpdated = true
+	}
+
 	for (var i in blockList){
 		if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
 			
@@ -131,8 +153,6 @@ var checkCollision = function(obj, isBouncable = false){
 							else {obj.speedY = 0;}
 						}
 					}
-					if (obj.y < 0)
-						obj.y = 0;
 					posUpdated = true;
 				}
 				else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
@@ -143,9 +163,6 @@ var checkCollision = function(obj, isBouncable = false){
 							else {obj.speedY = 0;}
 						}
 					}
-
-					if (obj.y > mapHeight)
-						obj.y = mapHeight;
 					posUpdated = true;
 				}
 				else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
@@ -156,9 +173,6 @@ var checkCollision = function(obj, isBouncable = false){
 							else {obj.speedX = 0;}
 						}
 					}
-
-					if (obj.x < 0)
-						obj.x = 0;
 					posUpdated = true;
 				}
 				else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
@@ -169,9 +183,6 @@ var checkCollision = function(obj, isBouncable = false){
 							else {obj.speedX = 0;}
 						}
 					}
-
-					if (obj.x > mapWidth)
-						obj.x = mapWidth;
 					posUpdated = true;
 				}
 			}

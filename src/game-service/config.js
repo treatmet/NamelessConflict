@@ -111,12 +111,12 @@ global.grappleStrength = 3;
 global.grappleLength = 5 * 75; //Tiles * 75
 global.grenadeEnergyCost = 25;
 global.grenadeTimer = 3 * 60; //Seconds (translated to frames)
-global.grenadeThrowSpeed = 15;
-global.grenadeDrag = 1;
+global.grenadeThrowSpeed = 18;
+global.grenadeDrag = 0.2;
 global.grenadeExplosionSize = 400;
-global.grenadeDamage = 100;
+global.grenadeDamage = 30;
 global.grenadeDamageScale = 1;
-global.grenadePower = 10;
+global.grenadePower = 0.6;
 
 /*
 {rank:"bronze1",rating:0},

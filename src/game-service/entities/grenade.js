@@ -22,10 +22,8 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 			self.timer--;
 		}
 		if (self.timer <= 0){
-			console.log("DELEING NADE");
 			self.explode();
 			delete Grenade.list[self.id];
-			console.log(getGrenadeListLength() + " nades now remain");
 		}
 		else {
 			self.move();
@@ -57,28 +55,28 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 			if (block.checkCollision(self, true)){
 				posUpdated = true;
 			}
-			self.calculateDrag();
+			entityHelpers.calculateDrag(self, grenadeDrag);
 		}
 	}
 
-	self.calculateDrag = function(){
-		if (self.speedX > 0){
-			self.speedX -= grenadeDrag;
-			if (self.speedX < 0){self.speedX = 0;}
-		}
-		if (self.speedX < 0){
-			self.speedX += grenadeDrag;
-			if (self.speedX > 0){self.speedX = 0;}
-		}
-		if (self.speedY > 0){
-			self.speedY -= grenadeDrag;
-			if (self.speedY < 0){self.speedY = 0;}
-		}
-		if (self.speedY < 0){
-			self.speedY += grenadeDrag;
-			if (self.speedY > 0){self.speedY = 0;}
-		}
-	}
+	// self.calculateDrag = function(){
+	// 	if (self.speedX > 0){
+	// 		self.speedX -= grenadeDrag;
+	// 		if (self.speedX < 0){self.speedX = 0;}
+	// 	}
+	// 	if (self.speedX < 0){
+	// 		self.speedX += grenadeDrag;
+	// 		if (self.speedX > 0){self.speedX = 0;}
+	// 	}
+	// 	if (self.speedY > 0){
+	// 		self.speedY -= grenadeDrag;
+	// 		if (self.speedY < 0){self.speedY = 0;}
+	// 	}
+	// 	if (self.speedY < 0){
+	// 		self.speedY += grenadeDrag;
+	// 		if (self.speedY > 0){self.speedY = 0;}
+	// 	}
+	// }
 
 	self.explode = function(){
 		explode(self.x, self.y, self.throwingPlayerId);
@@ -109,6 +107,7 @@ function explode(x, y, playerResponsibleId){
 	var blocks = block.getBlockList();
 	var players = player.getTeamPlayerList();
 	var playersHit = [];
+	var grenadesHit = [];
 
 
 	//Create rays with momentum to travel at each interval angle (current angle)
@@ -130,16 +129,27 @@ function explode(x, y, playerResponsibleId){
 				for(var p in players){
 					var hitPlayer = players[p];
 					if(isPointIntersectingBody(rays[t], hitPlayer) && !playersHit.find(id => id == hitPlayer.id)){
-						var blockDist = Math.round((getDistance({x:x, y:y}, hitPlayer) / 75) * 10) /10;
-						console.log("BLASTED!!! " + blockDist + " from block");
+						var rawDist = getDistance({x:x, y:y}, {x:hitPlayer.x, y:hitPlayer.y});
+						if (rawDist < 1){rawDist = 1;}//Divide by zero
 						playersHit.push(hitPlayer.id);
-						hitPlayer.hit(1, 0, player.getPlayerById(playerResponsibleId), getDistance({x:x, y:y}, hitPlayer), 0, 6);
-						entityHelpers.sprayBloodOntoTarget(1, hitPlayer.x, hitPlayer.y, hitPlayer.id);
+						hitPlayer.hit({xMovRatio:(hitPlayer.x - x)/rawDist, yMovRatio:(hitPlayer.y - y)/rawDist}, 0, player.getPlayerById(playerResponsibleId), rawDist, 0, 6);
+						if (hitPlayer.health > 0)
+							entityHelpers.sprayBloodOntoTarget(1, hitPlayer.x, hitPlayer.y, hitPlayer.id);
 
 					}
 				}
 
-
+				//Check if ray is hitting grenade at this step
+				for(var g in Grenade.list){
+					var hitGrenade = Grenade.list[g]; //might hit self, should be okay
+					if (hitGrenade.holdingPlayerId){continue;}
+					if(isPointIntersectingBody(rays[t], hitGrenade, 20) && !grenadesHit.find(id => id == hitGrenade.id)){
+						var rawDist = getDistance({x:x, y:y}, {x:hitGrenade.x, y:hitGrenade.y});
+						if (rawDist < 1){rawDist = 1;}//Divide by zero
+						grenadesHit.push(hitGrenade.id);
+						launchObject(hitGrenade, {xMovRatio:(hitGrenade.x - x)/rawDist, yMovRatio:(hitGrenade.y - y)/rawDist}, rawDist*1.5);
+					}
+				}
 
 				//Check if ray is hitting block at this step
 				for(var b in blocks){
@@ -177,6 +187,13 @@ class Circle{
 		this.lifespan--;
 
 	}
+}
+
+function launchObject(object, directionData, distance){
+	if (distance < 100){distance = 100;}
+	var power = -(distance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;
+	object.speedX += (directionData.xMovRatio * grenadePower) * power;
+	object.speedY += (directionData.yMovRatio * grenadePower) * power;
 }
 
 

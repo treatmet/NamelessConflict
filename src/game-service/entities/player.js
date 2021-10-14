@@ -124,7 +124,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		//THROWING
 		if (self.throwingObject > 0){
 			if (self.throwingObject === 1){
-				console.log("TROW DAT SHIT");
 				self.updatePropAndSend("throwingObject", 0);
 			}
 			else {
@@ -734,12 +733,13 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 	self.throwGrenade = function(){
 		if (self.throwingObject === -1){
-			self.updatePropAndSend("throwingObject", 30);		
+			self.updatePropAndSend("throwingObject", 30);
 			var myNade = grenade.getPlayerNade(self.id);
 			if (myNade){
 				myNade.updatePropAndSend("holdingPlayerId", false);
 				switch (self.shootingDir){
 					case 1:
+						myNade.updatePropAndSend("speedX", self.speedX);
 						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed);
 						break;
 					case 2:
@@ -748,12 +748,14 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 						break;
 					case 3:
 						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed);
+						myNade.updatePropAndSend("speedY", self.speedY);
 						break;
 					case 4:
 						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed*(2/3));
 						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed*(2/3));
 						break;
 					case 5:
+						myNade.updatePropAndSend("speedX", self.speedX);
 						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed);
 						break;
 					case 6:
@@ -762,6 +764,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 						break;
 					case 7:
 						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed);
+						myNade.updatePropAndSend("speedY", self.speedY);
 						break;
 					case 8:
 						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed*(2/3));
@@ -1122,12 +1125,13 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX, weapon = false){
 		if (self.health <= 0){return;}
 		if (!weapon){weapon = shooter.weapon;}
+		if (weapon == 6 && targetDistance < 100){targetDistance = 100;}
 
-		if (shooter.weapon != 4 && shooter.weapon != 5 && weapon != 6){
+		if (weapon != 4 && weapon != 5 && weapon != 6){
 			var shotData = {};
 			shotData.id = Math.random();
 			shotData.playerId = shooter.id;
-			shotData.weapon = shooter.weapon;
+			shotData.weapon = weapon;
 			shotData.x = shotX;
 			shotData.spark = false;
 			shotData.shootingDir = shootingDir;
@@ -1151,53 +1155,58 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		var damageInflicted = 0;
 		
 		//Player stagger and cloak interruption stuff
-		self.stagger = staggerTime;		
+		if (weapon != 6)
+			self.stagger = staggerTime;		
 		self.healDelay += healDelayTime;
 		if (self.healDelay > healDelayTime){self.healDelay = healDelayTime;} //Ceiling on healDelay
 		if (self.team != shooter.team || gametype == "ffa"){
 			playerEvent(shooter.id, "hit");
 		}
 		if (self.cloakEngaged){
-			self.cloakEngaged = false;
+			self.updatePropAndSend("cloakEngaged", false);
 			damageInflicted += cloakBonusDamage;
-			updatePlayerList.push({id:self.id,property:"cloakEngaged",value:self.cloakEngaged});
 		}
 		
+
 		//Initial damage (all angles)
-		if (shooter.weapon == 1){ damageInflicted += pistolDamage; } //Single Pistol
-		else if (shooter.weapon == 2){ damageInflicted += DPDamage; } //Double damage for double pistols
-		else if (shooter.weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
-		else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
-		else if (shooter.weapon == 5){ damageInflicted = LaserDamage;} //Damage for Laser
-		else if (weapon == 6){ damageInflicted += -(targetDistance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;} //Damage for Grenade
+		if (weapon == 1){ damageInflicted += pistolDamage; } //Single Pistol
+		else if (weapon == 2){ damageInflicted += DPDamage; } //Double damage for double pistols
+		else if (weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
+		else if (weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
+		else if (weapon == 5){ damageInflicted = LaserDamage;} //Damage for Laser
+		else if (weapon == 6){
+			//console.log("-(" + targetDistance + " - " + grenadeExplosionSize + ")/(" + grenadeExplosionSize + "/3) * " + grenadeDamage +")");
+			damageInflicted += -(targetDistance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;
+			//console.log("result:" + damageInflicted);
+		} //Damage for Grenade
 		if (weapon != 6){
 			if (self.team != shooter.team || gametype == "ffa"){
 				shooter.cumulativeAllyDamage = 0;
 				var shooterDirDif = entityHelpers.getDirDif(self.shootingDir, shootingDir);
 				if (shooterDirDif <= 2){
 					//self is NOT facing shooter (within 3 angles)
-					if (shooter.weapon == 1){ damageInflicted += pistolSideDamage; } //Single Pistol
-					else if (shooter.weapon == 2){ damageInflicted += DPSideDamage; } //Double damage for double pistols
-					else if (shooter.weapon == 3){ damageInflicted += mgSideDamage; } //Damage for MG
-					else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGSideDamage; } //Damage for SG
+					if (weapon == 1){ damageInflicted += pistolSideDamage; } //Single Pistol
+					else if (weapon == 2){ damageInflicted += DPSideDamage; } //Double damage for double pistols
+					else if (weapon == 3){ damageInflicted += mgSideDamage; } //Damage for MG
+					else if (weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGSideDamage; } //Damage for SG
 				}
 				if (shooterDirDif <= 1){
 					//Back Damage
-					if (shooter.weapon == 1){ damageInflicted += pistolBackDamage; } //Single Pistol
-					else if (shooter.weapon == 2){ damageInflicted += DPBackDamage; } //Double damage for double pistols
-					else if (shooter.weapon == 3){ damageInflicted += mgBackDamage; } //Damage for MG
-					else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGBackDamage; } //Damage for SG
+					if (weapon == 1){ damageInflicted += pistolBackDamage; } //Single Pistol
+					else if (weapon == 2){ damageInflicted += DPBackDamage; } //Double damage for double pistols
+					else if (weapon == 3){ damageInflicted += mgBackDamage; } //Damage for MG
+					else if (weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGBackDamage; } //Damage for SG
 				}
 			}			
-			else if (self.team == shooter.team && gametype != "ffa"){
-				damageInflicted *= friendlyFireDamageScale;
-				if (shooter.weapon == 5){damageInflicted = 15;}			
-				shooter.processAllyDamage(damageInflicted, self.id);			
-			}
 		}
-		
+		if ((self.team == shooter.team && self.id != shooter.id) && gametype != "ffa"){ //teamDamage
+			damageInflicted *= friendlyFireDamageScale;
+			if (weapon == 5){damageInflicted = 15;}			
+			if (weapon != 6){shooter.processAllyDamage(damageInflicted, self.id);}			
+		}
+	
 		damageInflicted = damageInflicted * damageScale; //Scale damage
-		if (gametype == "horde" || (pregame && pregameIsHorde)){damageInflicted = 0;}
+		if (weapon != 6 && (gametype == "horde" || (pregame && pregameIsHorde))){damageInflicted = 0;}
 
 		//Calculate Assists
 		if (self.team != shooter.team && gametype != "ffa"){
@@ -1213,15 +1222,23 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 
 		self.health -= Math.floor(damageInflicted); //damageValue
-		console.log("HIT FROM NADE? " + damageInflicted);
 
 		updatePlayerList.push({id:self.id,property:"health",value:self.health});
 					
 		//Damage push
-		self.pushSpeed += damageInflicted/8 * damagePushScale;
-		self.pushDir = Player.list[shooter.id].shootingDir;			
-		updatePlayerList.push({id:self.id,property:"pushSpeed",value:self.pushSpeed});
-		updatePlayerList.push({id:self.id,property:"pushDir",value:self.pushDir});
+		if (weapon != 6){
+			self.pushSpeed += damageInflicted/8 * damagePushScale;
+			self.pushDir = Player.list[shooter.id].shootingDir;			
+		}
+		else if (weapon == 6){
+			var pushX = (shootingDir.xMovRatio * grenadePower) * damageInflicted;
+			console.log("(" + shootingDir.xMovRatio + " * " + grenadePower + ") * " + damageInflicted);
+			console.log("PUSH X: " + pushX);
+			if (!isNaN(shootingDir.xMovRatio)){
+				self.speedX += (shootingDir.xMovRatio * grenadePower) * damageInflicted;
+				self.speedY += (shootingDir.yMovRatio * grenadePower) * damageInflicted;
+			}
+		}
 
 		if (self.health <= 0){
 			self.kill(shooter);
@@ -1229,7 +1246,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.processAllyDamage = function(damageInflicted, victimId){
-		self.cumulativeAllyDamage += damageInflicted;
 		if (self.cumulativeAllyDamage >= allyDamageWarningThreshold){
 			socket.emit('allyDamageWarning', {playerId:victimId});
 			self.cumulativeAllyDamage = 0;
@@ -1275,7 +1291,12 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 			}
 			else { //Killed by own team or self AND no last enemy to hit
-				playerEvent(shooter.id, "benedict");
+				if (shooter.id == self.id){
+					playerEvent(shooter.id, "suicide");
+				}
+				else {
+					playerEvent(shooter.id, "benedict");
+				}
 			}
 		}
 		if (self.chargingLaser > 0){
@@ -2893,6 +2914,12 @@ function playerEvent(playerId, event){
 				}
 			}
 			updateNotificationList.push({text:"Betrayal!",playerId:playerId});
+		}
+		else if (event == "suicide"){
+			if (!gameOver && !pregame){
+				dataAccessFunctions.dbUserUpdate("inc", Player.list[playerId].cognitoSub, {suicide: 1});
+			}
+			updateNotificationList.push({text:"Suicide!",playerId:playerId});
 		}
 		else if (event == "steal"){
 			Player.list[playerId].steals++;

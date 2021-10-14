@@ -1132,6 +1132,23 @@ checkBlockCollision = function(obj, isBouncable = false){
 	}
 
 	var posUpdated = false;
+	if (obj.y < 0){
+		obj.y = 0 + 30;
+		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
+	}
+	else if (obj.y > mapHeight){
+		obj.y = mapHeight - 30;
+		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
+	}
+	else if (obj.x < 0){
+		obj.x = 0 + 30;
+		if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
+	}
+	else if (obj.x > mapWidth){
+		obj.x = mapWidth - 30;
+		if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
+	}
+
 	for (var i in blockList){
 		if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
 			
@@ -1139,7 +1156,9 @@ checkBlockCollision = function(obj, isBouncable = false){
 				var overlapTop = Math.abs(blockList[i].y - obj.y);  
 				var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - obj.y);
 				var overlapLeft = Math.abs(obj.x - blockList[i].x);
-				var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - obj.x);			
+				var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - obj.x);		
+				
+			
 				if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){	
 					obj.y = blockList[i].y - (1 + extendTopOfBlock);
 					if (typeof obj.speedX != 'undefined'){
@@ -1148,8 +1167,6 @@ checkBlockCollision = function(obj, isBouncable = false){
 							else {obj.speedY = 0;}
 						}
 					}
-					if (obj.y < 0)
-						obj.y = 0;
 					posUpdated = true;
 				}
 				else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
@@ -1160,9 +1177,6 @@ checkBlockCollision = function(obj, isBouncable = false){
 							else {obj.speedY = 0;}
 						}
 					}
-
-					if (obj.y > mapHeight)
-						obj.y = mapHeight;
 					posUpdated = true;
 				}
 				else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
@@ -1173,9 +1187,6 @@ checkBlockCollision = function(obj, isBouncable = false){
 							else {obj.speedX = 0;}
 						}
 					}
-
-					if (obj.x < 0)
-						obj.x = 0;
 					posUpdated = true;
 				}
 				else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
@@ -1186,9 +1197,6 @@ checkBlockCollision = function(obj, isBouncable = false){
 							else {obj.speedX = 0;}
 						}
 					}
-
-					if (obj.x > mapWidth)
-						obj.x = mapWidth;
 					posUpdated = true;
 				}
 			}
@@ -2276,7 +2284,7 @@ function updateCamera(){
 	if ((myPlayer.pressingShift)){
 		//lookAhead = true; //!!!Binoculars
 	}
-	if (pressingArrowKey() && myPlayer.weapon == 5){
+	if (pressingArrowKey() && myPlayer.weapon == 5 && !Player.list[myPlayer.id].throwingObject){
 		lookAhead = true;
 	}
 	if (myPlayer.team == 0 || myPlayer.health <= 0){
@@ -2384,6 +2392,14 @@ function drawImageTrans(img, x, y, width = 0, height = 0){
 	ctx.translate(centerX - myPlayer.x * zoom + x * zoom, centerY - myPlayer.y * zoom + y * zoom); //Center camera on controlled player
 		drawImage(img, 0, 0, width * zoom, height * zoom);
 	ctx.restore();
+}
+
+function drawCenteredImageTrans(img, x, y, width = 0, height = 0){ //drawImageCentered
+	if (width == 0){width = img.width;}
+	if (height == 0){height = img.height;}
+	x -= width/2;
+	y -=height/2;
+	drawImageTrans(img, x, y, width, height);
 }
 
 function drawImageCtx(context, img, x, y, width = 0, height = 0){
@@ -3348,7 +3364,7 @@ function drawTorsos(){
 						}
 					}
 					
-					if (Player.list[i].throwingObject === -1){
+					if (Player.list[i].throwingObject === -1){ //holdingObject
 						img = Player.list[i].images[team].throw1;
 					}
 					else if (Player.list[i].throwingObject > 0){
@@ -4088,7 +4104,7 @@ function drawNotifications(){
 				ctx.lineWidth=4 * zoom;
 				ctx.fillStyle="#19BE44";
 				ctx.textAlign="center";
-				if (Notification.list[n].text.includes("Betrayal")){ctx.fillStyle="#9A0606";}
+				if (Notification.list[n].text.includes("Betrayal") || Notification.list[n].text.includes("Suicide")){ctx.fillStyle="#9A0606";}
 				if (Notification.list[n].text.includes("**")){ctx.fillStyle="#1583e4"; noteFontSize += 10;}
 				ctx.font = 'bold ' + noteFontSize + 'px Electrolize';
 				strokeAndFillText(Notification.list[n].text,0, noteY * zoom);
@@ -6254,9 +6270,6 @@ var Grenade = function(id, grenadeTimer = 3*60, team = 0, holdingPlayerId = fals
 		if (self.timer <= 0){
 			//explode
 			new Explosion(self.x, self.y);
-
-
-
 			delete Grenade.list[self.id];
 		}
 		else {
@@ -6289,35 +6302,34 @@ var Grenade = function(id, grenadeTimer = 3*60, team = 0, holdingPlayerId = fals
 			if (checkBlockCollision(self, true)){
 				posUpdated = true;
 			}
-			self.calculateDrag();
+			calculateDrag(self, grenadeDrag);
 		}
 	}
-
-	self.calculateDrag = function(){
-		if (self.speedX > 0){
-			self.speedX -= grenadeDrag;
-			if (self.speedX < 0){self.speedX = 0;}
-		}
-		if (self.speedX < 0){
-			self.speedX += grenadeDrag;
-			if (self.speedX > 0){self.speedX = 0;}
-		}
-		if (self.speedY > 0){
-			self.speedY -= grenadeDrag;
-			if (self.speedY < 0){self.speedY = 0;}
-		}
-		if (self.speedY < 0){
-			self.speedY += grenadeDrag;
-			if (self.speedY > 0){self.speedY = 0;}
-		}
-	}
-
 
 	Grenade.list[id] = self;
 	
 	return self;
 } //End Player function
 Grenade.list = {};
+
+var calculateDrag = function(entity, drag){
+	if (typeof entity == 'undefined' || typeof entity.speedX == 'undefined' || typeof entity.speedY == 'undefined')	{
+		return;
+	}
+
+	var fullVelocity = Math.sqrt( Math.pow(entity.speedX,2) + Math.pow(entity.speedY,2) );
+	if (fullVelocity <= 0.5){
+		entity.speedX = 0;
+		entity.speedY = 0;
+		return;
+	}
+
+	var speedXRatio = entity.speedX / fullVelocity;
+	var speedYRatio = entity.speedY / fullVelocity;
+	entity.speedX -= speedXRatio * drag;  
+	entity.speedY -= speedYRatio * drag;  
+
+}
 
 class Circle{
 	constructor(x, y, radius, color, xmom = 0, ymom = 0){
@@ -6330,7 +6342,7 @@ class Circle{
 		this.color = color
 		this.xmom = xmom
 		this.ymom = ymom
-		this.lifespan = explosionSize;
+		this.lifespan = grenadeExplosionSize;
 		this.collided = false;
 	}       
 	 draw(){
@@ -6350,7 +6362,10 @@ class Circle{
 	}
 }
 
-var explosionSize = 400;
+var grenadeExplosionSize = 400;
+var grenadeDamage = 30;
+var grenadeDamageScale = 1;
+var grenadePower = 0.6;
 var explosions = [];
 class Explosion{
 	constructor(x, y){
@@ -6358,20 +6373,21 @@ class Explosion{
 		this.x = x,
 		this.y = y,
 		this.beams = 45;
-		this.ray = []
+		this.rays = []
 		this.globalangle = Math.PI;
 		this.gapangle = Math.PI;
 		this.currentangle = 0
 		this.obstacles = Block.list;
+		this.grenadesHit = [];
 
 		explosions[this.id] = {};
 		explosions[this.id].canvas = document.createElement('canvas');
-		explosions[this.id].canvas.width = explosionSize*2;
-		explosions[this.id].canvas.height = explosionSize*2;
+		explosions[this.id].canvas.width = grenadeExplosionSize*2;
+		explosions[this.id].canvas.height = grenadeExplosionSize*2;
 		explosions[this.id].ctx = explosions[this.id].canvas.getContext("2d");
 		explosions[this.id].x = this.x;
 		explosions[this.id].y = this.y;
-		explosions[this.id].timer = 20;
+		explosions[this.id].timer = 10;
 
 
 		this.draw();
@@ -6381,29 +6397,42 @@ class Explosion{
 		this.currentangle  = this.gapangle/2
 		for(let k = 0; k<=this.beams; k++){
 			this.currentangle+=(this.gapangle/(this.beams/2))
-			let ray = new Circle(this.x, this.y, 1, "white",((explosionSize * (Math.cos(this.globalangle+this.currentangle))))/explosionSize*2, ((explosionSize * (Math.sin(this.globalangle+this.currentangle))))/explosionSize*2 )
-			this.ray.push(ray);
+			let ray = new Circle(this.x, this.y, 1, "white",((grenadeExplosionSize * (Math.cos(this.globalangle+this.currentangle))))/grenadeExplosionSize*2, ((grenadeExplosionSize * (Math.sin(this.globalangle+this.currentangle))))/grenadeExplosionSize*2 )
+			this.rays.push(ray);
 		}
 
-		for(let f = 0; f<explosionSize/2; f++){
-			for(let t = 0; t<this.ray.length; t++){
-				if(this.ray[t].collided == false){
-					this.ray[t].move()
+		for(let f = 0; f<grenadeExplosionSize/2; f++){
+			for(let t = 0; t<this.rays.length; t++){
+				if(this.rays[t].collided == false){
+					this.rays[t].move()
 
 					for(var b in this.obstacles){
 						var block = this.obstacles[b];
-						if(this.ray[t].x > block.x){
-							if(this.ray[t].y > block.y){
-								if(this.ray[t].x < block.x+block.width){
-									if(this.ray[t].y < block.y+block.height){
-										this.ray[t].collided = true;
+						if(this.rays[t].x > block.x){
+							if(this.rays[t].y > block.y){
+								if(this.rays[t].x < block.x+block.width){
+									if(this.rays[t].y < block.y+block.height){
+										this.rays[t].collided = true;
 										break;
 									}
 								}
 							}
 						}
-						// if(intersects(block, this.ray[t])){
-						// 	this.ray[t].collided = true;
+
+						//Check if ray is hitting grenade at this step
+						for(var g in Grenade.list){
+							var hitGrenade = Grenade.list[g]; //might hit self, should be okay
+							if (hitGrenade.holdingPlayerId){continue;}
+							if(isPointIntersectingBody(this.rays[t], hitGrenade, 20) && !this.grenadesHit.find(id => id == hitGrenade.id)){
+								var rawDist = getDistance({x:this.x, y:this.y}, {x:hitGrenade.x, y:hitGrenade.y});
+								this.grenadesHit.push(hitGrenade.id);
+								launchObject(hitGrenade, {xMovRatio:(hitGrenade.x - this.x)/rawDist, yMovRatio:(hitGrenade.y - this.y)/rawDist}, rawDist*1.5);
+							}
+						}
+
+						
+						// if(intersects(block, this.rays[t])){
+						// 	this.rays[t].collided = true;
 						// 	break;
 						// }
 					}
@@ -6416,18 +6445,26 @@ class Explosion{
 	draw(){
 		this.beam()
 		explosions[this.id].ctx.beginPath();
-		explosions[this.id].ctx.moveTo(explosionSize, explosionSize);
+		explosions[this.id].ctx.moveTo(grenadeExplosionSize, grenadeExplosionSize);
 		//explosions[this.id].ctx.moveTo(this.x, this.y);
 
-		for(let y = 0; y<this.ray.length; y++){
-			explosions[this.id].ctx.lineTo(this.ray[y].x - this.x + explosionSize, this.ray[y].y - this.y + explosionSize)
-			//explosions[this.id].ctx.lineTo(this.ray[y].x, this.ray[y].y)
+		for(let y = 0; y<this.rays.length; y++){
+			explosions[this.id].ctx.lineTo(this.rays[y].x - this.x + grenadeExplosionSize, this.rays[y].y - this.y + grenadeExplosionSize)
+			//explosions[this.id].ctx.lineTo(this.rays[y].x, this.rays[y].y)
 		}
 		//explosions[this.id].ctx.stroke();
 		explosions[this.id].ctx.fillStyle = "yellow";
 		explosions[this.id].ctx.fill();
-		this.ray =[];
+		this.rays =[];
 	}
+}
+
+
+function launchObject(object, directionData, distance){
+	if (distance < 100){distance = 100;}
+	var power = -(distance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;
+	object.speedX += (directionData.xMovRatio * grenadePower) * power;
+	object.speedY += (directionData.yMovRatio * grenadePower) * power;
 }
 
 function intersects(circle, left) {
@@ -6441,7 +6478,7 @@ function drawExplosions(){
 	noShadow();
 	for (var e in explosions){
 	
-		drawImageTrans(explosions[e].canvas, explosions[e].x - explosionSize, explosions[e].y - explosionSize, explosions[e].canvas.width, explosions[e].canvas.height);
+		drawImageTrans(explosions[e].canvas, explosions[e].x - grenadeExplosionSize, explosions[e].y - grenadeExplosionSize, explosions[e].canvas.width, explosions[e].canvas.height);
 		//drawImageTrans(explosions[e].canvas, explosions[e].x, explosions[e].y, explosions[e].width, explosions[e].height);
 
 		if (explosions[e].timer > 0){
@@ -6455,10 +6492,12 @@ function drawExplosions(){
 
 function drawGrenades(){
 	for (var g in Grenade.list){
-		var grenade = Grenade.list[g];
-		grenade.engine();
+			var grenade = Grenade.list[g];
+			grenade.engine();
 
-		drawImageTrans(Img.grenade, grenade.x, grenade.y);
+		if (isObjVisible(grenade)){
+			drawCenteredImageTrans(Img.grenade, grenade.x, grenade.y);
+		}
 	}
 }
 
@@ -7804,6 +7843,42 @@ function getNewTip(){
 
 
 //Handy handy functions
+var isPointIntersectingRect = function(point, rect, margin = 0){ //collision detection
+	if (!rect){return false;}
+	if (!point){return false;}
+
+	if(point.x > rect.x - margin){
+		if(point.y > rect.y - margin){
+			if(point.x < rect.x+rect.width + margin){
+				if(point.y < rect.y+rect.height + margin){
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+var isPointIntersectingBody = function(point, body, margin = 0){ //margin is body "width"
+	if (!body){return false;}
+	if (!point){return false;}
+	if (typeof body.width === 'undefined'){body.width = 0;}
+	if (typeof body.height === 'undefined'){body.height = 0;}
+
+	if(point.x > body.x - body.width/2 - margin){
+		if(point.y > body.y - body.height/2 - margin){
+			if(point.x < body.x+body.width/2 + margin){
+				if(point.y < body.y+body.height/2 + margin){
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
 function drawRect(x, y, width, height, strokeWidth = 0, strokeColor = "black"){
 	var newX = x;
 	var newY = y;

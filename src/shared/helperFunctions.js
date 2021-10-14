@@ -430,6 +430,18 @@ global.isPointIntersectingBody = function(point, body, margin = 0){ //margin is 
 	return false;
 }
 
+global.getXYSpeedFromAngleWithForce = function(ratio, force){
+	//ratio of x:y
+	var speedX = force;
+	var speedY = force * ratio;
+
+	return {speedX:speedX, speedY:speedY};
+}
+
+global.getAngleBetweenTwoPoints = function(point1, point2){
+	return -Math.atan2(point1.y - point2.y, point2.x - point1.x) * 180 / Math.PI / 180.0;
+}
+
 global.getObjectiveText = function(){
 	var objectiveText = "Kill enemy players to win!";
 	if (customServer && pregame)
