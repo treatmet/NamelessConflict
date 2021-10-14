@@ -117,24 +117,24 @@ var checkCollision = function(obj, isBouncable = false){
 	var posUpdated = false;
 
 	if (obj.y < 0){
-		obj.y = 0 + 30;
-		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
-		posUpdated = true
+		obj.y = 0;
+		if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
+		return true;
 	}
 	else if (obj.y > mapHeight){
-		obj.y = mapHeight - 30;
+		obj.y = mapHeight;
 		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
-		posUpdated = true
+		return true;
 	}
 	else if (obj.x < 0){
-		obj.x = 0 + 30;
+		obj.x = 0;
 		if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
-		posUpdated = true
+		return true;
 	}
 	else if (obj.x > mapWidth){
-		obj.x = mapWidth - 30;
+		obj.x = mapWidth;
 		if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
-		posUpdated = true
+		return true;
 	}
 
 	for (var i in blockList){

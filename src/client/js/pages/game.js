@@ -1133,20 +1133,24 @@ checkBlockCollision = function(obj, isBouncable = false){
 
 	var posUpdated = false;
 	if (obj.y < 0){
-		obj.y = 0 + 30;
-		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
+		obj.y = 0;
+		if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
+		return;
 	}
 	else if (obj.y > mapHeight){
-		obj.y = mapHeight - 30;
+		obj.y = mapHeight;
 		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
+		return;
 	}
 	else if (obj.x < 0){
-		obj.x = 0 + 30;
+		obj.x = 0;
 		if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
+		return;
 	}
 	else if (obj.x > mapWidth){
-		obj.x = mapWidth - 30;
+		obj.x = mapWidth;
 		if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
+		return;
 	}
 
 	for (var i in blockList){
@@ -6280,8 +6284,6 @@ var Grenade = function(id, grenadeTimer = 3*60, team = 0, holdingPlayerId = fals
 
 
 	self.move = function(){
-		var posUpdated = false;
-
 		if (self.holdingPlayerId){
 			self.speedX = 0;
 			self.speedY = 0;
@@ -6292,16 +6294,12 @@ var Grenade = function(id, grenadeTimer = 3*60, team = 0, holdingPlayerId = fals
 		}
 		else {
 			if (self.speedY != 0){
-				posUpdated = true;
 				self.y += self.speedY;
 			}
 			if (self.speedX != 0){
-				posUpdated = true;
 				self.x += self.speedX;
 			}	
-			if (checkBlockCollision(self, true)){
-				posUpdated = true;
-			}
+			checkBlockCollision(self, true);			
 			calculateDrag(self, grenadeDrag);
 		}
 	}

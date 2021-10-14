@@ -3,7 +3,7 @@
 	"mongoDbLocation": "mongodb://RWsystem:NC20732z!@rw-database-shard-00-00-aywyv.mongodb.net:27017,rw-database-shard-00-01-aywyv.mongodb.net:27017,rw-database-shard-00-02-aywyv.mongodb.net:27017/RWAR?ssl=true&replicaSet=RW-Database-shard-0&authSource=admin&retryWrites=true",
 	"s3LoggingBucket": "rw3000-logs",
 	"serverHealthCheckTimestampThreshold": 90,
-	" ": 300,
+	"staleFriendRequestThresholdDays": 300,
 	"stalePartyRequestThresholdSeconds": 300,
 	"updateEB": 0,
 	"AWSRegion":"us-east-2",
