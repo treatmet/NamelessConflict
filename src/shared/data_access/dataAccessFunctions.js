@@ -623,7 +623,7 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 			}
 
 			//manual hardcode
-			//shopList[0] = "ivoryPistolWeapon";
+			//shopList[0] = "ivoryDPWeapon";
 			// shopList[1] = "redBowHat";
 			// shopList[2] = "blueBowHat";
 			// shopList[3] = "orangeBowHat";

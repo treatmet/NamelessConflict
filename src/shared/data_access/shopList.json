@@ -127,7 +127,7 @@
 		"subCategory":"type",
 		"title":"Deer Head",
 		"text":"You are fawntastic! For real, doe.",
-		"price": 0,
+		"price": 200000,
 		"team":0,
 		"rarity":3,
 		"canvasValue":"deerHat"
@@ -1963,6 +1963,18 @@
 		"canvasValue":"#ff2860"
 	},	
 	{
+		"id":"ivoryDPWeapon",
+        "category":"weapons",
+		"subCategory":"dualPistols",
+		"title":"Ivory DP",
+		"text":"Handguns procured from the black market",
+		"price": 500000,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":false,
+		"canvasValue":"#fffef8"
+	},	
+	{
 		"id":"goldDPWeapon",
         "category":"weapons",
 		"subCategory":"dualPistols",
@@ -2054,6 +2066,18 @@
 		"canvasValue":"#ffcc00"
 	},		
 	{
+		"id":"ivoryMGWeapon",
+        "category":"weapons",
+		"subCategory":"machineGun",
+		"title":"Ivory MG",
+		"text":"Illegal in nine countries",
+		"price": 500000,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":true,
+		"canvasValue":"#fffef8"
+	},		
+	{
 		"id":"defaultSGWeapon",
         "category":"weapons",
 		"subCategory":"shotgun",
@@ -2143,6 +2167,18 @@
 		"hideFromShop":true,
 		"canvasValue":"#ffcc00"
 	},	
+	{
+		"id":"ivorySGWeapon",
+        "category":"weapons",
+		"subCategory":"shotgun",
+		"title":"Ivory SG",
+		"text":"A shotgun forged through very illicit means",
+		"price": 500000,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":true,
+		"canvasValue":"#fffef8"
+	},		
 	{
 		"id":"crownHat",
         "category":"hat",
