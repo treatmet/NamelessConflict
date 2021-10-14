@@ -18,5 +18,3 @@ package-lock.json
 artifacts
 
 #Lambda excludes
-src/lambda-restart-eb/config.json
-src/lambda-server-admin/config.json
