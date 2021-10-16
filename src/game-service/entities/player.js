@@ -131,7 +131,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 		else if (self.throwingObject === 0 && self.pressingShift){
-			//self.pullGrenade();
+			self.pullGrenade();
 		}
 
 		
@@ -403,32 +403,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (self.rechargeDelay > 0){self.rechargeDelay--;}
 				
 		///////////////////////CLOAKING/////////////////////
-		if (self.cloakEngaged && self.energy > 0){
-			self.energy -= cloakDrainSpeed;
-			if (self.energy < 0)
-				self.energy = 0;
-			updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
-			self.rechargeDelay = rechargeDelayTime;
-		}
-		if (self.cloakEngaged && self.energy > 0 && self.cloak < 1){
-			self.cloak += cloakInitializeSpeed;
-			if (self.cloak > 1)
-				self.cloak = 1;
-			self.cloak = Math.round(self.cloak * 100) / 100;
-			updatePlayerList.push({id:self.id,property:"cloak",value:self.cloak});
-		}
-		else if ((!self.cloakEngaged || self.energy <= 0) && self.cloak > 0){
-			self.cloak -= cloakDeinitializeSpeed;
-			if (self.energy == 0){
-				self.rechargeDelay = rechargeDelayTime * 2;
-				self.energyExhausted = true;
-				self.cloakEngaged = false;
-				updatePlayerList.push({id:self.id,property:"cloakEngaged",value:self.cloakEngaged});
-			}		
-			if (self.cloak < 0)
-				self.cloak = 0;
-			self.cloak = Math.round(self.cloak * 100) / 100;
-			updatePlayerList.push({id:self.id,property:"cloak",value:self.cloak});
+		if (self.cloakEngaged && !self.energyExhausted){
+			self.expendEnergy(cloakDrainSpeed);
 		}
 		
 		/////RETURN COOLDOWN//////////
@@ -466,26 +442,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		///////////////////// COLLISION WITH OBSTACLES/PLAYERS /////////////////////////
 		
 		//Check collision with players
-		for (var i in Player.list){
-			if (Player.list[i].team != 0 && Player.list[i].id != self.id  && Player.list[i].health > 0 && self.x + self.width > Player.list[i].x && self.x < Player.list[i].x + Player.list[i].width && self.y + self.height > Player.list[i].y && self.y < Player.list[i].y + Player.list[i].height){								
-				if (self.x == Player.list[i].x && self.y == Player.list[i].y){self.x -= 5; posUpdated = true;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
-				var dx1 = self.x - Player.list[i].x;
-				var dy1 = self.y - Player.list[i].y;
-				var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-				var ax1 = dx1/dist1;
-				var ay1 = dy1/dist1;
-				if (dist1 < 40){				
-					if (self.boosting > 0){  //melee boost collision bash smash
-						self.updatePropAndSend("throwingObject", 20);
-						Player.list[i].getSlammed(self.id, self.walkingDir);
-					}					
-					self.x += ax1 / (dist1 / 70); //Higher number is greater push
-					posUpdated = true
-					self.y += ay1 / (dist1 / 70);
-					posUpdated = true;
-				}
-			}
-		}
+		entityHelpers.checkBodyCollisionWithGroupOfBodies(self, Player.list);
+
 	
 		//Check collision with thugs
 		var thugList = thug.getThugList();
@@ -523,7 +481,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		
 		//Check Player collision with blocks
-		block.checkCollision(self);
+		if (block.checkCollision(self) && !posUpdated){posUpdated = true;}
 		
 		//Keep player from walls Edge detection. Walls.
 		if (self.x > mapWidth - 5){self.x = mapWidth - 5; posUpdated = true;} //right
@@ -723,12 +681,21 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}//End engine()
 
 	self.pullGrenade = function(){
-		if (self.throwingObject == 0 && self.energy > 0){
-			self.updatePropAndSend("energy", self.energy - grenadeEnergyCost);
-			self.updatePropAndSend("throwingObject", -1);
-			self.updatePropAndSend("reloading", 0);
-			grenade.create(self.id, self.id, self.x, self.y);
-		}		
+		if (self.throwingObject == 0){
+			var floorGrenadeId = entityHelpers.checkPointCollisionWithGroup(self, grenade.getList(), 130);
+			if (floorGrenadeId){
+				self.updatePropAndSend("throwingObject", -1);
+				self.updatePropAndSend("reloading", 0);
+				grenade.getById(floorGrenadeId).updatePropAndSend("holdingPlayerId", self.id);
+				grenade.getById(floorGrenadeId).updatePropAndSend("throwingPlayerId", self.id);
+			}
+			else if (!self.energyExhausted){
+				self.expendEnergy(grenadeEnergyCost);
+				self.updatePropAndSend("throwingObject", -1);
+				self.updatePropAndSend("reloading", 0);
+				grenade.create(self.id, self.id, self.x, self.y);
+			}		
+		}
 	}
 
 	self.throwGrenade = function(){
@@ -1082,6 +1049,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.boost = function(){
+		self.expendEnergy(boostEnergyCost);
 		self.boosting = 1;
 		if(self.walkingDir == 1){
 			self.speedY -= boostAmount;
@@ -1125,7 +1093,14 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX, weapon = false){
 		if (self.health <= 0){return;}
 		if (!weapon){weapon = shooter.weapon;}
-		if (weapon == 6 && targetDistance < 100){targetDistance = 100;}
+		if (weapon == 6){
+			if (targetDistance < 10){
+				targetDistance = 50;
+			}
+			else if (targetDistance < 100){
+				targetDistance = 100;
+			}
+		}
 
 		if (weapon != 4 && weapon != 5 && weapon != 6){
 			var shotData = {};
@@ -1366,6 +1341,18 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 	}
 
+	self.expendEnergy = function(amount){ //loseEnergy spendEnergy useEnergy
+		self.rechargeDelay = rechargeDelayTime;
+		self.energy -= amount;
+		if (self.energy <= 0){
+			self.rechargeDelay = rechargeDelayTime * 2;
+			self.energy = 0;
+			self.energyExhausted = true;
+			self.updatePropAndSend("cloakEngaged", false);
+		}
+		updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
+	}
+
 	self.triggerPlayerEvent = function(event){
 		playerEvent(self.id, event);
 	}
@@ -1410,6 +1397,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.updatePropAndSend("cloak", 0);
 		self.updatePropAndSend("cloakEngaged", false);
 		self.updatePropAndSend("boosting", 0);
+		self.updatePropAndSend("throwingObject", 0);
 		self.PClip = 15;
 		updatePlayerList.push({id:self.id,property:"PClip",value:self.PClip});
 
@@ -1649,21 +1637,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 								player.cloakEngaged = false;						
 								updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});	
 							}
-								player.boost();
-								updateEffectList.push({type:3,playerId:player.id});
-								updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
-
-							player.rechargeDelay = rechargeDelayTime;
-							// if (player.name != "RTPM3")
-							player.energy -= 25;
-							if (player.energy <= 0){
-								player.rechargeDelay = rechargeDelayTime * 2;
-								player.energy = 0;
-								player.energyExhausted = true;
-							}
-							updatePlayerList.push({id:player.id,property:"energy",value:player.energy,single:true});
-							//player.boostingDir = player.walkingDir; //!!!Remove after movement overhaul finalized
-							
+							player.boost();
+							updateEffectList.push({type:3,playerId:player.id});
+							updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
 						}
 						else if (player.holdingBag == true && player.walkingDir != 0){
 							player.holdingBag = false;
@@ -1725,9 +1701,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 
 					else if (data.inputId == 16){ //Shift
 						player.pressingShift = data.state;
-						// if (data.state == false){
-						// 	player.throwGrenade();
-						// }
+						if (data.state == false){
+							player.throwGrenade();
+						}
 					}
 					else if (data.inputId == 49){ //1
 						if (player.weapon != 1){

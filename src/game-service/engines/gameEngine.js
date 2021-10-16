@@ -946,8 +946,8 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 	logg("ATTEMPTING TO ADD SPECTATORS");
 	//Assign team to spectating parties
 	for (var q = 0; q < parties.length; q++){
-		var newGameZise=parties[q].partySize + getNumTeamPlayersInGame();
-		logg("IF WE ADD YOU[" + parties[q].playerIds[0] + "'s party], IS NEW GAME SIZE(" + newGameZise + ") greater than maxPlayers (" + maxPlayers);
+		var newGameSise=parties[q].partySize + getNumTeamPlayersInGame();
+		logg("IF WE ADD YOU[" + parties[q].playerIds[0] + "'s party], IS NEW GAME SIZE(" + newGameSise + ") greater than maxPlayers (" + maxPlayers);
 		if (parties[q].partySize + getNumTeamPlayersInGame() > maxPlayers && !assignEvenIfFull){
 			logg("Game already full, moving on");
 			continue;
@@ -1270,6 +1270,7 @@ function initializeNewGame(){ //startGame gameStart
 		}			
 	}
 	thug.clearThugList();
+	grenade.clearGrenades();
 	ensureCorrectThugCount();
 	mapEngine.initializePickups(map);
 	mapEngine.initializeBlocks(map);

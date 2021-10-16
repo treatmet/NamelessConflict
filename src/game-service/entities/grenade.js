@@ -1,5 +1,6 @@
 var gameEngine = require('../engines/gameEngine.js');
 var block = require('./block.js');
+var thug = require('./thug.js');
 var entityHelpers = require('./_entityHelpers.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
 var player = require('../entities/player.js');
@@ -11,6 +12,7 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 		throwingPlayerId:throwingPlayerId,
 		speedX:speedX,
 		speedY:speedY,
+		radius:30,
 		x:x,
 		y:y,
 		timer:grenadeTimer,
@@ -22,7 +24,8 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 			self.timer--;
 		}
 		if (self.timer <= 0){
-			self.explode();
+			console.log(self.id + " EXPLODE");
+			explode(self.x, self.y, self.throwingPlayerId);
 			delete Grenade.list[self.id];
 		}
 		else {
@@ -33,8 +36,6 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 
 
 	self.move = function(){
-		var posUpdated = false;
-
 		if (self.holdingPlayerId){
 			self.speedX = 0;
 			self.speedY = 0;
@@ -45,18 +46,18 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 		}
 		else {
 			if (self.speedY != 0){
-				posUpdated = true;
 				self.y += self.speedY;
 			}
 			if (self.speedX != 0){
-				posUpdated = true;
 				self.x += self.speedX;
 			}	
-			if (block.checkCollision(self, true)){
-				posUpdated = true;
-			}
+			entityHelpers.checkPointCollisionWithGroupAndMove(self, Grenade.list, self.radius);
+			block.checkCollision(self, true);
 			entityHelpers.calculateDrag(self, grenadeDrag);
+
 		}
+
+		//log("Nade " + self.id + " x:" + Math.round(self.x * 10)/10 + " y:" + Math.round(self.y * 10)/10);
 	}
 
 	// self.calculateDrag = function(){
@@ -78,9 +79,6 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 	// 	}
 	// }
 
-	self.explode = function(){
-		explode(self.x, self.y, self.throwingPlayerId);
-	}
 
 
 	self.updatePropAndSend = function(propName, value, full = false){
@@ -90,10 +88,13 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 		updateGrenadeList.push({id:self.id,property:propName,value:value});	
 	}
 
+	Grenade.list[self.id] = self;	
+	//console.log(Grenade.list);
+
 	self.updatePropAndSend("entity", self, true);
 
 
-	Grenade.list[self.id] = self;	
+
 	return self;
 } //End Grenade function
 Grenade.list = {};
@@ -106,7 +107,9 @@ function explode(x, y, playerResponsibleId){
 	var currentangle = 0;
 	var blocks = block.getBlockList();
 	var players = player.getTeamPlayerList();
+	var thugs = thug.getThugList();
 	var playersHit = [];
+	var thugsHit = [];
 	var grenadesHit = [];
 
 
@@ -117,6 +120,8 @@ function explode(x, y, playerResponsibleId){
 		let ray = new Circle(x, y, 1, "white",((grenadeExplosionSize * (Math.cos(globalangle+currentangle))))/grenadeExplosionSize*2, ((grenadeExplosionSize * (Math.sin(globalangle+currentangle))))/grenadeExplosionSize*2 )
 		rays.push(ray);
 	}
+
+	updateEffectList.push({type:8,x:x, y:y});
 
 	for(let f = 0; f<grenadeExplosionSize/2; f++){ //For each step of the rays as they go outward
 		for(let t = 0; t<rays.length; t++){ //For each ray
@@ -138,6 +143,21 @@ function explode(x, y, playerResponsibleId){
 
 					}
 				}
+
+				//Check if ray is hitting thugs at this step
+				for(var p in thugs){
+					var hitThug = thugs[p];
+					if(isPointIntersectingBody(rays[t], hitThug) && !thugsHit.find(id => id == hitThug.id)){
+						var rawDist = getDistance({x:x, y:y}, {x:hitThug.x, y:hitThug.y});
+						if (rawDist < 1){rawDist = 1;}//Divide by zero
+						thugsHit.push(hitThug.id);
+						hitThug.hit(1, 0, player.getPlayerById(playerResponsibleId), rawDist, 0, 6);
+						if (hitThug.health > 0)
+							entityHelpers.sprayBloodOntoTarget(1, hitThug.x, hitThug.y, hitThug.id);
+
+					}
+				}
+
 
 				//Check if ray is hitting grenade at this step
 				for(var g in Grenade.list){
@@ -267,6 +287,10 @@ function getGrenadeListLength(){
 	return count;
 }
 
+var clearGrenades = function(){
+	Grenade.list = {};
+}
+
 
 module.exports.getSpeedAdjust = getSpeedAdjust;
 module.exports.getList = getList;
@@ -275,3 +299,4 @@ module.exports.runEngines = runEngines;
 module.exports.getListLength = getListLength;
 module.exports.create = create;
 module.exports.getPlayerNade = getPlayerNade;
+module.exports.clearGrenades = clearGrenades;

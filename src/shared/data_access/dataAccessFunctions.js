@@ -280,7 +280,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("October 7, 2021 16:00:00");
+	var thresholdDate = new Date("October 14, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -306,29 +306,31 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 					console.log("ERROR - no customizationOptions");
 					continue;
 				}
-				// if (!customizations || !customizations["1"] || !customizations["2"] ){
-				//   	console.log("ERROR - no customizations");
-				//   	continue;
-				// }
+				if (!customizations || !customizations["1"] || !customizations["2"] ){
+				  	console.log("ERROR - no customizations");
+				  	continue;
+				}
 
-				if (customizationOptions.indexOf("ivoryPistolWeapon") == -1){
-					customizationOptions.push("ivoryPistolWeapon");
-					console.log("Pushing ivoryPistolWeapon");
+				if (customizationOptions.indexOf("ivoryDPWeapon") == -1){
+					customizationOptions.push("ivoryDPWeapon");
+					console.log("Pushing ivoryDPWeapon");
 					updatey = true;
 				}
     
-/* 				console.log("-----------------------------------customizations");
-				console.log(customizations);
-				
-				customizations["1"].mgColor = "#ffcc00"; //CONFIGURATION
-				customizations["2"].mgColor = "#ffcc00"; //CONFIGURATION
- */
+    
+				if (customizations["1"].dpColor != "#fffef8"){
+					customizations["1"].dpColor = "#fffef8"; //CONFIGURATION
+					customizations["2"].dpColor = "#fffef8"; //CONFIGURATION
+					updatey = true;
+				}
+
 				//customizationOptions.push("bronze3_0Icon");
 				//customizationOptions.push("silver3_0Icon");
 				//customizationOptions.push("gold3_0Icon");
 				//customizationOptions.push("diamond_0Icon");
 				var obj = {
-					customizationOptions:customizationOptions
+					customizationOptions:customizationOptions,
+					customizations:customizations
 				};
 
 				if (!updatey){

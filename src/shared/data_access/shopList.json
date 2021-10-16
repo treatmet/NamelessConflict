@@ -1975,6 +1975,18 @@
 		"canvasValue":"#ffcc00"
 	},		
 	{
+		"id":"ivoryDPWeapon",
+        "category":"weapons",
+		"subCategory":"dualPistols",
+		"title":"Ivory DP",
+		"text":"Handguns procured from the black market",
+		"price": 500000,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":false,
+		"canvasValue":"#fffef8"
+	},		
+	{
 		"id":"defaultMGWeapon",
         "category":"weapons",
 		"subCategory":"machineGun",

@@ -359,9 +359,164 @@ var calculateDrag = function(entity, drag){
 	entity.speedY -= speedYRatio * drag;  
 
 }
+//Body = an entity with width + height where origin is in the middle
+//Rect = an entity with width + height where origin is upper left
+//Point = an entity with no width/height
+
+var checkBodyCollisionWithGroupOfBodies = function(self, list){
+//Check collision with players
+	for (var i in list){
+		entity = list[i];
+		if (typeof entity === 'undefined'){continue;}
+		if (entity.id == self.id ){continue;}
+		if (typeof entity.team != "undefined" && entity.team == 0){continue;}
+		if (typeof entity.health != "undefined" && entity.health <= 0){continue;}
+		var posUpdated = false;
+
+		if (self.x + self.width/2 > entity.x - entity.width/2 &&
+		self.x - self.width/2 < entity.x + entity.width/2 &&
+		self.y + self.height/2 > entity.y - entity.width/2 &&
+		self.y - self.height/2 < entity.y + entity.height/2){								
+			if (self.x == entity.x && self.y == entity.y){self.x -= 5; posUpdated = true; continue;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+			var dx1 = self.x - entity.x;
+			var dy1 = self.y - entity.y;
+			var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+			var ax1 = dx1/dist1;
+			var ay1 = dy1/dist1;
+			if (dist1 < 40){				
+				if (typeof self.boosting != 'undefined' && self.boosting > 0){  //melee boost collision bash smash
+					self.updatePropAndSend("throwingObject", 20);
+					entity.getSlammed(self.id, self.walkingDir);
+				}					
+				self.x += ax1 / (dist1 / 70); //Higher number is greater push
+				self.y += ay1 / (dist1 / 70);
+				posUpdated = true;
+			}
+		}
+
+	}
+	if (posUpdated){return true;}
+	else {return false;}
+}
+
+var checkPointCollisionWithGroupAndMove = function(self, list, margin){
+	checkPointCollisionWithGroup(self, list, margin, true);
+}
+
+var checkPointCollisionWithGroup = function(self, list, margin, move = false){
+	for (var i in list){
+		entity = list[i];
+
+		if (typeof entity === 'undefined'){continue;}
+		if (entity.id == self.id ){continue;}
+		if (typeof entity.health != "undefined" && (entity.health <= 0 || entity.team === 0)){continue;}
+		var encounteredEntityId = false;
+
+		if (self.x == entity.x && self.y == entity.y){self.x -= 5; encounteredEntityId = entity.id; console.log("ON TOP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"); continue;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+		var dx1 = self.x - entity.x;
+		var dy1 = self.y - entity.y;
+		var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+		if (dist1 < 5){dist1 = 5;}
+		var ax1 = dx1/dist1;
+		var ay1 = dy1/dist1;
+		if (dist1 <= margin){
+			if (move){
+				movePostCollision(self, entity, ax1, ay1, dist1);
+			}
+			encounteredEntityId = entity.id;
+		}
+
+	}
+	return encounteredEntityId;
+}
+
+var movePostCollision = function(self, entity, ax1, ay1, dist1){
+	self.speedX += ax1 / (dist1 / 70); //Higher number is greater push
+	self.speedY += ay1 / (dist1 / 70);
+	if (typeof self.boosting != 'undefined' && self.boosting > 0 && typeof entity.getSlammed == 'function' ){  //melee boost collision bash smash
+		self.updatePropAndSend("throwingObject", 20);
+		entity.getSlammed(self.id, self.walkingDir);
+	}					
+
+}
+
+// var slamEntity = function(slammer, slamee, direction = 1, pushSpeed = 20, bagSlam = false){ //slam smash
+// 	if (getPlayerById(slameeId))
+// 	var slamee = getPlayerById(playerId);
+// 	if (!player){
+// 		return; 
+// 	}
+
+// 	self.pushSpeed = pushSpeed;
+// 	self.pushDir = direction;
+// 	var sameTeam = player.team == self.team ? true : false;
+// 	if (gametype == "ffa"){sameTeam = false;}
+// 	if (!sameTeam && !bagSlam){
+// 		self.health -= boostDamage;
+// 	}
+// 	//player.pushSpeed = pushSpeed;
+// 	player.boosting = 0;
+// 	updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
+// 	updateEffectList.push({type:4,playerId:player.id});
+	
+
+// 	//Assassinations
+// 	if (!sameTeam && bagSlam == false && entityHelpers.getDirDif(player.walkingDir, self.shootingDir) <= 1){
+// 		self.health = 0;			
+// 	}
+
+// 	updatePlayerList.push({id:self.id,property:"health",value:self.health})
+// 	self.healDelay = healDelayTime;
+// 	entityHelpers.sprayBloodOntoTarget(direction, self.x, self.y, self.id);
+// 	if (self.health <= 0){
+// 		self.kill(player);
+// 	}		
+// }
+
+
+
+// for (var i in thugList){
+// 	if (thugList[i].id != self.id && thugList[i].health > 0 && self.x + self.width > thugList[i].x && self.x < thugList[i].x + thugList[i].width && self.y + self.height > thugList[i].y && self.y < thugList[i].y + thugList[i].height){								
+// 		if (self.x == thugList[i].x && self.y == thugList[i].y){self.x -= 5; updateThugList.push({id:self.id,property:"x",value:self.x});} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+// 		var dx1 = self.x - thugList[i].x;
+// 		var dy1 = self.y - thugList[i].y;
+// 		var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+// 		var ax1 = dx1/dist1;
+// 		var ay1 = dy1/dist1;
+// 		if (dist1 < 40){		
+
+// 			if (self.boosting > 0){
+// 				self.pushSpeed = 20;
+// 				self.boosting = 0;
+// 				updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
+// 				updateEffectList.push({type:4,playerId:self.id});
+				
+// 				if (self.team != thugList[i].team){
+// 					thugList[i].health -= boostDamage;
+// 					updateThugList.push({id:thugList[i].id,property:"health",value:thugList[i].health})
+// 					entityHelpers.sprayBloodOntoTarget(self.walkingDir, thugList[i].x, thugList[i].y, thugList[i].id);
+// 					thugList[i].attacking = thugAttackDelay;
+// 					if (thugList[i].health <= 0){
+// 						thugList[i].kill(self);
+// 					}
+// 				}
+// 			}
+		
+// 			self.x += ax1 / (dist1 / 70); //Higher number is greater push
+// 			self.y += ay1 / (dist1 / 70);
+// 		}				
+// 	}
+// }
+
+
+
+
 
 module.exports.sprayBloodOntoTarget = sprayBloodOntoTarget;
 module.exports.checkIfInLineOfShot = checkIfInLineOfShot;
 module.exports.getHitTarget = getHitTarget;
 module.exports.getDirDif = getDirDif;
 module.exports.calculateDrag = calculateDrag;
+module.exports.checkPointCollisionWithGroup = checkPointCollisionWithGroup;
+module.exports.checkPointCollisionWithGroupAndMove = checkPointCollisionWithGroupAndMove;
+module.exports.checkBodyCollisionWithGroupOfBodies = checkBodyCollisionWithGroupOfBodies;
