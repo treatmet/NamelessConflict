@@ -400,6 +400,9 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 				ptsGained = 0;				
 			}
 
+
+			ptsGained = 0; //GRENADES
+			
 			if (customServer){
 				player.cashEarnedThisGame =  Math.round(player.cashEarnedThisGame/2);
 			}

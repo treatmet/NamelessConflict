@@ -131,6 +131,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 		else if (self.throwingObject === 0 && self.pressingShift){
+			self.firing = 0;
+			self.aiming = 0;
 			self.pullGrenade();
 		}
 
@@ -414,15 +416,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		/////MOVEMENT movement//////////
 		var posUpdated = false;
 		self.move();
-		//Actually move player based on speed
-		if (self.speedY != 0){
-			posUpdated = true;
-			self.y += self.speedY;
-		}
-		if (self.speedX != 0){
-			posUpdated = true;
-			self.x += self.speedX;
-		}	
+
 
 		//default to shootingdir = walkingdir unless otherwise specified!
 		if (!self.pressingShift && self.throwingObject === 0 && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
@@ -432,10 +426,18 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		} 
 
+		//Actually move player based on speed
+		if (self.speedY != 0){
+			posUpdated = true;
+			self.y += self.speedY;
+		}
+		if (self.speedX != 0){
+			posUpdated = true;
+			self.x += self.speedX;
+		}	
 		
 		if (self.stagger > 0){self.stagger--;}
-		//End MOVEMENT
-	
+
 		////////////////////// BEING PUSHED ///////////////////////////////////////////
 		gameEngine.processEntityPush(self);
 
@@ -480,8 +482,11 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 		
+
+				
 		//Check Player collision with blocks
 		if (block.checkCollision(self) && !posUpdated){posUpdated = true;}
+
 		
 		//Keep player from walls Edge detection. Walls.
 		if (self.x > mapWidth - 5){self.x = mapWidth - 5; posUpdated = true;} //right
@@ -489,6 +494,15 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (self.x < 5){self.x = 5; posUpdated = true;} //left
 		if (self.y < 5){self.y = 5; posUpdated = true;} //top
 
+
+
+
+
+
+
+		//log("self.x" + self.x + " self.y" + self.y + " speedX" + self.speedX + " speedY" + self.speedY);
+
+		//and send to clients
 		self.y = Math.round(self.y * 10)/10;
 		self.x = Math.round(self.x * 10)/10;
 		if (self.x != self.lastX){
@@ -499,6 +513,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.lastY = self.y;
 			updatePlayerList.push({id:self.id,property:"y",value:self.y});
 		}
+
+
 
 
 		//Pickup updates
@@ -1094,10 +1110,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (self.health <= 0){return;}
 		if (!weapon){weapon = shooter.weapon;}
 		if (weapon == 6){
-			if (targetDistance < 10){
-				targetDistance = 50;
-			}
-			else if (targetDistance < 100){
+			// if (targetDistance < 10){
+			// 	targetDistance = 50;
+			// }
+			if (targetDistance < 100){
 				targetDistance = 100;
 			}
 		}
@@ -1207,8 +1223,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		else if (weapon == 6){
 			var pushX = (shootingDir.xMovRatio * grenadePower) * damageInflicted;
-			console.log("(" + shootingDir.xMovRatio + " * " + grenadePower + ") * " + damageInflicted);
-			console.log("PUSH X: " + pushX);
+			// console.log("(" + shootingDir.xMovRatio + " * " + grenadePower + ") * " + damageInflicted);
+			// console.log("PUSH X: " + pushX);
 			if (!isNaN(shootingDir.xMovRatio)){
 				self.speedX += (shootingDir.xMovRatio * grenadePower) * damageInflicted;
 				self.speedY += (shootingDir.yMovRatio * grenadePower) * damageInflicted;

@@ -12,7 +12,7 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 		throwingPlayerId:throwingPlayerId,
 		speedX:speedX,
 		speedY:speedY,
-		radius:30,
+		radius:15,
 		x:x,
 		y:y,
 		timer:grenadeTimer,
@@ -24,7 +24,7 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 			self.timer--;
 		}
 		if (self.timer <= 0){
-			console.log(self.id + " EXPLODE");
+			//log(self.id + " EXPLODE");
 			explode(self.x, self.y, self.throwingPlayerId);
 			delete Grenade.list[self.id];
 		}

@@ -119,34 +119,33 @@ var checkCollision = function(obj, isBouncable = false){
 	if (obj.y < 0){
 		obj.y = 0;
 		if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
-		return true;
+		posUpdated = true;
 	}
 	else if (obj.y > mapHeight){
 		obj.y = mapHeight;
 		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
-		return true;
+		posUpdated = true;
 	}
 	else if (obj.x < 0){
 		obj.x = 0;
 		if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
-		return true;
+		posUpdated = true;
 	}
 	else if (obj.x > mapWidth){
 		obj.x = mapWidth;
 		if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
-		return true;
+		posUpdated = true;
 	}
 
 	for (var i in blockList){
 		if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
-			
 			if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
 				var overlapTop = Math.abs(blockList[i].y - obj.y);  
 				var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - obj.y);
 				var overlapLeft = Math.abs(obj.x - blockList[i].x);
 				var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - obj.x);			
 				if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){	
-					obj.y = blockList[i].y - (1 + extendTopOfBlock);
+					obj.y = blockList[i].y - (extendTopOfBlock);
 					if (typeof obj.speedX != 'undefined'){
 						if (obj.speedY > 0){
 							if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
@@ -156,7 +155,7 @@ var checkCollision = function(obj, isBouncable = false){
 					posUpdated = true;
 				}
 				else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
-					obj.y = blockList[i].y + blockList[i].height + (1 + extendBottomOfBlock);
+					obj.y = blockList[i].y + blockList[i].height + extendBottomOfBlock;
 					if (typeof obj.speedX != 'undefined'){
 						if (obj.speedY < 0){
 							if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
@@ -166,7 +165,7 @@ var checkCollision = function(obj, isBouncable = false){
 					posUpdated = true;
 				}
 				else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
-					obj.x = blockList[i].x - (1 + extendLeftOfBlock);
+					obj.x = blockList[i].x - extendLeftOfBlock;
 					if (typeof obj.speedX != 'undefined'){
 						if (obj.speedX > 0){
 							if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
@@ -176,7 +175,7 @@ var checkCollision = function(obj, isBouncable = false){
 					posUpdated = true;
 				}
 				else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
-					obj.x = blockList[i].x + blockList[i].width + (1 + extendRightOfBlock);
+					obj.x = blockList[i].x + blockList[i].width + extendRightOfBlock;
 					if (typeof obj.speedX != 'undefined'){
 						if (obj.speedX < 0){
 							if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
@@ -237,6 +236,16 @@ var checkCollision = function(obj, isBouncable = false){
 			}
 		}// End check if player is overlapping block
 	}//End blockList loop	
+
+	rayCastMeOuttaHere = false;
+	for (var i in blockList){
+		if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
+			rayCastMeOuttaHere = true;
+			console.log("HAAAAAAAALP");
+
+			break;
+		}
+	}
 
 	if (posUpdated){
 		return true;

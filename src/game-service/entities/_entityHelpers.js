@@ -431,8 +431,12 @@ var checkPointCollisionWithGroup = function(self, list, margin, move = false){
 }
 
 var movePostCollision = function(self, entity, ax1, ay1, dist1){
-	self.speedX += ax1 / (dist1 / 70); //Higher number is greater push
-	self.speedY += ay1 / (dist1 / 70);
+	// self.speedX += ax1 / (dist1 / 70); //Higher number is greater push
+	// self.speedY += ay1 / (dist1 / 70);
+	self.updatePropAndSend("speedX", ax1 / (dist1 / 70));
+	self.updatePropAndSend("speedY", ay1 / (dist1 / 70));
+	self.updatePropAndSend("x", self.x, false);
+	self.updatePropAndSend("y", self.y, false);
 	if (typeof self.boosting != 'undefined' && self.boosting > 0 && typeof entity.getSlammed == 'function' ){  //melee boost collision bash smash
 		self.updatePropAndSend("throwingObject", 20);
 		entity.getSlammed(self.id, self.walkingDir);

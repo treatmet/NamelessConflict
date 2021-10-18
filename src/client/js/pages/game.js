@@ -87,7 +87,7 @@ var localGame = false;
 
 
 //-----------------Config----------------------
-var version = "v 0.5.0"; //Scalable + customizations
+var version = "v 0.6.0 - the grenade update"; //Scalable + customizations
 
 const spectateMoveSpeed = 10;
 var screenShakeScale = 0.5;
@@ -116,7 +116,7 @@ var pushStrength = 14;
 var shopEnabled = false;
 
 //Player Config
-var grenadeTimer = 3 * 60; //Seconds (translated to frames)
+var grenadeTimer = 2 * 60; //Seconds (translated to frames)
 var grenadeThrowSpeed = 18;
 var grenadeDrag = 0.2;
 var SGTriggerTapLimitTimer = 50;
@@ -799,6 +799,10 @@ var sfxExplosion1 = new Howl({src: ['/src/client/sfx/explosion1.mp3']});
 var sfxExplosion2 = new Howl({src: ['/src/client/sfx/explosion2.mp3']});
 var sfxExplosion3 = new Howl({src: ['/src/client/sfx/explosion3.mp3']});
 var sfxExplosion4 = new Howl({src: ['/src/client/sfx/explosion4.mp3']});
+var sfxClink1 = new Howl({src: ['/src/client/sfx/clink1.mp3']});
+var sfxClink2 = new Howl({src: ['/src/client/sfx/clink2.mp3']});
+var sfxClink3 = new Howl({src: ['/src/client/sfx/clink1.mp3']});
+var sfxClink4 = new Howl({src: ['/src/client/sfx/clink2.mp3']});
 var sfxPinPull1 = new Howl({src: ['/src/client/sfx/pinPull1.mp3']});
 var sfxPinPull2 = new Howl({src: ['/src/client/sfx/pinPull2.mp3']});
 sfxPinPull1.volume(.6);
@@ -1148,31 +1152,37 @@ checkBlockCollision = function(obj, isBouncable = false){
 	}
 
 	var posUpdated = false;
+	var clink = false;
 	if (obj.y < 0){
 		obj.y = 0;
 		if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
-		return;
+		posUpdated = true;
+		clink = true;
 	}
 	else if (obj.y > mapHeight){
 		obj.y = mapHeight;
 		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
-		return;
+		posUpdated = true;
+		clink = true;
 	}
 	else if (obj.x < 0){
 		obj.x = 0;
 		if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
-		return;
+		posUpdated = true;
+		clink = true;
 	}
 	else if (obj.x > mapWidth){
 		obj.x = mapWidth;
 		if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
-		return;
+		posUpdated = true;
+		clink = true;
 	}
 
 	for (var i in blockList){
 		if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
 			
 			if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
+				clink = true;
 				var overlapTop = Math.abs(blockList[i].y - obj.y);  
 				var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - obj.y);
 				var overlapLeft = Math.abs(obj.x - blockList[i].x);
@@ -1273,6 +1283,7 @@ checkBlockCollision = function(obj, isBouncable = false){
 	}//End blockList loop	
 
 	if (posUpdated){
+		if (clink && isBouncable){playGrenadeClinkSfx(obj.x, obj.y);}
 		return true;
 	}
 }
@@ -2599,7 +2610,7 @@ function drawMapElementsOnMapCanvas(){
 	}	
 }
 
-function playGrenadeExplosionSfx(x, y){
+function playGrenadeExplosionSfx(x, y){ //playExplosionSfx
 	var maxDist = 1500;
 	var minDist = 750;
 
@@ -2639,6 +2650,48 @@ function playGrenadeExplosionSfx(x, y){
 			else {
 				//log("4 on second");
 				sfxRangedLoud("sfxExplosion4", x, y, maxDist, minDist);
+			}	
+		}
+	}
+}
+
+function playGrenadeClinkSfx(x, y){ //playExplosionSfx
+	if (!mute){
+		var randy = Math.random();
+		if (randy < 0.25 && !sfxClink1.playing()){
+			sfxRangedLoud("sfxClink1", x, y);
+			//log("1 on first");
+		}
+		else if (((randy >= 0.25 && randy < 0.5) || (sfxClink1.playing())) && !sfxClink2.playing()){
+			sfxRangedLoud("sfxClink2", x, y);
+			//log("2 on first");
+
+		}
+		else if (((randy >= 0.5 && randy < 0.75) || (sfxClink1.playing() && sfxClink2.playing())) && !sfxClink3.playing()){
+			//log("3 on first");
+			sfxRangedLoud("sfxClink3", x, y);
+		}
+		else if (((randy >= 0.75 && randy < 1) || (sfxClink1.playing() && sfxClink2.playing() && sfxClink3.playing())) && !sfxClink4.playing()){
+			//log("4 on first");
+			sfxRangedLoud("sfxClink4", x, y);
+		}
+		else {
+			if (randy < 0.25){
+				sfxRangedLoud("sfxClink1", x, y);
+				//log("1 on second");
+
+			}
+			else if (randy >= 0.25 && randy < 0.5){
+				sfxRangedLoud("sfxClink2", x, y);
+				//log("2 on second");
+			}
+			else if (randy >= 0.5 && randy < 0.75){
+				sfxRangedLoud("sfxClink3", x, y);
+				//log("3 on second");
+			}
+			else {
+				//log("4 on second");
+				sfxRangedLoud("sfxClink4", x, y);
 			}	
 		}
 	}
@@ -6346,17 +6399,17 @@ function drawEverything(){
 }
 
 //new Grenade create Grenade newGrenade createGrenade
-var Grenade = function(id, grenadeTimer = 3*60, team = 0, holdingPlayerId = false){
+var Grenade = function(id, grenadeTimer = 2*60, team = 0, holdingPlayerId = false){
 	var self = {
 		id:id,
 		team:team,
 		speedX:0,
 		speedY:0,
-		radius:30,
+		radius:15,
 		blinkOn:false,
 		blinkTimer:0,
-		width:Img.grenade.width,
-		height:Img.grenade.height,
+		width:Img.grenade.width * (4/3),
+		height:Img.grenade.height * (4/3),
 		x:0,
 		y:0,
 		timer:grenadeTimer,
@@ -6395,7 +6448,7 @@ var Grenade = function(id, grenadeTimer = 3*60, team = 0, holdingPlayerId = fals
 			if (self.speedX != 0){
 				self.x += self.speedX;
 			}	
-			checkPointCollisionWithGroupAndMove(self, Grenade.list, self.radius);
+			if (checkPointCollisionWithGroup(self, Grenade.list, self.radius)){playGrenadeClinkSfx(self.x, self.y);}
 			checkBlockCollision(self, true);			
 			calculateDrag(self, grenadeDrag);
 		}
@@ -6403,7 +6456,7 @@ var Grenade = function(id, grenadeTimer = 3*60, team = 0, holdingPlayerId = fals
 	}
 
 	Grenade.list[id] = self;
-	//console.log(Grenade.list);
+	//log(Grenade.list);
 	
 	return self;
 } //End Player function
@@ -6420,15 +6473,42 @@ var checkPointCollisionWithGroupAndMove = function(self, list, margin){
 		if (typeof entity.health != "undefined" && (entity.health <= 0 || entity.team === 0)){continue;}
 		var posUpdated = false;
 
-		if (self.x == entity.x && self.y == entity.y){self.x -= 5; posUpdated = true; console.log("ON TOP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"); continue;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+		if (self.x == entity.x && self.y == entity.y){self.x -= 5; posUpdated = true; continue;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
 		var dx1 = self.x - entity.x;
 		var dy1 = self.y - entity.y;
 		var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+		if (dist1 < 5){dist1 = 5;}
 		var ax1 = dx1/dist1;
 		var ay1 = dy1/dist1;
 		if (dist1 <= margin){
 			self.speedX += ax1 / (dist1 / 70);
 			self.speedY += ay1 / (dist1 / 70);
+			posUpdated = true;
+		}
+
+	}
+	if (posUpdated){return true;}
+	else {return false;}
+}
+
+var checkPointCollisionWithGroup = function(self, list, margin){
+	for (var i in list){
+
+		entity = list[i];
+
+		if (typeof entity === 'undefined'){continue;}
+		if (entity.id == self.id ){continue;}
+		if (typeof entity.health != "undefined" && (entity.health <= 0 || entity.team === 0)){continue;}
+		var posUpdated = false;
+
+		if (self.x == entity.x && self.y == entity.y){self.x -= 5; posUpdated = true; continue;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+		var dx1 = self.x - entity.x;
+		var dy1 = self.y - entity.y;
+		var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+		if (dist1 < 5){dist1 = 5;}
+		var ax1 = dx1/dist1;
+		var ay1 = dy1/dist1;
+		if (dist1 <= margin){
 			posUpdated = true;
 		}
 
@@ -6496,8 +6576,6 @@ class Explosion{
 		this.id = Math.random();
 		this.x = x,
 		this.y = y,
-		this.width = grenadeExplosionSize*2;
-		this.height = grenadeExplosionSize*2;
 		this.beams = 45;
 		this.rays = []
 		this.globalangle = Math.PI;
@@ -6513,6 +6591,8 @@ class Explosion{
 		explosions[this.id].ctx = explosions[this.id].canvas.getContext("2d");
 		explosions[this.id].x = this.x;
 		explosions[this.id].y = this.y;
+		explosions[this.id].width = grenadeExplosionSize*2;
+		explosions[this.id].height = grenadeExplosionSize*2;
 		explosions[this.id].timer = 20;
 
 
@@ -6600,7 +6680,7 @@ function drawExplosions(){
 	noShadow();
 	for (var e in explosions){
 
-		if (isObjVisible(explosions[e])){
+		if (isObjVisible(explosions[e], true)){
 			explosions[e].ctx.drawImage(Img.blastGrenade, 0 + (explosions[e].timer * explosionExpansionFactor), 0 + (explosions[e].timer * explosionExpansionFactor), grenadeExplosionSize*2 - (explosions[e].timer * explosionExpansionFactor*2), grenadeExplosionSize*2 - (explosions[e].timer * explosionExpansionFactor*2));
 			drawImageTrans(explosions[e].canvas, explosions[e].x - grenadeExplosionSize, explosions[e].y - grenadeExplosionSize, explosions[e].canvas.width, explosions[e].canvas.height);
 		}
@@ -6623,7 +6703,7 @@ function drawGrenades(){
 			grenade.engine();
 
 
-		if (isObjVisible(grenade)){
+		if (isObjVisible(grenade, true)){
 			var grenadeDrawnX = grenade.x;
 			var grenadeDrawnY = grenade.y;
 			var offsetAmountLeft = 26;
@@ -6681,12 +6761,18 @@ function drawGrenades(){
 					}
 				}
 			}
+			var rot = -Math.PI/2;
+			if (!grenade.holdingPlayerId){rot += grenade.id * 10;}
 			if (grenade.blinkOn || grenade.timer < 5){
 				if (grenade.timer < 4){grenade.width += 8; grenade.height += 8;}
-				drawCenteredImageTrans(Img.grenadeRed, grenadeDrawnX, grenadeDrawnY, grenade.width, grenade.height);
+				var image = rotateAndCache(Img.grenadeRed, rot + Math.abs(grenade.speedX) + Math.abs(grenade.speedY)/2);
+				//var image = Img.grenadeRed;
+				drawCenteredImageTrans(image, grenadeDrawnX, grenadeDrawnY, grenade.width, grenade.height);
 			}
 			else {
-				drawCenteredImageTrans(Img.grenade, grenadeDrawnX, grenadeDrawnY, grenade.width, grenade.height);
+				var image = rotateAndCache(Img.grenade, rot + Math.abs(grenade.speedX) + Math.abs(grenade.speedY)/2);
+				//var image = Img.grenade;
+				drawCenteredImageTrans(image, grenadeDrawnX, grenadeDrawnY, grenade.width, grenade.height);
 			}
 		}
 	}
@@ -7054,6 +7140,8 @@ function getLeaderIds(){
 
 setInterval( 
 	function(){
+		if (targetZoom == spectateZoom && myPlayer.team != 0){targetZoom = defaultZoom;}
+
 		var isTeamGame = (gametype == "ffa" || pregame && pregameIsHorde) ? false : true;
 		sortPlayers(isTeamGame);
 		if (!gameOver && gametype == "ffa"){

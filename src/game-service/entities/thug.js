@@ -254,12 +254,13 @@ var Thug = function(team, x, y){
 	}
 
     
-	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX){
-		if (shooter.weapon != 4){
+	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX, weapon = false){
+		if (!weapon){weapon = shooter.weapon;}
+		if (weapon != 4 && weapon != 6){
 			var shotData = {};
 			shotData.id = Math.random();
 			shotData.playerId = shooter.id;
-			shotData.weapon = shooter.weapon;		
+			shotData.weapon = weapon;		
 			shotData.x = shotX;
 			shotData.spark = false;
 			shotData.shootingDir = shootingDir;
@@ -283,11 +284,16 @@ var Thug = function(team, x, y){
 		var damageInflicted = 0;
 		
 		//Facing attacker (lowest damage)
-		if (shooter.weapon == 1){ damageInflicted += pistolDamage; } //Single Pistol
-		else if (shooter.weapon == 2){ damageInflicted += DPDamage; } //damage for double pistols
-		else if (shooter.weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
-		else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
-		else if (shooter.weapon == 5){ damageInflicted = 175; } //Damage for SG
+		if (weapon == 1){ damageInflicted += pistolDamage; } //Single Pistol
+		else if (weapon == 2){ damageInflicted += DPDamage; } //damage for double pistols
+		else if (weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
+		else if (weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
+		else if (weapon == 5){ damageInflicted = 175; } //Damage for Lazer
+		else if (weapon == 6){
+			//console.log("-(" + targetDistance + " - " + grenadeExplosionSize + ")/(" + grenadeExplosionSize + "/3) * " + grenadeDamage +")");
+			damageInflicted += -(targetDistance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;
+			//console.log("result:" + damageInflicted);
+		} //Damage for Grenade
 		
 		damageInflicted = damageInflicted * damageScale; //Scale damage
 		self.health -= Math.floor(damageInflicted);
