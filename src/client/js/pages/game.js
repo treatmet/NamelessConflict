@@ -452,6 +452,7 @@ Img.quickChatKeys = new Image();
 Img.quickChatKeys.src = "/src/client/img/quickChatKeys.png";
 Img.redDeath = new Image();
 Img.redDeath.src = "/src/client/img/red-death.png";
+
 Img.block = new Image();
 Img.block.src = "/src/client/img/map/block.png";
 Img.redBlock = new Image();
@@ -480,6 +481,10 @@ Img.warp3 = new Image();
 Img.warp3.src = "/src/client/img/beam3.png";
 Img.warp4 = new Image();
 Img.warp4.src = "/src/client/img/beam4.png";
+Img.moon = new Image();
+Img.moon.src = "/src/client/img/map/moon.png";
+
+
 Img.statOverlay = new Image();
 Img.statOverlay.src = "/src/client/img/stat-overlay.png";
 Img.statArrow = new Image();
@@ -1276,8 +1281,6 @@ checkBlockCollision = function(obj, isBouncable = false){
 				posUpdated = true;
 				obj.y = blockList[i].warpY;
 				posUpdated = true;
-				if (SOCKET_LIST[obj.id])
-					SOCKET_LIST[obj.id].emit('sfx', "sfxWarp");
 			}
 		}// End check if player is overlapping block
 	}//End blockList loop	
@@ -2698,9 +2701,10 @@ function playGrenadeClinkSfx(x, y){ //playExplosionSfx
 }
 
 function drawMap() {
-	
+	drawImage(Img.moon, 890, 10);
 	if (reallyLowGraphicsMode){
-		ctx.fillStyle = '#585858';
+		//ctx.fillStyle = '#585858';
+		ctx.fillStyle = '#323232';
 		drawRect(centerX - myPlayer.x * zoom, centerY - myPlayer.y * zoom, mapWidth * zoom, mapHeight * zoom);
 		drawGrid();
 	}
@@ -6621,7 +6625,7 @@ class Explosion{
 							var rawDist = getDistance({x:this.x, y:this.y}, {x:hitGrenade.x, y:hitGrenade.y});
 							if (rawDist < 1){rawDist = 1;}//Divide by zero
 							this.grenadesHit.push(hitGrenade.id);
-							launchObject(hitGrenade, {xMovRatio:(hitGrenade.x - this.x)/rawDist, yMovRatio:(hitGrenade.y - this.y)/rawDist}, rawDist*1.5);
+							launchObject(hitGrenade, {xMovRatio:(hitGrenade.x - this.x)/rawDist, yMovRatio:(hitGrenade.y - this.y)/rawDist}, rawDist, 1.5);
 						}
 					}
 
@@ -6662,11 +6666,11 @@ class Explosion{
 }
 
 
-function launchObject(object, directionData, distance){
+function launchObject(object, directionData, distance, powerRatio = 1){
 	if (distance < 100){distance = 100;}
 	var power = -(distance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;
-	object.speedX += (directionData.xMovRatio * grenadePower) * power;
-	object.speedY += (directionData.yMovRatio * grenadePower) * power;
+	object.speedX += (directionData.xMovRatio * grenadePower) * power * powerRatio;
+	object.speedY += (directionData.yMovRatio * grenadePower) * power * powerRatio;
 }
 
 function intersects(circle, left) {
@@ -8183,7 +8187,8 @@ function drawGrid(){
         ctx.moveTo(Math.round(0-cameraX), Math.round(y-cameraY));
 		ctx.lineTo(Math.round(mapWidth*zoom-cameraX), Math.round(y-cameraY));
     }
-    ctx.strokeStyle = "#6b6b6b";
+    //ctx.strokeStyle = "#6b6b6b";
+    ctx.strokeStyle = "#3b3b3b";
     ctx.lineWidth = 1;
     ctx.stroke();
 }

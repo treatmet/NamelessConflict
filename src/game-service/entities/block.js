@@ -237,16 +237,6 @@ var checkCollision = function(obj, isBouncable = false){
 		}// End check if player is overlapping block
 	}//End blockList loop	
 
-	rayCastMeOuttaHere = false;
-	for (var i in blockList){
-		if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
-			rayCastMeOuttaHere = true;
-			console.log("HAAAAAAAALP");
-
-			break;
-		}
-	}
-
 	if (posUpdated){
 		return true;
 	}

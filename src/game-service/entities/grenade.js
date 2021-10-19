@@ -25,8 +25,8 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 		}
 		if (self.timer <= 0){
 			//log(self.id + " EXPLODE");
-			explode(self.x, self.y, self.throwingPlayerId);
 			delete Grenade.list[self.id];
+			explode(self.x, self.y, self.throwingPlayerId);
 		}
 		else {
 			self.move();
@@ -167,7 +167,9 @@ function explode(x, y, playerResponsibleId){
 						var rawDist = getDistance({x:x, y:y}, {x:hitGrenade.x, y:hitGrenade.y});
 						if (rawDist < 1){rawDist = 1;}//Divide by zero
 						grenadesHit.push(hitGrenade.id);
-						launchObject(hitGrenade, {xMovRatio:(hitGrenade.x - x)/rawDist, yMovRatio:(hitGrenade.y - y)/rawDist}, rawDist*1.5);
+						var xmov = hitGrenade.x - x;
+						console.log("Xmov Ratio = " + xmov + " id:" + hitGrenade.id);
+						launchObject(hitGrenade, {xMovRatio:(hitGrenade.x - x)/rawDist, yMovRatio:(hitGrenade.y - y)/rawDist}, rawDist, 1.5);
 					}
 				}
 
@@ -209,11 +211,14 @@ class Circle{
 	}
 }
 
-function launchObject(object, directionData, distance){
+function launchObject(object, directionData, distance, powerRatio = 1){
 	if (distance < 100){distance = 100;}
 	var power = -(distance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;
-	object.speedX += (directionData.xMovRatio * grenadePower) * power;
-	object.speedY += (directionData.yMovRatio * grenadePower) * power;
+	var finalMov = (directionData.xMovRatio * grenadePower) * power;
+	console.log("distance:" + distance + " grenadeExplosionSize:" + grenadeExplosionSize);
+	console.log("Final speed inf:" + finalMov);
+	object.speedX += (directionData.xMovRatio * grenadePower) * power * powerRatio;
+	object.speedY += (directionData.yMovRatio * grenadePower) * power * powerRatio;
 }
 
 

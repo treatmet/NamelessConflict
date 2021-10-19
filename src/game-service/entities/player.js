@@ -698,17 +698,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 	self.pullGrenade = function(){
 		if (self.throwingObject == 0){
+			self.updatePropAndSend("throwingObject", -1);
+			self.updatePropAndSend("reloading", 0);
+	
 			var floorGrenadeId = entityHelpers.checkPointCollisionWithGroup(self, grenade.getList(), 130);
-			if (floorGrenadeId){
-				self.updatePropAndSend("throwingObject", -1);
-				self.updatePropAndSend("reloading", 0);
+			if (floorGrenadeId && grenade.getById(floorGrenadeId) && !grenade.getById(floorGrenadeId).holdingPlayerId){
 				grenade.getById(floorGrenadeId).updatePropAndSend("holdingPlayerId", self.id);
 				grenade.getById(floorGrenadeId).updatePropAndSend("throwingPlayerId", self.id);
 			}
 			else if (!self.energyExhausted){
 				self.expendEnergy(grenadeEnergyCost);
-				self.updatePropAndSend("throwingObject", -1);
-				self.updatePropAndSend("reloading", 0);
 				grenade.create(self.id, self.id, self.x, self.y);
 			}		
 		}
@@ -1139,7 +1138,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 		
-		if (self.team != shooter.team || gametype == "ffa"){
+		if (self.team != shooter.team || (gametype == "ffa" && self.id != shooter.id)){
 			self.lastEnemyToHit = shooter.id; //For betrayal/Suicide detection
 		}
 		
@@ -1250,7 +1249,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 		if (shooter.id != 0){
 			if (self.team != shooter.team || self.lastEnemyToHit || gametype == "ffa"){ //Someone gets credit for the kill
-				if ((self.lastEnemyToHit && self.lastEnemyToHit != 0) && self.team == shooter.team && gametype != "ffa"){ //Killed by teammate, but kill goes to last enemy to hit
+				if ((self.lastEnemyToHit && self.lastEnemyToHit != 0) && (self.team == shooter.team || (gametype != "ffa" && self.id != shooter.id))){ //Killed by teammate, but kill goes to last enemy to hit
 					if (getPlayerById(self.lastEnemyToHit))
 						shooter = getPlayerById(self.lastEnemyToHit); //Give kill credit to last enemy that hit the player (if killed by own team or self)
 				}
@@ -1258,15 +1257,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					gameEngine.killScore(shooter.team);
 				}
 				
-				playerEvent(shooter.id, "kill");				
-				shooter.spree++;
-				shooter.multikill++;
-				shooter.multikillTimer = multikillTimer;
-				if (shooter.multikill >= 2){
-					playerEvent(shooter.id, "multikill");
-				}
-				if (shooter.spree == 5 || shooter.spree == 10 || shooter.spree == 15 || shooter.spree == 20){
-					playerEvent(shooter.id, "spree");
+				if (shooter.id != self.id){
+					playerEvent(shooter.id, "kill");				
+					shooter.spree++;
+					shooter.multikill++;
+					shooter.multikillTimer = multikillTimer;
+					if (shooter.multikill >= 2){
+						playerEvent(shooter.id, "multikill");
+					}
+					if (shooter.spree == 5 || shooter.spree == 10 || shooter.spree == 15 || shooter.spree == 20){
+						playerEvent(shooter.id, "spree");
+					}
 				}
 
 				//Assists
@@ -1373,7 +1374,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		playerEvent(self.id, event);
 	}
 
-	self.updatePropAndSend = function(propName, value, singlePlayer = false){
+	self.updatePropAndSend = function(propName, value, singlePlayer = false, coords = false, ){
 		if (self[propName] != value){
 			self[propName] = value;
 			if (!singlePlayer)
