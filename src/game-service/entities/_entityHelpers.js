@@ -383,13 +383,29 @@ var checkBodyCollisionWithGroupOfBodies = function(self, list){
 			var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
 			var ax1 = dx1/dist1;
 			var ay1 = dy1/dist1;
-			if (dist1 < 40){				
+			if (dist1 < meleeRange){				
 				if (typeof self.boosting != 'undefined' && self.boosting > 0){  //melee boost collision bash smash
-					self.updatePropAndSend("throwingObject", 20);
+
+					if(self.throwingObject == 0){ 
+						self.updatePropAndSend("throwingObject", 20);
+						self.updatePropAndSend("shootingDir", self.walkingDir);
+					}
 					entity.getSlammed(self.id, self.walkingDir);
-				}					
-				self.x += ax1 / (dist1 / 70); //Higher number is greater push
-				self.y += ay1 / (dist1 / 70);
+
+					if (entity.health > 0){
+						self.speedX += dx1/2;
+						self.speedY += dy1/2;
+					}
+					else {
+						self.speedX -= dx1/5;
+						self.speedY -= dy1/5;
+					}
+
+				}
+				else {					
+					self.x += ax1 / (dist1 / 70); //Higher number is greater push
+					self.y += ay1 / (dist1 / 70);
+				}
 				posUpdated = true;
 			}
 		}
@@ -398,6 +414,7 @@ var checkBodyCollisionWithGroupOfBodies = function(self, list){
 	if (posUpdated){return true;}
 	else {return false;}
 }
+
 
 var checkPointCollisionWithGroupAndMove = function(self, list, margin){
 	checkPointCollisionWithGroup(self, list, margin, true);

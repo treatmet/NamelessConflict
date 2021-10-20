@@ -99,7 +99,7 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 } //End Grenade function
 Grenade.list = {};
 
-var rayCount = 45;
+var rayCount = 30;
 function explode(x, y, playerResponsibleId){
 	var rays = []
 	var globalangle = Math.PI;
@@ -212,13 +212,17 @@ class Circle{
 }
 
 function launchObject(object, directionData, distance, powerRatio = 1){
-	if (distance < 100){distance = 100;}
+	if (distance < 120){distance = 120;}
 	var power = -(distance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;
 	var finalMov = (directionData.xMovRatio * grenadePower) * power;
 	console.log("distance:" + distance + " grenadeExplosionSize:" + grenadeExplosionSize);
 	console.log("Final speed inf:" + finalMov);
-	object.speedX += (directionData.xMovRatio * grenadePower) * power * powerRatio;
-	object.speedY += (directionData.yMovRatio * grenadePower) * power * powerRatio;
+	var updatedSpeedX = object.speedX + (directionData.xMovRatio * grenadePower) * power * powerRatio;
+	var updatedSpeedY = object.speedY + (directionData.yMovRatio * grenadePower) * power * powerRatio;
+
+	object.updatePropAndSend("speedX", updatedSpeedX);
+	object.updatePropAndSend("speedY", updatedSpeedY);
+
 }
 
 

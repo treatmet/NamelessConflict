@@ -484,8 +484,8 @@ var initializeBlocks = function(map){
 		block.createBlock(12, 5.1, 2, 3.9, "red");	
 		block.createBlock(12, 5, 6, 2, "red");	
 
-		block.createBlock(26, 5, 6, 2, "red");	
 		block.createBlock(30, 5.1, 2, 3.9, "red");	
+		block.createBlock(26, 5, 6, 2, "red");	
 
 		//red warps
 		block.createBlock(20, 0, 3, 1, "warp", 21.5*75, 26*75);	
@@ -493,7 +493,7 @@ var initializeBlocks = function(map){
 		block.createBlock(30, 16, 1, 3, "warp", 11.1*75, 17.5*75);	
 
 		//right device
-		block.createBlock(36.8, 15, 2.2, 29, "pushDown");
+		block.createBlock(36.9, 15, 2.2, 29, "pushDown");
 		block.createBlock(29, 15, 5, 1, "normal");	
 		block.createBlock(29, 15, 1, 33, "normal");	
 		block.createBlock(36, 13, 1, 31, "normal");	
@@ -505,7 +505,7 @@ var initializeBlocks = function(map){
 		block.createBlock(37, 46, 3, 10, "normal");
 
 		//left device
-		block.createBlock(3.8, 19, 2.2, 29, "pushUp");
+		block.createBlock(3.9, 19, 2.2, 29, "pushUp");
 		block.createBlock(3, 7, 3, 10, "normal");	
 		block.createBlock(9, 15, 5, 1, "normal");	
 		block.createBlock(6, 19, 8, 25, "normal");	
@@ -582,7 +582,7 @@ var initializeBlocks = function(map){
 		block.createBlock(31, 0, 20, 4, "normal");	
 		block.createBlock(41, 0, 10, 8, "normal");	
 		block.createBlock(50, 0, 1, 27, "normal");
-		block.createBlock(0, 13, 9, 1, "normal");
+		block.createBlock(0, 13, 7, 48, "normal");
 
 		block.createBlock(12, 5.1, 3, 4.9, "red");	
 		block.createBlock(12, 5, 8, 3, "red");	
@@ -598,8 +598,8 @@ var initializeBlocks = function(map){
 		block.createBlock(35, 23, 1, 3, "warp", 16.9*75, 24.5*75);	
 
 		//right device
-		block.createBlock(43.8, 16, 2.2, 22, "pushDown");
-		block.createBlock(43.8, 38, 2.2, 23, "pushDown");
+		block.createBlock(43.9, 16, 2.2, 22, "pushDown");
+		block.createBlock(43.9, 38, 2.2, 23, "pushDown");
 		block.createBlock(46, 22, 5, 5, "normal");
 		block.createBlock(37, 18, 3, 4.9, "normal");	
 		block.createBlock(34, 20, 6, 3, "normal");	
@@ -611,12 +611,12 @@ var initializeBlocks = function(map){
 		block.createBlock(44, 63, 3, 11, "normal");
 
 		//left device
-		block.createBlock(6.8, 26, 2.2, 22, "pushUp");
-		block.createBlock(6.8, 48, 2.2, 23, "pushUp");
+		block.createBlock(6.9, 26, 2.2, 22, "pushUp");
+		block.createBlock(6.9, 48, 2.2, 23, "pushUp");
 		block.createBlock(2, 60, 5, 5, "normal");
 		block.createBlock(6, 13, 3, 11, "normal");	
 		block.createBlock(12, 18, 3, 4.9, "normal");	
-		block.createBlock(12, 20, 6, 3, "normal");	
+		block.createBlock(12, 20, 7, 3, "normal");	
 		block.createBlock(9, 26, 10, 35, "normal");
 		block.createBlock(6, 13, 1, 60, "normal");
 		block.createBlock(9, 26, 1, 47, "normal");
@@ -644,7 +644,7 @@ var initializeBlocks = function(map){
 		block.createBlock(30, 86, 23, 1, "normal");	
 		block.createBlock(34, 83, 19, 4, "normal");	
 		block.createBlock(52, 73, 1, 14, "normal");	
-		block.createBlock(44, 73, 9, 1, "normal");	
+		block.createBlock(46, 26, 7, 48, "normal");	
 
 		block.createBlock(38, 77, 3, 4.9, "blue");	
 		block.createBlock(34, 79, 7, 3, "blue");	

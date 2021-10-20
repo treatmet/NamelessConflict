@@ -257,34 +257,47 @@ function getEmptyLayers(){
 }
 //var getCustStart = 0;
 //!!! Error handling! What if png does not exist or fails to load? This will crash the client
-async function drawCustomizations(customizations, id, cb){		//!!! We don't need id passed here anymore	
-	// console.log("customizations:");
-	// console.log(customizations);
-	var layers = getEmptyLayers();
+async function drawCustomizations(customizations, id, cb, teamToDraw = false){		//!!! We don't need id passed here anymore	
+/* 	console.log("customizations:");
+	console.log(customizations);
+ */	var layers = getEmptyLayers();
 	
 	var imgSources = [];
 	imgSources.push("/src/client/img/small.png"); //Make sure small gets added to loaded images regardless of shirt pattern 
 
-	for (var t = 0; t < teams.length; t++){		
+	var drawnTeams = teams;
+	if (teamToDraw){
+		drawnTeams = [teamToDraw];
+	}
+	for (var t = 0; t < drawnTeams.length; t++){		
+
+/* 		if (!customizations || !customizations[drawnTeams[t]]){
+			cb(false, false);
+			return;
+		} */
+
+
 		for (var a = 0; a < animations.length; a++){
 			// var loggy = new Date() - getCustStart;
 			// console.log("Get layer order loop " + loggy + " " + animations[a]);
 			var layerOrder = getLayerOrder(animations[a]);
 
 			for (var l in layerOrder){
-				var layer = getLayerDrawProperties(layerOrder[l], customizations[teams[t]]);
+
+				if (!customizations[drawnTeams[t]]){continue;}
+				var layer = getLayerDrawProperties(layerOrder[l], customizations[drawnTeams[t]]);
 				if (!layer){continue;}
 
 				imgSources.push(layer.img.src);
 				if (layer.pattern && layer.pattern.src){imgSources.push(layer.pattern.src);}
-				layers[teams[t]][animations[a]].push(layer);
+				layers[drawnTeams[t]][animations[a]].push(layer);
 			} // layers loop
 		} //animations loop
-	} // teams loop
+	} // drawnTeams loop
 	
 	var playerAnimations = {};
-	for (var t = 0; t < teams.length; t++){
-		playerAnimations[teams[t]] = {};	
+	for (var t = 0; t < drawnTeams.length; t++){
+		playerAnimations[drawnTeams[t]] = {};	
 	}	
 
 	//log("Loading images:");
@@ -294,22 +307,22 @@ async function drawCustomizations(customizations, id, cb){		//!!! We don't need 
 		//var loggy = new Date() - getCustStart;
 		//console.log("After load images " + loggy);
 		//log("Images loaded");
-		for (var t = 0; t < teams.length; t++){
+		for (var t = 0; t < drawnTeams.length; t++){
 			for (var a = 0; a < animations.length; a++){
-				await sleep(10);
+				await sleep(5);
 
 				//Replace invalid images
-				for (var l = 0; l < layers[teams[t]][animations[a]].length; l++){						
+				for (var l = 0; l < layers[drawnTeams[t]][animations[a]].length; l++){						
 					for (var p = 0; p < invalidSrcPaths.length; p++){
-						if (invalidSrcPaths[p] == layers[teams[t]][animations[a]][l].img.src){
-							layers[teams[t]][animations[a]][l].img = smallImg;
+						if (invalidSrcPaths[p] == layers[drawnTeams[t]][animations[a]][l].img.src){
+							layers[drawnTeams[t]][animations[a]][l].img = smallImg;
 						}
 					}
 				}
 				// var loggy = new Date() - getCustStart;
 				// console.log("Drawing layered images " + loggy + " " + animations[a]);
 				await sleep(2);
-				playerAnimations[teams[t]][animations[a]] = drawLayeredImage(layers[teams[t]][animations[a]]);
+				playerAnimations[drawnTeams[t]][animations[a]] = drawLayeredImage(layers[drawnTeams[t]][animations[a]]);
 			}
 		}
 		cb(playerAnimations, id);
@@ -368,7 +381,9 @@ function getLayerDrawProperties(layerData, teamCustomizations){
 	var type = "default";				
 	var animationVariant = layerData.animationVariant ? "/" + layerData.animationVariant : "";
 
-	// log(animations[a] + " " + layerData.layer + " animationVariant: " + animationVariant);
+	if (!teamCustomizations){
+		log(" layerData.layer:" + layerData.layer + " animationVariant: " + animationVariant);
+	}
 
 	switch(String(layerData.layer)){
 		case "arms":

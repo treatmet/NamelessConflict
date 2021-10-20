@@ -5,8 +5,8 @@ var grenade = require('./grenade.js');
 var pickup = require('./pickup.js');
 var entityHelpers = require('./_entityHelpers.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
-var profanityImport = require('@2toad/profanity');
 
+var profanityImport = require('@2toad/profanity');
 const options = new profanityImport.ProfanityOptions();
 options.wholeWord = false;
 const profanity = new profanityImport.Profanity(options);
@@ -61,7 +61,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 		
 	//Initialize Player
-	updatePlayerList.push({id:self.id,property:"team",value:self.team});
+	updatePlayerList.push({id:self.id,property:"team",value:self.team, single:2});
 	updatePlayerList.push({id:self.id,property:"cash",value:self.cash});
 	updatePlayerList.push({id:self.id,property:"cashEarnedThisGame",value:self.cashEarnedThisGame});
 	updatePlayerList.push({id:self.id,property:"kills",value:self.kills});
@@ -71,7 +71,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	updatePlayerList.push({id:self.id,property:"returns",value:self.returns});
 	updatePlayerList.push({id:self.id,property:"captures",value:self.captures});
 	updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-	updatePlayerList.push({id:self.id,property:"customizations",value:customizations});
+	updatePlayerList.push({id:self.id,property:"customizations",value:customizations, single:2});
 
 
 
@@ -706,7 +706,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				grenade.getById(floorGrenadeId).updatePropAndSend("holdingPlayerId", self.id);
 				grenade.getById(floorGrenadeId).updatePropAndSend("throwingPlayerId", self.id);
 			}
-			else if (!self.energyExhausted){
+			else if (!self.energyExhausted){ //bagGrenades bag grenade  && !self.holdingBag
 				self.expendEnergy(grenadeEnergyCost);
 				grenade.create(self.id, self.id, self.x, self.y);
 			}		
@@ -1112,8 +1112,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			// if (targetDistance < 10){
 			// 	targetDistance = 50;
 			// }
-			if (targetDistance < 100){
-				targetDistance = 100;
+			if (targetDistance < 120){
+				targetDistance = 120;
 			}
 		}
 
@@ -2592,9 +2592,9 @@ function reload(playerId){
 
 	if (checkForEmptyWeaponAndSwap(playerId)){return;}
 
-	if (Player.list[playerId].weapon == 1 && Player.list[playerId].PClip >= 15){return;}
-	else if ((Player.list[playerId].weapon == 3 && Player.list[playerId].MGClip >= MGClipSize) || (Player.list[playerId].weapon == 3 && Player.list[playerId].MGAmmo <= 0)){return;}
-	else if ((Player.list[playerId].weapon == 2 && Player.list[playerId].DPClip >= DPClipSize) || (Player.list[playerId].weapon == 2 && Player.list[playerId].DPAmmo <= 0)){return;}
+	if (Player.list[playerId].weapon == 1 && Player.list[playerId].PClip >= PClipSize+1){return;}
+	else if ((Player.list[playerId].weapon == 3 && Player.list[playerId].MGClip >= MGClipSize+1) || (Player.list[playerId].weapon == 3 && Player.list[playerId].MGAmmo <= 0)){return;}
+	else if ((Player.list[playerId].weapon == 2 && Player.list[playerId].DPClip >= DPClipSize+1) || (Player.list[playerId].weapon == 2 && Player.list[playerId].DPAmmo <= 0)){return;}
 	else if ((Player.list[playerId].weapon == 4 && Player.list[playerId].SGClip >= SGClipSize) || (Player.list[playerId].weapon == 4 && Player.list[playerId].SGAmmo <= 0)){return;}
 	if (Player.list[playerId].reloading <= 0){
 		if (Player.list[playerId].weapon == 1){

@@ -119,6 +119,12 @@ global.grenadeDamage = 30;
 global.grenadeDamageScale = 1;
 global.grenadePower = 0.6;
 
+//Boost config
+global.boostDamage = 34;
+global.boostEnergyCost = 25;
+global.meleeRange = 50;
+
+
 /*
 {rank:"bronze1",rating:0},
 {rank:"bronze2",rating:100},
@@ -201,9 +207,6 @@ global.pushMaxSpeed = 35;
 
 global.allowBagWeapons = false;
 
-//Boost config
-global.boostDamage = 34;
-global.boostEnergyCost = 25;
 
 //Shop config
 global.shopEnabled = true;

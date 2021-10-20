@@ -1654,38 +1654,54 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		if (!Player.list[playerDataPack[i].id]){
 			Player(playerDataPack[i].id);
 		}
+		Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
+		if (playerDataPack[i].id == myPlayer.id)
+			myPlayer[playerDataPack[i].property] = playerDataPack[i].value;
+		/////////////////////////////////////////////////////////////////////////////////////////////////
 
 		if (playerDataPack[i].property == "grapple"){
 			//log(playerDataPack[i].value);
 		}
 
-		Player.list[playerDataPack[i].id][playerDataPack[i].property] = playerDataPack[i].value;
-		if (playerDataPack[i].id == myPlayer.id)
-			myPlayer[playerDataPack[i].property] = playerDataPack[i].value;
-
 		//Draw customizations
-		if (playerDataPack[i].property == "customizations"){	
+		if (playerDataPack[i].property == "customizations"){
 			drawCustomizations(Player.list[playerDataPack[i].id].customizations, playerDataPack[i].id, async function(playerAnimations, id){
 				if (Player.list[id]){
 					Player.list[id].images = playerAnimations;
-					for (var t in teams){
-						getUserIconImg(Player.list[id].customizations[teams[t]].icon, teams[t], function(iconImg, team){
-							Player.list[id].images[team].icon = iconImg;
-						});
-					}
+/* 					console.log("This guy:");
+					console.log(Player.list[id]);
+					log("Drawing on customizations for " + Player.list[id].name + " team:" + Player.list[id].team);
+					console.log(Player.list[id].customizations);	
+
+ */					getUserIconImg(Player.list[id].customizations[Player.list[id].team].icon, Player.list[id].team, function(iconImg, team){
+						Player.list[id].images[team].icon = iconImg;
+					});
 				}
-			});
+			}, Player.list[playerDataPack[i].id].team);
 		}
 
 		//Set Zoom on spec/join
-		if (playerDataPack[i].property == "team" && playerDataPack[i].id == myPlayer.id){	
-			if (playerDataPack[i].value == 0){
-				setZoom(spectateZoom);
+		if (playerDataPack[i].property == "team"){	
+			if (playerDataPack[i].id == myPlayer.id){
+				if (playerDataPack[i].value == 0){
+					setZoom(spectateZoom);
+				}
+				else {
+					setZoom(defaultZoom);
+				}
 			}
-			else {
-				setZoom(defaultZoom);
+			if (Player.list[playerDataPack[i].id].customizations && Player.list[playerDataPack[i].id].team && Player.list[playerDataPack[i].id].customizations[Player.list[playerDataPack[i].id].team]){
+				drawCustomizations(Player.list[playerDataPack[i].id].customizations, playerDataPack[i].id, async function(playerAnimations, id){
+					if (Player.list[id]){
+						Player.list[id].images = playerAnimations;
+						//log("Drawing on teamchange");
+						//console.log(Player.list[id].images);		
+						getUserIconImg(Player.list[id].customizations[Player.list[id].team].icon, Player.list[id].team, function(iconImg, team){
+							Player.list[id].images[team].icon = iconImg;
+						});
+					}
+				}, playerDataPack[i].value);	
 			}
-
 		}
 ////////////Put future client updates after this line /////////////////
 		//Play bagGrab SFX if holdingBag switched to true for someone OR their "returns" count increased
@@ -2105,16 +2121,21 @@ function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack,
 			Player.list[playerPack[i].id] = playerPack[i];
 		}
 
+/* 		log(Player.list[playerPack[i].id].name + "'s customizations");
+		console.log(Player.list[playerPack[i].id].customizations);
+ */		
 		drawCustomizations(Player.list[playerPack[i].id].customizations, playerPack[i].id, function(playerAnimations, id = 0){
 			if (Player.list[id]){
 				Player.list[id].images = playerAnimations;
-				for (var t in teams){
-					getUserIconImg(Player.list[id].customizations[teams[t]].icon, teams[t], function(iconImg, team){
+				//log("Drawing on FULL GAME");
+				//console.log(Player.list[id].images);
+				if (Player.list[id].team != 0){
+					getUserIconImg(Player.list[id].customizations[Player.list[id].team].icon, Player.list[id].team, function(iconImg, team){
 						Player.list[id].images[team].icon = iconImg;
 					});
 				}
 			}
-		});
+		}, playerPack[i].team);
 	}
 	
 	Thug.list = [];
@@ -2701,6 +2722,7 @@ function playGrenadeClinkSfx(x, y){ //playExplosionSfx
 }
 
 function drawMap() {
+	if (hideBlocks){return;}
 	drawImage(Img.moon, 890, 10);
 	if (reallyLowGraphicsMode){
 		//ctx.fillStyle = '#585858';
@@ -3050,8 +3072,11 @@ function drawLegs(){
 			}
 		
 			if (isObjVisible(Player.list[i], true)){
-				var legs = Player.list[i].images[1].legs;
-				if (Player.list[i].team == 2){legs = Player.list[i].images[2].legs;}
+				let legs;
+				
+				if (Player.list[i].images && Player.list[i].images[Player.list[i].team]){
+					legs = Player.list[i].images[Player.list[i].team].legs;
+				}
 				
 				if (typeof legs == 'undefined'){ //Load default images if animation frames not yet drawn
 					legs = Img.blackPlayerLegs;
@@ -3398,27 +3423,6 @@ function drawTorsos(){
 		if (Player.list[i].health > 0 && team != 0){
 			if (isObjVisible(Player.list[i], true)){
 				normalShadow();
-				let img;
-				try {
-					if (Player.list[i].weapon == 1){
-						img = Player.list[i].images[team].pistol;
-					}				
-					if (Player.list[i].weapon == 2){
-						img = Player.list[i].images[team].DP;
-					}
-					else if (Player.list[i].weapon == 3){
-						img = Player.list[i].images[team].MG;
-					}
-					else if (Player.list[i].weapon == 4){
-						img = Player.list[i].images[team].SG;
-					}
-					else if (Player.list[i].weapon == 5){
-						img = Player.list[i].images[team].Laser;
-					}
-				}
-				catch (e){
-					//log("ERRROR USER ID:" + i);
-				}
 				ctx.save();
 				ctx.translate(centerX - myPlayer.x * zoom + Player.list[i].x * zoom, centerY - myPlayer.y * zoom + Player.list[i].y * zoom); //Center camera on controlled player			
 				ctx.rotate(getRotation(Player.list[i].shootingDir));
@@ -3433,91 +3437,110 @@ function drawTorsos(){
                         ctx.restore();
 					}
 					
-					////RELOADING////
-					if (Player.list[i].reloading > 0){
-						Player.list[i].reloading--;
-						////!!! Move erything below to different function
-						if (Player.list[i].weapon == 1){
-							if (Player.list[i].reloading < 12)
-								img = Player.list[i].images[team].pistolReloading3;
-							else if (Player.list[i].reloading < 24)
-								img = Player.list[i].images[team].pistolReloading4;
-							else if (Player.list[i].reloading < 36)
-								img = Player.list[i].images[team].pistolReloading3;
-							else if (Player.list[i].reloading < 48)
-								img = Player.list[i].images[team].pistolReloading2;
-							else if (Player.list[i].reloading <= 60)
-								img = Player.list[i].images[team].pistolReloading1;
+					let img;
+					if (Player.list[i].images && Player.list[i].images[team]){
+						if (Player.list[i].reloading <= 0) {
+							if (Player.list[i].weapon == 1){
+								img = Player.list[i].images[team].pistol;
+							}				
+							if (Player.list[i].weapon == 2){
+								img = Player.list[i].images[team].DP;
+							}
+							else if (Player.list[i].weapon == 3){
+								img = Player.list[i].images[team].MG;
+							}
+							else if (Player.list[i].weapon == 4){
+								img = Player.list[i].images[team].SG;
+							}
+							else if (Player.list[i].weapon == 5){
+								img = Player.list[i].images[team].Laser;
+							}
 						}
-						if (Player.list[i].weapon == 2){
-							if (Player.list[i].reloading < 20)
-								img = Player.list[i].images[team].DPReloading3;
-							else if (Player.list[i].reloading < 60)
-								img = Player.list[i].images[team].DPReloading2;
-							else if (Player.list[i].reloading <= 80)
-								img = Player.list[i].images[team].DPReloading1;
+						else {
+							////RELOADING////
+							Player.list[i].reloading--;
+							////!!! Move erything below to different function
+							if (Player.list[i].weapon == 1){
+								if (Player.list[i].reloading < 12)
+									img = Player.list[i].images[team].pistolReloading3;
+								else if (Player.list[i].reloading < 24)
+									img = Player.list[i].images[team].pistolReloading4;
+								else if (Player.list[i].reloading < 36)
+									img = Player.list[i].images[team].pistolReloading3;
+								else if (Player.list[i].reloading < 48)
+									img = Player.list[i].images[team].pistolReloading2;
+								else if (Player.list[i].reloading <= 60)
+									img = Player.list[i].images[team].pistolReloading1;
+							}
+							if (Player.list[i].weapon == 2){
+								if (Player.list[i].reloading < 20)
+									img = Player.list[i].images[team].DPReloading3;
+								else if (Player.list[i].reloading < 60)
+									img = Player.list[i].images[team].DPReloading2;
+								else if (Player.list[i].reloading <= 80)
+									img = Player.list[i].images[team].DPReloading1;
+							}
+							else if (Player.list[i].weapon == 3){
+								if (Player.list[i].reloading < 30)
+									img = Player.list[i].images[team].MGReloading4;
+								else if (Player.list[i].reloading < 37)
+									img = Player.list[i].images[team].MGReloading5;
+								else if (Player.list[i].reloading < 54)
+									img = Player.list[i].images[team].MGReloading4;
+								else if (Player.list[i].reloading < 65)
+									img = Player.list[i].images[team].MGReloading1;
+								else if (Player.list[i].reloading <= 76)
+									img = Player.list[i].images[team].MGReloading2;
+								else if (Player.list[i].reloading < 93)
+									img = Player.list[i].images[team].MGReloading3;
+								else if (Player.list[i].reloading < 104)
+									img = Player.list[i].images[team].MGReloading2;
+								else if (Player.list[i].reloading <= 115)
+									img = Player.list[i].images[team].MGReloading1;
+							}
+							if (Player.list[i].weapon == 4){
+								if (Player.list[i].reloading < 10)
+									img = Player.list[i].images[team].SGReloading3;
+								else if (Player.list[i].reloading < 20)
+									img = Player.list[i].images[team].SGReloading2;
+								else if (Player.list[i].reloading <= 30)
+									img = Player.list[i].images[team].SGReloading1;
+								if (Player.list[i].reloading == 20 && !mute){								
+									var randy = randomInt(0,2);
+									if (randy == 0)
+										sfxSGReload1.play();
+									else if (randy == 1)
+										sfxSGReload2.play();
+									else if (randy == 2)
+										sfxSGReload3.play();
+									else
+										sfxSGReload1.play();
+								}
+							}
 						}
-						else if (Player.list[i].weapon == 3){
-							if (Player.list[i].reloading < 30)
-								img = Player.list[i].images[team].MGReloading4;
-							else if (Player.list[i].reloading < 37)
-								img = Player.list[i].images[team].MGReloading5;
-							else if (Player.list[i].reloading < 54)
-								img = Player.list[i].images[team].MGReloading4;
-							else if (Player.list[i].reloading < 65)
-								img = Player.list[i].images[team].MGReloading1;
-							else if (Player.list[i].reloading <= 76)
-								img = Player.list[i].images[team].MGReloading2;
-							else if (Player.list[i].reloading < 93)
-								img = Player.list[i].images[team].MGReloading3;
-							else if (Player.list[i].reloading < 104)
-								img = Player.list[i].images[team].MGReloading2;
-							else if (Player.list[i].reloading <= 115)
-								img = Player.list[i].images[team].MGReloading1;
-						}
-						if (Player.list[i].weapon == 4){
-							if (Player.list[i].reloading < 10)
-								img = Player.list[i].images[team].SGReloading3;
-							else if (Player.list[i].reloading < 20)
-								img = Player.list[i].images[team].SGReloading2;
-							else if (Player.list[i].reloading <= 30)
-								img = Player.list[i].images[team].SGReloading1;
-							if (Player.list[i].reloading == 20 && !mute){								
-								var randy = randomInt(0,2);
-								if (randy == 0)
-									sfxSGReload1.play();
-								else if (randy == 1)
-									sfxSGReload2.play();
-								else if (randy == 2)
-									sfxSGReload3.play();
+						//SG Cocking
+						if (Player.list[i].triggerTapLimitTimer > 0){					
+							Player.list[i].triggerTapLimitTimer--;
+							if (Player.list[i].weapon == 4){
+								if (Player.list[i].triggerTapLimitTimer == 30 && !mute){
+									sfxSGEquip.play();
+								}
+								if (Player.list[i].triggerTapLimitTimer > 30)
+									img = Player.list[i].images[team].SG;
+								else if (Player.list[i].triggerTapLimitTimer > 10)
+									img = Player.list[i].images[team].SGCock;
 								else
-									sfxSGReload1.play();
+									img = Player.list[i].images[team].SG;
 							}
 						}
-					}
-					//SG Cocking
-					if (Player.list[i].triggerTapLimitTimer > 0){					
-						Player.list[i].triggerTapLimitTimer--;
-						if (Player.list[i].weapon == 4){
-							if (Player.list[i].triggerTapLimitTimer == 30 && !mute){
-								sfxSGEquip.play();
-							}
-							if (Player.list[i].triggerTapLimitTimer > 30)
-								img = Player.list[i].images[team].SG;
-							else if (Player.list[i].triggerTapLimitTimer > 10)
-								img = Player.list[i].images[team].SGCock;
-							else
-								img = Player.list[i].images[team].SG;
+						
+						if (Player.list[i].throwingObject === -1){ //holdingObject
+							img = Player.list[i].images[team].throw1;
+						}
+						else if (Player.list[i].throwingObject > 0){
+							img = Player.list[i].images[team].throw2;
 						}
 					}
-					
-					if (Player.list[i].throwingObject === -1){ //holdingObject
-						img = Player.list[i].images[team].throw1;
-					}
-					else if (Player.list[i].throwingObject > 0){
-						img = Player.list[i].images[team].throw2;
-					}
-
 
 					if (typeof img == 'undefined'){ //Load default images if animation frames not yet drawn
 						img = Player.list[i].team == 1 ? Img.whitePlayerPistol : Img.blackPlayerPistol;
@@ -4138,8 +4161,7 @@ function drawBoosts(){
 				blastDir = Player.list[i].walkingDir;
 			}
 
-			var imgblast = Player.list[i].images[1].boost;
-			if (Player.list[i].team == 2){imgblast = Player.list[i].images[2].boost;}			
+			var imgblast = Player.list[i].images[Player.list[i].team].boost;
 			if (typeof imgblast == 'undefined'){ //Load default images if animation frames not yet drawn
 				imgblast = Img.boostBlast;
 			}
@@ -4316,12 +4338,18 @@ function drawPlayerTags(){
 				if (gametype == "ffa"){sameTeam = false;}
 
 				if (Player.list[i].health > 0 && Player.list[i].team != 0 && !(Player.list[i].cloakEngaged == true && !sameTeam)){
-					var nameColor = Player.list[i].customizations[Player.list[i].team].nameColor;
-					if (gametype != "ffa" && myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true && Player.list[i].id != myPlayer.id){
+					let nameColor;
+					if (Player.list[i].customizations && Player.list[i].customizations[Player.list[i].team] && Player.list[i].id == myPlayer.id){
+						nameColor = Player.list[i].customizations[Player.list[i].team].nameColor;
+					}
+					else if (gametype != "ffa" && myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true && Player.list[i].id != myPlayer.id){
 						nameColor = Player.list[i].team == 1 ? "#9d0000" : "#00259d";
 					}
-					if (gametype == "ffa" && (nameColor == "#9d0000" || nameColor == "#00259d")){
+					else if (gametype == "ffa" && (nameColor == "#9d0000" || nameColor == "#00259d")){
 						nameColor = "black";
+					}
+					else {
+						nameColor = Player.list[i].team == 1 ? "#9d0000" : "#00259d";
 					}
 
 					
@@ -4334,7 +4362,12 @@ function drawPlayerTags(){
 						}
 					}
 
-					drawName(ctx, playerUsername, nameColor, 0, -Img.whitePlayerPistol.height/2 * zoom, Player.list[i].images[Player.list[i].team].icon, stroke);
+					var icon = false;
+					if (Player.list[i].images && Player.list[i].images[Player.list[i].team]){
+						icon = Player.list[i].images[Player.list[i].team].icon;
+					}
+
+					drawName(ctx, playerUsername, nameColor, 0, -Img.whitePlayerPistol.height/2 * zoom, icon, stroke);
 				}			
 				if (Player.list[i].team != 0 && Player.list[i].chat && Player.list[i].chatDecay > 0 && !(Player.list[i].cloakEngaged && !sameTeam)){
 					if (Player.list[i].chat.length > 0){
@@ -6372,22 +6405,26 @@ function drawEverything(){
 	drawMissingBags();
 
 	drawBodies();	
-	drawLegs();
+	if (!hidePlayers){
+		drawLegs();
+	}
 	drawLaser();
 	//drawBlockLasers();
 	drawGrapples();
 	//drawBlockCanvas();	
-	drawBlocks();
 	drawExplosions();
+	drawBlocks();
 	drawLaserCanonLaser();
 	drawWallBodies();
 	drawPickups();
 	drawBags();
 	drawGrenades();
 
-	drawThugs();
-	drawBoosts();
-	drawTorsos();
+	if (!hidePlayers){
+		drawThugs();
+		drawBoosts();
+		drawTorsos();
+	}
 	drawLaserChargingEffect();
 	drawShots();
 	drawBlood();
@@ -6580,7 +6617,7 @@ class Explosion{
 		this.id = Math.random();
 		this.x = x,
 		this.y = y,
-		this.beams = 45;
+		this.beams = 30;
 		this.rays = []
 		this.globalangle = Math.PI;
 		this.gapangle = Math.PI;
@@ -6618,7 +6655,7 @@ class Explosion{
 
 
 					//Check if ray is hitting grenade at this step
-					for(var g in Grenade.list){
+/* 					for(var g in Grenade.list){
 						var hitGrenade = Grenade.list[g]; //might hit self, should be okay
 						if (hitGrenade.holdingPlayerId){continue;}
 						if(isPointIntersectingBody(this.rays[t], hitGrenade, 20) && !this.grenadesHit.find(id => id == hitGrenade.id)){
@@ -6627,7 +6664,7 @@ class Explosion{
 							this.grenadesHit.push(hitGrenade.id);
 							launchObject(hitGrenade, {xMovRatio:(hitGrenade.x - this.x)/rawDist, yMovRatio:(hitGrenade.y - this.y)/rawDist}, rawDist, 1.5);
 						}
-					}
+					} */
 
 
 					for(var b in this.obstacles){
@@ -6667,7 +6704,7 @@ class Explosion{
 
 
 function launchObject(object, directionData, distance, powerRatio = 1){
-	if (distance < 100){distance = 100;}
+	if (distance < 120){distance = 120;}
 	var power = -(distance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;
 	object.speedX += (directionData.xMovRatio * grenadePower) * power * powerRatio;
 	object.speedY += (directionData.yMovRatio * grenadePower) * power * powerRatio;
@@ -6685,12 +6722,21 @@ function drawExplosions(){
 	for (var e in explosions){
 
 		if (isObjVisible(explosions[e], true)){
-			explosions[e].ctx.drawImage(Img.blastGrenade, 0 + (explosions[e].timer * explosionExpansionFactor), 0 + (explosions[e].timer * explosionExpansionFactor), grenadeExplosionSize*2 - (explosions[e].timer * explosionExpansionFactor*2), grenadeExplosionSize*2 - (explosions[e].timer * explosionExpansionFactor*2));
-			drawImageTrans(explosions[e].canvas, explosions[e].x - grenadeExplosionSize, explosions[e].y - grenadeExplosionSize, explosions[e].canvas.width, explosions[e].canvas.height);
+			var drawnWidth = grenadeExplosionSize*2;
+			var drawnX = 0;
+			var drawnImage = Img.blastGrenade;
+			if (!reallyLowGraphicsMode){
+				drawnWidth = grenadeExplosionSize*2 - (explosions[e].timer * explosionExpansionFactor*2)
+				drawnX = (explosions[e].timer * explosionExpansionFactor);
+				explosions[e].ctx.drawImage(Img.blastGrenade, drawnX, drawnX, drawnWidth, drawnWidth);
+				drawnImage = explosions[e].canvas;
+			}
+			drawImageTrans(drawnImage, explosions[e].x - grenadeExplosionSize, explosions[e].y - grenadeExplosionSize, explosions[e].canvas.width, explosions[e].canvas.height);
 		}
 
 		if (explosions[e].timer > 0){
 			explosions[e].timer--;
+			if (reallyLowGraphicsMode){explosions[e].timer--;}
 		}
 		else {
 			delete explosions[e];
@@ -6765,19 +6811,23 @@ function drawGrenades(){
 					}
 				}
 			}
-			var rot = -Math.PI/2;
-			if (!grenade.holdingPlayerId){rot += grenade.id * 10;}
+
+			var image = Img.grenade;
+
 			if (grenade.blinkOn || grenade.timer < 5){
 				if (grenade.timer < 4){grenade.width += 8; grenade.height += 8;}
-				var image = rotateAndCache(Img.grenadeRed, rot + Math.abs(grenade.speedX) + Math.abs(grenade.speedY)/2);
-				//var image = Img.grenadeRed;
-				drawCenteredImageTrans(image, grenadeDrawnX, grenadeDrawnY, grenade.width, grenade.height);
+				image = Img.grenadeRed;
 			}
-			else {
-				var image = rotateAndCache(Img.grenade, rot + Math.abs(grenade.speedX) + Math.abs(grenade.speedY)/2);
-				//var image = Img.grenade;
-				drawCenteredImageTrans(image, grenadeDrawnX, grenadeDrawnY, grenade.width, grenade.height);
-			}
+			var rot = 0;
+//			if (!reallyLowGraphicsMode){
+				rot = -Math.PI/2;
+				if (!grenade.holdingPlayerId){rot += grenade.id * 10;}
+				rot = rot + Math.abs(grenade.speedX) + Math.abs(grenade.speedY)/2;
+				image = rotateAndCache(image, rot);
+//			}
+
+			drawCenteredImageTrans(image, grenadeDrawnX, grenadeDrawnY, grenade.width, grenade.height);
+
 		}
 	}
 }
@@ -7660,6 +7710,8 @@ Body.list = [];
 //---------------------------KEY INPUTS--------------------------------
 
 //Key Presses
+var hidePlayers = false;
+var hideBlocks = false;
 document.onkeydown = function(event){
 	var hitKeyCode = event.keyCode;
 	if (chatInput.style.display == "none" && hitKeyCode != 123){
@@ -7911,6 +7963,24 @@ document.onkeydown = function(event){
 					}
 					drawMapElementsOnMapCanvas();
 					drawBlocksOnBlockCanvas();
+				}
+				else if (chatInput.value == '/blocks'){
+					if (hideBlocks){
+						hideBlocks = false;
+					}
+					else {
+						addToChat("Hide blocks")
+						hideBlocks = true;
+					}
+				}
+				else if (chatInput.value == '/players'){
+					if (hidePlayers){
+						hidePlayers = false;
+					}
+					else {
+						addToChat("Hide players")
+						hidePlayers = true;
+					}
 				}
 				else if (chatInput.value.substring(0,5) == '/mute'){
 					if (chatInput.value.substring(5).length > 0){
