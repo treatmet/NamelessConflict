@@ -6819,12 +6819,12 @@ function drawGrenades(){
 				image = Img.grenadeRed;
 			}
 			var rot = 0;
-//			if (!reallyLowGraphicsMode){
+			if (!reallyLowGraphicsMode){
 				rot = -Math.PI/2;
 				if (!grenade.holdingPlayerId){rot += grenade.id * 10;}
 				rot = rot + Math.abs(grenade.speedX) + Math.abs(grenade.speedY)/2;
 				image = rotateAndCache(image, rot);
-//			}
+			}
 
 			drawCenteredImageTrans(image, grenadeDrawnX, grenadeDrawnY, grenade.width, grenade.height);
 
@@ -7714,7 +7714,7 @@ var hidePlayers = false;
 var hideBlocks = false;
 document.onkeydown = function(event){
 	var hitKeyCode = event.keyCode;
-	if (chatInput.style.display == "none" && hitKeyCode != 123){
+	if (chatInput.style.display == "none" && hitKeyCode != 123 && hitKeyCode != 122){
 		event.preventDefault();
 	}
 	if (myPlayer.settings){
