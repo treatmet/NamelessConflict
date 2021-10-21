@@ -2,9 +2,11 @@ var pickup = require('../entities/pickup.js');
 var block = require('../entities/block.js');
 var thug = require('../entities/thug.js');
 var player = require('../entities/player.js');
+var grenade = require('../entities/grenade.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
 var dataAccess = require('../../shared/data_access/dataAccess.js');
 var mapEngine = require('./mapEngine.js');
+
 const { request } = require('express');
 const { ElastiCache } = require('aws-sdk');
 
@@ -133,20 +135,16 @@ var changeTeams = function(playerId, requestedTeam = false){
 				bagRed.captured = false;
 				updateMisc.bagRed = bagRed;
 			}
-			playerList[playerId].holdingBag = false;
-			updatePlayerList.push({id:playerList[playerId].id,property:"holdingBag",value:playerList[playerId].holdingBag});				
+			playerList[playerId].updatePropAndSend("holdingBag", false);
 		}
 		if (requestedTeam === 0 && playerList[playerId].team != 0){
-			playerList[playerId].team = 0;
+			playerList[playerId].updatePropAndSend("team", 0);
 			playerList[playerId].manualSpectate = true;
-			playerList[playerId].health = 0;
-			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});			
-			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"health",value:playerList[playerId].health});			
+			playerList[playerId].updatePropAndSend("health", 0);
 		}
 		else if ((requestedTeam == 2 || requestedTeam == false) && playerList[playerId].team != 2){
 			console.log("CHANGING TO TEAM 2");
-			playerList[playerId].team = 2;
-			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
+			playerList[playerId].updatePropAndSend("team", 2);
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
 			if (!(gametype == "elim" && playerList[playerId].health <= 0)){
 				playerList[playerId].respawn(true);			
@@ -154,8 +152,7 @@ var changeTeams = function(playerId, requestedTeam = false){
 		}
 		else if ((requestedTeam == 1 || requestedTeam == false) && playerList[playerId].team != 1){
 			console.log("CHANGING TO TEAM 1");
-			playerList[playerId].team = 1;
-			updatePlayerList.push({id:SOCKET_LIST[playerId].id,property:"team",value:playerList[playerId].team});
+			playerList[playerId].updatePropAndSend("team", 1);
 			SOCKET_LIST[playerId].emit('addToChat', 'CHANGING TO THE OTHER TEAM.');
 			if (!(gametype == "elim" && playerList[playerId].health <= 0)){
 				playerList[playerId].respawn(true);			
@@ -398,6 +395,9 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 				ptsGained = 0;				
 			}
 
+
+			//ptsGained = 0; //GRENADES
+			
 			if (customServer){
 				player.cashEarnedThisGame =  Math.round(player.cashEarnedThisGame/2);
 			}
@@ -944,8 +944,8 @@ var assignSpectatorsToTeam = function(assignEvenIfFull){
 	logg("ATTEMPTING TO ADD SPECTATORS");
 	//Assign team to spectating parties
 	for (var q = 0; q < parties.length; q++){
-		var newGameZise=parties[q].partySize + getNumTeamPlayersInGame();
-		logg("IF WE ADD YOU[" + parties[q].playerIds[0] + "'s party], IS NEW GAME SIZE(" + newGameZise + ") greater than maxPlayers (" + maxPlayers);
+		var newGameSise=parties[q].partySize + getNumTeamPlayersInGame();
+		logg("IF WE ADD YOU[" + parties[q].playerIds[0] + "'s party], IS NEW GAME SIZE(" + newGameSise + ") greater than maxPlayers (" + maxPlayers);
 		if (parties[q].partySize + getNumTeamPlayersInGame() > maxPlayers && !assignEvenIfFull){
 			logg("Game already full, moving on");
 			continue;
@@ -1268,6 +1268,7 @@ function initializeNewGame(){ //startGame gameStart
 		}			
 	}
 	thug.clearThugList();
+	grenade.clearGrenades();
 	ensureCorrectThugCount();
 	mapEngine.initializePickups(map);
 	mapEngine.initializeBlocks(map);
@@ -1656,6 +1657,7 @@ var gameLoop = function(){
 		return;
 	
 	player.runPlayerEngines();
+	grenade.runEngines();
 	thug.runThugEngines();
 		
 	if (gametype == "ctf"){
@@ -1687,15 +1689,18 @@ var gameLoop = function(){
 			}
 		});
 		
-
+		//updatePlayerListFiltered
 		var myUpdatePlayerList = updatePlayerList.filter((item) => { //SELECT //WHERE //LINQ
-			if (!item.single){
-				return true;
+			if (item.single === 2 && item.id == socket.id){
+				return false;
 			}
-			else if (item.id == socket.id){
-				return true;
+			if (item.property == "customizations" && item.id == socket.id){
+				return false;
 			}
-			return false;
+			if (item.single === true && item.id != socket.id){
+				return false;
+			}
+			return true;
 		});
 
 		//SOCKET OVERLOADING PREVENTION
@@ -1704,11 +1709,12 @@ var gameLoop = function(){
 		// }
 
 		//send update
-		socket.emit('update', myUpdatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateMisc);
+		socket.emit('update', myUpdatePlayerList, updateThugList, updatePickupList, updateNotificationList, teamFilteredUpdateEffectList, updateGrenadeList, updateMisc);
 	}
 
 	//console.log("Sent " + msSinceLastTick + "ms after last tick. Emit took " + msSinceEmit + "ms");
 	updatePlayerList = [];
+	updateGrenadeList = [];
 	updateThugList = [];
 	updatePickupList = [];
 	updateNotificationList = [];
@@ -1952,6 +1958,18 @@ function incrementTimeInGameForPlayers(){
 	}
 }
 
+var profanityImport = require('@2toad/profanity');
+const options = new profanityImport.ProfanityOptions();
+options.wholeWord = false;
+const profanity = new profanityImport.Profanity(options);
+profanity.removeWords([
+ '4r5e','5h1t','5hit','a55','anal','anus','ar5e','arrse','arse','arses','ass','ass-fucker','asses','assfucker','assfukka','asshole','assholes','asswhole','a_s_s','a$$','as$','a$s','b!tch','b00bs','b17ch','b1tch','ballbag','balls','ballsack','bastard','beastial','beastiality','bellend','bestial','bestiality','bi+ch','biatch','bitch','bitchboy','bitcher','bitchers','bitches','bitchin','bitching','bloody','blow job','blowjob','blowjobs','boiolas','bollock','bollok','boner','boob','boobs','booobs','boooobs','booooobs','booooooobs','breasts','buceta','bugger','bullshit','bum','butt','butts','butthole','buttmuch','buttplug','c0ck','c0cksucker','carpet muncher','cawk','chink','cipa','cl1t','clit','clitoris','clits','cnut','cock','cock-sucker','cockface','cockhead','cockmunch','cockmuncher','cocks','cocksuck','cocksucked','cocksucker','cocksucking','cocksucks','cocksuka','cocksukka','cok','cokmuncher','coksucka','coon','cox','crap','cum','cummer','cumming','cums','cumshot','cunilingus','cunillingus','cunnilingus','cunt','cuntlick','cuntlicker','cuntlicking','cunts','cyalis','cyberfuc','cyberfuck','cyberfucked','cyberfucker','cyberfuckers','cyberfucking','d1ck','damn','dick','dickhead','dildo','dildos','dink','dinks','dirsa','dlck','dog-fucker','doggin','dogging','donkeyribber','doosh','duche','dyke','ejaculate','ejaculated','ejaculates','ejaculating','ejaculatings','ejaculation','ejakulate','f u c k','f u c k e r','f4nny','fag','fagging','faggitt','faggot','faggs','fagot','fagots','fags','fanny','fannyflaps','fannyfucker','fanyy','fatass','fcuk','fcuker','fcuking','feck','fecker','felching','fellate','fellatio','fingerfuck','fingerfucked','fingerfucker','fingerfuckers','fingerfucking','fingerfucks','fistfuck','fistfucked','fistfucker','fistfuckers','fistfucking','fistfuckings','fistfucks','flange','fook','fooker','fuck','fucka','fucked','fucker','fuckers','fuckhead','fuckheads','fuckin','fucking','fuckings','fuckingshitmotherfucker','fuckme','fucks','fuckwhit','fuckwit','fudge packer','fudgepacker','fuk','fuker','fukker','fukkin','fuks','fukwhit','fukwit','fux','fux0r','f_u_c_k','gangbang','gangbanged','gangbangs','gaylord','gaysex','goatse','god-dam','god-damned','goddamn','goddamned','hardcoresex','headass','hoar','hoare','hoer','hoes','homo','hore','horniest','horny','hotsex','jack-off','jackoff','jap','jerk-off','jism','jiz','jizm','jizz','kawk','knobead','knobed','knobend','knobhead','knobjocky','knobjokey','kock','kondum','kondums','kum','kummer','kumming','kums','kunilingus','l3i+ch','l3itch','labia','lust','lusting','m0f0','m0fo','m45terbate','ma5terb8','ma5terbate','masochist','master-bate','masterb8','masterbat*','masterbat3','masterbate','masterbation','masterbations','masturbate','mo-fo','mof0','mofo','mothafuck','mothafucka','mothafuckas','mothafuckaz','mothafucked','mothafucker','mothafuckers','mothafuckin','mothafucking','mothafuckings','mothafucks','motherfuck','motherfucked','motherfucker','motherfuckers','motherfuckin','motherfucking','motherfuckings','motherfuckka','motherfucks','muff','muthafecker','muthafuckker','mutherfucker','n1gga','n1gger','nazi','nigg3r','nigg4h','nigga','niggah','niggas','niggaz','nigger','niggers','nob','nob jokey','nobhead','nobjocky','nobjokey','numbnuts','nutsack','orgasim','orgasims','orgasm','orgasms','p0rn','pawn','pecker','penis','penisfucker','phonesex','phuck','phuk','phuked','phuking','phukked','phukking','phuks','phuq','pigfucker','pimpis','piss','pissed','pisser','pissers','pisses','pissflaps','pissin','pissing','pissoff','poop','porn','porno','pornography','pornos','prick','pricks','pron','pube','pusse','pussi','pussies','pussy','pussys','rectum','retard','rimjaw','rimming','s hit','s.o.b.','sadist','schlong','screwing','scroat','scrote','scrotum','semen','sex','sh!+','sh!t','sh1t','shag','shagger','shaggin','shagging','shemale','shi+','shit','shitdick','shite','shited','shitey','shitfuck','shitfull','shithead','shiting','shitings','shits','shitted','shitter','shitters','shitting','shittings','shitty','skank','slut','sluts','smegma','smut','snatch','son-of-a-bitch','spac','spunk','s_h_i_t','t1tt1e5','t1tties','teets','teez','testical','testicle','tit','titfuck','tits','titt','tittie5','tittiefucker','titties','tittyfuck','tittywank','titwank','tosser','turd','tw4t','twat','twathead','twatty','twunt','twunter','v14gra','v1gra','vagina','viagra','vulva','w00se','wang','wank','wanker','wanky','whoar','whore','willies','willy'
+]);
+profanity.addWords([
+'5h1t','5hit','a55','ass-fucker','assfucker','assfukka','asshole','assholes','asswhole','beastiality','bestiality','bullshit','c0ck','c0cksucker','cawk','chink','clit','clitoris','clits','cock','cock-sucker','cockface','cockhead','cockmunch','cockmuncher','cocks','cocksuck','cocksucked','cocksucker','cocksucking','cocksucks','cocksuka','cocksukka','cok','cokmuncher','coksucka','coon','cox','cum','cummer','cumming','cums','cumshot','cunilingus','cunillingus','cunnilingus','cunt','cuntlick','cuntlicker','cuntlicking','cunts','dog-fucker','dyke','f u c k','f u c k e r','fag','fagging','faggitt','faggot','faggs','fagot','fagots','fags','fannyfucker','fcuk','fcuker','fcuking','felching','fellate','fellatio','fingerfuck','fingerfucked','fingerfucker','fingerfuckers','fingerfucking','fingerfucks','fistfuck','fistfucked','fistfucker','fistfuckers','fistfucking','fistfuckings','fistfucks','fuck','fucka','fucked','fucker','fuckers','fuckhead','fuckheads','fuckin','fucking','fuckings','fuckingshitmotherfucker','fuckme','fucks','fuckwhit','fuckwit','fudge packer','fudgepacker','fuk','fuker','fukker','fukkin','fuks','fukwhit','fukwit','fux','fux0r','f_u_c_k','gangbang','gangbanged','gangbangs','gaysex','goatse','hardcoresex','homo','hore','jack-off','jackoff','jap','jerk-off','jism','jiz','jizm','jizz','kawk','kock','kum','kummer','kumming','kums','kunilingus','labia','m45terbate','ma5terb8','ma5terbate','masochist','master-bate','masterb8','masterbat*','masterbat3','masterbate','masterbation','masterbations','masturbate','mo-fo','mof0','mofo','mothafuck','mothafucka','mothafuckas','mothafuckaz','mothafucked','mothafucker','mothafuckers','mothafuckin','mothafucking','mothafuckings','mothafucks','motherfuck','motherfucked','motherfucker','motherfuckers','motherfuckin','motherfucking','motherfuckings','motherfuckka','motherfucks','muthafecker','muthafuckker','mutherfucker','n1gga','n1gger','nigg3r','nigg4h','nigga','niggah','niggas','niggaz','nigger','niggers','penis','penisfucker','phuck','phuk','phuked','phuking','phukked','phukking','phuks','phuq','pigfucker','pussies','pussy','pussys','retard','rimjaw','rimming','s hit','sh!+','sh!t','sh1t','shi+','shit','shitdick','shite','shited','shitey','shitfuck','shitfull','shithead','shiting','shitings','shits','shitted','shitter','shitters','shitting','shittings','shitty','slut','sluts','smegma','s_h_i_t','titfuck','tittiefucker','titties','tittyfuck','tittywank','titwank','tw4t','twat','twathead','twatty','twunt','twunter','vagina','vulva','whore'
+])
+
+
 function getServerName(){
 	if (!customServer){
 		serverName = "Ranked " + port.substring(2,4);
@@ -1959,7 +1977,7 @@ function getServerName(){
 			serverName = "Invasion " + port.substring(2,4);
 		}
 	}
-	return serverName;
+	return profanity.censor(serverName);
 }
 
 function getServerSubName(){

@@ -1,21 +1,22 @@
 var gameEngine = require('../engines/gameEngine.js');
 var thug = require('./thug.js');
 var block = require('./block.js');
+var grenade = require('./grenade.js');
 var pickup = require('./pickup.js');
 var entityHelpers = require('./_entityHelpers.js');
 var dataAccessFunctions = require('../../shared/data_access/dataAccessFunctions.js');
-var profanityImport = require('@2toad/profanity');
 
+var profanityImport = require('@2toad/profanity');
 const options = new profanityImport.ProfanityOptions();
 options.wholeWord = false;
 const profanity = new profanityImport.Profanity(options);
 profanity.removeWords([
- '4r5e','5h1t','5hit','a55','anal','anus','ar5e','arrse','arse','arses','ass','ass-fucker','asses','assfucker','assfukka','asshole','assholes','asswhole','a_s_s','a$$','as$','a$s','b!tch','b00bs','b17ch','b1tch','ballbag','balls','ballsack','bastard','beastial','beastiality','bellend','bestial','bestiality','bi+ch','biatch','bitch','bitchboy','bitcher','bitchers','bitches','bitchin','bitching','bloody','blow job','blowjob','blowjobs','boiolas','bollock','bollok','boner','boob','boobs','booobs','boooobs','booooobs','booooooobs','breasts','buceta','bugger','bullshit','bum','butt','butts','butthole','buttmuch','buttplug','c0ck','c0cksucker','carpet muncher','cawk','chink','cipa','cl1t','clit','clitoris','clits','cnut','cock','cock-sucker','cockface','cockhead','cockmunch','cockmuncher','cocks','cocksuck','cocksucked','cocksucker','cocksucking','cocksucks','cocksuka','cocksukka','cok','cokmuncher','coksucka','coon','cox','crap','cum','cummer','cumming','cums','cumshot','cunilingus','cunillingus','cunnilingus','cunt','cuntlick','cuntlicker','cuntlicking','cunts','cyalis','cyberfuc','cyberfuck','cyberfucked','cyberfucker','cyberfuckers','cyberfucking','d1ck','damn','dick','dickhead','dildo','dildos','dink','dinks','dirsa','dlck','dog-fucker','doggin','dogging','donkeyribber','doosh','duche','dyke','ejaculate','ejaculated','ejaculates','ejaculating','ejaculatings','ejaculation','ejakulate','f u c k','f u c k e r','f4nny','fag','fagging','faggitt','faggot','faggs','fagot','fagots','fags','fanny','fannyflaps','fannyfucker','fanyy','fatass','fcuk','fcuker','fcuking','feck','fecker','felching','fellate','fellatio','fingerfuck','fingerfucked','fingerfucker','fingerfuckers','fingerfucking','fingerfucks','fistfuck','fistfucked','fistfucker','fistfuckers','fistfucking','fistfuckings','fistfucks','flange','fook','fooker','fuck','fucka','fucked','fucker','fuckers','fuckhead','fuckheads','fuckin','fucking','fuckings','fuckingshitmotherfucker','fuckme','fucks','fuckwhit','fuckwit','fudge packer','fudgepacker','fuk','fuker','fukker','fukkin','fuks','fukwhit','fukwit','fux','fux0r','f_u_c_k','gangbang','gangbanged','gangbangs','gaylord','gaysex','goatse','god-dam','god-damned','goddamn','goddamned','hardcoresex','headass','hoar','hoare','hoer','hoes','homo','hore','horniest','horny','hotsex','jack-off','jackoff','jap','jerk-off','jism','jiz','jizm','jizz','kawk','knobead','knobed','knobend','knobhead','knobjocky','knobjokey','kock','kondum','kondums','kum','kummer','kumming','kums','kunilingus','l3i+ch','l3itch','labia','lust','lusting','m0f0','m0fo','m45terbate','ma5terb8','ma5terbate','masochist','master-bate','masterb8','masterbat*','masterbat3','masterbate','masterbation','masterbations','masturbate','mo-fo','mof0','mofo','mothafuck','mothafucka','mothafuckas','mothafuckaz','mothafucked','mothafucker','mothafuckers','mothafuckin','mothafucking','mothafuckings','mothafucks','motherfuck','motherfucked','motherfucker','motherfuckers','motherfuckin','motherfucking','motherfuckings','motherfuckka','motherfucks','muff','muthafecker','muthafuckker','mutherfucker','n1gga','n1gger','nazi','nigg3r','nigg4h','nigga','niggah','niggas','niggaz','nigger','niggers','nob','nob jokey','nobhead','nobjocky','nobjokey','numbnuts','nutsack','orgasim','orgasims','orgasm','orgasms','p0rn','pawn','pecker','penis','penisfucker','phonesex','phuck','phuk','phuked','phuking','phukked','phukking','phuks','phuq','pigfucker','pimpis','piss','pissed','pisser','pissers','pisses','pissflaps','pissin','pissing','pissoff','poop','porn','porno','pornography','pornos','prick','pricks','pron','pube','pusse','pussi','pussies','pussy','pussys','rectum','retard','rimjaw','rimming','s hit','s.o.b.','sadist','schlong','screwing','scroat','scrote','scrotum','semen','sex','sh!+','sh!t','sh1t','shag','shagger','shaggin','shagging','shemale','shi+','shit','shitdick','shite','shited','shitey','shitfuck','shitfull','shithead','shiting','shitings','shits','shitted','shitter','shitters','shitting','shittings','shitty','skank','slut','sluts','smegma','smut','snatch','son-of-a-bitch','spac','spunk','s_h_i_t','t1tt1e5','t1tties','teets','teez','testical','testicle','tit','titfuck','tits','titt','tittie5','tittiefucker','titties','tittyfuck','tittywank','titwank','tosser','turd','tw4t','twat','twathead','twatty','twunt','twunter','v14gra','v1gra','vagina','viagra','vulva','w00se','wang','wank','wanker','wanky','whoar','whore','willies','willy'
+	'4r5e','5h1t','5hit','a55','anal','anus','ar5e','arrse','arse','arses','ass','ass-fucker','asses','assfucker','assfukka','asshole','assholes','asswhole','a_s_s','a$$','as$','a$s','b!tch','b00bs','b17ch','b1tch','ballbag','balls','ballsack','bastard','beastial','beastiality','bellend','bestial','bestiality','bi+ch','biatch','bitch','bitchboy','bitcher','bitchers','bitches','bitchin','bitching','bloody','blow job','blowjob','blowjobs','boiolas','bollock','bollok','boner','boob','boobs','booobs','boooobs','booooobs','booooooobs','breasts','buceta','bugger','bullshit','bum','butt','butts','butthole','buttmuch','buttplug','c0ck','c0cksucker','carpet muncher','cawk','chink','cipa','cl1t','clit','clitoris','clits','cnut','cock','cock-sucker','cockface','cockhead','cockmunch','cockmuncher','cocks','cocksuck','cocksucked','cocksucker','cocksucking','cocksucks','cocksuka','cocksukka','cok','cokmuncher','coksucka','coon','cox','crap','cum','cummer','cumming','cums','cumshot','cunilingus','cunillingus','cunnilingus','cunt','cuntlick','cuntlicker','cuntlicking','cunts','cyalis','cyberfuc','cyberfuck','cyberfucked','cyberfucker','cyberfuckers','cyberfucking','d1ck','damn','dick','dickhead','dildo','dildos','dink','dinks','dirsa','dlck','dog-fucker','doggin','dogging','donkeyribber','doosh','duche','dyke','ejaculate','ejaculated','ejaculates','ejaculating','ejaculatings','ejaculation','ejakulate','f u c k','f u c k e r','f4nny','fag','fagging','faggitt','faggot','faggs','fagot','fagots','fags','fanny','fannyflaps','fannyfucker','fanyy','fatass','fcuk','fcuker','fcuking','feck','fecker','felching','fellate','fellatio','fingerfuck','fingerfucked','fingerfucker','fingerfuckers','fingerfucking','fingerfucks','fistfuck','fistfucked','fistfucker','fistfuckers','fistfucking','fistfuckings','fistfucks','flange','fook','fooker','fuck','fucka','fucked','fucker','fuckers','fuckhead','fuckheads','fuckin','fucking','fuckings','fuckingshitmotherfucker','fuckme','fucks','fuckwhit','fuckwit','fudge packer','fudgepacker','fuk','fuker','fukker','fukkin','fuks','fukwhit','fukwit','fux','fux0r','f_u_c_k','gangbang','gangbanged','gangbangs','gaylord','gaysex','goatse','god-dam','god-damned','goddamn','goddamned','hardcoresex','headass','hoar','hoare','hoer','hoes','homo','hore','horniest','horny','hotsex','jack-off','jackoff','jap','jerk-off','jism','jiz','jizm','jizz','kawk','knobead','knobed','knobend','knobhead','knobjocky','knobjokey','kock','kondum','kondums','kum','kummer','kumming','kums','kunilingus','l3i+ch','l3itch','labia','lust','lusting','m0f0','m0fo','m45terbate','ma5terb8','ma5terbate','masochist','master-bate','masterb8','masterbat*','masterbat3','masterbate','masterbation','masterbations','masturbate','mo-fo','mof0','mofo','mothafuck','mothafucka','mothafuckas','mothafuckaz','mothafucked','mothafucker','mothafuckers','mothafuckin','mothafucking','mothafuckings','mothafucks','motherfuck','motherfucked','motherfucker','motherfuckers','motherfuckin','motherfucking','motherfuckings','motherfuckka','motherfucks','muff','muthafecker','muthafuckker','mutherfucker','n1gga','n1gger','nazi','nigg3r','nigg4h','nigga','niggah','niggas','niggaz','nigger','niggers','nob','nob jokey','nobhead','nobjocky','nobjokey','numbnuts','nutsack','orgasim','orgasims','orgasm','orgasms','p0rn','pawn','pecker','penis','penisfucker','phonesex','phuck','phuk','phuked','phuking','phukked','phukking','phuks','phuq','pigfucker','pimpis','piss','pissed','pisser','pissers','pisses','pissflaps','pissin','pissing','pissoff','poop','porn','porno','pornography','pornos','prick','pricks','pron','pube','pusse','pussi','pussies','pussy','pussys','rectum','retard','rimjaw','rimming','s hit','s.o.b.','sadist','schlong','screwing','scroat','scrote','scrotum','semen','sex','sh!+','sh!t','sh1t','shag','shagger','shaggin','shagging','shemale','shi+','shit','shitdick','shite','shited','shitey','shitfuck','shitfull','shithead','shiting','shitings','shits','shitted','shitter','shitters','shitting','shittings','shitty','skank','slut','sluts','smegma','smut','snatch','son-of-a-bitch','spac','spunk','s_h_i_t','t1tt1e5','t1tties','teets','teez','testical','testicle','tit','titfuck','tits','titt','tittie5','tittiefucker','titties','tittyfuck','tittywank','titwank','tosser','turd','tw4t','twat','twathead','twatty','twunt','twunter','v14gra','v1gra','vagina','viagra','vulva','w00se','wang','wank','wanker','wanky','whoar','whore','willies','willy'
 ]);
 profanity.addWords([
-'5h1t','5hit','a55','ass-fucker','assfucker','assfukka','asshole','assholes','asswhole','beastiality','bestiality','bullshit','c0ck','c0cksucker','cawk','chink','clit','clitoris','clits','cock','cock-sucker','cockface','cockhead','cockmunch','cockmuncher','cocks','cocksuck','cocksucked','cocksucker','cocksucking','cocksucks','cocksuka','cocksukka','cok','cokmuncher','coksucka','coon','cox','cum','cummer','cumming','cums','cumshot','cunilingus','cunillingus','cunnilingus','cunt','cuntlick','cuntlicker','cuntlicking','cunts','dog-fucker','dyke','f u c k','f u c k e r','fag','fagging','faggitt','faggot','faggs','fagot','fagots','fags','fannyfucker','fcuk','fcuker','fcuking','felching','fellate','fellatio','fingerfuck','fingerfucked','fingerfucker','fingerfuckers','fingerfucking','fingerfucks','fistfuck','fistfucked','fistfucker','fistfuckers','fistfucking','fistfuckings','fistfucks','fuck','fucka','fucked','fucker','fuckers','fuckhead','fuckheads','fuckin','fucking','fuckings','fuckingshitmotherfucker','fuckme','fucks','fuckwhit','fuckwit','fudge packer','fudgepacker','fuk','fuker','fukker','fukkin','fuks','fukwhit','fukwit','fux','fux0r','f_u_c_k','gangbang','gangbanged','gangbangs','gaysex','goatse','hardcoresex','homo','hore','jack-off','jackoff','jap','jerk-off','jism','jiz','jizm','jizz','kawk','kock','kum','kummer','kumming','kums','kunilingus','labia','m45terbate','ma5terb8','ma5terbate','masochist','master-bate','masterb8','masterbat*','masterbat3','masterbate','masterbation','masterbations','masturbate','mo-fo','mof0','mofo','mothafuck','mothafucka','mothafuckas','mothafuckaz','mothafucked','mothafucker','mothafuckers','mothafuckin','mothafucking','mothafuckings','mothafucks','motherfuck','motherfucked','motherfucker','motherfuckers','motherfuckin','motherfucking','motherfuckings','motherfuckka','motherfucks','muthafecker','muthafuckker','mutherfucker','n1gga','n1gger','nigg3r','nigg4h','nigga','niggah','niggas','niggaz','nigger','niggers','penis','penisfucker','phuck','phuk','phuked','phuking','phukked','phukking','phuks','phuq','pigfucker','pussies','pussy','pussys','retard','rimjaw','rimming','s hit','sh!+','sh!t','sh1t','shi+','shit','shitdick','shite','shited','shitey','shitfuck','shitfull','shithead','shiting','shitings','shits','shitted','shitter','shitters','shitting','shittings','shitty','slut','sluts','smegma','s_h_i_t','titfuck','tittiefucker','titties','tittyfuck','tittywank','titwank','tw4t','twat','twathead','twatty','twunt','twunter','vagina','vulva','whore'
+	'5h1t','d1ck','dick','5hit','a55','ass-fucker','assfucker','assfukka','asshole','assholes','asswhole','beastiality','bestiality','bullshit','c0ck','c0cksucker','cawk','chink','clit','clitoris','clits','cock','cock-sucker','cockface','cockhead','cockmunch','cockmuncher','cocks','cocksuck','cocksucked','cocksucker','cocksucking','cocksucks','cocksuka','cocksukka','cok','cokmuncher','coksucka','coon','cox','cum','cummer','cumming','cums','cumshot','cunilingus','cunillingus','cunnilingus','cunt','cuntlick','cuntlicker','cuntlicking','cunts','dog-fucker','dyke','f u c k','f u c k e r','fag','fagging','faggitt','faggot','faggs','fagot','fagots','fags','fannyfucker','fcuk','fcuker','fcuking','felching','fellate','fellatio','fingerfuck','fingerfucked','fingerfucker','fingerfuckers','fingerfucking','fingerfucks','fistfuck','fistfucked','fistfucker','fistfuckers','fistfucking','fistfuckings','fistfucks','fuck','fucka','fucked','fucker','fuckers','fuckhead','fuckheads','fuckin','fucking','fuckings','fuckingshitmotherfucker','fuckme','fucks','fuckwhit','fuckwit','fudge packer','fudgepacker','fuk','fuker','fukker','fukkin','fuks','fukwhit','fukwit','fux','fux0r','f_u_c_k','gangbang','gangbanged','gangbangs','gaysex','goatse','hardcoresex','homo','hore','jack-off','jackoff','jap','jerk-off','jism','jiz','jizm','jizz','kawk','kock','kum','kummer','kumming','kums','kunilingus','labia','m45terbate','ma5terb8','ma5terbate','masochist','master-bate','masterb8','masterbat*','masterbat3','masterbate','masterbation','masterbations','masturbate','mo-fo','mof0','mofo','mothafuck','mothafucka','mothafuckas','mothafuckaz','mothafucked','mothafucker','mothafuckers','mothafuckin','mothafucking','mothafuckings','mothafucks','motherfuck','motherfucked','motherfucker','motherfuckers','motherfuckin','motherfucking','motherfuckings','motherfuckka','motherfucks','muthafecker','muthafuckker','mutherfucker','n1gga','n1gger','nigg3r','nigg4h','nigga','niggah','niggas','niggaz','nigger','niggers','penis','penisfucker','phuck','phuk','phuked','phuking','phukked','phukking','phuks','phuq','pigfucker','pussies','pussy','pussys','retard','rimjaw','rimming','s hit','sh!+','sh!t','sh1t','shi+','shit','shitdick','shite','shited','shitey','shitfuck','shitfull','shithead','shiting','shitings','shits','shitted','shitter','shitters','shitting','shittings','shitty','slut','sluts','smegma','s_h_i_t','titfuck','tittiefucker','titties','tittyfuck','tittywank','titwank','tw4t','twat','twathead','twatty','twunt','twunter','vagina','vulva','whore'
 ])
-
+	
 var Player = function(id, cognitoSub, name, team, customizations, settings, partyId){
 	log("Player initializing... cognitoSub=" + cognitoSub + " id:" + id);
 	var self = {
@@ -42,7 +43,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		shootingDir:1,
 		customizations: customizations,
 		settings: settings,
-		//eligibleForRank:!isGameInFullSwing(),
+		throwingObject:0,
 
 		cash:(gametype == "elim" ? startingCash : 0),
 		cashEarnedThisGame:0,
@@ -60,7 +61,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 		
 	//Initialize Player
-	updatePlayerList.push({id:self.id,property:"team",value:self.team});
+	updatePlayerList.push({id:self.id,property:"team",value:self.team, single:2});
 	updatePlayerList.push({id:self.id,property:"cash",value:self.cash});
 	updatePlayerList.push({id:self.id,property:"cashEarnedThisGame",value:self.cashEarnedThisGame});
 	updatePlayerList.push({id:self.id,property:"kills",value:self.kills});
@@ -70,7 +71,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	updatePlayerList.push({id:self.id,property:"returns",value:self.returns});
 	updatePlayerList.push({id:self.id,property:"captures",value:self.captures});
 	updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-	updatePlayerList.push({id:self.id,property:"customizations",value:customizations});
+	updatePlayerList.push({id:self.id,property:"customizations",value:customizations, single:2});
 
 
 
@@ -87,17 +88,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		//PING
 		self.ticksSinceLastPing++;
 
-		//Invincibility in Shop
-		if (invincibleInShop){
-			if (self.team == 1 && self.x == 0 && self.y < 200 && self.health < 100){
-				self.health = 100;
-				updatePlayerList.push({id:self.id,property:"health",value:self.health});
-			}
-			else if (self.team == 2 && self.x == mapWidth && self.y > mapHeight - 200 && self.health < 100){
-				self.health = 100;
-				updatePlayerList.push({id:self.id,property:"health",value:self.health});
-			}		
-		}		
+
 		/////////////////////////// DEATH /////////////////////		
 		//Drop bag
 		if (self.health <= 0 && self.holdingBag == true){
@@ -129,6 +120,22 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 		if (self.health <= 0){return false;}
 
+
+		//THROWING
+		if (self.throwingObject > 0){
+			if (self.throwingObject === 1){
+				self.updatePropAndSend("throwingObject", 0);
+			}
+			else {
+				self.throwingObject--;
+			}
+		}
+		else if (self.throwingObject === 0 && self.pressingShift){
+			self.firing = 0;
+			self.aiming = 0;
+			self.pullGrenade();
+		}
+
 		
 		////////////SHOOTING///////////////////
 	
@@ -136,7 +143,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			var discharge = false;
 			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === false){				
 				if (self.shootingDir != 1){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing)
 							discharge = true;
 					}
@@ -146,7 +153,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === true && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
 				if (self.shootingDir != 2){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 1 || self.shootingDir == 3)) //doubleshots
 							discharge = true;
 					}
@@ -156,7 +163,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
 				if (self.shootingDir != 3){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing) //doubleshots
 							discharge = true;
 					}			
@@ -166,7 +173,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === true && self.pressingLeft === false){				
 				if (self.shootingDir != 4){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 3 || self.shootingDir == 5)) //doubleshots
 							discharge = true;
 					}
@@ -176,7 +183,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === false){				
 				if (self.shootingDir != 5){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing) //doubleshots
 							discharge = true;
 					}
@@ -186,7 +193,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === true){				
 				if (self.shootingDir != 6){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 5 || self.shootingDir == 7)) //doubleshots
 							discharge = true;
 					}
@@ -196,7 +203,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
 				if (self.shootingDir != 7){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing) //doubleshots
 							discharge = true;
 					}
@@ -206,7 +213,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
 				if (self.shootingDir != 8){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 7 || self.shootingDir == 1)) //doubleshots
 							discharge = true;
 					}			
@@ -221,7 +228,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 
 		//Auto shooting for holding down button
-		if (self.firing <= 0 && !self.pressingShift && self.fireRate <= 0 && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight) && self.weapon != 5){
+		if (self.firing <= 0 && !self.pressingShift && self.throwingObject === 0 && self.fireRate <= 0 && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight) && self.weapon != 5){
 			Discharge(self);
 		}
 		if (self.fireRate > 0){
@@ -398,32 +405,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (self.rechargeDelay > 0){self.rechargeDelay--;}
 				
 		///////////////////////CLOAKING/////////////////////
-		if (self.cloakEngaged && self.energy > 0){
-			self.energy -= cloakDrainSpeed;
-			if (self.energy < 0)
-				self.energy = 0;
-			updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
-			self.rechargeDelay = rechargeDelayTime;
-		}
-		if (self.cloakEngaged && self.energy > 0 && self.cloak < 1){
-			self.cloak += cloakInitializeSpeed;
-			if (self.cloak > 1)
-				self.cloak = 1;
-			self.cloak = Math.round(self.cloak * 100) / 100;
-			updatePlayerList.push({id:self.id,property:"cloak",value:self.cloak});
-		}
-		else if ((!self.cloakEngaged || self.energy <= 0) && self.cloak > 0){
-			self.cloak -= cloakDeinitializeSpeed;
-			if (self.energy == 0){
-				self.rechargeDelay = rechargeDelayTime * 2;
-				self.energyExhausted = true;
-				self.cloakEngaged = false;
-				updatePlayerList.push({id:self.id,property:"cloakEngaged",value:self.cloakEngaged});
-			}		
-			if (self.cloak < 0)
-				self.cloak = 0;
-			self.cloak = Math.round(self.cloak * 100) / 100;
-			updatePlayerList.push({id:self.id,property:"cloak",value:self.cloak});
+		if (self.cloakEngaged && !self.energyExhausted){
+			self.expendEnergy(cloakDrainSpeed);
 		}
 		
 		/////RETURN COOLDOWN//////////
@@ -433,6 +416,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		/////MOVEMENT movement//////////
 		var posUpdated = false;
 		self.move();
+
+
+		//default to shootingdir = walkingdir unless otherwise specified!
+		if (!self.pressingShift && self.throwingObject === 0 && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
+			if (self.shootingDir != self.walkingDir){
+				self.shootingDir = self.walkingDir;
+				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			}
+		} 
+
 		//Actually move player based on speed
 		if (self.speedY != 0){
 			posUpdated = true;
@@ -442,44 +435,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			posUpdated = true;
 			self.x += self.speedX;
 		}	
-
-		//default to shootingdir = walkingdir unless otherwise specified!
-		if (!self.pressingShift && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
-			if (self.shootingDir != self.walkingDir){
-				self.shootingDir = self.walkingDir;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-			}
-		} 
-
 		
 		if (self.stagger > 0){self.stagger--;}
-		//End MOVEMENT
-	
+
 		////////////////////// BEING PUSHED ///////////////////////////////////////////
 		gameEngine.processEntityPush(self);
 
 		///////////////////// COLLISION WITH OBSTACLES/PLAYERS /////////////////////////
 		
 		//Check collision with players
-		for (var i in Player.list){
-			if (Player.list[i].team != 0 && Player.list[i].id != self.id  && Player.list[i].health > 0 && self.x + self.width > Player.list[i].x && self.x < Player.list[i].x + Player.list[i].width && self.y + self.height > Player.list[i].y && self.y < Player.list[i].y + Player.list[i].height){								
-				if (self.x == Player.list[i].x && self.y == Player.list[i].y){self.x -= 5; posUpdated = true;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
-				var dx1 = self.x - Player.list[i].x;
-				var dy1 = self.y - Player.list[i].y;
-				var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-				var ax1 = dx1/dist1;
-				var ay1 = dy1/dist1;
-				if (dist1 < 40){				
-					if (self.boosting > 0){  //melee boost collision bash smash
-						Player.list[i].getSlammed(self.id, self.walkingDir);
-					}					
-					self.x += ax1 / (dist1 / 70); //Higher number is greater push
-					posUpdated = true
-					self.y += ay1 / (dist1 / 70);
-					posUpdated = true;
-				}
-			}
-		}
+		entityHelpers.checkBodyCollisionWithGroupOfBodies(self, Player.list);
+
 	
 		//Check collision with thugs
 		var thugList = thug.getThugList();
@@ -516,8 +482,11 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 		
+
+				
 		//Check Player collision with blocks
-		block.checkCollision(self);
+		if (block.checkCollision(self) && !posUpdated){posUpdated = true;}
+
 		
 		//Keep player from walls Edge detection. Walls.
 		if (self.x > mapWidth - 5){self.x = mapWidth - 5; posUpdated = true;} //right
@@ -525,6 +494,15 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (self.x < 5){self.x = 5; posUpdated = true;} //left
 		if (self.y < 5){self.y = 5; posUpdated = true;} //top
 
+
+
+
+
+
+
+		//log("self.x" + self.x + " self.y" + self.y + " speedX" + self.speedX + " speedY" + self.speedY);
+
+		//and send to clients
 		self.y = Math.round(self.y * 10)/10;
 		self.x = Math.round(self.x * 10)/10;
 		if (self.x != self.lastX){
@@ -535,6 +513,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.lastY = self.y;
 			updatePlayerList.push({id:self.id,property:"y",value:self.y});
 		}
+
+
 
 
 		//Pickup updates
@@ -716,6 +696,73 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 	}//End engine()
 
+	self.pullGrenade = function(){
+		if (self.throwingObject == 0){
+			self.updatePropAndSend("throwingObject", -1);
+			self.updatePropAndSend("reloading", 0);
+	
+			var floorGrenadeId = entityHelpers.checkPointCollisionWithGroup(self, grenade.getList(), 130);
+			if (floorGrenadeId && grenade.getById(floorGrenadeId) && !grenade.getById(floorGrenadeId).holdingPlayerId){
+				grenade.getById(floorGrenadeId).updatePropAndSend("holdingPlayerId", self.id);
+				grenade.getById(floorGrenadeId).updatePropAndSend("throwingPlayerId", self.id);
+			}
+			else if (!self.energyExhausted){ //bagGrenades bag grenade  && !self.holdingBag
+				self.expendEnergy(grenadeEnergyCost);
+				grenade.create(self.id, self.id, self.x, self.y);
+			}		
+		}
+	}
+
+	self.throwGrenade = function(){
+		if (self.throwingObject === -1){
+			self.updatePropAndSend("throwingObject", 30);
+			var myNade = grenade.getPlayerNade(self.id);
+			if (myNade){
+				myNade.updatePropAndSend("holdingPlayerId", false);
+				switch (self.shootingDir){
+					case 1:
+						myNade.updatePropAndSend("speedX", self.speedX);
+						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed);
+						break;
+					case 2:
+						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed*(2/3));
+						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed*(2/3));
+						break;
+					case 3:
+						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed);
+						myNade.updatePropAndSend("speedY", self.speedY);
+						break;
+					case 4:
+						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed*(2/3));
+						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed*(2/3));
+						break;
+					case 5:
+						myNade.updatePropAndSend("speedX", self.speedX);
+						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed);
+						break;
+					case 6:
+						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed*(2/3));
+						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed*(2/3));
+						break;
+					case 7:
+						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed);
+						myNade.updatePropAndSend("speedY", self.speedY);
+						break;
+					case 8:
+						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed*(2/3));
+						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed*(2/3));
+						break;
+					default:
+						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed);
+						break;						
+				}
+
+
+
+			}
+		}
+	}
+
 	self.shootGrapple = function(){
 		console.log("SHOT");
 		self.updatePropAndSend("grapple", {
@@ -823,7 +870,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.processChargingLaser = function(){	//processLaser
-		if (self.weapon == 5 && self.laserClip > 0 && self.pressingArrowKey()){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
+		if (self.weapon == 5 && self.laserClip > 0 && self.pressingArrowKey() && self.throwingObject === 0){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
 			if (self.chargingLaser < laserMaxCharge && self.fireRate <= 0){
 				self.chargingLaser++;
 				if (self.chargingLaser == 1){ //Only send laser to client when first charing up to initiate sfx
@@ -1017,6 +1064,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.boost = function(){
+		self.expendEnergy(boostEnergyCost);
 		self.boosting = 1;
 		if(self.walkingDir == 1){
 			self.speedY -= boostAmount;
@@ -1057,15 +1105,23 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 
-	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX){
-		if (self.health <= 0)
-			return;
+	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX, weapon = false){
+		if (self.health <= 0){return;}
+		if (!weapon){weapon = shooter.weapon;}
+		if (weapon == 6){
+			// if (targetDistance < 10){
+			// 	targetDistance = 50;
+			// }
+			if (targetDistance < 120){
+				targetDistance = 120;
+			}
+		}
 
-		if (shooter.weapon != 4 && shooter.weapon != 5){
+		if (weapon != 4 && weapon != 5 && weapon != 6){
 			var shotData = {};
 			shotData.id = Math.random();
 			shotData.playerId = shooter.id;
-			shotData.weapon = shooter.weapon;
+			shotData.weapon = weapon;
 			shotData.x = shotX;
 			shotData.spark = false;
 			shotData.shootingDir = shootingDir;
@@ -1082,58 +1138,65 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 		
-		if (self.team != shooter.team || gametype == "ffa"){
+		if (self.team != shooter.team || (gametype == "ffa" && self.id != shooter.id)){
 			self.lastEnemyToHit = shooter.id; //For betrayal/Suicide detection
 		}
 		
 		var damageInflicted = 0;
 		
 		//Player stagger and cloak interruption stuff
-		self.stagger = staggerTime;		
+		if (weapon != 6)
+			self.stagger = staggerTime;		
 		self.healDelay += healDelayTime;
 		if (self.healDelay > healDelayTime){self.healDelay = healDelayTime;} //Ceiling on healDelay
 		if (self.team != shooter.team || gametype == "ffa"){
 			playerEvent(shooter.id, "hit");
 		}
 		if (self.cloakEngaged){
-			self.cloakEngaged = false;
+			self.updatePropAndSend("cloakEngaged", false);
 			damageInflicted += cloakBonusDamage;
-			updatePlayerList.push({id:self.id,property:"cloakEngaged",value:self.cloakEngaged});
 		}
 		
+
 		//Initial damage (all angles)
-		if (shooter.weapon == 1){ damageInflicted += pistolDamage; } //Single Pistol
-		else if (shooter.weapon == 2){ damageInflicted += DPDamage; } //Double damage for double pistols
-		else if (shooter.weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
-		else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
-		else if (shooter.weapon == 5){ damageInflicted = LaserDamage;} //Damage for Laser
-		
-		if (self.team != shooter.team || gametype == "ffa"){
-			shooter.cumulativeAllyDamage = 0;
-			var shooterDirDif = entityHelpers.getDirDif(self.shootingDir, shootingDir);
-			if (shooterDirDif <= 2){
-				//self is NOT facing shooter (within 3 angles)
-				if (shooter.weapon == 1){ damageInflicted += pistolSideDamage; } //Single Pistol
-				else if (shooter.weapon == 2){ damageInflicted += DPSideDamage; } //Double damage for double pistols
-				else if (shooter.weapon == 3){ damageInflicted += mgSideDamage; } //Damage for MG
-				else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGSideDamage; } //Damage for SG
-			}
-			if (shooterDirDif <= 1){
-				//Back Damage
-				if (shooter.weapon == 1){ damageInflicted += pistolBackDamage; } //Single Pistol
-				else if (shooter.weapon == 2){ damageInflicted += DPBackDamage; } //Double damage for double pistols
-				else if (shooter.weapon == 3){ damageInflicted += mgBackDamage; } //Damage for MG
-				else if (shooter.weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGBackDamage; } //Damage for SG
-			}
-		}			
-		else if (self.team == shooter.team && gametype != "ffa"){
-			damageInflicted *= friendlyFireDamageScale;
-			if (shooter.weapon == 5){damageInflicted = 15;}			
-			shooter.processAllyDamage(damageInflicted, self.id);			
+		if (weapon == 1){ damageInflicted += pistolDamage; } //Single Pistol
+		else if (weapon == 2){ damageInflicted += DPDamage; } //Double damage for double pistols
+		else if (weapon == 3){ damageInflicted += mgDamage; } //Damage for MG
+		else if (weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGDamage; } //Damage for SG
+		else if (weapon == 5){ damageInflicted = LaserDamage;} //Damage for Laser
+		else if (weapon == 6){
+			//console.log("-(" + targetDistance + " - " + grenadeExplosionSize + ")/(" + grenadeExplosionSize + "/3) * " + grenadeDamage +")");
+			damageInflicted += -(targetDistance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;
+			//console.log("result:" + damageInflicted);
+		} //Damage for Grenade
+		if (weapon != 6){
+			if (self.team != shooter.team || gametype == "ffa"){
+				shooter.cumulativeAllyDamage = 0;
+				var shooterDirDif = entityHelpers.getDirDif(self.shootingDir, shootingDir);
+				if (shooterDirDif <= 2){
+					//self is NOT facing shooter (within 3 angles)
+					if (weapon == 1){ damageInflicted += pistolSideDamage; } //Single Pistol
+					else if (weapon == 2){ damageInflicted += DPSideDamage; } //Double damage for double pistols
+					else if (weapon == 3){ damageInflicted += mgSideDamage; } //Damage for MG
+					else if (weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGSideDamage; } //Damage for SG
+				}
+				if (shooterDirDif <= 1){
+					//Back Damage
+					if (weapon == 1){ damageInflicted += pistolBackDamage; } //Single Pistol
+					else if (weapon == 2){ damageInflicted += DPBackDamage; } //Double damage for double pistols
+					else if (weapon == 3){ damageInflicted += mgBackDamage; } //Damage for MG
+					else if (weapon == 4){ damageInflicted += -(targetDistance - SGRange)/(SGRange/SGCloseRangeDamageScale) * SGBackDamage; } //Damage for SG
+				}
+			}			
 		}
-		
+		if ((self.team == shooter.team && self.id != shooter.id) && gametype != "ffa"){ //teamDamage
+			damageInflicted *= friendlyFireDamageScale;
+			if (weapon == 5){damageInflicted = 15;}			
+			if (weapon != 6){shooter.processAllyDamage(damageInflicted, self.id);}			
+		}
+	
 		damageInflicted = damageInflicted * damageScale; //Scale damage
-		if (gametype == "horde" || (pregame && pregameIsHorde)){damageInflicted = 0;}
+		if (weapon != 6 && (gametype == "horde" || (pregame && pregameIsHorde))){damageInflicted = 0;}
 
 		//Calculate Assists
 		if (self.team != shooter.team && gametype != "ffa"){
@@ -1153,10 +1216,19 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		updatePlayerList.push({id:self.id,property:"health",value:self.health});
 					
 		//Damage push
-		self.pushSpeed += damageInflicted/8 * damagePushScale;
-		self.pushDir = Player.list[shooter.id].shootingDir;			
-		updatePlayerList.push({id:self.id,property:"pushSpeed",value:self.pushSpeed});
-		updatePlayerList.push({id:self.id,property:"pushDir",value:self.pushDir});
+		if (weapon != 6){
+			self.pushSpeed += damageInflicted/8 * damagePushScale;
+			self.pushDir = Player.list[shooter.id].shootingDir;			
+		}
+		else if (weapon == 6){
+			var pushX = (shootingDir.xMovRatio * grenadePower) * damageInflicted;
+			// console.log("(" + shootingDir.xMovRatio + " * " + grenadePower + ") * " + damageInflicted);
+			// console.log("PUSH X: " + pushX);
+			if (!isNaN(shootingDir.xMovRatio)){
+				self.speedX += (shootingDir.xMovRatio * grenadePower) * damageInflicted;
+				self.speedY += (shootingDir.yMovRatio * grenadePower) * damageInflicted;
+			}
+		}
 
 		if (self.health <= 0){
 			self.kill(shooter);
@@ -1164,7 +1236,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.processAllyDamage = function(damageInflicted, victimId){
-		self.cumulativeAllyDamage += damageInflicted;
 		if (self.cumulativeAllyDamage >= allyDamageWarningThreshold){
 			socket.emit('allyDamageWarning', {playerId:victimId});
 			self.cumulativeAllyDamage = 0;
@@ -1178,7 +1249,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 		if (shooter.id != 0){
 			if (self.team != shooter.team || self.lastEnemyToHit || gametype == "ffa"){ //Someone gets credit for the kill
-				if ((self.lastEnemyToHit && self.lastEnemyToHit != 0) && self.team == shooter.team && gametype != "ffa"){ //Killed by teammate, but kill goes to last enemy to hit
+				if ((self.lastEnemyToHit && self.lastEnemyToHit != 0) && (self.team == shooter.team || (gametype != "ffa" && self.id != shooter.id))){ //Killed by teammate, but kill goes to last enemy to hit
 					if (getPlayerById(self.lastEnemyToHit))
 						shooter = getPlayerById(self.lastEnemyToHit); //Give kill credit to last enemy that hit the player (if killed by own team or self)
 				}
@@ -1186,15 +1257,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					gameEngine.killScore(shooter.team);
 				}
 				
-				playerEvent(shooter.id, "kill");				
-				shooter.spree++;
-				shooter.multikill++;
-				shooter.multikillTimer = multikillTimer;
-				if (shooter.multikill >= 2){
-					playerEvent(shooter.id, "multikill");
-				}
-				if (shooter.spree == 5 || shooter.spree == 10 || shooter.spree == 15 || shooter.spree == 20){
-					playerEvent(shooter.id, "spree");
+				if (shooter.id != self.id){
+					playerEvent(shooter.id, "kill");				
+					shooter.spree++;
+					shooter.multikill++;
+					shooter.multikillTimer = multikillTimer;
+					if (shooter.multikill >= 2){
+						playerEvent(shooter.id, "multikill");
+					}
+					if (shooter.spree == 5 || shooter.spree == 10 || shooter.spree == 15 || shooter.spree == 20){
+						playerEvent(shooter.id, "spree");
+					}
 				}
 
 				//Assists
@@ -1210,7 +1283,12 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 			}
 			else { //Killed by own team or self AND no last enemy to hit
-				playerEvent(shooter.id, "benedict");
+				if (shooter.id == self.id){
+					playerEvent(shooter.id, "suicide");
+				}
+				else {
+					playerEvent(shooter.id, "benedict");
+				}
 			}
 		}
 		if (self.chargingLaser > 0){
@@ -1280,14 +1358,30 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 	}
 
+	self.expendEnergy = function(amount){ //loseEnergy spendEnergy useEnergy
+		self.rechargeDelay = rechargeDelayTime;
+		self.energy -= amount;
+		if (self.energy <= 0){
+			self.rechargeDelay = rechargeDelayTime * 2;
+			self.energy = 0;
+			self.energyExhausted = true;
+			self.updatePropAndSend("cloakEngaged", false);
+		}
+		updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
+	}
+
 	self.triggerPlayerEvent = function(event){
 		playerEvent(self.id, event);
 	}
 
-	self.updatePropAndSend = function(propName, value){
+	self.updatePropAndSend = function(propName, value, singlePlayer = false, coords = false, ){
 		if (self[propName] != value){
 			self[propName] = value;
-			updatePlayerList.push({id:self.id,property:propName,value:value});	
+			if (!singlePlayer)
+				updatePlayerList.push({id:self.id,property:propName,value:value});	
+			else {
+				updatePlayerList.push({id:self.id,property:propName,value:value, single:true});	
+			}
 		}
 	}
 
@@ -1320,6 +1414,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.updatePropAndSend("cloak", 0);
 		self.updatePropAndSend("cloakEngaged", false);
 		self.updatePropAndSend("boosting", 0);
+		self.updatePropAndSend("throwingObject", 0);
 		self.PClip = 15;
 		updatePlayerList.push({id:self.id,property:"PClip",value:self.PClip});
 
@@ -1479,12 +1574,8 @@ function gunCycle(player, forwards){
 	updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
 }
 
-function gunSwap(player){
-	if (player.reloading > 0){
-		player.reloading = 0;
-		updatePlayerList.push({id:player.id,property:"reloading",value:player.reloading});				
-	}
-
+function gunSwap(player, weapon = false){
+	player.updatePropAndSend("reloading", 0);
 
 	if (player.weapon == 1){
 		if (player.SGAmmo > 0 || player.SGClip > 0){
@@ -1563,21 +1654,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 								player.cloakEngaged = false;						
 								updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});	
 							}
-								player.boost();
-								updateEffectList.push({type:3,playerId:player.id});
-								updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
-
-							player.rechargeDelay = rechargeDelayTime;
-							// if (player.name != "RTPM3")
-							player.energy -= 25;
-							if (player.energy <= 0){
-								player.rechargeDelay = rechargeDelayTime * 2;
-								player.energy = 0;
-								player.energyExhausted = true;
-							}
-							updatePlayerList.push({id:player.id,property:"energy",value:player.energy,single:true});
-							//player.boostingDir = player.walkingDir; //!!!Remove after movement overhaul finalized
-							
+							player.boost();
+							updateEffectList.push({type:3,playerId:player.id});
+							updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
 						}
 						else if (player.holdingBag == true && player.walkingDir != 0){
 							player.holdingBag = false;
@@ -1639,6 +1718,9 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 
 					else if (data.inputId == 16){ //Shift
 						player.pressingShift = data.state;
+						if (data.state == false){
+							player.throwGrenade();
+						}
 					}
 					else if (data.inputId == 49){ //1
 						if (player.weapon != 1){
@@ -2504,14 +2586,15 @@ function checkForEmptyWeaponAndSwap(playerId){
 }
 
 function reload(playerId){
-	if (!Player.list[playerId])
-		return;
+	if (!Player.list[playerId]){return;}		
+	if (Player.list[playerId].throwingObject != 0){return;}
+		
 
 	if (checkForEmptyWeaponAndSwap(playerId)){return;}
 
-	if (Player.list[playerId].weapon == 1 && Player.list[playerId].PClip >= 15){return;}
-	else if ((Player.list[playerId].weapon == 3 && Player.list[playerId].MGClip >= MGClipSize) || (Player.list[playerId].weapon == 3 && Player.list[playerId].MGAmmo <= 0)){return;}
-	else if ((Player.list[playerId].weapon == 2 && Player.list[playerId].DPClip >= DPClipSize) || (Player.list[playerId].weapon == 2 && Player.list[playerId].DPAmmo <= 0)){return;}
+	if (Player.list[playerId].weapon == 1 && Player.list[playerId].PClip >= PClipSize+1){return;}
+	else if ((Player.list[playerId].weapon == 3 && Player.list[playerId].MGClip >= MGClipSize+1) || (Player.list[playerId].weapon == 3 && Player.list[playerId].MGAmmo <= 0)){return;}
+	else if ((Player.list[playerId].weapon == 2 && Player.list[playerId].DPClip >= DPClipSize+1) || (Player.list[playerId].weapon == 2 && Player.list[playerId].DPAmmo <= 0)){return;}
 	else if ((Player.list[playerId].weapon == 4 && Player.list[playerId].SGClip >= SGClipSize) || (Player.list[playerId].weapon == 4 && Player.list[playerId].SGAmmo <= 0)){return;}
 	if (Player.list[playerId].reloading <= 0){
 		if (Player.list[playerId].weapon == 1){
@@ -2824,6 +2907,12 @@ function playerEvent(playerId, event){
 				}
 			}
 			updateNotificationList.push({text:"Betrayal!",playerId:playerId});
+		}
+		else if (event == "suicide"){
+			if (!gameOver && !pregame){
+				dataAccessFunctions.dbUserUpdate("inc", Player.list[playerId].cognitoSub, {suicide: 1});
+			}
+			updateNotificationList.push({text:"Suicide!",playerId:playerId});
 		}
 		else if (event == "steal"){
 			Player.list[playerId].steals++;

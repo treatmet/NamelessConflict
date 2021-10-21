@@ -89,7 +89,7 @@ global.maxPlayers = 14;
 global.bootOnAfk = true;
 global.AfkFramesAllowed = 60 * 60; //seconds (translated to frames) //timeout
 
-//Player config
+//Player config player settings
 global.framesOfAiming = 60;
 global.boostAmount = 19;
 global.playerMaxSpeed = 5;
@@ -109,6 +109,20 @@ global.assistDamageThreshold = 30;
 global.grappleSpeed = 20;
 global.grappleStrength = 3;
 global.grappleLength = 5 * 75; //Tiles * 75
+
+global.grenadeEnergyCost = 30;
+global.grenadeTimer = 2 * 60; //Seconds (translated to frames)
+global.grenadeThrowSpeed = 18;
+global.grenadeDrag = 0.2;
+global.grenadeExplosionSize = 400;
+global.grenadeDamage = 30;
+global.grenadeDamageScale = 1;
+global.grenadePower = 0.6;
+
+//Boost config
+global.boostDamage = 34;
+global.boostEnergyCost = 25;
+global.meleeRange = 50;
 
 
 /*
@@ -131,7 +145,7 @@ global.cloakingEnabled = true;
 global.cloakDrainSpeed = 0.12;
 global.cloakDrag = 0.5; //Walking speed multiplier when cloaked
 global.cloakInitializeSpeed = 0.02;
-global.cloakDeinitializeSpeed = 0.1;
+global.cloakDeinitializeSpeed = cloakInitializeSpeed * 5;
 
 
 //Weapons config
@@ -150,7 +164,6 @@ global.damageScale = 1;
 	global.SGBackDamage = SGDamage/2;
 	global.LaserDamage = 250;
 	global.friendlyFireDamageScale = 0.25;
-	global.boostDamage = 34;
 	global.cloakBonusDamage = 20;
 
 global.allyDamageWarningThreshold = 25;
@@ -193,6 +206,7 @@ global.damagePushScale = 2;
 global.pushMaxSpeed = 35;
 
 global.allowBagWeapons = false;
+
 
 //Shop config
 global.shopEnabled = true;
@@ -315,6 +329,7 @@ global.updateThugList = [];
 global.updateNotificationList = [];
 global.updatePickupList = [];
 global.updateEffectList = [];
+global.updateGrenadeList = [];
 global.updateMisc = {};
 
 global.SOCKET_LIST = [];
