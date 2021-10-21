@@ -4575,6 +4575,8 @@ function drawUILayer(){
 	drawPostGameProgress();
 	drawGameEventText();
 	drawMute();
+	drawPerformanceTestGrid();
+
 }
 
 const indicatorEdgeOffset = 60;
@@ -6297,17 +6299,23 @@ function drawLaserChargingEffect(){
 
 			if (!isCenteredObjVisible(Player.list[p].x, Player.list[p].y, flareWidth, flareHeight))
 				continue;
-
-			var rotRing = rotateAndCache(Img.laserRing,(Player.list[p].laserChargeGraphic/30) * (Player.list[p].laserChargeGraphic/30))
-			var rotFlare = rotateAndCache(Img.laserFlare,90)
-
+			let imgRing;
+			let imgFlare;
+			if (reallyLowGraphicsMode){
+				imgRing = Img.laserRing;
+				imgFlare = Img.laserFlare;	
+			}
+			else {
+				imgRing = rotateAndCache(Img.laserRing,(Player.list[p].laserChargeGraphic/30) * (Player.list[p].laserChargeGraphic/30))
+				imgFlare = rotateAndCache(Img.laserFlare,90)
+			}
 			ctx.save();
 			ctx.translate(centerX - myPlayer.x * zoom + Player.list[p].x * zoom, centerY - myPlayer.y * zoom + Player.list[p].y * zoom); //Center camera on lasering player
 				ctx.rotate(getRotation(Player.list[p].shootingDir));
 				ctx.globalAlpha = Player.list[p].laserChargeGraphic / 170;
 				noShadow();
-				ctx.drawImage(rotRing,  10 - ringWidth/2, -35 - ringWidth/2, ringWidth, ringWidth); //rotating ring
-				ctx.drawImage(rotFlare,  10 - flareWidth/2, -35 - flareHeight/2, flareWidth, flareHeight); //Slowly growing flare
+				ctx.drawImage(imgRing,  10 - ringWidth/2, -35 - ringWidth/2, ringWidth, ringWidth); //rotating ring
+				ctx.drawImage(imgFlare,  10 - flareWidth/2, -35 - flareHeight/2, flareWidth, flareHeight); //Slowly growing flare
 
 			ctx.restore();
 
@@ -6626,18 +6634,21 @@ class Explosion{
 		this.grenadesHit = [];
 
 		explosions[this.id] = {};
-		explosions[this.id].canvas = document.createElement('canvas');
-		explosions[this.id].canvas.width = grenadeExplosionSize*2;
-		explosions[this.id].canvas.height = grenadeExplosionSize*2;
-		explosions[this.id].ctx = explosions[this.id].canvas.getContext("2d");
+		explosions[this.id].timer = 20;
 		explosions[this.id].x = this.x;
 		explosions[this.id].y = this.y;
 		explosions[this.id].width = grenadeExplosionSize*2;
 		explosions[this.id].height = grenadeExplosionSize*2;
-		explosions[this.id].timer = 20;
 
-
-		this.draw();
+		if (!reallyLowGraphicsMode){
+			explosions[this.id].canvas = document.createElement('canvas');
+			explosions[this.id].canvas.width = grenadeExplosionSize*2;
+			explosions[this.id].canvas.height = grenadeExplosionSize*2;
+			explosions[this.id].ctx = explosions[this.id].canvas.getContext("2d");
+			explosions[this.id].width = grenadeExplosionSize*2;
+			explosions[this.id].height = grenadeExplosionSize*2;
+			this.draw();
+		}
 	}
 
 	beam(){
@@ -6725,13 +6736,17 @@ function drawExplosions(){
 			var drawnWidth = grenadeExplosionSize*2;
 			var drawnX = 0;
 			var drawnImage = Img.blastGrenade;
-			if (!reallyLowGraphicsMode){
+			if (!reallyLowGraphicsMode && explosions[e].canvas){
 				drawnWidth = grenadeExplosionSize*2 - (explosions[e].timer * explosionExpansionFactor*2)
 				drawnX = (explosions[e].timer * explosionExpansionFactor);
 				explosions[e].ctx.drawImage(Img.blastGrenade, drawnX, drawnX, drawnWidth, drawnWidth);
 				drawnImage = explosions[e].canvas;
+				drawImageTrans(drawnImage, explosions[e].x - grenadeExplosionSize, explosions[e].y - grenadeExplosionSize, explosions[e].canvas.width, explosions[e].canvas.width);
 			}
-			drawImageTrans(drawnImage, explosions[e].x - grenadeExplosionSize, explosions[e].y - grenadeExplosionSize, explosions[e].canvas.width, explosions[e].canvas.height);
+			else {
+				drawImageTrans(Img.blastGrenade, explosions[e].x - grenadeExplosionSize, explosions[e].y - grenadeExplosionSize, grenadeExplosionSize*2, grenadeExplosionSize*2);
+			}
+
 		}
 
 		if (explosions[e].timer > 0){
@@ -6815,7 +6830,7 @@ function drawGrenades(){
 			var image = Img.grenade;
 
 			if (grenade.blinkOn || grenade.timer < 5){
-				if (grenade.timer < 4){grenade.width += 8; grenade.height += 8;}
+				if (grenade.timer < 4 && !reallyLowGraphicsMode){grenade.width += 8; grenade.height += 8;}
 				image = Img.grenadeRed;
 			}
 			var rot = 0;
@@ -7712,6 +7727,8 @@ Body.list = [];
 //Key Presses
 var hidePlayers = false;
 var hideBlocks = false;
+var showTestSquare = false;
+
 document.onkeydown = function(event){
 	var hitKeyCode = event.keyCode;
 	if (chatInput.style.display == "none" && hitKeyCode != 123 && hitKeyCode != 122){
@@ -7955,11 +7972,11 @@ document.onkeydown = function(event){
 					}
 				}
 				else if (chatInput.value == '/zoom' || chatInput.value == '/zoom1'){
-					if (defaultZoom == 1){
-						defaultZoom = 0.75;
+					if (targetZoom == 1){
+						targetZoom = defaultZoom;
 					}
 					else {
-						defaultZoom = 1;
+						targetZoom = 1;
 					}
 					drawMapElementsOnMapCanvas();
 					drawBlocksOnBlockCanvas();
@@ -7980,6 +7997,15 @@ document.onkeydown = function(event){
 					else {
 						addToChat("Hide players")
 						hidePlayers = true;
+					}
+				}
+				else if (chatInput.value == '/test'){
+					if (showTestSquare){
+						showTestSquare = false;
+					}
+					else {
+						addToChat("Show Test square")
+						showTestSquare = true;
 					}
 				}
 				else if (chatInput.value.substring(0,5) == '/mute'){
@@ -8259,6 +8285,31 @@ function drawGrid(){
     }
     //ctx.strokeStyle = "#6b6b6b";
     ctx.strokeStyle = "#3b3b3b";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+}
+
+function drawPerformanceTestGrid(){
+	var squareX = 200;
+	var squareY = 100;
+	var squareWidth = 500;
+	var squareHeight = 500;
+	
+	if (!showTestSquare){return;}
+	ctx.fillStyle = "black";
+	ctx.fillRect(squareX, squareY, squareWidth, squareHeight);
+
+	ctx.beginPath();
+	for (var x = squareX; x <= squareX + squareWidth; x += 3) { //Draw Vertial (Y) lines
+        ctx.moveTo(Math.round(x), Math.round(squareY));
+		ctx.lineTo(Math.round(x), Math.round(squareY + squareHeight));
+    }
+    for (var y = squareY; y <= squareY + squareHeight; y += 3) {
+        ctx.moveTo(Math.round(squareX), Math.round(y));
+		ctx.lineTo(Math.round(squareX + squareWidth), Math.round(y));
+    }
+    //ctx.strokeStyle = "#6b6b6b";
+    ctx.strokeStyle = "white";
     ctx.lineWidth = 1;
     ctx.stroke();
 }
