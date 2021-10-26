@@ -164,6 +164,7 @@ function updateOpponentTitle(value){
 }
 
 socket.on('staleOpponent', function(value){
+    log("Opponent is stale!");
     updateOpponentTitle(value);
 });
 
@@ -231,6 +232,7 @@ socket.on('addMessageToChat', function(text, color = "#FFFFFF"){ //Server messag
 });
 
 socket.on('tradePing', function(){ //Server message
+    console.log("Got trade ping");
     socket.emit('tradePingResponse');
 });
 

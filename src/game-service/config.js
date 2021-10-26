@@ -74,6 +74,7 @@ global.hordeGlobalBest = 0;
 global.hordeGlobalBestNames = "RTPM3";
 global.personalHordeMode = true;
 
+//Server settings
 global.minutesLeft = 9;
 global.secondsLeft = 99;
 global.scoreToWin = 3;
@@ -118,11 +119,19 @@ global.grenadeExplosionSize = 400;
 global.grenadeDamage = 30;
 global.grenadeDamageScale = 1;
 global.grenadePower = 0.6;
+global.grenadeRaySpeed = 8;
 
 //Boost config
 global.boostDamage = 34;
 global.boostEnergyCost = 25;
 global.meleeRange = 50;
+
+
+//Block config
+global.blockPushSpeed = 4;
+
+global.clientSideMovement = true;
+
 
 
 /*
@@ -166,7 +175,7 @@ global.damageScale = 1;
 	global.friendlyFireDamageScale = 0.25;
 	global.cloakBonusDamage = 20;
 
-global.allyDamageWarningThreshold = 25;
+global.allyDamageWarningThreshold = 50;
 
 global.startingWeapon = 1;
 global.bulletRange = 19 * 75;
@@ -333,6 +342,22 @@ global.updateGrenadeList = [];
 global.updateMisc = {};
 
 global.SOCKET_LIST = [];
+
+global.sharedSettings = { //Initial 1 time only config settings
+	grenadeTimer: grenadeTimer,
+	grenadeThrowSpeed: grenadeThrowSpeed,
+	grenadeDrag:grenadeDrag,
+	grenadeExplosionSize:grenadeExplosionSize,
+	grenadeDamage:grenadeDamage,
+	grenadeDamageScale:grenadeDamageScale,
+	grenadePower:grenadePower,
+	grappleSpeed:grappleSpeed,
+	pushStrength:pushStrength,
+	blockPushSpeed:blockPushSpeed,
+	speedCap:speedCap,
+	clientSideMovement:clientSideMovement,
+	laserMaxCharge:laserMaxCharge,
+};
 
 // map = "horde";
 // gametype = "horde";

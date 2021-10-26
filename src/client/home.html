@@ -13,10 +13,21 @@
 {{header}}
     
 <div style="display:none;" id="mainContent">
-	<div id="sectionTitles">
-		<h1>Welcome to the SocketShot Alpha</h1>
-		<h2>Free-to-Play Top Down Multiplayer Shooter</h2>
+	<div id="homepageBanner">
+		<h1 style="filter: drop-shadow(0 0 0.35rem black);">Welcome to the SocketShot Alpha</h1>
+		<h2 style="filter: drop-shadow(0 0 0.35rem black);">Free-to-Play Top Down Multiplayer Shooter</h2>
+		<div id="playNowButtonWrapperDiv">
+			<button id="bigAssPlayNow" class="RWButton heavyTextShadow" onclick="getJoinableServer({server:'any'})">Play Now!</button>			<br>
+		</div>
+
 	</div>
+
+	<div id="sectionTitles">
+		<div id="sectionTitle1" class="sectionTitle3">Select Game</div>
+		<div id="sectionTitle2" class="sectionTitle3">Leaderboard</div>
+		<div id="sectionTitle3" class="sectionTitle3">Community</div>
+	</div>
+
 
 	<div id="serverSelection" class="columnSection">
 		<div id="serversHiddenMsg" style="display:none;">
@@ -27,7 +38,6 @@
 		</div>
 		
 		<div id="serverLoginButtons">
-			<button id="bigAssPlayNow" class="RWButton heavyTextShadow" onclick="getJoinableServer({server:'any'})">Play Now!</button>			<br>
 			(Not logged in)
 			<br>
 			Log in to customize your character, party up with friends, save your progress, and track stats!
@@ -70,7 +80,7 @@
 				</div>
 				<div class="controlsElementSmall">
 					<img class="controlsImage" src="/src/client/img/icons/shift.png">
-					<div class="controlsText">Look ahead</div>
+					<div class="controlsText">Utility</div>
 				</div>
 				<div class="controlsElementSmall">
 					<img class="controlsImage" src="/src/client/img/icons/enter.png">
@@ -114,7 +124,9 @@
 
 	</div>
 	<div class="columnSection">
-		<img src="/src/client/img/icons/ss02Banner.jpg" class="bannerImage" alt="SocketShot Season Zero-2. Win new cosmetic items and play in new events this season!">
+		<a href="https://docs.google.com/spreadsheets/d/18cxfJ1ff0rMQO4XIc2ChrgfGqpYpUFXITg_0lFXWfW8/edit#gid=0">
+			<img src="/src/client/img/icons/banner.jpg" class="bannerImage" alt="SocketShot Season Zero-2. Win new cosmetic items and play in new events this season!">
+		</a>
 		<div style="text-align: center;" class="socialLinksContainer">
 
 		</br>
@@ -140,6 +152,15 @@
 		<div id="homepageVideo">
 			<iframe width="100%" height="350px" src="https://www.youtube.com/embed/MU4FzvqUfm0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		</div>
+	</br>
+	</br>
+	</br>
+	</br>
+	</br>
+	</br>
+	</br>
+	</br>
+	</br>
 	</br>
 
 	</div>

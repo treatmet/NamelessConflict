@@ -310,6 +310,17 @@
 		"canvasValue":"googlyHat"
 	},
 	{
+		"id":"batWingsHat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Bat Wings",
+		"text":"When your mom was a human, but your dad was a bat",
+		"price": 500000,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"batWingsHat"
+	},
+	{
 		"id":"baldHair",
         "category":"hair",
 		"subCategory":"type",
@@ -2086,7 +2097,7 @@
 		"price": 500000,
 		"team":0,
 		"rarity":3,
-		"hideFromShop":true,
+		"hideFromShop":false,
 		"canvasValue":"#fffef8"
 	},		
 	{

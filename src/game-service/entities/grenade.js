@@ -99,7 +99,7 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 } //End Grenade function
 Grenade.list = {};
 
-var rayCount = 30;
+var rayCount = 45;
 function explode(x, y, playerResponsibleId){
 	var rays = []
 	var globalangle = Math.PI;
@@ -117,13 +117,13 @@ function explode(x, y, playerResponsibleId){
 	currentangle = gapangle/2
 	for(let k = 0; k<=rayCount; k++){
 		currentangle+=(gapangle/(rayCount/2))
-		let ray = new Circle(x, y, 1, "white",((grenadeExplosionSize * (Math.cos(globalangle+currentangle))))/grenadeExplosionSize*2, ((grenadeExplosionSize * (Math.sin(globalangle+currentangle))))/grenadeExplosionSize*2 )
+		let ray = new Ray(x, y, 1, ((grenadeExplosionSize * (Math.cos(globalangle+currentangle))))/grenadeExplosionSize*grenadeRaySpeed, ((grenadeExplosionSize * (Math.sin(globalangle+currentangle))))/grenadeExplosionSize*grenadeRaySpeed )
 		rays.push(ray);
 	}
 
 	updateEffectList.push({type:8,x:x, y:y});
 
-	for(let f = 0; f<grenadeExplosionSize/2; f++){ //For each step of the rays as they go outward
+	for(let f = 0; f<grenadeExplosionSize/grenadeRaySpeed; f++){ //For each step of the rays as they go outward
 		for(let t = 0; t<rays.length; t++){ //For each ray
 			if(rays[t].collided == false){
 
@@ -133,7 +133,7 @@ function explode(x, y, playerResponsibleId){
 				//Check if ray is hitting player at this step
 				for(var p in players){
 					var hitPlayer = players[p];
-					if(isPointIntersectingBody(rays[t], hitPlayer) && !playersHit.find(id => id == hitPlayer.id)){
+					if(isPointIntersectingBody(rays[t], {x:hitPlayer.x, y:hitPlayer.y, width:50, height:50}) && !playersHit.find(id => id == hitPlayer.id)){
 						var rawDist = getDistance({x:x, y:y}, {x:hitPlayer.x, y:hitPlayer.y});
 						if (rawDist < 1){rawDist = 1;}//Divide by zero
 						playersHit.push(hitPlayer.id);
@@ -169,7 +169,7 @@ function explode(x, y, playerResponsibleId){
 						grenadesHit.push(hitGrenade.id);
 						var xmov = hitGrenade.x - x;
 						console.log("Xmov Ratio = " + xmov + " id:" + hitGrenade.id);
-						launchObject(hitGrenade, {xMovRatio:(hitGrenade.x - x)/rawDist, yMovRatio:(hitGrenade.y - y)/rawDist}, rawDist, 1.5);
+						launchObject(hitGrenade, {xMovRatio:(hitGrenade.x - x)/rawDist, yMovRatio:(hitGrenade.y - y)/rawDist}, rawDist);
 					}
 				}
 
@@ -189,8 +189,8 @@ function explode(x, y, playerResponsibleId){
 }
 
 
-class Circle{
-	constructor(x, y, radius, color, xmom = 0, ymom = 0){
+class Ray{
+	constructor(x, y, radius, xmom = 0, ymom = 0){
 
 		this.height = 0
 		this.width = 0
@@ -214,11 +214,15 @@ class Circle{
 function launchObject(object, directionData, distance, powerRatio = 1){
 	if (distance < 120){distance = 120;}
 	var power = -(distance - grenadeExplosionSize)/(grenadeExplosionSize/3) * grenadeDamage;
-	var finalMov = (directionData.xMovRatio * grenadePower) * power;
+	power = (power + 31)/2; //Even out spread of power regardless of distance from epicenter
+	var deltaX = (directionData.xMovRatio * grenadePower) * power * powerRatio;
+	var deltaY = (directionData.yMovRatio * grenadePower) * power * powerRatio;
+
 	console.log("distance:" + distance + " grenadeExplosionSize:" + grenadeExplosionSize);
-	console.log("Final speed inf:" + finalMov);
-	var updatedSpeedX = object.speedX + (directionData.xMovRatio * grenadePower) * power * powerRatio;
-	var updatedSpeedY = object.speedY + (directionData.yMovRatio * grenadePower) * power * powerRatio;
+	console.log("Final speed inf:" + deltaX);
+
+	var updatedSpeedX = object.speedX + deltaX;
+	var updatedSpeedY = object.speedY + deltaY;
 
 	object.updatePropAndSend("speedX", updatedSpeedX);
 	object.updatePropAndSend("speedY", updatedSpeedY);

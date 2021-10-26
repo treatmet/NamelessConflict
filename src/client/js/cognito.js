@@ -628,6 +628,7 @@ function requestDeclineClick(id){
 	});
 }
 
+//acceptTradeClick
 function tradeAcceptClick(id){
 	const params = {
 		type:"trade",
@@ -635,6 +636,7 @@ function tradeAcceptClick(id){
 		accept:true
 	};
 	
+	console.log("Accepted Trade request, awaiting response from server");
 	$.post('/requestResponse', params, function(data,status){
 		console.log("requestResponse (party accept) endpoint response from server:");
 		console.log(data);		
@@ -704,7 +706,12 @@ function setLocalStorage(){
 function logOutClick(){
 	cognitoSub = "";
     $.post('/logOut', {}, function(data,status){
-		window.location.reload();
+		if (page == "trade"){
+			window.location = serverHomePage;
+		}
+		else {
+			window.location.reload();
+		}
     });
 }
 
@@ -723,7 +730,6 @@ function localClick(){
 
 function showDefaultLoginButtons(){
 	if (page == "game"){return;}
-	else if (page == "home"){show("sectionTitle1")}
     show("createAccountH");
     show("logInH");
     show("playNowH");
@@ -1198,7 +1204,7 @@ function hydrateKeybindingSettings(data){
                 data[r].default = 82;
                 break;
             case "look":
-                data[r].actionName = "Look Ahead";
+                data[r].actionName = "Utility";
                 data[r].default = 16;
                 break;
             case "weapon1":

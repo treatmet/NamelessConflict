@@ -280,7 +280,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("October 14, 2021 16:00:00");
+	var thresholdDate = new Date("October 21, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -311,16 +311,16 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				  	continue;
 				}
 
-				if (customizationOptions.indexOf("ivoryDPWeapon") == -1){
-					customizationOptions.push("ivoryDPWeapon");
-					console.log("Pushing ivoryDPWeapon");
+				if (customizationOptions.indexOf("ivoryMGWeapon") == -1){
+					customizationOptions.push("ivoryMGWeapon");
+					console.log("Pushing ivoryMGWeapon");
 					updatey = true;
 				}
     
     
-				if (customizations["1"].dpColor != "#fffef8"){
-					customizations["1"].dpColor = "#fffef8"; //CONFIGURATION
-					customizations["2"].dpColor = "#fffef8"; //CONFIGURATION
+				if (customizations["1"].mgColor != "#fffef8"){
+					customizations["1"].mgColor = "#fffef8"; //CONFIGURATION
+					customizations["2"].mgColor = "#fffef8"; //CONFIGURATION
 					updatey = true;
 				}
 
@@ -625,7 +625,7 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 			}
 
 			//manual hardcode
-			//shopList[0] = "ivoryDPWeapon";
+			//shopList[0] = "batWingsHat";
 			// shopList[1] = "redBowHat";
 			// shopList[2] = "blueBowHat";
 			// shopList[3] = "orangeBowHat";

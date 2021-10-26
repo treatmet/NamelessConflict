@@ -242,8 +242,6 @@ var checkCollision = function(obj, isBouncable = false){
 	}
 }
 
-var blockPushSpeed = 4;
-
 module.exports.getBlockList = getBlockList;
 module.exports.getBlockById = getBlockById;
 module.exports.createBlock = createBlock;

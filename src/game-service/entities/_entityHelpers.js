@@ -352,7 +352,7 @@ var calculateDrag = function(entity, drag){
 		entity.speedY = 0;
 		return;
 	}
-
+	drag += fullVelocity/100;
 	var speedXRatio = entity.speedX / fullVelocity;
 	var speedYRatio = entity.speedY / fullVelocity;
 	entity.speedX -= speedXRatio * drag;  

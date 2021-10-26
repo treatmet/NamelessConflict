@@ -50,7 +50,7 @@ var resetGameSettingsToStandard = function(){
 	cloakDeinitializeSpeed = 0.1;
 	playerMaxHealth = 175;
 	bootOnAfk = true;
-	AfkFramesAllowed = 120 * 60; //seconds (translated to frames) //timeout
+	AfkFramesAllowed = 60 * 60; //seconds (translated to frames) //timeout
 	damageScale = 1;
 	pistolDamage = 10;
 	pistolSideDamage = 6; //Stacks on above
@@ -1306,6 +1306,7 @@ function initializeNewGame(){ //startGame gameStart
 		playerList[i].kills = 0;
 		playerList[i].assists = 0;
 		playerList[i].benedicts = 0;
+		playerList[i].damageWarnings = 0;
 		playerList[i].deaths = 0;
 		playerList[i].steals = 0;
 		playerList[i].returns = 0;
@@ -1482,10 +1483,12 @@ var joinGame = function(cognitoSub, username, team, partyId){
 	}
 
 	var socket = SOCKET_LIST[getSocketIdFromCognitoSub(cognitoSub)];
+	
 	if (!socket){
 		log("ERROR!!! Socket not yet connected to game server, or cognitoSub has not been set on socket!");
 		return;
 	}
+
 	socket.team = team;
 	socket.partyId = partyId;
 	log("!!!!Player signing into game server - socketID: " + socket.id + " cognitoSub: " + cognitoSub + " username: " + username + " team: " + team + " partyId: " + partyId);

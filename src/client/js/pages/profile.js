@@ -192,6 +192,8 @@ function buildDisplaySettings(displaySettings){
 
     var forceTeamNameColors = displaySettings.find(setting => setting.key == "forceTeamNameColors");
     var profanityFilter = displaySettings.find(setting => setting.key == "profanityFilter");
+    var enableBlood = displaySettings.find(setting => setting.key == "enableBlood");
+
     if (forceTeamNameColors){
         var settingValue = forceTeamNameColors.value == true ? 'checked' : '';
         console.log(settingValue);
@@ -203,6 +205,12 @@ function buildDisplaySettings(displaySettings){
         profanityFilterCheckboxValue = '';
     }
     HTML += "<input type='checkbox' class='settingsCheckbox' id='profanityFilter' name='profanityFilter' value='profanityFilter' onclick='profanityFilterClicked()' " + profanityFilterCheckboxValue + "><label for='profanityFilter'> Enable Profanity Filter</label><br></br>";
+    
+    var enableBloodCheckboxValue = '';
+    if (enableBlood && enableBlood.value == true){
+        enableBloodCheckboxValue = 'checked';
+    }
+    HTML += "<input type='checkbox' class='settingsCheckbox' id='enableBlood' name='enableBlood' value='enableBlood' onclick='enableBloodClicked()' " + enableBloodCheckboxValue + "><label for='enableBlood'> Enable Blood Effects</label><br></br>";
     
     
     settingsList.innerHTML = HTML;
@@ -228,6 +236,21 @@ function profanityFilterClicked(){
 
     if (profanityFilter){
         profanityFilter.value = document.getElementById("profanityFilter").checked;
+    }
+}
+
+function enableBloodClicked(){
+    flagUnsavedSettings(true);
+    if (!document.getElementById("enableBlood")){return;}
+
+    var enableBlood = currentSettings.display.find(setting => setting.key == "enableBlood");
+    if (typeof enableBlood === 'undefined'){
+        currentSettings.display.push(newSetting("enableBlood", document.getElementById("enableBlood").checked))
+        enableBlood = currentSettings.display.find(setting => setting.key == "enableBlood");
+    }
+
+    if (enableBlood){
+        enableBlood.value = document.getElementById("enableBlood").checked;
     }
 }
 

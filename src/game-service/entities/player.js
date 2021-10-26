@@ -683,7 +683,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (typeof self.afk === 'undefined'){
 		 self.afk = AfkFramesAllowed;
 		}
-		else if (self.afk >= 0 && self.team != 0 && !pregame && !gameOver){
+		else if (self.afk >= 0 && !pregame && !gameOver){
 			self.afk--;
 		}
 		else if (self.afk <= 0 && bootOnAfk && !isLocal) { //Boot em
@@ -698,17 +698,18 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 	self.pullGrenade = function(){
 		if (self.throwingObject == 0){
-			self.updatePropAndSend("throwingObject", -1);
-			self.updatePropAndSend("reloading", 0);
-	
 			var floorGrenadeId = entityHelpers.checkPointCollisionWithGroup(self, grenade.getList(), 130);
 			if (floorGrenadeId && grenade.getById(floorGrenadeId) && !grenade.getById(floorGrenadeId).holdingPlayerId){
 				grenade.getById(floorGrenadeId).updatePropAndSend("holdingPlayerId", self.id);
 				grenade.getById(floorGrenadeId).updatePropAndSend("throwingPlayerId", self.id);
+				self.updatePropAndSend("throwingObject", -1);
+				self.updatePropAndSend("reloading", 0);
 			}
 			else if (!self.energyExhausted){ //bagGrenades bag grenade  && !self.holdingBag
 				self.expendEnergy(grenadeEnergyCost);
 				grenade.create(self.id, self.id, self.x, self.y);
+				self.updatePropAndSend("throwingObject", -1);
+				self.updatePropAndSend("reloading", 0);	
 			}		
 		}
 	}
@@ -865,6 +866,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.healDelay = healDelayTime;
 		entityHelpers.sprayBloodOntoTarget(direction, self.x, self.y, self.id);
 		if (self.health <= 0){
+			console.log("UPDATE");
+			player.updatePropAndSend("energy", player.energy+50, true);
 			self.kill(player);
 		}		
 	}
@@ -1143,21 +1146,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		
 		var damageInflicted = 0;
-		
-		//Player stagger and cloak interruption stuff
-		if (weapon != 6)
-			self.stagger = staggerTime;		
-		self.healDelay += healDelayTime;
-		if (self.healDelay > healDelayTime){self.healDelay = healDelayTime;} //Ceiling on healDelay
-		if (self.team != shooter.team || gametype == "ffa"){
-			playerEvent(shooter.id, "hit");
-		}
-		if (self.cloakEngaged){
-			self.updatePropAndSend("cloakEngaged", false);
-			damageInflicted += cloakBonusDamage;
-		}
-		
-
+			
 		//Initial damage (all angles)
 		if (weapon == 1){ damageInflicted += pistolDamage; } //Single Pistol
 		else if (weapon == 2){ damageInflicted += DPDamage; } //Double damage for double pistols
@@ -1190,14 +1179,59 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}			
 		}
 		if ((self.team == shooter.team && self.id != shooter.id) && gametype != "ffa"){ //teamDamage
+			if (weapon != 6){shooter.processAllyDamage(damageInflicted, self.id);}			
 			damageInflicted *= friendlyFireDamageScale;
 			if (weapon == 5){damageInflicted = 15;}			
-			if (weapon != 6){shooter.processAllyDamage(damageInflicted, self.id);}			
 		}
 	
-		damageInflicted = damageInflicted * damageScale; //Scale damage
-		if (weapon != 6 && (gametype == "horde" || (pregame && pregameIsHorde))){damageInflicted = 0;}
+		//Damage push
+		if (weapon != 6){
+			self.pushSpeed += damageInflicted/8 * damagePushScale;
+			self.pushDir = Player.list[shooter.id].shootingDir;			
+		}
+		else if (weapon == 6){
+			var pushX = (shootingDir.xMovRatio * grenadePower) * damageInflicted;
+			// console.log("(" + shootingDir.xMovRatio + " * " + grenadePower + ") * " + damageInflicted);
+			// console.log("PUSH X: " + pushX);
+			var damageForPush = (damageInflicted + 31)/2;
+			if (!isNaN(shootingDir.xMovRatio)){
+				self.speedX += (shootingDir.xMovRatio * grenadePower) * damageForPush;
+				self.speedY += (shootingDir.yMovRatio * grenadePower) * damageForPush;
+			}
+		}
 
+
+		damageInflicted = damageInflicted * damageScale; //Scale damage
+		if (gametype == "horde" || (pregame && pregameIsHorde) || roundOver){
+			damageInflicted = 0;
+		}
+
+		//Damage floor on grenade damage
+		if (weapon == 6 && damageInflicted < 5){
+			damageInflicted = 0;
+		}
+		else {
+			//Player stagger
+			//if (weapon != 6)
+				self.stagger = staggerTime;
+
+			//Heal delay		
+			self.healDelay += healDelayTime;
+			if (self.healDelay > healDelayTime){self.healDelay = healDelayTime;} //Ceiling on healDelay
+			if (self.team != shooter.team || gametype == "ffa"){
+				playerEvent(shooter.id, "hit");
+			}
+			//Cloak interruption
+			if (self.cloakEngaged){
+				self.updatePropAndSend("cloakEngaged", false);
+				damageInflicted += cloakBonusDamage;
+			}
+		}
+
+
+		//FINAL INFLICTION
+		self.updatePropAndSend("health", self.health - Math.floor(damageInflicted));
+					
 		//Calculate Assists
 		if (self.team != shooter.team && gametype != "ffa"){
 			if (!self.damageDealers){
@@ -1211,24 +1245,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 
-		self.health -= Math.floor(damageInflicted); //damageValue
-
-		updatePlayerList.push({id:self.id,property:"health",value:self.health});
-					
-		//Damage push
-		if (weapon != 6){
-			self.pushSpeed += damageInflicted/8 * damagePushScale;
-			self.pushDir = Player.list[shooter.id].shootingDir;			
-		}
-		else if (weapon == 6){
-			var pushX = (shootingDir.xMovRatio * grenadePower) * damageInflicted;
-			// console.log("(" + shootingDir.xMovRatio + " * " + grenadePower + ") * " + damageInflicted);
-			// console.log("PUSH X: " + pushX);
-			if (!isNaN(shootingDir.xMovRatio)){
-				self.speedX += (shootingDir.xMovRatio * grenadePower) * damageInflicted;
-				self.speedY += (shootingDir.yMovRatio * grenadePower) * damageInflicted;
-			}
-		}
 
 		if (self.health <= 0){
 			self.kill(shooter);
@@ -1236,9 +1252,23 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.processAllyDamage = function(damageInflicted, victimId){
+		self.cumulativeAllyDamage += damageInflicted;
+		console.log("self.damageWarnings" + self.damageWarnings);
 		if (self.cumulativeAllyDamage >= allyDamageWarningThreshold){
 			socket.emit('allyDamageWarning', {playerId:victimId});
 			self.cumulativeAllyDamage = 0;
+
+			if (!self.damageWarnings){
+				self.damageWarnings = 1;
+			}
+			else {
+				self.damageWarnings += 1;
+			}
+			if (self.damageWarnings >= 5 && !customServer){
+				bannedCognitoSubs.push({cognitoSub:self.cognitoSub, reason:"being a Benedict Arnold"});
+				SOCKET_LIST[self.id].emit("betrayalKick");
+			}
+
 		}
 	}
 
@@ -1424,6 +1454,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.weapon = startingWeapon;
 			updatePlayerList.push({id:self.id,property:"weapon",value:self.weapon});
 			self.hasBattery = maxEnergyMultiplier;
+			//if (self.cognitoSub == "892e9c3d-d9d6-4402-90e5-6c95efa72098"){self.hasBattery = 2;} //!!!Tommy
 			self.DPClip = 0;
 			if (startingWeapon == 2){self.DPClip = DPClipSize;}
 			updatePlayerList.push({id:self.id,property:"DPClip",value:self.DPClip});
@@ -1623,6 +1654,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			
 			socket.emit('addToChat', getObjectiveText(), 0);
 			sendChatToAll("Welcome, " + name + "!");
+			socket.emit('settings', sharedSettings);
 
 			socket.on('keyPress', function(data){
 				player.afk = AfkFramesAllowed;
@@ -1948,6 +1980,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 				if (data[1] == "[Team] " || data[1] == "[Team]" || data[1] == "" || data[1] == " "){return;} //blank messages
 
 				if (getPlayerById(data[0])){
+					getPlayerById(data[0]).afk = AfkFramesAllowed;
 					if (data[1].substring(0,2) == "./"){
 						evalServer(socket, data[1].substring(2));
 					}

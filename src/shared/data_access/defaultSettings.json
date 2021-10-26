@@ -101,6 +101,10 @@
 			"value": true
 		},
 		{
+			"key": "enableBlood",
+			"value": false
+		},
+		{
 			"key": "tutorialCompleted",
 			"value": false
 		}

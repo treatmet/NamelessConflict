@@ -20,7 +20,7 @@ function loginFail(){
 
 function loginAlways(){
 	populateLeaderboard();
-	showUnset("mainContent");
+	show("mainContent");
 	console.log("gpu");
 	console.log(gpu);
 }

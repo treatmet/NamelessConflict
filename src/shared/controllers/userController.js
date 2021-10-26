@@ -144,6 +144,7 @@ router.post('/requestResponse', async function (req, res) {
 									else 
 										targetUrl = serverHomePage + "trade/?tradeId=" + requestDB._id + "&server=" + instanceId.substring(2) + "&process=00";
 									
+									log("Redirecting both users. requestorCognitoSub:" + requestDB.cognitoSub + " targetCognitoSub:" + requestDB.targetCognitoSub + " to " + targetUrl);
 									//Redirect Both Users
 									var party = [
 										{cognitoSub:requestingUser.cognitoSub, serverUrl:requestingUser.serverUrl},

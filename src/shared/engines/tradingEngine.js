@@ -1,4 +1,5 @@
 var dataAccessFunctions = require('../data_access/dataAccessFunctions.js');
+var dataAccess = require('../data_access/dataAccess.js');
 
 var tradeList = [];
 
@@ -11,14 +12,38 @@ var newTrade = function(requestorCognitoSub, targetCognitoSub, tradeId, cb){
 	console.log("CREATING NEW TRADE: " + tradeId);
 	//Check for existing trade
 	var existingTrade = tradeList.find(function(trade){
-		if (trade && trade.tradeId == tradeId){
-			return true;
+		if (trade){
+			if (trade.tradeId == tradeId){
+				return true;
+			}
+			// if (trade.requestorCognitoSub == requestorCognitoSub && trade.targetCognitoSub == targetCognitoSub
+			// || trade.targetCognitoSub == requestorCognitoSub && trade.requestorCognitoSub == targetCognitoSub){
+			// 	return true;
+			// }
 		}
 	});
 	if (existingTrade){
 		cb(tradeId);
+		return;
 	}
-	
+
+	//Destroy all open trades target (accepting) user is involved in
+	tradeList = tradeList.filter(function(trade){
+		if (trade){
+			// if (trade.requestorCognitoSub == requestorCognitoSub || trade.targetCognitoSub == requestorCognitoSub){
+			// 	console.log("DELETING OLD TRADE");
+			// 	return false;
+			// }
+			if (trade.requestorCognitoSub == targetCognitoSub || trade.targetCognitoSub == targetCognitoSub){
+				console.log("DELETING OLD TRADE");
+				return false;
+			}
+			return true;
+		}
+	});
+	dataAccess.dbUpdateAwait("RW_REQUEST", "rem", {cognitoSub:targetCognitoSub}, {}, async function(err, res){
+	});
+
 	var trade = {
 		tradeId: tradeId,
 		requestorCognitoSub: requestorCognitoSub,
@@ -72,6 +97,7 @@ function isNotDefaultItem(itemId){
 }
 
 var createTradeSocketEvents = function(socket, cognitoSub, tradeId){
+	console.log(cognitoSub + " CONNECTED TO TRADE: " + tradeId + " SOCKET ID: " + socket.id);
 	var trade = tradeList.find(singleTrade => singleTrade.tradeId == tradeId);
 		if (!trade){return {error:true, msg:"Trade does not exist. Please request another trade."}}
 	var isRequestor = checkIfRequestor(cognitoSub, trade);
@@ -174,6 +200,8 @@ var createTradeSocketEvents = function(socket, cognitoSub, tradeId){
 
 	socket.on("chat", function(obj){
 		trade.tradeActivityTimestamp = new Date().getTime();
+		var distance = new Date().getTime() - trade.tradeActivityTimestamp;
+		console.log(trade.tradeId + "UPDATED TIMESTAMP:" + trade.tradeActivityTimestamp + " WE ARE " + distance + " FROM TIMEOUT");
 		var text = obj.username + ": " + obj.text;
 
 		var requestorSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.requestorCognitoSub)];
@@ -394,7 +422,7 @@ setInterval(
 					trade.targetItemsOwned.push.apply(trade.targetItemsOwned, trade.requestorItemsOffered); 
 
 					dataAccessFunctions.completeTrade(trade, function(tradeId){
-						foundIndexToDelete = tradeList.findIndex(tradeListItem => tradeListItem.tradeId == trade.tradeId);
+						foundIndexToDelete = tradeList.findIndex(tradeListItem => tradeListItem.tradeId == tradeId);
 						if (foundIndexToDelete === -1){
 							logg("ERROR - Could not delete trade from trade list" + trade.tradeId);
 						}
@@ -410,13 +438,18 @@ setInterval(
 				}
 				sendTradeTimer(trade);
 			}
+			else {
+				//Delete stale trades
+				var milisecondThresh = 120000;
+				var distance = new Date().getTime() - trade.tradeActivityTimestamp;
 
-			//Delete stale trades
-			var milisecondThresh = 120000;
-			if (new Date().getTime() - trade.tradeActivityTimestamp > milisecondThresh){
-				console.log("DELETING STALE TRADE" + tradeList[i].tradeId);
-				bootSockets(trade);
-				tradeList.splice(i, 1);
+				console.log(trade.tradeId + "_ JUST CHECKING.. WE ARE " + distance + " FROM THRESH");
+				if (new Date().getTime() - trade.tradeActivityTimestamp > milisecondThresh){
+					console.log("DELETING STALE TRADE" + tradeList[i].tradeId);
+					//bootSockets(trade); //Why boot Sockets on a trade that is stale? Users are already gone, and this seems to affect people even on other pages
+					tradeList.splice(i, 1);
+					continue;
+				}
 			}
 
 			sendTradePing(trade);
