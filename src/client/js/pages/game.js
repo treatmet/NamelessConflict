@@ -178,14 +178,14 @@ var noShadows = false;
 
 //Shared settings
 var grappleSpeed = 20;
-var pushStrength = 14;
-var blockPushSpeed = 4;
-var speedCap = 45;
+var pushStrength = 0; //14
+var blockPushSpeed = 0; //4
+var speedCap = 0;
 //Player Config
-var grenadeTimer = 2 * 60; //Seconds (translated to frames)
-var grenadeThrowSpeed = 18;
-var grenadeDrag = 0.2;
-var laserMaxCharge = 150;
+var grenadeTimer = 0; //Seconds (translated to frames)
+var grenadeThrowSpeed = 0;
+var grenadeDrag = 0;
+var laserMaxCharge = 0;
 
 //-------------------------------------------------------------------------------------
 
@@ -495,6 +495,10 @@ Img.statCamera = new Image();
 Img.statCamera.src = "/src/client/img/cameraIconScoreboard.png";
 Img.mute = new Image();
 Img.mute.src = "/src/client/img/mute.png";
+Img.voteNextGame = new Image();
+Img.voteNextGame.src = "/src/client/img/voteNextGame.png";
+
+
 Img.yellow = new Image();
 Img.yellow.src = "/src/client/img/yellow.png";
 Img.orange = new Image();
@@ -4602,8 +4606,8 @@ function drawUILayer(){
 
 const indicatorEdgeOffset = 60;
 const scaleBubbleSize = false;
-function drawIndicators(){ //playerIndicators
-	if (!myPlayer.team || gametype == "ffa"){return;}
+function drawIndicators(){ //playerIndicators offscreenIndicators
+	if (!myPlayer.team || gametype == "ffa" || gameOver){return;}
 	noShadow();
 
 	//Ally indicators
@@ -6033,8 +6037,12 @@ function drawStatOverlay(){
 	}
 }
 
-function drawVoteOnLeft(){
 
+function drawVoteOnLeft(){ //Vote Next game
+if (!postGameProgressStopExpTicks || !gameOver){return;}
+
+	var voteNextX = (leftArrowX - 67)/4 + 5;
+	drawImage(Img.voteNextGame, voteNextX, scoreBoardY + scoreBoardHeight/2 - Img.voteNextGame.height/2);
 }
 
 function drawRankedIndicator(){
