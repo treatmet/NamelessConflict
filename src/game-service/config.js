@@ -166,7 +166,7 @@ global.damageScale = 1;
 	global.friendlyFireDamageScale = 0.25;
 	global.cloakBonusDamage = 20;
 
-global.allyDamageWarningThreshold = 25;
+global.allyDamageWarningThreshold = 40;
 
 global.startingWeapon = 1;
 global.bulletRange = 19 * 75;
