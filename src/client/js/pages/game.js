@@ -1,5 +1,6 @@
 
 page = "game";
+var isClientSide = true;
 //document.oncontextmenu =new Function("return false;")
 initializePage();
 function initializePage(){
@@ -171,8 +172,10 @@ var nextGameTimer = 0;
 var ping = 0;
 var previousPing = 0;
 
+//Client-only settings
 var lowGraphicsMode = true;
 var noShadows = false;
+var warningVol = 0.2;
 
 //Initialize client-side code variables
 
@@ -186,6 +189,8 @@ var grenadeTimer = 0; //Seconds (translated to frames)
 var grenadeThrowSpeed = 0;
 var grenadeDrag = 0;
 var laserMaxCharge = 0;
+var diagMovementScale = 0;
+var playerMaxSpeed = 0;
 
 //-------------------------------------------------------------------------------------
 
@@ -869,7 +874,7 @@ var sfxWarning2 = new Howl({src: ['/src/client/sfx/warning2.mp3']});
 sfxWarning2.on('fade', function(){
 	sfxWarning2.stop();
 });
-var sfxCharge = new Howl({src: ['/src/client/sfx/charging3.mp3']});
+var sfxCharge = new Howl({src: ['/src/client/sfx/charging3.mp3']}); //sfxRecharge
 //sfxCharge.volume(.9);
 sfxCharge.on('fade', function(){
 	sfxCharge.stop();
@@ -952,6 +957,8 @@ var Player = function(id){
 		y:0,	
 		height:94,
 		width:94,
+		speedX:0,
+		speedY:0,
 		reloading:0,
 		triggerTapLimitTimer:0,
 		healthFlashTimer:100,
@@ -960,15 +967,417 @@ var Player = function(id){
 		images:{ 1:{}, 2:{} }
 	}
 
+	self.engine = function(){
+		self.move();
+		self.rechargeEnergy();
+	}
+
+	self.move = function(){
+		var selfMaxSpeed = playerMaxSpeed;
+		if (self.stagger > 0){
+			selfMaxSpeed = selfMaxSpeed * staggerScale;
+		}
+		if (self.cloakEngaged){
+			selfMaxSpeed = selfMaxSpeed * cloakDrag;
+		}
+		if (self.holdingBag){
+			selfMaxSpeed = selfMaxSpeed * bagDrag;
+		}
+
+
+		if(self.pressingW && !self.pressingS && !self.pressingD && !self.pressingA){
+			const targetSpeedX = 0;
+			const targetSpeedY = -selfMaxSpeed;
+			var incrementX = playerAcceleration * diagMovementScale;
+			var incrementY = playerAcceleration;
+
+			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);
+			if (Math.abs(self.speedX) != 0){
+				incrementY = playerAcceleration * diagMovementScale;
+			}
+			//console.log("PRESSING-W self.speedY:" + self.speedY + " targetSpeedY:" + targetSpeedY + " incrementY:" + incrementY);
+			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
+			self.updatePropAndSend("walkingDir", 1);
+		}
+		else if(self.pressingD && !self.pressingS && !self.pressingW && !self.pressingA){
+			const targetSpeedX = selfMaxSpeed;
+			const targetSpeedY = 0;
+			var incrementX = playerAcceleration;
+			var incrementY = playerAcceleration * diagMovementScale;
+
+			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
+			if (Math.abs(self.speedY) != 0){
+				incrementX = playerAcceleration * diagMovementScale;
+			}
+			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);
+			self.updatePropAndSend("walkingDir", 3);
+		}
+		else if(self.pressingS && !self.pressingA && !self.pressingW && !self.pressingD){
+			const targetSpeedX = 0;
+			const targetSpeedY = selfMaxSpeed;
+			var incrementX = playerAcceleration * diagMovementScale;
+			var incrementY = playerAcceleration;
+
+			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);
+			if (Math.abs(self.speedX) != 0){
+				incrementY = playerAcceleration * diagMovementScale;
+			}
+			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
+			self.updatePropAndSend("walkingDir", 5);
+		}
+		else if(self.pressingA && !self.pressingS && !self.pressingW && !self.pressingD){
+			const targetSpeedX = -selfMaxSpeed;
+			const targetSpeedY = 0;
+			var incrementX = playerAcceleration;
+			var incrementY = playerAcceleration * diagMovementScale;
+
+			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
+			if (Math.abs(self.speedY) != 0){
+				incrementX = playerAcceleration * diagMovementScale;
+			}
+			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);
+			self.updatePropAndSend("walkingDir", 7);
+		} //Diags
+		else if(self.pressingW && self.pressingD){
+			const targetSpeedX = selfMaxSpeed * diagMovementScale;
+			const targetSpeedY = -selfMaxSpeed * diagMovementScale;
+			var incrementX = playerAcceleration * diagMovementScale;
+			var incrementY = playerAcceleration * diagMovementScale;
+			
+			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
+			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
+			self.updatePropAndSend("walkingDir", 2);
+		}
+		else if(self.pressingD && self.pressingS){
+			const targetSpeedX = selfMaxSpeed * diagMovementScale;
+			const targetSpeedY = selfMaxSpeed * diagMovementScale;
+			var incrementX = playerAcceleration * diagMovementScale;
+			var incrementY = playerAcceleration * diagMovementScale;
+			
+			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
+			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
+			self.updatePropAndSend("walkingDir", 4);
+		}
+		else if(self.pressingA && self.pressingS){
+			const targetSpeedX = -selfMaxSpeed * diagMovementScale;
+			const targetSpeedY = selfMaxSpeed * diagMovementScale;
+			var incrementX = playerAcceleration * diagMovementScale;
+			var incrementY = playerAcceleration * diagMovementScale;
+			
+			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
+			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
+			self.updatePropAndSend("walkingDir", 6);
+		}
+		else if(self.pressingW && self.pressingA){
+			const targetSpeedX = -selfMaxSpeed * diagMovementScale;
+			const targetSpeedY = -selfMaxSpeed * diagMovementScale;
+			var incrementX = playerAcceleration * diagMovementScale;
+			var incrementY = playerAcceleration * diagMovementScale;
+			
+			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
+			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
+			self.updatePropAndSend("walkingDir", 8);
+		}
+		else if ((!self.pressingW && !self.pressingA && !self.pressingS && !self.pressingD) || (self.pressingD && self.pressingA) || (self.pressingS && self.pressingW)){
+			const targetSpeedX = 0;
+			const targetSpeedY = 0;
+			var incrementX = playerAcceleration * diagMovementScale;
+			var incrementY = playerAcceleration * diagMovementScale;
+			
+			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
+			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
+
+			self.updatePropAndSend("walkingDir", 0);
+		}
+
+		//End boost
+		if (Math.sqrt(self.speedX*self.speedX + self.speedY*self.speedY) <= playerMaxSpeed){
+			self.updatePropAndSend("boosting", 0);
+		}
+
+		//Actually move player based on speed
+		if (self.speedY != 0){
+			posUpdated = true;
+			self.y += self.speedY;
+		}
+		if (self.speedX != 0){
+			posUpdated = true;
+			self.x += self.speedX;
+		}	
+		
+		if (self.stagger > 0){self.stagger--;}
+
+
+		//Check collision with players
+		entityHelpers.checkBodyCollisionWithGroupOfBodies(self, Player.list);
+
+		///////////////////// COLLISION WITH OBSTACLES/PLAYERS /////////////////////////
+		
+		if (!isClientSide){
+			////////////////////// BEING PUSHED ///////////////////////////////////////////
+			gameEngine.processEntityPush(self);
+
+
+
+	
+			//Check collision with thugs
+			var thugList = thug.getThugList();
+			for (var i in thugList){
+				if (thugList[i].id != self.id && thugList[i].health > 0 && self.x + self.width > thugList[i].x && self.x < thugList[i].x + thugList[i].width && self.y + self.height > thugList[i].y && self.y < thugList[i].y + thugList[i].height){								
+					if (self.x == thugList[i].x && self.y == thugList[i].y){self.x -= 5; updateThugList.push({id:self.id,property:"x",value:self.x});} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+					var dx1 = self.x - thugList[i].x;
+					var dy1 = self.y - thugList[i].y;
+					var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+					var ax1 = dx1/dist1;
+					var ay1 = dy1/dist1;
+					if (dist1 < 40){		
+
+						if (self.boosting > 0){
+							self.pushSpeed = 20;
+							self.boosting = 0;
+							updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
+							updateEffectList.push({type:4,playerId:self.id});
+							
+							if (self.team != thugList[i].team){
+								thugList[i].health -= boostDamage;
+								updateThugList.push({id:thugList[i].id,property:"health",value:thugList[i].health})
+								entityHelpers.sprayBloodOntoTarget(self.walkingDir, thugList[i].x, thugList[i].y, thugList[i].id);
+								thugList[i].attacking = thugAttackDelay;
+								if (thugList[i].health <= 0){
+									thugList[i].kill(self);
+								}
+							}
+						}
+					
+						self.x += ax1 / (dist1 / 70); //Higher number is greater push
+						self.y += ay1 / (dist1 / 70);
+					}				
+				}
+			}				
+		}//End clientside check
+
+		//Check Player collision with blocks
+		if (block.checkCollision(self) && !posUpdated){posUpdated = true;}
+
+		//and send to clients
+		self.x = Math.round(self.x * 10)/10;
+		self.y = Math.round(self.y * 10)/10;
+		if (!clientSideMovement && !isClientSide){
+			if (self.x != self.lastX){
+				self.lastX = self.x;
+				updatePlayerList.push({id:self.id,property:"x",value:self.x});	
+			}
+			if (self.y != self.lastY){
+				self.lastY = self.y;
+				updatePlayerList.push({id:self.id,property:"y",value:self.y});
+			}
+		}
+
+		//default to shootingdir = walkingdir unless otherwise specified!
+		if (!self.pressingShift && self.throwingObject === 0 && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
+			self.updatePropAndSend("shootingDir", self.walkingDir);
+		} 
+
+	}
+
+	self.rechargeEnergy = function(){
+		if (self.rechargeDelay <= 0 && self.energy < (100 * self.hasBattery)){
+			self.energy++;
+			if (isClientSide){
+				sfxCharge.volume(.3);
+				sfxPlay("sfxCharge");
+				sfxWarning.fade(warningVol, 0, 100);
+				sfxWarning2.fade(warningVol, 0, 100);
+			}
+			if ((self.hasBattery > 1 && self.energy == 100) || (self.hasBattery > 2 && self.energy == 200) || (self.hasBattery > 3 && self.energy == 300) || (self.hasBattery > 4 && self.energy == 400))
+				self.energy++; //Free extra energy at 100 if more than one battery to avoid stopping the charge sfx at 100 (normally 100 is "charge complete")
+
+			if (self.hasBattery == 1 && self.energy >= 100){
+				self.energy = 100;
+				if (isClientSide){sfxCharge.fade(.3, 0, 100);}
+			}
+			if (self.hasBattery == 2 && self.energy >= 200){
+				self.energy = 200;
+				if (isClientSide){sfxCharge.fade(.3, 0, 100);}
+			}
+			if (self.energy >= 100){self.energyExhausted = false;}
+			if (!clientSideMovement && !isClientSide){
+				updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
+			}
+		}
+		if (self.rechargeDelay > 0){self.rechargeDelay--;}
+	}
+
+	self.pressSpace = function(){
+		//Boosting
+		if ((self.pressingW || self.pressingD || self.pressingS || self.pressingA) && !self.energyExhausted && self.boosting == 0 && self.holdingBag == false){		
+
+			self.updatePropAndSend("cloakEngaged", false, 2);
+			self.boost();
+		}
+		//Throwing Bag
+		else if (self.holdingBag == true && self.walkingDir != 0){
+			if (!isClientSide) {
+				self.throwBag();
+			}
+			else {
+				sfxWhoosh.play();
+			}
+		}
+		//Cloaking
+		else if ((!self.pressingW && !self.pressingD && !self.pressingS && !self.pressingA) && !self.energyExhausted){
+			self.cloakOnOff();
+		}
+		//Energy exhausted puff
+		else if (self.energyExhausted && !Player.list[myPlayer.id].holdingBag && !sfxBoostEmpty.playing()){
+			sfxBoostEmpty.play();
+		}
+	}
+
+	self.cloakOnOff = function(){
+		if (!self.cloakEngaged && cloakingEnabled){
+			self.updatePropAndSend("cloakEngaged", true, 2);
+			if (!clientSideMovement && !isClientSide){
+				SOCKET_LIST[self.id].emit('sfx', "sfxCloak");
+			}
+			else if (isClientSide){
+				sfxPlay("sfxCloak");
+			}
+		}
+		else if (self.cloakEngaged){
+			self.updatePropAndSend("cloakEngaged", false, 2);
+		}
+	}
+
+
+	self.boost = function(){
+		if (!isClientSide){
+			self.expendEnergy(boostEnergyCost);
+		}
+		self.updatePropAndSend("boosting", 1, 2);
+		if(self.walkingDir == 1){
+			self.speedY -= boostAmount;
+		}
+		else if(self.walkingDir == 3){
+			self.speedX += boostAmount;
+		}
+		else if(self.walkingDir == 5){
+			self.speedY += boostAmount;
+		}
+		else if(self.walkingDir == 7){
+			self.speedX -= boostAmount;
+		}
+		else if(self.walkingDir == 2){
+			self.speedX += boostAmount * diagMovementScale;
+			self.speedY -= boostAmount * diagMovementScale;
+		}
+		else if(self.walkingDir == 4){
+			self.speedX += boostAmount * diagMovementScale;
+			self.speedY += boostAmount * diagMovementScale;
+		}
+		else if(self.walkingDir == 6){
+			self.speedX -= boostAmount * diagMovementScale;
+			self.speedY += boostAmount * diagMovementScale;
+		}
+		else if(self.walkingDir == 8){
+			self.speedX -= boostAmount * diagMovementScale;
+			self.speedY -= boostAmount * diagMovementScale;
+		}	
+		if (self.speedX > speedCap)
+			self.speedX = speedCap;
+		else if (self.speedX < -speedCap)
+			self.speedX = -speedCap;
+		if (self.speedY > speedCap)
+			self.speedY = speedCap;
+		else if (self.speedY < -speedCap)
+			self.speedY = -speedCap;		
+
+		if (!isClientSide)
+			updateEffectList.push({type:3,playerId:player.id});
+	}	
+
+	self.updatePropAndSend = function(propName, value, singlePlayer = false, coords = false){
+		self[propName] = value;
+	}
 
 
 
 	Player.list[id] = self;
+	if (self.id == myPlayer.id){myPlayer = self;}
 }
 Player.list = [];
 
 var getPlayerById = function(id){
     return Player.list[id];
+}
+
+
+var entityHelpers = {
+	checkBodyCollisionWithGroupOfBodies: function(self, list){
+	//Check collision with players
+		for (var i in list){
+			entity = list[i];
+			if (typeof entity === 'undefined'){continue;}
+			if (entity.id == self.id ){continue;}
+			if (typeof entity.team != "undefined" && entity.team == 0){continue;}
+			if (typeof entity.health != "undefined" && entity.health <= 0){continue;}
+			var posUpdated = false;
+
+			if (self.x + self.width/2 > entity.x - entity.width/2 &&
+			self.x - self.width/2 < entity.x + entity.width/2 &&
+			self.y + self.height/2 > entity.y - entity.width/2 &&
+			self.y - self.height/2 < entity.y + entity.height/2){								
+				if (self.x == entity.x && self.y == entity.y){self.x -= 5; posUpdated = true; continue;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+				var dx1 = self.x - entity.x;
+				var dy1 = self.y - entity.y;
+				var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+				var ax1 = dx1/dist1;
+				var ay1 = dy1/dist1;
+				if (dist1 < meleeRange){				
+					if (typeof self.boosting != 'undefined' && self.boosting > 0){  //melee boost collision bash smash
+						if (!isClientSide){
+							if(self.throwingObject == 0){ 
+								self.updatePropAndSend("throwingObject", 20);
+								self.updatePropAndSend("shootingDir", self.walkingDir);
+							}
+							entity.getSlammed(self.id, self.walkingDir);
+						}
+					}
+					else {
+						var newX = self.x + ax1 / (dist1 / 70);
+						var newY = self.y + ay1 / (dist1 / 70);
+						console.log(self.name + " Moving from " + self.y + " to " + newY + " while pressingW:" + self.pressingW);
+						self.x = newX;
+						self.y = newY;
+						// self.updatePropAndSend("x", newX);
+						// self.updatePropAndSend("y", newY);
+					}
+					posUpdated = true;
+				}
+			}
+
+		}
+		if (posUpdated){return true;}
+		else {return false;}
+	}
+}
+
+function getSpeedAdjust(currentSpeed, targetSpeed, increment){
+	if (currentSpeed == targetSpeed){return currentSpeed;} //No adjust
+
+	if (currentSpeed > targetSpeed){
+		currentSpeed -= increment;
+		if (currentSpeed < targetSpeed){
+			currentSpeed = targetSpeed;
+		}
+	}
+	else if (currentSpeed < targetSpeed){
+		currentSpeed += increment;
+		if (currentSpeed > targetSpeed){
+			currentSpeed = targetSpeed;
+		}
+	}
+	return currentSpeed;
 }
 
 var orderedPlayerList = [];
@@ -1128,174 +1537,182 @@ var Block = function(id){
 }
 Block.list = []; //var Block.list
 
-checkBlockCollision = function(obj, isBouncable = false){
-	if (!obj){return false;}
-	var blockList = Block.list;
-	var extendTopOfBlock = 0;
-	var extendRightOfBlock = 0;
-	var extendBottomOfBlock = 0;
-	var extendLeftOfBlock = 0;
+var block = {
+	checkCollision: function(obj, isBouncable = false){
+		if (!obj){return false;}
+		var blockList = Block.list;
+		var extendTopOfBlock = 0;
+		var extendRightOfBlock = 0;
+		var extendBottomOfBlock = 0;
+		var extendLeftOfBlock = 0;
 
-	if (obj.weapon == 5) {
-		switch(obj.shootingDir) {
-			case 1:
-				extendLeftOfBlock = laserOffsetX;
-				break;
-			case 3:
-				extendTopOfBlock = laserOffsetX;
-				break;
-			case 5:
-				extendRightOfBlock = laserOffsetX;
-				break;
-			case 7:
-				extendBottomOfBlock = laserOffsetX;
-				break;
-			default:
-				break;
+		if (obj.weapon == 5) {
+			switch(obj.shootingDir) {
+				case 1:
+					extendLeftOfBlock = laserOffsetX;
+					break;
+				case 3:
+					extendTopOfBlock = laserOffsetX;
+					break;
+				case 5:
+					extendRightOfBlock = laserOffsetX;
+					break;
+				case 7:
+					extendBottomOfBlock = laserOffsetX;
+					break;
+				default:
+					break;
+			}
+		}
+
+		if (obj.homeX){
+			extendTopOfBlock = 10;
+			extendRightOfBlock = 10;
+			extendBottomOfBlock = 10;
+			extendLeftOfBlock = 10;
+		}
+
+		var posUpdated = false;
+		var clink = false;
+		if (obj.y < 0){
+			obj.y = 0;
+			if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
+			posUpdated = true;
+			clink = true;
+		}
+		else if (obj.y > mapHeight){
+			obj.y = mapHeight;
+			if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
+			posUpdated = true;
+			clink = true;
+		}
+		else if (obj.x < 0){
+			obj.x = 0;
+			if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
+			posUpdated = true;
+			clink = true;
+		}
+		else if (obj.x > mapWidth){
+			obj.x = mapWidth;
+			if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
+			posUpdated = true;
+			clink = true;
+		}
+
+		// if (obj.name == "RTPM3")
+		// 	console.log("Obj.y:" + obj.y);
+
+		for (var i in blockList){
+			if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
+				
+				if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
+					clink = true;
+					var overlapTop = Math.abs(blockList[i].y - obj.y);  
+					var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - obj.y);
+					var overlapLeft = Math.abs(obj.x - blockList[i].x);
+					var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - obj.x);		
+					
+				
+					if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){	
+						obj.y = blockList[i].y - extendTopOfBlock;
+						if (typeof obj.speedX != 'undefined'){
+							if (obj.speedY > 0){
+								if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
+								else {obj.speedY = 0;}
+							}
+						}
+						posUpdated = true;
+					}
+					else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
+						obj.y = blockList[i].y + blockList[i].height + extendBottomOfBlock;
+						if (typeof obj.speedX != 'undefined'){
+							if (obj.speedY < 0){
+								if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
+								else {obj.speedY = 0;}
+							}
+						}
+						posUpdated = true;
+					}
+					else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
+						obj.x = blockList[i].x - extendLeftOfBlock;
+						if (typeof obj.speedX != 'undefined'){
+							if (obj.speedX > 0){
+								if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
+								else {obj.speedX = 0;}
+							}
+						}
+						posUpdated = true;
+					}
+					else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
+						obj.x = blockList[i].x + blockList[i].width + extendRightOfBlock;
+						if (typeof obj.speedX != 'undefined'){
+							if (obj.speedX < 0){
+								if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
+								else {obj.speedX = 0;}
+							}
+						}
+						posUpdated = true;
+					}
+				}
+				else if (blockList[i].type == "pushUp"){
+					if (typeof obj.speedX == 'undefined'){
+						obj.y -= pushStrength;
+					}
+					else {
+						obj.speedY -= blockPushSpeed;
+						if (obj.speedY < -speedCap*0.75){obj.speedY = -speedCap*0.75;}
+					}
+					posUpdated = true;
+				}
+				else if (blockList[i].type == "pushRight"){
+					if (typeof obj.speedX == 'undefined'){
+						obj.x += pushStrength;
+					}
+					else {
+						obj.speedX += blockPushSpeed;
+						if (obj.speedX > speedCap*0.75){obj.speedX = speedCap*0.75;}
+
+					}
+					posUpdated = true;
+				}
+				else if (blockList[i].type == "pushDown"){
+					if (typeof obj.speedX == 'undefined'){
+						obj.y += pushStrength;
+					}
+					else {
+						// console.log("obj.x:" + obj.x + " obj.y:" + obj.y + " obj.speedX:" + obj.speedX + " obj.speedY:" + obj.speedY);
+						obj.speedY += blockPushSpeed;
+						if (obj.speedY > speedCap*0.75){obj.speedY = speedCap*0.75;}
+						// console.log("UPDATED obj.x:" + obj.x + " obj.y:" + obj.y + " obj.speedX:" + obj.speedX + " obj.speedY:" + obj.speedY);
+					}
+					posUpdated = true;
+				}
+				else if (blockList[i].type == "pushLeft"){
+					if (typeof obj.speedX == 'undefined'){
+						obj.x -= pushStrength;
+					}
+					else {
+						obj.speedX -= blockPushSpeed;
+						if (obj.speedX < -speedCap*0.75){obj.speedX = -speedCap*0.75;}
+					}
+					posUpdated = true;
+				}
+				else if (blockList[i].type == "warp"){
+					obj.x = blockList[i].warpX;
+					posUpdated = true;
+					obj.y = blockList[i].warpY;
+					posUpdated = true;
+				}
+			}// End check if player is overlapping block
+		}//End blockList loop	
+
+		if (posUpdated){
+			if (clink && isBouncable){playGrenadeClinkSfx(obj.x, obj.y);}
+			return true;
 		}
 	}
-
-	if (obj.homeX){
-		extendTopOfBlock = 10;
-		extendRightOfBlock = 10;
-		extendBottomOfBlock = 10;
-		extendLeftOfBlock = 10;
-	}
-
-	var posUpdated = false;
-	var clink = false;
-	if (obj.y < 0){
-		obj.y = 0;
-		if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
-		posUpdated = true;
-		clink = true;
-	}
-	else if (obj.y > mapHeight){
-		obj.y = mapHeight;
-		if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
-		posUpdated = true;
-		clink = true;
-	}
-	else if (obj.x < 0){
-		obj.x = 0;
-		if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
-		posUpdated = true;
-		clink = true;
-	}
-	else if (obj.x > mapWidth){
-		obj.x = mapWidth;
-		if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
-		posUpdated = true;
-		clink = true;
-	}
-
-	for (var i in blockList){
-		if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
-			
-			if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
-				clink = true;
-				var overlapTop = Math.abs(blockList[i].y - obj.y);  
-				var overlapBottom = Math.abs((blockList[i].y + blockList[i].height) - obj.y);
-				var overlapLeft = Math.abs(obj.x - blockList[i].x);
-				var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - obj.x);		
-				
-			
-				if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){	
-					obj.y = blockList[i].y - (1 + extendTopOfBlock);
-					if (typeof obj.speedX != 'undefined'){
-						if (obj.speedY > 0){
-							if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
-							else {obj.speedY = 0;}
-						}
-					}
-					posUpdated = true;
-				}
-				else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
-					obj.y = blockList[i].y + blockList[i].height + (1 + extendBottomOfBlock);
-					if (typeof obj.speedX != 'undefined'){
-						if (obj.speedY < 0){
-							if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
-							else {obj.speedY = 0;}
-						}
-					}
-					posUpdated = true;
-				}
-				else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
-					obj.x = blockList[i].x - (1 + extendLeftOfBlock);
-					if (typeof obj.speedX != 'undefined'){
-						if (obj.speedX > 0){
-							if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
-							else {obj.speedX = 0;}
-						}
-					}
-					posUpdated = true;
-				}
-				else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
-					obj.x = blockList[i].x + blockList[i].width + (1 + extendRightOfBlock);
-					if (typeof obj.speedX != 'undefined'){
-						if (obj.speedX < 0){
-							if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
-							else {obj.speedX = 0;}
-						}
-					}
-					posUpdated = true;
-				}
-			}
-			else if (blockList[i].type == "pushUp"){
-				if (typeof obj.speedX == 'undefined'){
-					obj.y -= pushStrength;
-				}
-				else {
-					obj.speedY -= blockPushSpeed;
-					if (obj.speedY < -speedCap*0.75){obj.speedY = -speedCap*0.75;}
-				}
-				posUpdated = true;
-			}
-			else if (blockList[i].type == "pushRight"){
-				if (typeof obj.speedX == 'undefined'){
-					obj.x += pushStrength;
-				}
-				else {
-					obj.speedX += blockPushSpeed;
-					if (obj.speedX > speedCap*0.75){obj.speedX = speedCap*0.75;}
-
-				}
-				posUpdated = true;
-			}
-			else if (blockList[i].type == "pushDown"){
-				if (typeof obj.speedX == 'undefined'){
-					obj.y += pushStrength;
-				}
-				else {
-					obj.speedY += blockPushSpeed;
-					if (obj.speedY > speedCap*0.75){obj.speedY = speedCap*0.75;}
-				}
-				posUpdated = true;
-			}
-			else if (blockList[i].type == "pushLeft"){
-				if (typeof obj.speedX == 'undefined'){
-					obj.x -= pushStrength;
-				}
-				else {
-					obj.speedX -= blockPushSpeed;
-					if (obj.speedX < -speedCap*0.75){obj.speedX = -speedCap*0.75;}
-				}
-				posUpdated = true;
-			}
-			else if (blockList[i].type == "warp"){
-				obj.x = blockList[i].warpX;
-				posUpdated = true;
-				obj.y = blockList[i].warpY;
-				posUpdated = true;
-			}
-		}// End check if player is overlapping block
-	}//End blockList loop	
-
-	if (posUpdated){
-		if (clink && isBouncable){playGrenadeClinkSfx(obj.x, obj.y);}
-		return true;
-	}
 }
+
 
 var Pickup = function(id){
 	var self = {
@@ -1511,17 +1928,18 @@ socket.on('evalAnswer', function(data){
 socket.on('sfx', function(sfx){
 	sfxPlay(sfx);
 });
-function sfxPlay(sfx){
-	if (!mute)
-		eval(sfx + ".play();");	
+
+function sfxPlay(sfxName){
+	var sfx = eval(sfxName);
+	if (!mute && sfx && !sfx.playing())
+		sfx.play();	
 }
 
 socket.on('sfxStop', function(sfx){
 	sfxStop(sfx);
 });
 function sfxStop(sfx){
-	if (!mute)
-		eval(sfx + ".stop();");	
+	eval(sfx + ".stop();");	
 }
 
 socket.on('sfxRanged', function(sfx, x, y){
@@ -1580,6 +1998,8 @@ socket.on('update', function(playerDataPack, thugDataPack, pickupDataPack, notif
 });
 
 function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificationPack, updateEffectPack, updateGrenadePack, miscPack){
+	runPlayerEngines();
+
 	var debugUpdates = false;
 	clientTimeoutTicker = clientTimeoutSeconds;
 	for (var i = 0; i < playerDataPack.length; i++) {
@@ -1593,7 +2013,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			shop.active = false;
 		}
 
-		var warningVol = 0.2
+
 		//Play Charging/Decharge sounds
 		if (playerDataPack[i].id == myPlayer.id && !mute){
 			if (playerDataPack[i].property == "energy" && playerDataPack[i].value == 0){
@@ -1635,7 +2055,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		}
 								
 		//Add blue border for armor
-		if (playerDataPack[i].property == "health"){
+		if (playerDataPack[i].property == "health" && playerDataPack[i].id == myPlayer.id){
 			if (playerDataPack[i].value == 175){
 				determineBorderStyle();
 			}
@@ -1645,6 +2065,20 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				}
 			}
 		}
+
+		//Press Space
+		
+		if (playerDataPack[i].property == "pressingSpace"){
+			if (playerDataPack[i].value == true && Player.list[playerDataPack[i].id].pressingSpace != true) {
+				Player.list[playerDataPack[i].id].pressSpace();
+				Player.list[playerDataPack[i].id].pressingSpace = true;
+			}
+			else if (playerDataPack[i].value == false && Player.list[playerDataPack[i].id].pressingSpace == true){
+				Player.list[playerDataPack[i].id].pressingSpace = false;				
+			}
+		}
+
+
 
 		//Laser charging sounds
 		if (playerDataPack[i].property == "chargingLaser"){
@@ -2108,9 +2542,17 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		playerDied = miscPack.playerDied;
 		playerDiedTimer = playerDiedTimerMax;
 	}
-
 	drawEverything();
 }
+
+function runPlayerEngines(){
+	for (var p in Player.list){
+		if (Player.list[p].health > 0 && Player.list[p].team != 0 && clientSideMovement){
+			Player.list[p].engine(); //runPlayerEngines run player engines
+		}
+	}
+}
+
 var playerDied = "";
 var playerDiedTimer = 0;
 var playerDiedTimerMax = 300;
@@ -2126,20 +2568,24 @@ var pickupCount = 0;
 function sendFullGameStatusFunction(playerPack, thugPack, pickupPack, blockPack, miscPack){
 	Player.list = [];
 	for (var i = 0; i < playerPack.length; i++) {
-		//Update myPlayer
 		if (playerPack[i].id == myPlayer.id){
 			if (playerPack[i].settings){
 				playerPack[i].settings.keybindings = hydrateKeybindingSettings(playerPack[i].settings.keybindings);
 			}
-			myPlayer = playerPack[i];
-			myPlayer.reloading = 0;
 		}
 		if (Player.list[playerPack[i].id]){ //It's fine that this overwrites client-side values like legSwing since this only happens on respawn or gamestart where those values should be reset anyway
-			Player.list[playerPack[i].id] = playerPack[i];
+			for (var prop in playerPack[i]){
+				Player.list[playerPack[i].id][prop] = playerPack[i][prop];
+			}
 		}
 		else {
 			Player(playerPack[i].id);
-			Player.list[playerPack[i].id] = playerPack[i];
+			for (var prop in playerPack[i]){
+				Player.list[playerPack[i].id][prop] = playerPack[i][prop];
+			}
+		}
+		if (playerPack[i].id == myPlayer.id){
+			myPlayer.reloading = 0;
 		}
 
 /* 		log(Player.list[playerPack[i].id].name + "'s customizations");
@@ -3435,13 +3881,16 @@ function drawBags(){
 	}
 }
 
-function drawTorsos(){
+function drawPlayers(){
 	tCtx.clearRect(0,0, torso_canvas.width, torso_canvas.height); //Clears previous frame
 
 	for (var i in Player.list) {		
 		const team = Player.list[i].team;
 		if (!Player.list[i] || !Player.list[i].images){continue;}
 		if (Player.list[i].health > 0 && team != 0){
+			// if (clientSideMovement){
+			// 	Player.list[i].engine(); //runPlayerEngines run player engines
+			// }
 			if (isObjVisible(Player.list[i], true)){
 				normalShadow();
 				ctx.save();
@@ -6484,7 +6933,7 @@ function drawEverything(){
 	if (!hidePlayers){
 		drawThugs();
 		drawBoosts();
-		drawTorsos();
+		drawPlayers();
 	}
 	drawLaserChargingEffect();
 	drawShots();
@@ -6551,7 +7000,7 @@ var Grenade = function(id, grenadeTimer = 2*60, team = 0, holdingPlayerId = fals
 				self.x += self.speedX;
 			}	
 			if (checkPointCollisionWithGroup(self, Grenade.list, self.radius)){playGrenadeClinkSfx(self.x, self.y);}
-			checkBlockCollision(self, true);			
+			block.checkCollision(self, true);			
 			calculateDrag(self, grenadeDrag);
 		}
 		//log("Nade " + self.id + " x:" + Math.round(self.x * 10)/10 + " y:" + Math.round(self.y * 10)/10);
@@ -7130,7 +7579,7 @@ function processGrapple(player){
 		if (player.grapple.dir == 6){player.grapple.y += grappleSpeed * (2/3); player.grapple.x -= grappleSpeed * (2/3);}
 		if (player.grapple.dir == 7){player.grapple.x -= grappleSpeed;}
 		if (player.grapple.dir == 8){player.grapple.y -= grappleSpeed * (2/3); player.grapple.x -= grappleSpeed * (2/3);}
-		if (checkBlockCollision(player.grapple)){
+		if (block.checkCollision(player.grapple)){
 			player.grapple.firing = false;
 		}	
 	}
@@ -7618,7 +8067,8 @@ socket.on('shootUpdate', function(shotData){
 });
 
 function shootUpdateFunction(shotData){
-	if (!myPlayer.x || !Player.list[shotData.playerId])
+
+	if (typeof myPlayer.x == 'undefined' || !Player.list[shotData.playerId])
 		return;
 
 	var newShot = true; //To keep double shot sounds from playing when shooting diagonally (pressing 2 "shoot" keys at once)
@@ -7804,7 +8254,6 @@ document.onkeydown = function(event){
 		if (!myPlayer.pressingW && !shop.active){
 			keyPress(87, true);
 		}
-		myPlayer.pressingW = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
 			spectatePlayers = false;
 			spectatingPlayerId = "";
@@ -7814,7 +8263,6 @@ document.onkeydown = function(event){
 		if (!myPlayer.pressingD && !shop.active){
 			keyPress(68, true);
 		}
-		myPlayer.pressingD = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
 			spectatePlayers = false;
 			spectatingPlayerId = "";
@@ -7824,7 +8272,6 @@ document.onkeydown = function(event){
 		if (!myPlayer.pressingS && !shop.active){
 			keyPress(83, true);
 		}
-		myPlayer.pressingS = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
 			spectatePlayers = false;
 			spectatingPlayerId = "";
@@ -7834,7 +8281,6 @@ document.onkeydown = function(event){
 		if (!myPlayer.pressingA && !shop.active){
 			keyPress(65, true);
 		}
-		myPlayer.pressingA = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
 			spectatePlayers = false;
 			spectatingPlayerId = "";
@@ -7842,7 +8288,6 @@ document.onkeydown = function(event){
 	}		
 	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up
 		if (myPlayer.pressingUp != true){
-			myPlayer.pressingUp = true;
 			if (!shop.active){
 				keyPress(38, true);
 			}
@@ -7863,7 +8308,6 @@ document.onkeydown = function(event){
 	}
 	else if(hitKeyCode === 39 && chatInput.style.display == "none"){ //Right
 		if (myPlayer.pressingRight != true){
-			myPlayer.pressingRight = true;
 			if (!shop.active){
 				keyPress(39, true);
 			}
@@ -7886,7 +8330,6 @@ document.onkeydown = function(event){
 	}
 	else if(hitKeyCode === 40 && chatInput.style.display == "none"){ //Down
 		if (myPlayer.pressingDown != true){
-			myPlayer.pressingDown = true;
 			if (!shop.active){
 				keyPress(40, true);
 			}
@@ -7904,7 +8347,6 @@ document.onkeydown = function(event){
 	}
 	else if(hitKeyCode === 37 && chatInput.style.display == "none"){ //Left
 		if (myPlayer.pressingLeft != true){
-			myPlayer.pressingLeft = true;
 			if (!shop.active){
 				keyPress(37, true);
 			}
@@ -7969,16 +8411,6 @@ document.onkeydown = function(event){
 	else if(hitKeyCode === 32 && chatInput.style.display == "none" && !shop.active){ //Space
 		if (!myPlayer.pressingSpace){
 			keyPress(32, true);
-			if ((myPlayer.pressingW || myPlayer.pressingD || myPlayer.pressingS || myPlayer.pressingA) && Player.list[myPlayer.id].boosting == 0 && !mute){
-				if (!Player.list[myPlayer.id].holdingBag && !myPlayer.energyExhausted){
-					//Boosting!
-				}				
-				else if (!Player.list[myPlayer.id].holdingBag && myPlayer.energyExhausted && !sfxBoostEmpty.playing())
-					sfxBoostEmpty.play();
-				else if (Player.list[myPlayer.id].holdingBag)
-					sfxWhoosh.play();
-			}
-			myPlayer.pressingSpace = true;
 		}
 	}		
 	else if(hitKeyCode === 81 && chatInput.style.display == "none"){ //Q 
@@ -7991,7 +8423,6 @@ document.onkeydown = function(event){
 		keyPress(82, true);
 	}
 	else if(hitKeyCode === 16 && chatInput.style.display == "none"){ //Shift 
-		myPlayer.pressingShift = true;
 		keyPress(16, true);
 	}
 	else if(hitKeyCode === 49 && chatInput.style.display == "none"){ //1 
@@ -8188,45 +8619,35 @@ document.onkeyup = function(event){
 	}
 
 	if(hitKeyCode === 87){ //W
-		myPlayer.pressingW = false;
 		keyPress(87, false);
 	}
 	else if(hitKeyCode === 68){ //D
-		myPlayer.pressingD = false;
 		keyPress(68, false);
 	}
 	else if(hitKeyCode === 83){ //S
-		myPlayer.pressingS = false;
 		keyPress(83, false);
 	}
 	else if(hitKeyCode === 65){ //A
-		myPlayer.pressingA = false;
 		keyPress(65, false);
 	}		
 	else if(hitKeyCode === 38 && chatInput.style.display == "none"){ //Up
-		myPlayer.pressingUp = false;
 		keyPress(38, false);
 	}
 	else if(hitKeyCode === 39 && chatInput.style.display == "none"){ //Right
-		myPlayer.pressingRight = false;
 		keyPress(39, false);
 	}
 	else if(hitKeyCode === 40 && chatInput.style.display == "none"){ //Down
-		myPlayer.pressingDown = false;
 		keyPress(40, false);
 	}
 	else if(hitKeyCode === 37 && chatInput.style.display == "none"){ //Left
-		myPlayer.pressingLeft = false;
 		keyPress(37, false);
 	}
 	
 	else if(hitKeyCode === 16){ //Shift
-		myPlayer.pressingShift = false;
 		keyPress(16, false);
 	}
 	else if(hitKeyCode === 32){
-		myPlayer.pressingSpace = false;
-		//keyPress(32, false); //Not needed currently
+		keyPress(32, false); //Not needed currently
 	}
 	
 	else if(hitKeyCode === 84 && chatInput.style.display == "none" && myPlayer.name != ""){ //T

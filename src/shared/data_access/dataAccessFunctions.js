@@ -280,7 +280,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("October 21, 2021 16:00:00");
+	var thresholdDate = new Date("October 28, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -311,16 +311,16 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				  	continue;
 				}
 
-				if (customizationOptions.indexOf("ivoryMGWeapon") == -1){
-					customizationOptions.push("ivoryMGWeapon");
-					console.log("Pushing ivoryMGWeapon");
+				if (customizationOptions.indexOf("ivorySGWeapon") == -1){
+					customizationOptions.push("ivorySGWeapon");
+					console.log("Pushing ivorySGWeapon");
 					updatey = true;
-				}
+				}	
     
     
-				if (customizations["1"].mgColor != "#fffef8"){
-					customizations["1"].mgColor = "#fffef8"; //CONFIGURATION
-					customizations["2"].mgColor = "#fffef8"; //CONFIGURATION
+				if (customizations["1"].sgColor != "#fffef8"){
+					customizations["1"].sgColor = "#fffef8"; //CONFIGURATION
+					customizations["2"].sgColor = "#fffef8"; //CONFIGURATION
 					updatey = true;
 				}
 
@@ -337,10 +337,10 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 					console.log("Nothing to update...");
 					continue;
 				}
-				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
-					console.log("SAFETYS ON");
-					continue;
-				}
+				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+				// 	console.log("SAFETYS ON");
+				// 	continue;
+				// }
 				// if (resy[k]._id == "60776761f660555073ed3168"){ //Get User
 				// 	console.log("UPDATE!!!!!!!!!!!!!!!");
 				// 	delete resy[k]._id;

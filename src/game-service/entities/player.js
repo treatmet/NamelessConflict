@@ -138,234 +138,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 		
 		////////////SHOOTING///////////////////
-	
-		//If currently holding an arrow key, be aiming in that direction 
-			var discharge = false;
-			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === false){				
-				if (self.shootingDir != 1){
-					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
-						if (!self.firing)
-							discharge = true;
-					}
-					self.shootingDir = 1;
-					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-				}
-			}
-			if (self.pressingUp === true && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
-				if (self.shootingDir != 2){
-					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
-						if (!self.firing || (self.firing && self.shootingDir == 1 || self.shootingDir == 3)) //doubleshots
-							discharge = true;
-					}
-					self.shootingDir = 2;
-					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-				}
-			}
-			if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
-				if (self.shootingDir != 3){
-					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
-						if (!self.firing) //doubleshots
-							discharge = true;
-					}			
-					self.shootingDir = 3;
-					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-				}
-			}
-			if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === true && self.pressingLeft === false){				
-				if (self.shootingDir != 4){
-					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
-						if (!self.firing || (self.firing && self.shootingDir == 3 || self.shootingDir == 5)) //doubleshots
-							discharge = true;
-					}
-					self.shootingDir = 4;
-					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-				}
-			}
-			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === false){				
-				if (self.shootingDir != 5){
-					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
-						if (!self.firing) //doubleshots
-							discharge = true;
-					}
-					self.shootingDir = 5;
-					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-				}
-			}
-			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === true){				
-				if (self.shootingDir != 6){
-					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
-						if (!self.firing || (self.firing && self.shootingDir == 5 || self.shootingDir == 7)) //doubleshots
-							discharge = true;
-					}
-					self.shootingDir = 6;
-					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-				}
-			}
-			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
-				if (self.shootingDir != 7){
-					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
-						if (!self.firing) //doubleshots
-							discharge = true;
-					}
-					self.shootingDir = 7;
-					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-				}
-			}
-			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
-				if (self.shootingDir != 8){
-					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
-						if (!self.firing || (self.firing && self.shootingDir == 7 || self.shootingDir == 1)) //doubleshots
-							discharge = true;
-					}			
-					self.shootingDir = 8;
-					updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-				}
-			}
-
-		if (discharge){
-			self.aiming = framesOfAiming;
-			Discharge(self);				
-		}
-
-		//Auto shooting for holding down button
-		if (self.firing <= 0 && !self.pressingShift && self.throwingObject === 0 && self.fireRate <= 0 && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight) && self.weapon != 5){
-			Discharge(self);
-		}
-		if (self.fireRate > 0){
-			self.fireRate--;
-			if (self.bufferReload && self.fireRate <= 0){
-				self.bufferReload = false;
-				reload(self.id);				
-			}
-		}
-
-		//Firing and aiming decay (every frame)
-		if (self.aiming > 0){self.aiming--;}
-		if (self.triggerTapLimitTimer > 0){self.triggerTapLimitTimer--;}
-		if (self.firing > 0){self.firing--;}
-		
+		self.processShooting();
 
 
-		//Processing all shots + Hit detection
-		for (var s in self.shotList){
-			/*{
-				all:[]
-				organic:[]
-				block:[]
-			}*/
-			var targetsInRange = getTargetsInRangeOfShot(self, self.shotList[s]);
-
-			if (self.weapon == 4){
-				for (var t in targetsInRange.organic){
-					if (targetsInRange.organic[t].target.health <= 0)
-						continue;							
-					var isBehindCover = false;
-					for (var b in targetsInRange.block){ 
-						if (checkIfBlocking(targetsInRange.block[b].target, self, targetsInRange.organic[t].target)){ //And see if it is blocking the shooter's path
-							isBehindCover = true;
-						}										
-					}
-					if (!isBehindCover){
-						targetsInRange.organic[t].target.hit(self.shootingDir, targetsInRange.organic[t].dist, self, getDistance(self,targetsInRange.organic[t].target), self.shotList[s].x);
-						//Calculate blood effect if target is organic
-						var bloodX = targetsInRange.organic[t].target.x;
-						var bloodY = targetsInRange.organic[t].target.y;
-						entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, targetsInRange.organic[t].target.id);
-					}
-				}
-				var shotData = {};
-				shotData.id = Math.random();
-				shotData.playerId = self.id;
-				shotData.weapon = self.weapon;
-				shotData.x = self.shotList[s].x;
-				shotData.spark = false;
-				shotData.distance = 10000;
-				shotData.shootingDir = self.shootingDir;
-				for(var i in SOCKET_LIST){
-					SOCKET_LIST[i].emit('shootUpdate',shotData);
-				}	
-			}
-			else if (self.weapon == 5){
-				//Out of all blocks in line of shot, which is closest?				
-				var stoppingBlock = entityHelpers.getHitTarget(targetsInRange.block);
-				var laserDistance = stoppingBlock ? stoppingBlock.dist : laserRange;		
-				
-				for (var t in targetsInRange.organic){
-					if (targetsInRange.organic[t].target.health <= 0)
-						continue;							
-					var isBehindCover = false;
-					for (var b in targetsInRange.block){ 
-						if (checkIfBlocking(targetsInRange.block[b].target, self, targetsInRange.organic[t].target)){ //And see if it is blocking the shooter's path
-							isBehindCover = true;
-						}										
-					}
-					if (!isBehindCover){
-						targetsInRange.organic[t].target.hit(self.shootingDir, targetsInRange.organic[t].dist, self, laserDistance, self.shotList[s].x);
-						//Calculate blood effect if target is organic
-						var bloodX = targetsInRange.organic[t].target.x;
-						var bloodY = targetsInRange.organic[t].target.y;
-						entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, targetsInRange.organic[t].target.id);
-					}
-				}
-
-				var shotData = {};
-				shotData.id = Math.random();
-				shotData.playerId = self.id;
-				shotData.weapon = self.weapon;
-				shotData.x = self.shotList[s].x;
-				shotData.spark = true;				
-				shotData.distance = laserDistance;
-				shotData.shootingDir = self.shootingDir;
-				if (!stoppingBlock){shotData.spark = false;}
-				if (self.shootingDir % 2 == 0){
-					shotData.distance = laserDistance * 1.42;
-				}
-				else {
-					shotData.distance = laserDistance;
-				}
-				if (shotData.distance < 0){shotData.distance = 1;}
-				for(var i in SOCKET_LIST){
-					SOCKET_LIST[i].emit('shootUpdate',shotData);
-				}	
-			}
-			else { //Weapons 1-3
-				//Out of all targets in line of shot, which is closest?				
-				var hitTarget = entityHelpers.getHitTarget(targetsInRange.all);	
-				if (hitTarget != null){
-					hitTarget.hit(self.shootingDir, hitTarget.dist, self, getDistance(self,hitTarget), self.shotList[s].x);				
-						
-					if (hitTarget.team && hitTarget.health){
-						//Calculate blood effect if target is organic
-						var bloodX = hitTarget.x;
-						var bloodY = hitTarget.y;
-						if (self.shootingDir == 1){bloodX = self.x;}
-						if (self.shootingDir == 2){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y - hitTarget.distFromDiag/2;}
-						if (self.shootingDir == 3){bloodY = self.y;}
-						if (self.shootingDir == 4){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y + hitTarget.distFromDiag/2;}
-						if (self.shootingDir == 5){bloodX = self.x;}
-						if (self.shootingDir == 6){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y - hitTarget.distFromDiag/2;}
-						if (self.shootingDir == 7){bloodY = self.y;}
-						if (self.shootingDir == 8){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y + hitTarget.distFromDiag/2;}
-						entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, hitTarget.id);
-					}
-				}
-				else {
-					var shotData = {};
-					shotData.id = Math.random();
-					shotData.playerId = self.id;
-					shotData.weapon = self.weapon;
-					shotData.x = self.shotList[s].x;
-					shotData.spark = false;
-					shotData.distance = bulletRange;
-					shotData.shootingDir = self.shootingDir;
-					for(var i in SOCKET_LIST){
-						SOCKET_LIST[i].emit('shootUpdate',shotData);
-					}					
-				}
-			}	
-		} //Shot loop
-
-		self.shotList = [];
 
 		
 		/////////////////////// MULTIKILL ////////////////////
@@ -388,133 +163,22 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		if (self.healDelay > 0){self.healDelay--;}
 
-		/////////////////////// ENERGY /////////////////////
-		if (self.rechargeDelay <= 0 && self.energy < (100 * self.hasBattery)){
-			self.energy++;
-			if ((self.hasBattery > 1 && self.energy == 100) || (self.hasBattery > 2 && self.energy == 200) || (self.hasBattery > 3 && self.energy == 300) || (self.hasBattery > 4 && self.energy == 400))
-				self.energy++; //Free extra energy at 100 if more than one battery to avoid stopping the charge sfx at 100 (normally 100 is "charge complete")
-			if (self.hasBattery == 1 && self.energy > 100){
-				self.energy = 100;
-			}
-			if (self.hasBattery == 2 && self.energy > 200){
-				self.energy = 200;
-			}
-			if (self.energy >= 100){self.energyExhausted = false;}
-			updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
-		}
-		if (self.rechargeDelay > 0){self.rechargeDelay--;}
 				
-		///////////////////////CLOAKING/////////////////////
-		if (self.cloakEngaged && !self.energyExhausted){
-			self.expendEnergy(cloakDrainSpeed);
-		}
 		
 		/////RETURN COOLDOWN//////////
 		if (self.lastReturnCooldown > 0)
 			self.lastReturnCooldown--;
 		
 		/////MOVEMENT movement//////////
-		var posUpdated = false;
 		self.move();
 
+		/////////////////////// ENERGY /////////////////////
+		self.rechargeEnergy();
 
-		//default to shootingdir = walkingdir unless otherwise specified!
-		if (!self.pressingShift && self.throwingObject === 0 && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
-			if (self.shootingDir != self.walkingDir){
-				self.shootingDir = self.walkingDir;
-				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
-			}
-		} 
-
-		//Actually move player based on speed
-		if (self.speedY != 0){
-			posUpdated = true;
-			self.y += self.speedY;
+		///////////////////////CLOAKING/////////////////////
+		if (self.cloakEngaged && !self.energyExhausted){
+			self.expendEnergy(cloakDrainSpeed);
 		}
-		if (self.speedX != 0){
-			posUpdated = true;
-			self.x += self.speedX;
-		}	
-		
-		if (self.stagger > 0){self.stagger--;}
-
-		////////////////////// BEING PUSHED ///////////////////////////////////////////
-		gameEngine.processEntityPush(self);
-
-		///////////////////// COLLISION WITH OBSTACLES/PLAYERS /////////////////////////
-		
-		//Check collision with players
-		entityHelpers.checkBodyCollisionWithGroupOfBodies(self, Player.list);
-
-	
-		//Check collision with thugs
-		var thugList = thug.getThugList();
-		for (var i in thugList){
-			if (thugList[i].id != self.id && thugList[i].health > 0 && self.x + self.width > thugList[i].x && self.x < thugList[i].x + thugList[i].width && self.y + self.height > thugList[i].y && self.y < thugList[i].y + thugList[i].height){								
-				if (self.x == thugList[i].x && self.y == thugList[i].y){self.x -= 5; updateThugList.push({id:self.id,property:"x",value:self.x});} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
-				var dx1 = self.x - thugList[i].x;
-				var dy1 = self.y - thugList[i].y;
-				var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-				var ax1 = dx1/dist1;
-				var ay1 = dy1/dist1;
-				if (dist1 < 40){		
-
-					if (self.boosting > 0){
-						self.pushSpeed = 20;
-						self.boosting = 0;
-						updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
-						updateEffectList.push({type:4,playerId:self.id});
-						
-						if (self.team != thugList[i].team){
-							thugList[i].health -= boostDamage;
-							updateThugList.push({id:thugList[i].id,property:"health",value:thugList[i].health})
-							entityHelpers.sprayBloodOntoTarget(self.walkingDir, thugList[i].x, thugList[i].y, thugList[i].id);
-							thugList[i].attacking = thugAttackDelay;
-							if (thugList[i].health <= 0){
-								thugList[i].kill(self);
-							}
-						}
-					}
-				
-					self.x += ax1 / (dist1 / 70); //Higher number is greater push
-					self.y += ay1 / (dist1 / 70);
-				}				
-			}
-		}
-		
-
-				
-		//Check Player collision with blocks
-		if (block.checkCollision(self) && !posUpdated){posUpdated = true;}
-
-		
-		//Keep player from walls Edge detection. Walls.
-		if (self.x > mapWidth - 5){self.x = mapWidth - 5; posUpdated = true;} //right
-		if (self.y > mapHeight - 5){self.y = mapHeight - 5; posUpdated = true;} // bottom
-		if (self.x < 5){self.x = 5; posUpdated = true;} //left
-		if (self.y < 5){self.y = 5; posUpdated = true;} //top
-
-
-
-
-
-
-
-		//log("self.x" + self.x + " self.y" + self.y + " speedX" + self.speedX + " speedY" + self.speedY);
-
-		//and send to clients
-		self.y = Math.round(self.y * 10)/10;
-		self.x = Math.round(self.x * 10)/10;
-		if (self.x != self.lastX){
-			self.lastX = self.x;
-			updatePlayerList.push({id:self.id,property:"x",value:self.x});	
-		}
-		if (self.y != self.lastY){
-			self.lastY = self.y;
-			updatePlayerList.push({id:self.id,property:"y",value:self.y});
-		}
-
-
 
 
 		//Pickup updates
@@ -696,6 +360,255 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 	}//End engine()
 
+	self.processShooting = function(){
+		//If currently holding an arrow key, be aiming in that direction 
+		var discharge = false;
+		if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === false){				
+			if (self.shootingDir != 1){
+				if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.firing)
+						discharge = true;
+				}
+				self.shootingDir = 1;
+				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			}
+		}
+		if (self.pressingUp === true && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
+			if (self.shootingDir != 2){
+				if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.firing || (self.firing && self.shootingDir == 1 || self.shootingDir == 3)) //doubleshots
+						discharge = true;
+				}
+				self.shootingDir = 2;
+				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			}
+		}
+		if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
+			if (self.shootingDir != 3){
+				if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.firing) //doubleshots
+						discharge = true;
+				}			
+				self.shootingDir = 3;
+				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			}
+		}
+		if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === true && self.pressingLeft === false){				
+			if (self.shootingDir != 4){
+				if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.firing || (self.firing && self.shootingDir == 3 || self.shootingDir == 5)) //doubleshots
+						discharge = true;
+				}
+				self.shootingDir = 4;
+				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			}
+		}
+		if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === false){				
+			if (self.shootingDir != 5){
+				if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.firing) //doubleshots
+						discharge = true;
+				}
+				self.shootingDir = 5;
+				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			}
+		}
+		if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === true){				
+			if (self.shootingDir != 6){
+				if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.firing || (self.firing && self.shootingDir == 5 || self.shootingDir == 7)) //doubleshots
+						discharge = true;
+				}
+				self.shootingDir = 6;
+				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			}
+		}
+		if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
+			if (self.shootingDir != 7){
+				if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.firing) //doubleshots
+						discharge = true;
+				}
+				self.shootingDir = 7;
+				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			}
+		}
+		if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
+			if (self.shootingDir != 8){
+				if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.firing || (self.firing && self.shootingDir == 7 || self.shootingDir == 1)) //doubleshots
+						discharge = true;
+				}			
+				self.shootingDir = 8;
+				updatePlayerList.push({id:self.id,property:"shootingDir",value:self.shootingDir});
+			}
+		}
+
+		if (discharge){
+			self.aiming = framesOfAiming;
+			Discharge(self);				
+		}
+
+		//Auto shooting for holding down button
+		if (self.firing <= 0 && !self.pressingShift && self.throwingObject === 0 && self.fireRate <= 0 && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight) && self.weapon != 5){
+			Discharge(self);
+		}
+		if (self.fireRate > 0){
+			self.fireRate--;
+			if (self.bufferReload && self.fireRate <= 0){
+				self.bufferReload = false;
+				reload(self.id);				
+			}
+		}
+
+		//Firing and aiming decay (every frame)
+		if (self.aiming > 0){self.aiming--;}
+		if (self.triggerTapLimitTimer > 0){self.triggerTapLimitTimer--;}
+		if (self.firing > 0){self.firing--;}
+		
+
+
+		//Processing all shots + Hit detection
+		for (var s in self.shotList){
+			/*{
+				all:[]
+				organic:[]
+				block:[]
+			}*/
+			var targetsInRange = getTargetsInRangeOfShot(self, self.shotList[s]);
+
+			if (self.weapon == 4){
+				for (var t in targetsInRange.organic){
+					if (targetsInRange.organic[t].target.health <= 0)
+						continue;							
+					var isBehindCover = false;
+					for (var b in targetsInRange.block){ 
+						if (checkIfBlocking(targetsInRange.block[b].target, self, targetsInRange.organic[t].target)){ //And see if it is blocking the shooter's path
+							isBehindCover = true;
+						}										
+					}
+					if (!isBehindCover){
+						targetsInRange.organic[t].target.hit(self.shootingDir, targetsInRange.organic[t].dist, self, getDistance(self,targetsInRange.organic[t].target), self.shotList[s].x);
+						//Calculate blood effect if target is organic
+						var bloodX = targetsInRange.organic[t].target.x;
+						var bloodY = targetsInRange.organic[t].target.y;
+						entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, targetsInRange.organic[t].target.id);
+					}
+				}
+				var shotData = {};
+				shotData.id = Math.random();
+				shotData.playerId = self.id;
+				shotData.weapon = self.weapon;
+				shotData.x = self.shotList[s].x;
+				shotData.spark = false;
+				shotData.distance = 10000;
+				shotData.shootingDir = self.shootingDir;
+				for(var i in SOCKET_LIST){
+					SOCKET_LIST[i].emit('shootUpdate',shotData);
+				}	
+			}
+			else if (self.weapon == 5){
+				//Out of all blocks in line of shot, which is closest?				
+				var stoppingBlock = entityHelpers.getHitTarget(targetsInRange.block);
+				var laserDistance = stoppingBlock ? stoppingBlock.dist : laserRange;		
+				
+				for (var t in targetsInRange.organic){
+					if (targetsInRange.organic[t].target.health <= 0)
+						continue;							
+					var isBehindCover = false;
+					for (var b in targetsInRange.block){ 
+						if (checkIfBlocking(targetsInRange.block[b].target, self, targetsInRange.organic[t].target)){ //And see if it is blocking the shooter's path
+							isBehindCover = true;
+						}										
+					}
+					if (!isBehindCover){
+						targetsInRange.organic[t].target.hit(self.shootingDir, targetsInRange.organic[t].dist, self, laserDistance, self.shotList[s].x);
+						//Calculate blood effect if target is organic
+						var bloodX = targetsInRange.organic[t].target.x;
+						var bloodY = targetsInRange.organic[t].target.y;
+						entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, targetsInRange.organic[t].target.id);
+					}
+				}
+
+				var shotData = {};
+				shotData.id = Math.random();
+				shotData.playerId = self.id;
+				shotData.weapon = self.weapon;
+				shotData.x = self.shotList[s].x;
+				shotData.spark = true;				
+				shotData.distance = laserDistance;
+				shotData.shootingDir = self.shootingDir;
+				if (!stoppingBlock){shotData.spark = false;}
+				if (self.shootingDir % 2 == 0){
+					shotData.distance = laserDistance * 1.42;
+				}
+				else {
+					shotData.distance = laserDistance;
+				}
+				if (shotData.distance < 0){shotData.distance = 1;}
+				for(var i in SOCKET_LIST){
+					SOCKET_LIST[i].emit('shootUpdate',shotData);
+				}	
+			}
+			else { //Weapons 1-3
+				//Out of all targets in line of shot, which is closest?				
+				var hitTarget = entityHelpers.getHitTarget(targetsInRange.all);	
+				if (hitTarget != null){
+					hitTarget.hit(self.shootingDir, hitTarget.dist, self, getDistance(self,hitTarget), self.shotList[s].x);				
+						
+					if (hitTarget.team && hitTarget.health){
+						//Calculate blood effect if target is organic
+						var bloodX = hitTarget.x;
+						var bloodY = hitTarget.y;
+						if (self.shootingDir == 1){bloodX = self.x;}
+						if (self.shootingDir == 2){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y - hitTarget.distFromDiag/2;}
+						if (self.shootingDir == 3){bloodY = self.y;}
+						if (self.shootingDir == 4){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y + hitTarget.distFromDiag/2;}
+						if (self.shootingDir == 5){bloodX = self.x;}
+						if (self.shootingDir == 6){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y - hitTarget.distFromDiag/2;}
+						if (self.shootingDir == 7){bloodY = self.y;}
+						if (self.shootingDir == 8){bloodX = hitTarget.x - hitTarget.distFromDiag/2; bloodY = hitTarget.y + hitTarget.distFromDiag/2;}
+						entityHelpers.sprayBloodOntoTarget(self.shootingDir, bloodX, bloodY, hitTarget.id);
+					}
+				}
+				else {
+					var shotData = {};
+					shotData.id = Math.random();
+					shotData.playerId = self.id;
+					shotData.weapon = self.weapon;
+					shotData.x = self.shotList[s].x;
+					shotData.spark = false;
+					shotData.distance = bulletRange;
+					shotData.shootingDir = self.shootingDir;
+					for(var i in SOCKET_LIST){
+						SOCKET_LIST[i].emit('shootUpdate',shotData);
+					}					
+				}
+			}	
+		} //Shot loop
+		self.shotList = [];
+
+	}
+
+	self.rechargeEnergy = function(){
+		if (self.rechargeDelay <= 0 && self.energy < (100 * self.hasBattery)){
+			self.energy++;
+			if ((self.hasBattery > 1 && self.energy == 100) || (self.hasBattery > 2 && self.energy == 200) || (self.hasBattery > 3 && self.energy == 300) || (self.hasBattery > 4 && self.energy == 400))
+				self.energy++; //Free extra energy at 100 if more than one battery to avoid stopping the charge sfx at 100 (normally 100 is "charge complete")
+			if (self.hasBattery == 1 && self.energy > 100){
+				self.energy = 100;
+			}
+			if (self.hasBattery == 2 && self.energy > 200){
+				self.energy = 200;
+			}
+			if (self.energy >= 100){self.energyExhausted = false;}
+			if (!clientSideMovement && !isClientSide){
+				updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
+			}
+		}
+		if (self.rechargeDelay > 0){self.rechargeDelay--;}		
+	}
+
 	self.pullGrenade = function(){
 		if (self.throwingObject == 0){
 			var floorGrenadeId = entityHelpers.checkPointCollisionWithGroup(self, grenade.getList(), 130);
@@ -856,7 +769,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
 		updateEffectList.push({type:4,playerId:player.id});
 		
-	
 		//Assassinations
 		if (!sameTeam && bagSlam == false && entityHelpers.getDirDif(player.walkingDir, self.shootingDir) <= 1){
 			self.health = 0;			
@@ -866,7 +778,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.healDelay = healDelayTime;
 		entityHelpers.sprayBloodOntoTarget(direction, self.x, self.y, self.id);
 		if (self.health <= 0){
-			console.log("UPDATE");
+			//console.log("UPDATE");
 			player.updatePropAndSend("energy", player.energy+50, true);
 			self.kill(player);
 		}		
@@ -925,12 +837,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			if (Math.abs(self.speedX) != 0){
 				incrementY = playerAcceleration * diagMovementScale;
 			}
+			//console.log("PRESSING-W self.speedY:" + self.speedY + " targetSpeedY:" + targetSpeedY + " incrementY:" + incrementY);
 			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-
-			if (self.walkingDir != 1){
-				self.walkingDir = 1;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
+			self.walkingDir = 1;
 		}
 		else if(self.pressingD && !self.pressingS && !self.pressingW && !self.pressingA){
 			const targetSpeedX = selfMaxSpeed;
@@ -943,11 +852,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				incrementX = playerAcceleration * diagMovementScale;
 			}
 			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);
-
-			if (self.walkingDir != 3){
-				self.walkingDir = 3;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
+			self.walkingDir = 3;
 		}
 		else if(self.pressingS && !self.pressingA && !self.pressingW && !self.pressingD){
 			const targetSpeedX = 0;
@@ -960,11 +865,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				incrementY = playerAcceleration * diagMovementScale;
 			}
 			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-
-			if (self.walkingDir != 5){
-				self.walkingDir = 5;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
+			self.walkingDir = 5;
 		}
 		else if(self.pressingA && !self.pressingS && !self.pressingW && !self.pressingD){
 			const targetSpeedX = -selfMaxSpeed;
@@ -977,11 +878,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				incrementX = playerAcceleration * diagMovementScale;
 			}
 			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);
-
-			if (self.walkingDir != 7){
-				self.walkingDir = 7;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
+			self.walkingDir = 7;
 		} //Diags
 		else if(self.pressingW && self.pressingD){
 			const targetSpeedX = selfMaxSpeed * diagMovementScale;
@@ -991,11 +888,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			
 			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
 			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
-
-			if (self.walkingDir != 2){
-				self.walkingDir = 2;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
+			self.walkingDir = 2;
 		}
 		else if(self.pressingD && self.pressingS){
 			const targetSpeedX = selfMaxSpeed * diagMovementScale;
@@ -1005,11 +898,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			
 			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
 			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
-
-			if (self.walkingDir != 4){
-				self.walkingDir = 4;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
+			self.walkingDir = 4;
 		}
 		else if(self.pressingA && self.pressingS){
 			const targetSpeedX = -selfMaxSpeed * diagMovementScale;
@@ -1019,11 +908,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			
 			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
 			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
-
-			if (self.walkingDir != 6){
-				self.walkingDir = 6;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
+			self.walkingDir = 6;
 		}
 		else if(self.pressingW && self.pressingA){
 			const targetSpeedX = -selfMaxSpeed * diagMovementScale;
@@ -1033,11 +918,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			
 			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
 			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
-
-			if (self.walkingDir != 8){
-				self.walkingDir = 8;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
+			self.walkingDir = 8;
 		}
 		else if ((!self.pressingW && !self.pressingA && !self.pressingS && !self.pressingD) || (self.pressingD && self.pressingA) || (self.pressingS && self.pressingW)){
 			const targetSpeedX = 0;
@@ -1047,28 +928,143 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			
 			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
 			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
-
-			if (self.walkingDir != 0){
-				self.walkingDir = 0;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
+			self.walkingDir = 0;
 		}
 
-
-
+		//End boost
 		if (Math.sqrt(self.speedX*self.speedX + self.speedY*self.speedY) <= playerMaxSpeed){
-			if (self.boosting != 0){
-				self.boosting = 0;
-				updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
+			self.updatePropAndSend("boosting", 0);
+		}
+
+	//Actually move player based on speed
+		if (self.speedY != 0){
+			posUpdated = true;
+			self.y += self.speedY;
+		}
+		if (self.speedX != 0){
+			posUpdated = true;
+			self.x += self.speedX;
+		}	
+		
+		if (self.stagger > 0){self.stagger--;}
+
+		//Check collision with players with other players
+		
+		entityHelpers.checkBodyCollisionWithGroupOfBodies(self, Player.list);
+
+		///////////////////// COLLISION WITH OBSTACLES/PLAYERS /////////////////////////
+		
+		if (!isClientSide){
+			////////////////////// BEING PUSHED ///////////////////////////////////////////
+			gameEngine.processEntityPush(self);
+
+		
+		
+			//Check collision with thugs
+			var thugList = thug.getThugList();
+			for (var i in thugList){
+				if (thugList[i].id != self.id && thugList[i].health > 0 && self.x + self.width > thugList[i].x && self.x < thugList[i].x + thugList[i].width && self.y + self.height > thugList[i].y && self.y < thugList[i].y + thugList[i].height){								
+					if (self.x == thugList[i].x && self.y == thugList[i].y){self.x -= 5; updateThugList.push({id:self.id,property:"x",value:self.x});} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+					var dx1 = self.x - thugList[i].x;
+					var dy1 = self.y - thugList[i].y;
+					var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+					var ax1 = dx1/dist1;
+					var ay1 = dy1/dist1;
+					if (dist1 < 40){		
+
+						if (self.boosting > 0){
+							self.pushSpeed = 20;
+							self.boosting = 0;
+							updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
+							updateEffectList.push({type:4,playerId:self.id});
+							
+							if (self.team != thugList[i].team){
+								thugList[i].health -= boostDamage;
+								updateThugList.push({id:thugList[i].id,property:"health",value:thugList[i].health})
+								entityHelpers.sprayBloodOntoTarget(self.walkingDir, thugList[i].x, thugList[i].y, thugList[i].id);
+								thugList[i].attacking = thugAttackDelay;
+								if (thugList[i].health <= 0){
+									thugList[i].kill(self);
+								}
+							}
+						}
+					
+						self.x += ax1 / (dist1 / 70); //Higher number is greater push
+						self.y += ay1 / (dist1 / 70);
+					}				
+				}
+			}
+		}
+				
+		//Check Player collision with blocks
+		if (block.checkCollision(self) && !posUpdated){posUpdated = true;}
+
+		//and send to clients
+		self.x = Math.round(self.x * 10)/10;
+		self.y = Math.round(self.y * 10)/10;
+		if (self.sendPosToClient){
+			self.sendPosToClient = false;
+			updatePlayerList.push({id:self.id,property:"x",value:self.x});	
+			updatePlayerList.push({id:self.id,property:"y",value:self.y});	
+		}
+		if (!clientSideMovement && !isClientSide){
+			if (self.x != self.lastX){
+				self.lastX = self.x;
+				updatePlayerList.push({id:self.id,property:"x",value:self.x});	
+			}
+			if (self.y != self.lastY){
+				self.lastY = self.y;
+				updatePlayerList.push({id:self.id,property:"y",value:self.y});
 			}
 		}
 
+		//default to shootingdir = walkingdir unless otherwise specified!
+		if (!self.pressingShift && self.throwingObject === 0 && self.walkingDir != 0 && self.aiming == 0 && !self.pressingUp && !self.pressingDown && !self.pressingLeft && !self.pressingRight && self.reloading <= 0){
+			self.updatePropAndSend("shootingDir", self.walkingDir);
+		} 
 
 	}
 
+	self.pressSpace = function(){
+		//Boosting
+		if ((self.pressingW || self.pressingD || self.pressingS || self.pressingA) && !self.energyExhausted && self.boosting == 0 && self.holdingBag == false){
+			self.updatePropAndSend("cloakEngaged", false, 2);
+			self.boost();
+		}
+		//Throwing Bag
+		else if (self.holdingBag == true && self.walkingDir != 0){
+			if (!isClientSide) {
+				self.throwBag();
+			}
+		}
+		//Cloaking
+		else if ((!self.pressingW && !self.pressingD && !self.pressingS && !self.pressingA) && !self.energyExhausted){
+			self.cloakOnOff();
+		}
+	}
+
+	self.cloakOnOff = function(){
+		if (!self.cloakEngaged && cloakingEnabled){
+			self.updatePropAndSend("cloakEngaged", true, 2);
+			if (!clientSideMovement && !isClientSide){
+				SOCKET_LIST[self.id].emit('sfx', "sfxCloak");
+			}
+			else if (isClientSide){
+				sfxPlay("sfxCloak");
+			}
+		}
+		else if (self.cloakEngaged){
+			self.updatePropAndSend("cloakEngaged", false, 2);
+		}
+	}
+
+
 	self.boost = function(){
-		self.expendEnergy(boostEnergyCost);
+		if (!isClientSide){
+			self.expendEnergy(boostEnergyCost);
+		}
 		self.boosting = 1;
+		//self.updatePropAndSend("boosting", 1);
 		if(self.walkingDir == 1){
 			self.speedY -= boostAmount;
 		}
@@ -1105,6 +1101,37 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.speedY = speedCap;
 		else if (self.speedY < -speedCap)
 			self.speedY = -speedCap;		
+
+		if (!isClientSide)
+			updateEffectList.push({type:3,playerId:self.id});
+	}
+
+	self.throwBag = function(){
+		self.updatePropAndSend("holdingBag", false);
+		if (self.previousWeapon){
+			self.weapon = self.previousWeapon == 5 ? 1 : self.previousWeapon;
+			updatePlayerList.push({id:self.id,property:"weapon",value:self.weapon});
+		}
+		if (self.energy > 0){
+			self.rechargeDelay = rechargeDelayTime;
+			self.energy = 1;
+			updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
+		}
+		self.updatePropAndSend("cloakEngaged", false);
+		if (self.team == 1){
+			bagBlue.captured = false;
+			updateMisc.bagBlue = bagBlue;
+			bagBlue.playerThrowing = self.id;
+			bagBlue.speed = 25;
+			bagBlue.direction = self.walkingDir;
+		}
+		else if (self.team == 2){
+			bagRed.captured = false;
+			updateMisc.bagRed = bagRed;
+			bagRed.playerThrowing = self.id;
+			bagRed.speed = 25;
+			bagRed.direction = self.walkingDir;
+		}
 	}
 
 
@@ -1197,6 +1224,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			if (!isNaN(shootingDir.xMovRatio)){
 				self.speedX += (shootingDir.xMovRatio * grenadePower) * damageForPush;
 				self.speedY += (shootingDir.yMovRatio * grenadePower) * damageForPush;
+				updatePlayerList.push({id:self.id,property:"speedX",value:self.speedX});	
+				updatePlayerList.push({id:self.id,property:"speedY",value:self.speedY});	
+				;
 			}
 		}
 
@@ -1213,7 +1243,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		else {
 			//Player stagger
 			//if (weapon != 6)
-				self.stagger = staggerTime;
+			self.updatePropAndSend("stagger", staggerTime);
 
 			//Heal delay		
 			self.healDelay += healDelayTime;
@@ -1398,17 +1428,22 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.updatePropAndSend("cloakEngaged", false);
 		}
 		updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
+		updatePlayerList.push({id:self.id,property:"rechargeDelay",value:self.rechargeDelay, single:true});
 	}
 
 	self.triggerPlayerEvent = function(event){
 		playerEvent(self.id, event);
 	}
 
-	self.updatePropAndSend = function(propName, value, singlePlayer = false, coords = false, ){
+	self.updatePropAndSend = function(propName, value, singlePlayer = false, coords = false){
 		if (self[propName] != value){
 			self[propName] = value;
-			if (!singlePlayer)
+			if (singlePlayer == 2){
+				updatePlayerList.push({id:self.id,property:propName,value:value, single:2});	
+			}
+			else if (!singlePlayer){
 				updatePlayerList.push({id:self.id,property:propName,value:value});	
+			}
 			else {
 				updatePlayerList.push({id:self.id,property:propName,value:value, single:true});	
 			}
@@ -1419,14 +1454,12 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	self.respawn = function(newPlayer = false){
 		updatePlayerList.push({id:self.id,property:"name",value:self.name});
 
-		self.rechargeDelay = 0;
 		self.healDelay = 0;
-
-
+		
 		
 		self.speed = 0;
-		self.speedY = 0;
-		self.speedX = 0;
+		// self.speedY = 0;
+		// self.speedX = 0;
 		self.stagger = 0;
 		self.respawnTimer = 0;
 		self.pushSpeed = 0;		
@@ -1445,6 +1478,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.updatePropAndSend("cloakEngaged", false);
 		self.updatePropAndSend("boosting", 0);
 		self.updatePropAndSend("throwingObject", 0);
+		self.updatePropAndSend("speedY", 0);
+		self.updatePropAndSend("speedX", 0);
 		self.PClip = 15;
 		updatePlayerList.push({id:self.id,property:"PClip",value:self.PClip});
 
@@ -1452,8 +1487,11 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 			self.updatePropAndSend("health", 100);
 			self.weapon = startingWeapon;
-			updatePlayerList.push({id:self.id,property:"weapon",value:self.weapon});
+			updatePlayerList.push({id:self.id,property:"weapon",value:self.weapon});			
+			self.rechargeDelay = 0;
+			updatePlayerList.push({id:self.id,property:"rechargeDelay",value:0});
 			self.hasBattery = maxEnergyMultiplier;
+			updatePlayerList.push({id:self.id,property:"hasBattery",value:maxEnergyMultiplier});
 			//if (self.cognitoSub == "892e9c3d-d9d6-4402-90e5-6c95efa72098"){self.hasBattery = 2;} //!!!Tommy
 			self.DPClip = 0;
 			if (startingWeapon == 2){self.DPClip = DPClipSize;}
@@ -1492,15 +1530,15 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.reloading = 0;
 		
 		
-		self.pressingUp = false;
-		self.pressingRight = false;
-		self.pressingDown = false;
-		self.pressingLeft = false;
-		self.pressingW = false;
-		self.pressingD = false;
-		self.pressingS = false;		
-		self.pressingA = false;
-		self.pressingShift = false;					
+		// self.pressingUp = false;
+		// self.pressingRight = false;
+		// self.pressingDown = false;
+		// self.pressingLeft = false;
+		// self.pressingW = false;
+		// self.pressingD = false;
+		// self.pressingS = false;		
+		// self.pressingA = false;
+		// self.pressingShift = false;					
 							
 		gameEngine.spawnSafely(self);
 		updatePlayerList.push({id:self.id,property:"y",value:self.y});
@@ -1661,80 +1699,82 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 				if (!Player.list[player.id])
 					return;
 
-				if (player.health > 0 && player.team != 0){
+				if (true){
 					var discharge = false;
-					if(data.inputId === 87){player.pressingW = data.state;} //W
-					else if(data.inputId === 68){player.pressingD = data.state;}
-					else if(data.inputId === 83){player.pressingS = data.state;}
-					else if(data.inputId === 65){player.pressingA = data.state;}
+					if(data.inputId === 87){
+						if (clientSideMovement){
+							player.updatePropAndSend("pressingW", data.state);
+						}
+						else{
+							player.pressingW = data.state;
+						}
+					} //W
+					else if(data.inputId === 68){
+						if (clientSideMovement){
+							player.updatePropAndSend("pressingD", data.state);
+						}
+						else{
+							player.pressingD = data.state;
+						}
+					}
+					else if(data.inputId === 83){
+						if (clientSideMovement){
+							player.updatePropAndSend("pressingS", data.state);
+						}
+						else{
+							player.pressingS = data.state;
+						}
+					}
+					else if(data.inputId === 65){
+						if (clientSideMovement){
+							player.updatePropAndSend("pressingA", data.state);
+						}
+						else{
+							player.pressingA = data.state;
+						}						
+					}
 					
 					else if(data.inputId === 38){ //Up
-						player.pressingUp = data.state;
+						if (clientSideMovement){
+							player.updatePropAndSend("pressingUp", data.state);
+						}
+						else{
+							player.pressingUp = data.state;
+						}
 					}
 					else if(data.inputId === 39){ //Right
-						player.pressingRight = data.state;
+						if (clientSideMovement){
+							player.updatePropAndSend("pressingRight", data.state);
+						}
+						else{
+							player.pressingRight = data.state;
+						}
 					}
 					else if(data.inputId === 40){ //Down
-						player.pressingDown = data.state;
+						if (clientSideMovement){
+							player.updatePropAndSend("pressingDown", data.state);
+						}
+						else{
+							player.pressingDown = data.state;
+						}
 					}
 					else if(data.inputId === 37){ //Left
-						player.pressingLeft = data.state;
+						if (clientSideMovement){
+							player.updatePropAndSend("pressingLeft", data.state);
+						}
+						else{
+							player.pressingLeft = data.state;
+						}
 					}	
 					else if(data.inputId === 32){ //SPACE
-						if ((player.pressingW || player.pressingD || player.pressingS || player.pressingA) && !player.energyExhausted && player.boosting == 0 && player.holdingBag == false){
-							if (player.cloakEngaged){
-								player.cloakEngaged = false;						
-								updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});	
-							}
-							player.boost();
-							updateEffectList.push({type:3,playerId:player.id});
-							updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
+						if (data.state == true){
+							player.updatePropAndSend("pressingSpace", data.state);
+							player.pressSpace();
 						}
-						else if (player.holdingBag == true && player.walkingDir != 0){
-							player.holdingBag = false;
-							if (player.previousWeapon){
-								player.weapon = player.previousWeapon == 5 ? 1 : player.previousWeapon;
-								updatePlayerList.push({id:player.id,property:"weapon",value:player.weapon});
-							}
-							if (player.energy > 0){
-								player.rechargeDelay = rechargeDelayTime;
-								player.energy = 1;
-								updatePlayerList.push({id:player.id,property:"energy",value:player.energy,single:true});
-							}
-							if (player.cloakEngaged){
-								player.cloakEngaged = false;						
-								updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});
-							}
-							updatePlayerList.push({id:player.id,property:"holdingBag",value:player.holdingBag});	
-							if (player.team == 1){
-								bagBlue.captured = false;
-								updateMisc.bagBlue = bagBlue;
-								bagBlue.playerThrowing = player.id;
-								bagBlue.speed = 25;
-								bagBlue.direction = player.walkingDir;
-							}
-							else if (player.team == 2){
-								bagRed.captured = false;
-								updateMisc.bagRed = bagRed;
-								bagRed.playerThrowing = player.id;
-								bagRed.speed = 25;
-								bagRed.direction = player.walkingDir;
-							}
+						else if (data.state == false) {
+							player.updatePropAndSend("pressingSpace", data.state);
 						}
-						else if ((!player.pressingW && !player.pressingD && !player.pressingS && !player.pressingA) && player.energy > 0){
-							if (!player.cloakEngaged && cloakingEnabled){
-								player.cloakEngaged = true;
-								SOCKET_LIST[player.id].emit('sfx', "sfxCloak");
-							}
-							else if (player.cloakEngaged){
-								player.cloakEngaged = false;
-							}
-							updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});	
-						}
-						else {
-							//no energy
-						}
-					}
+					}					
 					else if (data.inputId == 81){ //Q
 						gunCycle(player, false);
 					}
@@ -1749,7 +1789,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 					}
 
 					else if (data.inputId == 16){ //Shift
-						player.pressingShift = data.state;
+						player.updatePropAndSend("pressingShift", data.state);
 						if (data.state == false){
 							player.throwGrenade();
 						}

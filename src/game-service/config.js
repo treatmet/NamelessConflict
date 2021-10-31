@@ -97,7 +97,7 @@ global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
 global.diagMovementScale = (2/3);
 global.maxEnergyMultiplier = 1;
-global.rechargeDelayTime = 130; //Double for breaking under zero energy
+global.rechargeDelayTime = 120; //Double for breaking under zero energy
 global.healDelayTime = 300;
 global.healRate = 5; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal) //regenSpeed healthRegenSpeed
 global.respawnTimeLimit = 3 * 60;
@@ -151,7 +151,7 @@ global.clientSideMovement = true;
 
 //Cloaking config
 global.cloakingEnabled = true;
-global.cloakDrainSpeed = 0.12;
+global.cloakDrainSpeed = 0.2;
 global.cloakDrag = 0.5; //Walking speed multiplier when cloaked
 global.cloakInitializeSpeed = 0.02;
 global.cloakDeinitializeSpeed = cloakInitializeSpeed * 5;
@@ -275,6 +275,7 @@ global.instanceId = "local";
 //Game global variables
 global.isWebServer = false;
 global.isLocal = false;
+global.isClientSide = false;
 global.isTest = false; //No need to flip manually
 global.pause = false;
 
@@ -357,6 +358,19 @@ global.sharedSettings = { //Initial 1 time only config settings
 	speedCap:speedCap,
 	clientSideMovement:clientSideMovement,
 	laserMaxCharge:laserMaxCharge,
+	diagMovementScale:diagMovementScale,
+	playerMaxSpeed:playerMaxSpeed,
+	staggerScale:staggerScale,
+	playerAcceleration:playerAcceleration,
+	laserOffsetX:laserOffsetX,
+	rechargeDelayTime:rechargeDelayTime,
+	maxEnergyMultiplier:maxEnergyMultiplier,
+	cloakingEnabled:cloakingEnabled,
+	boostEnergyCost:boostEnergyCost,
+	boostAmount:boostAmount,
+	cloakDrag:cloakDrag,
+	bagDrag:bagDrag,
+	meleeRange:meleeRange,
 };
 
 // map = "horde";

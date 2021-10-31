@@ -187,7 +187,7 @@ var pickupPickup = function(playerId, pickupId, pickupOverride = false){
 			playerPickingUp.weapon = 5;
 			updatePlayerList.push({id:playerId,property:"weapon",value:playerPickingUp.weapon});	
 		}
-		else { //because the sfx will already trigger automatically clientside if switching weapons to SG
+		else { //because the sfx will already trigger automatically clientside if switching weapons to Lazer
 			sfx = "sfxLaserEquip";
 		}
 		playerPickingUp.laserClip += pickup.amount;

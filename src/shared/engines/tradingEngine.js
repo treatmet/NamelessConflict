@@ -201,7 +201,7 @@ var createTradeSocketEvents = function(socket, cognitoSub, tradeId){
 	socket.on("chat", function(obj){
 		trade.tradeActivityTimestamp = new Date().getTime();
 		var distance = new Date().getTime() - trade.tradeActivityTimestamp;
-		console.log(trade.tradeId + "UPDATED TIMESTAMP:" + trade.tradeActivityTimestamp + " WE ARE " + distance + " FROM TIMEOUT");
+		//console.log(trade.tradeId + "UPDATED TIMESTAMP:" + trade.tradeActivityTimestamp + " WE ARE " + distance + " FROM TIMEOUT");
 		var text = obj.username + ": " + obj.text;
 
 		var requestorSocket = SOCKET_LIST[getSocketIdFromCognitoSub(trade.requestorCognitoSub)];

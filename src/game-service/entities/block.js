@@ -137,6 +137,7 @@ var checkCollision = function(obj, isBouncable = false){
 		posUpdated = true;
 	}
 
+
 	for (var i in blockList){
 		if (obj.x > blockList[i].x - extendLeftOfBlock && obj.x < blockList[i].x + blockList[i].width + extendRightOfBlock && obj.y > blockList[i].y - extendTopOfBlock && obj.y < blockList[i].y + blockList[i].height + extendBottomOfBlock){												
 			if (blockList[i].type == "normal" || blockList[i].type == "red" || blockList[i].type == "blue"){
@@ -211,8 +212,10 @@ var checkCollision = function(obj, isBouncable = false){
 					obj.y += pushStrength;
 				}
 				else {
+					//console.log("PUSHDOWN obj.y:" + obj.y + " obj.speedY:" + obj.speedY);
 					obj.speedY += blockPushSpeed;
 					if (obj.speedY > speedCap*0.75){obj.speedY = speedCap*0.75;}
+					//console.log("UPDATED obj.y:" + obj.y + " obj.speedY:" + obj.speedY);
 				}
 				posUpdated = true;
 			}

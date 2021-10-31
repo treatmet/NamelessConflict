@@ -565,6 +565,7 @@ function getSafeCoordinates(team){
 
 function processEntityPush(entity){
 	if (entity.pushSpeed > 0){
+		entity.sendPosToClient = true;
 		var subtractPushSpeed = Math.floor(entity.pushSpeed / 10); 
 		entity.pushSpeed -= subtractPushSpeed;
 		if (entity.pushSpeed > pushMaxSpeed){entity.pushSpeed = pushMaxSpeed;}
@@ -599,11 +600,8 @@ function processEntityPush(entity){
 		}						
 		entity.pushSpeed--;
 
-		if (player.getPlayerById(entity.id)){
-			updatePlayerList.push({id:entity.id,property:"x",value:entity.x});
-			updatePlayerList.push({id:entity.id,property:"y",value:entity.y});
-		}
-		else if (thug.getThugById(entity.id)){
+
+		if (thug.getThugById(entity.id)){
 			updateThugList.push({id:entity.id,property:"x",value:entity.x});
 			updateThugList.push({id:entity.id,property:"y",value:entity.y});
 		}
@@ -1473,7 +1471,7 @@ var updatePlayersRatingAndExpFromDB = function(playerList, cb){
 }
 
 var joinGame = function(cognitoSub, username, team, partyId){
-	//if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" && isLocal){dataAccessFunctions.giveUsersItemsByTimestamp();}
+	if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" && isLocal){dataAccessFunctions.giveUsersItemsByTimestamp();}
 
 	log("Attempting to join game..." + cognitoSub);
 
@@ -1653,13 +1651,26 @@ var resetHordeMode = function(playerId = false){
 const tickLengthMs = 1000/60;
 var ticksSinceLastSecond = 0;
 var staleCustomGameThresholdTimer = 0;
+var globalServerTimer = 0;
 
 var gameLoop = function(){
 	ticksSinceLastSecond++;
+	globalServerTimer++;
 	if (pause == true)
 		return;
 	
-	player.runPlayerEngines();
+	var rtpInfo = false;
+	var plyrs = player.getPlayerList();
+	for (var p in plyrs){
+		if (plyrs[p].cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea"){
+			rtpInfo = "y:" + plyrs[p].y + " speedY:" + plyrs[p].speedY;
+		}
+	}
+
+	// if (rtpInfo)
+	// 	log("NEW FRAME| " + rtpInfo);
+
+	player.runPlayerEngines(); //run player engines
 	grenade.runEngines();
 	thug.runThugEngines();
 		
@@ -1783,7 +1794,6 @@ secondIntervalLoop();
 function secondIntervalLoop(){
 
 	var now = Date.now();
-
 	if (previousSecond + secondLengthMs - sloppyTimerWindowMs <= now){
 		previousSecond = now;
 		nextSecond += secondLengthMs;
@@ -1809,8 +1819,9 @@ function secondIntervalLoop(){
 	}
 }
 
-
+var sendClientPosTimer = 2;
 var secondIntervalFunction = function(){
+
 
 	//ranked Eligibility on timeout
 	if (!pregame && !gameOver)
@@ -1849,7 +1860,16 @@ var secondIntervalFunction = function(){
 			socket.emit('votesUpdate',votesData);
 		}
 	}
-	
+	if (sendClientPosTimer <= 0){
+		sendClientPosTimer = 2;
+		var players = player.getTeamPlayerList();
+
+		for (var p in players){
+			players[p].sendPosToClient = true;
+		}
+	}
+	sendClientPosTimer--;
+
 	//Clock shit
 	if ((gameMinutesLength > 0 || gameSecondsLength > 0) && !gameOver){
 		if (!pregame){
@@ -2323,3 +2343,4 @@ module.exports.gameServerSync = gameServerSync;
 module.exports.isBagHome = isBagHome;
 module.exports.eliminationRoundWin = eliminationRoundWin;
 module.exports.checkIfRoundOver = checkIfRoundOver;
+module.exports.globalServerTimer = globalServerTimer;

@@ -385,26 +385,22 @@ var checkBodyCollisionWithGroupOfBodies = function(self, list){
 			var ay1 = dy1/dist1;
 			if (dist1 < meleeRange){				
 				if (typeof self.boosting != 'undefined' && self.boosting > 0){  //melee boost collision bash smash
-
-					if(self.throwingObject == 0){ 
-						self.updatePropAndSend("throwingObject", 20);
-						self.updatePropAndSend("shootingDir", self.walkingDir);
+					if (!isClientSide){
+						if(self.throwingObject == 0){ 
+							self.updatePropAndSend("throwingObject", 20);
+							self.updatePropAndSend("shootingDir", self.walkingDir);
+						}
+						entity.getSlammed(self.id, self.walkingDir);
 					}
-					entity.getSlammed(self.id, self.walkingDir);
-
-					if (entity.health > 0){
-						self.speedX += dx1/2;
-						self.speedY += dy1/2;
-					}
-					else {
-						self.speedX -= dx1/5;
-						self.speedY -= dy1/5;
-					}
-
 				}
-				else {					
-					self.x += ax1 / (dist1 / 70); //Higher number is greater push
-					self.y += ay1 / (dist1 / 70);
+				else {
+					var newX = self.x + ax1 / (dist1 / 70);
+					var newY = self.y + ay1 / (dist1 / 70);
+					console.log(self.name + " Moving from " + self.y + " to " + newY + " while pressingW:" + self.pressingW);
+					self.x = newX;
+					self.y = newY;
+					// self.updatePropAndSend("x", newX);
+					// self.updatePropAndSend("y", newY);
 				}
 				posUpdated = true;
 			}
