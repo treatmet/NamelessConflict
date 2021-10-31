@@ -382,7 +382,9 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 				logg("Saved player from dipping below zero ranking");
 				ptsGained = -player.rating; //lose all points
 			}
-
+			
+			ptsGained = 0;	
+			
 			//Eligible for rank up/down this game?
 			if (gametype == "ffa"){
 				var timeElapsed = (gameMinutesLength * 60 + gameSecondsLength) - (minutesLeft * 60 + secondsLeft);
