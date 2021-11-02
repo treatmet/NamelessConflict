@@ -44,6 +44,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		customizations: customizations,
 		settings: settings,
 		throwingObject:0,
+		grenades:maxGrenades,
+		grenadeEnergy:100,
 
 		cash:(gametype == "elim" ? startingCash : 0),
 		cashEarnedThisGame:0,
@@ -390,7 +392,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 		/////////////////////// ENERGY /////////////////////
 		if (self.rechargeDelay <= 0 && self.energy < (100 * self.hasBattery)){
-			self.energy++;
+			self.energy += 2;
 			if ((self.hasBattery > 1 && self.energy == 100) || (self.hasBattery > 2 && self.energy == 200) || (self.hasBattery > 3 && self.energy == 300) || (self.hasBattery > 4 && self.energy == 400))
 				self.energy++; //Free extra energy at 100 if more than one battery to avoid stopping the charge sfx at 100 (normally 100 is "charge complete")
 			if (self.hasBattery == 1 && self.energy > 100){
@@ -403,6 +405,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
 		}
 		if (self.rechargeDelay > 0){self.rechargeDelay--;}
+
+		//GRENADE RECHARGE
+		if (grenadeResource){
+			if (self.grenadeEnergy < 100 && self.grenades < self.maxGrenades){
+				self.grenadeEnergyCost += grenadeResourceRechargeSpeed;
+				if (self.grenadeEnergy >= 100){
+					self.grenades++;
+					self.grenadeEnergy = 0;
+				}
+			}
+		}
 				
 		///////////////////////CLOAKING/////////////////////
 		if (self.cloakEngaged && !self.energyExhausted){
@@ -705,13 +718,20 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				self.updatePropAndSend("throwingObject", -1);
 				self.updatePropAndSend("reloading", 0);
 			}
-			else if (!self.energyExhausted){ //bagGrenades bag grenade  && !self.holdingBag
+			else if (!grenadeResource && !self.energyExhausted){
 				self.expendEnergy(grenadeEnergyCost);
-				grenade.create(self.id, self.id, self.x, self.y);
-				self.updatePropAndSend("throwingObject", -1);
-				self.updatePropAndSend("reloading", 0);	
-			}		
+				self.pullNewGrenade();
+			}
+			else if (grenadeResource && self.grenades > 0){
+				self.grenades--;
+				self.pullNewGrenade();
+			}
 		}
+	}
+	self.pullNewGrenade = function(){
+		grenade.create(self.id, self.id, self.x, self.y);
+		self.updatePropAndSend("throwingObject", -1);
+		self.updatePropAndSend("reloading", 0);	
 	}
 
 	self.throwGrenade = function(){
@@ -1434,7 +1454,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.multikill = 0;
 		self.multikillTimer = 0;
 		self.lastEnemyToHit = 0;
-		self.energyExhausted = false;		
+		self.energyExhausted = false;	
 		
 		self.firing = 0; //0-3; 0 = not firing
 		self.aiming = 0;
@@ -1445,6 +1465,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.updatePropAndSend("cloakEngaged", false);
 		self.updatePropAndSend("boosting", 0);
 		self.updatePropAndSend("throwingObject", 0);
+		self.updatePropAndSend("grenades", maxGrenades);
+		self.updatePropAndSend("grenadeEnergy", 100);
 		self.PClip = 15;
 		updatePlayerList.push({id:self.id,property:"PClip",value:self.PClip});
 

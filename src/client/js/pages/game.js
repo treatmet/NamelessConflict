@@ -186,6 +186,7 @@ var grenadeTimer = 0; //Seconds (translated to frames)
 var grenadeThrowSpeed = 0;
 var grenadeDrag = 0;
 var laserMaxCharge = 0;
+var grenadeResource = false;
 
 //-------------------------------------------------------------------------------------
 
@@ -602,6 +603,8 @@ Img.weapon4Key = new Image();
 Img.weapon4Key.src = "/src/client/img/4sg.png";
 Img.weapon5Key = new Image();
 Img.weapon5Key.src = "/src/client/img/5lz.png";
+Img.grenadeCountIcon = new Image();
+Img.grenadeCountIcon.src = "/src/client/img/grenadeUI.png";
 Img.energyIcon = new Image();
 Img.energyIcon.src = "/src/client/img/energyIcon.png";
 Img.energyBoostIcon = new Image();
@@ -2744,7 +2747,6 @@ function playGrenadeClinkSfx(x, y){ //playExplosionSfx
 
 function drawMap() {
 	if (hideBlocks){return;}
-	drawImage(Img.moon, 890, 10);
 	if (reallyLowGraphicsMode){
 		//ctx.fillStyle = '#585858';
 		ctx.fillStyle = '#323232';
@@ -4905,6 +4907,12 @@ function drawHUD(){
 			if (myPlayer.laserClip > 0){
 				drawImage(Img.weapon5Key, canvasWidth - 55 - iconWidth, canvasHeight - 130 - liftBottomHUD, Img.weapon4Key.width*0.75, Img.weapon4Key.height*0.75);
 			}
+		}
+
+		//Grenade Recharge
+		if (grenadeResource){
+			drawImage(Img.grenadeCountIcon, canvasWidth + 15 - iconWidth, canvasHeight - 97 - liftBottomHUD);
+			
 		}
 
 
@@ -8151,7 +8159,7 @@ document.onkeydown = function(event){
 	
 	else if(hitKeyCode === 85 && myPlayer.id && chatInput.style.display == "none"){ //"U" //U (TESTING BUTTON) DEBUG BUTTON testing U Testing testinButton
 		if (isLocal || myPlayer.eliminationSpectate || (myPlayer.team != 0) ){	
-			if (gametype == "elim")
+			if (gametype == "elim" && !gameOver)
 				shop.active = true;
 			if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" || isLocal){
 				//targetZoom -= zoomRate;

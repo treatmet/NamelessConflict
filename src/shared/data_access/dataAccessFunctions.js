@@ -311,7 +311,7 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				  	continue;
 				}
 
-				if (customizationOptions.indexOf("ivoryMGWeapon") == -1){
+				if (customizationOptions.indexOf("ivorySGWeapon") == -1){
 					customizationOptions.push("ivoryMGWeapon");
 					console.log("Pushing ivoryMGWeapon");
 					updatey = true;

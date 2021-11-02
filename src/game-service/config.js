@@ -97,7 +97,7 @@ global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
 global.diagMovementScale = (2/3);
 global.maxEnergyMultiplier = 1;
-global.rechargeDelayTime = 130; //Double for breaking under zero energy
+global.rechargeDelayTime = 100; //Double for breaking under zero energy
 global.healDelayTime = 300;
 global.healRate = 5; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal) //regenSpeed healthRegenSpeed
 global.respawnTimeLimit = 3 * 60;
@@ -120,6 +120,9 @@ global.grenadeDamage = 30;
 global.grenadeDamageScale = 1;
 global.grenadePower = 0.6;
 global.grenadeRaySpeed = 8;
+global.grenadeResource = true;
+global.grenadeResourceRechargeSpeed = 0.1; // out of 100
+global.maxGrenades = 2;
 
 //Boost config
 global.boostDamage = 34;
@@ -357,6 +360,9 @@ global.sharedSettings = { //Initial 1 time only config settings
 	speedCap:speedCap,
 	clientSideMovement:clientSideMovement,
 	laserMaxCharge:laserMaxCharge,
+	grenadeResource:grenadeResource,
+	grenadeResourceRechargeSpeed:grenadeResourceRechargeSpeed,
+	maxGrenades:maxGrenades,
 };
 
 // map = "horde";
