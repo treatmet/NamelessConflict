@@ -2769,22 +2769,22 @@ function drawMap() {
 		//#474c62 deep blue
 		//#564762 purple
 		if (map == "longest"){
-			ctx.fillStyle = '#475e62'; 
+			ctx.fillStyle = '#575f60'; 
 		}
 		else if (map == "thepit"){
 			ctx.fillStyle = '#585858'; //orig
 		}
 		else if (map == "crik"){
-			ctx.fillStyle = '#4e6247'; //orig
+			ctx.fillStyle = '#576058'; //orig
 		}
 		else if (map == "narrows"){
-			ctx.fillStyle = '#5c4848'; //orig
+			ctx.fillStyle = '#605757'; //orig
 		}
 		else if (map == "longNarrows"){
-			ctx.fillStyle = '#665540'; //orig
+			ctx.fillStyle = '#605c57'; //orig
 		}
 		else if (map == "whirlpool"){
-			ctx.fillStyle = '#474c62'; //orig
+			ctx.fillStyle = '#575860'; //orig
 		}
 		else {
 			ctx.fillStyle = '#585858'; //orig
