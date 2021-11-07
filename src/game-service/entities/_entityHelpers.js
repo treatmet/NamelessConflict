@@ -5,6 +5,7 @@ var sprayBloodOntoTarget = function(shootingDir, targetX, targetY, targetId) {
 	data.shootingDir = shootingDir;
 	data.targetId = targetId;
 	for(var i in SOCKET_LIST){
+		if (getPlayerById(i).)
 		SOCKET_LIST[i].emit('sprayBloodOntoTarget',data);
 	}
 }
