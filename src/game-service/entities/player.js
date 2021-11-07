@@ -44,8 +44,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		customizations: customizations,
 		settings: settings,
 		throwingObject:0,
-		grenades:maxGrenades,
-		grenadeEnergy:100,
+		grenades:0,
+		grenadeEnergy:-10,
 
 		cash:(gametype == "elim" ? startingCash : 0),
 		cashEarnedThisGame:0,
@@ -408,8 +408,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 		//GRENADE RECHARGE
 		if (grenadeResource){
-			if (self.grenadeEnergy < 100 && self.grenades < self.maxGrenades){
-				self.grenadeEnergyCost += grenadeResourceRechargeSpeed;
+			if (self.grenadeEnergy < 100 && self.grenades < maxGrenades){
+				self.grenadeEnergy += grenadeRechargeSpeed;
 				if (self.grenadeEnergy >= 100){
 					self.grenades++;
 					self.grenadeEnergy = 0;
@@ -723,11 +723,12 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				self.pullNewGrenade();
 			}
 			else if (grenadeResource && self.grenades > 0){
-				self.grenades--;
+				self.updatePropAndSend("grenades", self.grenades - 1, 1);
 				self.pullNewGrenade();
 			}
 		}
 	}
+
 	self.pullNewGrenade = function(){
 		grenade.create(self.id, self.id, self.x, self.y);
 		self.updatePropAndSend("throwingObject", -1);
@@ -893,7 +894,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.processChargingLaser = function(){	//processLaser
-		if (self.weapon == 5 && self.laserClip > 0 && self.pressingArrowKey() && self.throwingObject === 0){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
+		if (self.weapon == 5 && self.laserClip > 0 && self.pressingArrowKey() && self.throwingObject === 0 && self.health > 0){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
 			if (self.chargingLaser < laserMaxCharge && self.fireRate <= 0){
 				self.chargingLaser++;
 				if (self.chargingLaser == 1){ //Only send laser to client when first charing up to initiate sfx
@@ -1129,6 +1130,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 
 	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX, weapon = false){
+		if (!self || !shooter){return;} //shooter may have thrown a nade and logged out
 		if (self.health <= 0){return;}
 		if (!weapon){weapon = shooter.weapon;}
 		if (weapon == 6){
@@ -1429,6 +1431,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self[propName] = value;
 			if (!singlePlayer)
 				updatePlayerList.push({id:self.id,property:propName,value:value});	
+			else if (singlePlayer == 2) {
+				updatePlayerList.push({id:self.id,property:propName,value:value, single:2});	
+			}
 			else {
 				updatePlayerList.push({id:self.id,property:propName,value:value, single:true});	
 			}
@@ -1455,6 +1460,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.multikillTimer = 0;
 		self.lastEnemyToHit = 0;
 		self.energyExhausted = false;	
+		self.grenades = maxGrenades;
+		updatePlayerList.push({id:self.id,property:"grenades",value:self.grenades});
+		self.grenadeEnergy = 0;
+		updatePlayerList.push({id:self.id,property:"grenadeEnergy",value:self.grenadeEnergy});
 		
 		self.firing = 0; //0-3; 0 = not firing
 		self.aiming = 0;
@@ -1465,8 +1474,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.updatePropAndSend("cloakEngaged", false);
 		self.updatePropAndSend("boosting", 0);
 		self.updatePropAndSend("throwingObject", 0);
-		self.updatePropAndSend("grenades", maxGrenades);
-		self.updatePropAndSend("grenadeEnergy", 100);
 		self.PClip = 15;
 		updatePlayerList.push({id:self.id,property:"PClip",value:self.PClip});
 
@@ -2014,20 +2021,22 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							var recipient = getPlayerById(SOCKET_LIST[i].id);
 							if (!recipient){continue;}
 
+							var textToSend = data[1];
+
 							//Profanity filter
 							var profanityFilterSetting = recipient.settings.display.find(setting => setting.key == "profanityFilter")
 							if (!profanityFilterSetting || profanityFilterSetting.value == true){
-								data[1] = profanity.censor(data[1]);
+								textToSend = profanity.censor(data[1]);
 							}
 
 							//Team chat check
-							if (data[1].substring(0,6) == "[Team]" && getPlayerById(data[0]).team != recipient.team && gametype != "ffa"){continue;}
+							if (textToSend.substring(0,6) == "[Team]" && getPlayerById(data[0]).team != recipient.team && gametype != "ffa"){continue;}
 
-							SOCKET_LIST[i].emit('addToChat',getPlayerById(data[0]).name.substring(0,12) + ': ' + data[1].substring(0,50), getPlayerById(data[0]).id);
-							var overHeadChatMsg = data[1].substring(0,50);
+							SOCKET_LIST[i].emit('addToChat',getPlayerById(data[0]).name.substring(0,12) + ': ' + textToSend.substring(0,50), getPlayerById(data[0]).id);
+							var overHeadChatMsg = textToSend.substring(0,50);
 							var overheadChatTeam = 0;
-							if (data[1].substring(0,6) == "[Team]"){
-								overHeadChatMsg = data[1].substring(6,50);
+							if (textToSend.substring(0,6) == "[Team]"){
+								overHeadChatMsg = textToSend.substring(6,50);
 								overheadChatTeam = getPlayerById(data[0]).team;
 							}
 							updateEffectList.push({type:7, playerId:data[0], text:overHeadChatMsg, team:overheadChatTeam});

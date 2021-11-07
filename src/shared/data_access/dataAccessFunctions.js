@@ -280,7 +280,7 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("October 21, 2021 16:00:00");
+	var thresholdDate = new Date("October 4, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -311,18 +311,18 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				  	continue;
 				}
 
-				if (customizationOptions.indexOf("ivorySGWeapon") == -1){
-					customizationOptions.push("ivoryMGWeapon");
-					console.log("Pushing ivoryMGWeapon");
+				if (customizationOptions.indexOf("ivoryPistolWeapon") == -1){
+					customizationOptions.push("ivoryPistolWeapon");
+					console.log("Pushing ivoryPistolWeapon");
 					updatey = true;
 				}
     
     
-				if (customizations["1"].mgColor != "#fffef8"){
-					customizations["1"].mgColor = "#fffef8"; //CONFIGURATION
-					customizations["2"].mgColor = "#fffef8"; //CONFIGURATION
-					updatey = true;
-				}
+				// if (customizations["1"].pistolColor != "#fffef8"){
+				// 	customizations["1"].pistolColor = "#fffef8"; //CONFIGURATION
+				// 	customizations["2"].pistolColor = "#fffef8"; //CONFIGURATION
+				// 	updatey = true;
+				// }
 
 				//customizationOptions.push("bronze3_0Icon");
 				//customizationOptions.push("silver3_0Icon");

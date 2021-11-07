@@ -112,7 +112,7 @@ var resetGameSettingsToStandard = function(){
 	console.log("I'm setting " + port + " customServer to false");
 	customServer = false;
 	pregameIsHorde = true;
-	serverName = "Ranked " + port.substring(2,4);
+	serverName = "RANKED " + port.substring(2,4);
 	bannedCognitoSubs = [];
 	createdByCognitoSub = "";
 	mapEngine.initializeBlocks();
@@ -1034,7 +1034,7 @@ function tabulateVotes(){
 	if (thePitVotes > longestVotes && thePitVotes > crikVotes && thePitVotes > narrowsVotes && thePitVotes > longNarrowsVotes && thePitVotes > whirlpoolVotes){
 		map = "thepit";
 	}
-	else if (longestVotes > thePitVotes && longestVotes > crikVotes && longestVotes > narrowsVotes && longestVotes > longNarrowsVotes && longNarrowsVotes > whirlpoolVotes){
+	else if (longestVotes > thePitVotes && longestVotes > crikVotes && longestVotes > narrowsVotes && longestVotes > longNarrowsVotes && longestVotes > whirlpoolVotes){
 		map = "longest";
 	}
 	else if (crikVotes > thePitVotes && crikVotes > longestVotes && crikVotes > narrowsVotes && crikVotes > longNarrowsVotes && crikVotes > whirlpoolVotes){
@@ -1975,7 +1975,7 @@ profanity.addWords([
 
 function getServerName(){
 	if (!customServer){
-		serverName = "Ranked " + port.substring(2,4);
+		serverName = "RANKED " + port.substring(2,4);
 		if (gametype == "horde"){
 			serverName = "Invasion " + port.substring(2,4);
 		}
