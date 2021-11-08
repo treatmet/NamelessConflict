@@ -887,6 +887,7 @@ var eliminationRoundWin = function(team) { //endRound //winRound
 	}
 	roundOver = true;
 	nextGameTimer = timeBeforeNextRound;
+	pickup.clearDroppedPickups();
 
 	for (var i in SOCKET_LIST){
 		var socket = SOCKET_LIST[i];	

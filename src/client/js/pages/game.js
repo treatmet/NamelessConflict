@@ -4480,7 +4480,6 @@ function activateShop(active){
 }
 
 function drawShop(){
-	calculateShopMechanics();
 
 		if (leftArrowX > 77){
 			arrowsGoingOut = true;
@@ -4523,7 +4522,9 @@ function drawShop(){
 		
 		var inventoryYoffset = 100;
 
-		drawImage(Img.black50, 50 + teamBlackMarketXOffset, 0, 564, canvasHeight);
+		//drawImage(Img.black50, 50 + teamBlackMarketXOffset, 0, 564, canvasHeight);
+		ctx.fillStyle = 'black';
+		ctx.fillRect(50, 0, 564, canvasHeight);
 		drawImage(Img.shopInventory, 124 + teamBlackMarketXOffset, 250 + inventoryYoffset);
 		drawImage(Img.upArrow, 249 + moveArrow + teamBlackMarketXOffset, 175 + inventoryYoffset - shop.purchaseEffectTimer);
 		drawImage(Img.downArrow, 241.5 + teamBlackMarketXOffset, 370 + inventoryYoffset);
@@ -4909,6 +4910,7 @@ function drawInformation(){
 
 //Bloody border
 function drawBloodyBorder(){
+	if (reallyLowGraphicsMode){return;}
 	noShadow();
 	if (Player.list[myPlayer.id].health < 100 && !myPlayer.eliminationSpectate){ 
 		var bloodyScale = Player.list[myPlayer.id].health;
@@ -7729,8 +7731,8 @@ var BoostBlast = function(id){
 BoostBlast.list = [];
 
 
-socket.on('shootUpdate', function(shotData){	
-	// log("new shot");
+socket.on('shootUpdate', function(shotData){
+	//log("new shot");
 	shootUpdateFunction(shotData);
 });
 
