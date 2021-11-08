@@ -1366,6 +1366,47 @@ function checkForUnhealthyServers(){
 	});
 }
 
+/// MESSAGING ///////////
+
+function insertMessage(senderCognitoSub, recipientCognitoSub, message, cb){
+	var obj = {
+		id: Math.random(),
+		senderCognitoSub:senderCognitoSub,
+		recipientCognitoSub: recipientCognitoSub,
+		timestamp: new Date(),
+		message:message
+	};
+
+	dataAccess.dbUpdateAwait("RW_MSG", "ups", {id:id}, obj, async function(err, res){
+		if (err){
+			logg("DB ERROR - insertMessage(): " + err);
+		}	
+		cb(obj);
+	});
+
+}
+
+function deleteMessage(messageId, cb){
+	dataAccess.dbUpdateAwait("RW_MSG", "rem", {id:messageId}, {}, async function(err, res){
+		if (err){
+			logg("DB ERROR - deleteMessage() MessageId: " + messageId + " Error:" + err);
+		}	
+		cb(true);
+	});
+
+}
+
+function getConversation(cognitoSubOne, cognitoSubTwo){
+	var params = {onlineTimestamp:{ $gt: thresholdDate }};
+
+
+	console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
+	dataAccess.dbFindOptionsAwait("RW_MSG", params, {limit:2000}, async function(err, resy){
+
+	});
+
+}
+
 module.exports.getUser = getUser;
 module.exports.getAllUsersOnServer = getAllUsersOnServer;
 module.exports.getPartyForUser = getPartyForUser;

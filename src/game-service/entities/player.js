@@ -2982,7 +2982,7 @@ function playerEvent(playerId, event){
 			if (!gameOver && !pregame){
 				Player.list[playerId].benedicts++;
 				dataAccessFunctions.dbUserUpdate("inc", Player.list[playerId].cognitoSub, {benedicts: 1});
-				if (Player.list[playerId].benedicts >= 3 && !customServer){
+				if (Player.list[playerId].benedicts >= 3){
 					bannedCognitoSubs.push({cognitoSub:Player.list[playerId].cognitoSub, reason:"being a Benedict Arnold"});
 					SOCKET_LIST[Player.list[playerId].id].emit("betrayalKick");
 				}

@@ -1602,6 +1602,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		
 		//Kick out of shop upon damage
 		if (playerDataPack[i].id == myPlayer.id && playerDataPack[i].property == "health" && playerDataPack[i].value < Player.list[playerDataPack[i].id].health){
+			screenShakeCounter = 8; 
 			shop.active = false;
 		}
 
@@ -2278,6 +2279,7 @@ socket.on('showShop', function(){
 
 function endGame(){
 	shop.active = false;
+	determineBorderStyle();
 	if (!mute){
 		sfxStealGood.play();		
 	}	
@@ -2455,6 +2457,9 @@ function updateCamera(){
 
 function screenShake(){ //shakeScreen
 	if (screenShakeCounter >= 0) {
+		if (!gameOver && !roundOver){
+			canvas.style.border = "2px solid #FF0000";	
+		}
 		if (screenShakeCounter == 8){
 			centerX -= 10 * screenShakeScale;
 		}
@@ -4414,8 +4419,6 @@ function drawPlayerTags(){
 
 					//Custom namecolor, if accessible
 					if (Player.list[i].customizations && Player.list[i].customizations[Player.list[i].team]) {
-					
-
 						if (Player.list[i].id == myPlayer.id){
 						}
 						if (myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true){
@@ -4429,13 +4432,6 @@ function drawPlayerTags(){
 						if (gametype == "ffa" && (nameColor == "#9d0000" || nameColor == "#00259d")){
 							nameColor = "black";
 						}
-						
-					
-						nameColor = Player.list[i].customizations[Player.list[i].team].nameColor;
-					
-					
-					
-					
 					}
 
 					
@@ -6362,6 +6358,7 @@ function processChatMute(hoverPlayerId, y){
 	}
 	if (mutedPlayerIds.filter(playerId => playerId == hoverPlayerId).length > 0){
 		drawImage(Img.mute, 123, y - 13, 16, 16); //mute icon
+		drawImage(Img.redLaser, scoreBoardX, y - 21, 300, scoreboardPlayerNameGap);
 	}
 }
 
@@ -7597,7 +7594,6 @@ function sprayBloodOntoTargetFunction(data){
 		Blood(data.targetX, data.targetY, data.shootingDir, scale);	
 	}
 
-	if (data.targetId == myPlayer.id){ screenShakeCounter = 8; } 
 	if (!mute){
 		var dx1 = myPlayer.x - data.targetX;
 		var dy1 = myPlayer.y - data.targetY;
