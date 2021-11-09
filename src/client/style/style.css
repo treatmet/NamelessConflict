@@ -1879,3 +1879,118 @@ div#privacyContent {
     overflow-y: auto;
     height: 85%;
 }
+
+/* MESSAGING */
+.messagesSection {
+    height: calc(100% - 170px);
+    display: inline-block;
+    width: 66.4%;
+    position: relative;
+}
+.messagesTableContainer {
+    height: calc(100% - 105px);
+    overflow-y: auto;
+}
+
+.messagesInputDiv {
+    position: absolute; 
+    bottom: 0;
+    width:100%;
+    background-color: #3d3d3f;
+    border: 1px solid black;
+    height: 100px;
+}
+
+form#chat-form-msg {
+    padding-left: 5px;
+    margin-block-end: 5px;
+}
+textarea#chat-input-msg {
+    width: 80%;
+    background: rgba(255, 255, 255, 0.18);
+    color: white;
+    text-shadow: rgb(68 68 68) 1px 0px 1px, rgb(68 68 68) 1px 0px 1px, rgb(68 68 68) 0px 1px 1px, rgb(68 68 68) 0px -1px 1px, rgb(68 68 68) -1px -1px 0px, rgb(68 68 68) 1px -1px 0px, rgb(68 68 68) -1px 1px 0px, rgb(68 68 68) 1px 1px 0px;
+    margin-top: 5px;
+    resize: none;
+    float: left;
+}
+#sendMessageButton {
+    float: left;
+    margin-top: 4px;
+    height: 81px;
+    width: 18%;
+    margin-left: 5px;
+    font-size: 16px;
+}
+
+table.conversationsTable {
+    width: 100%;
+}
+
+div#conversationColumn {
+    border-right: 1px solid #404040;
+    overflow-y: auto;
+}
+
+
+.conversation {
+    background-color: rgb(41 41 41);
+    border: 1px solid black;
+    padding: 5px;
+}
+
+.conversation:hover {
+    background-color: rgb(104, 104, 104);
+    border: 1px solid white;
+    cursor: pointer;
+}
+
+.conversationTitle {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+
+
+.messageInfo {
+    width: 100px;
+    display: block;
+    padding-left: 5px;
+    padding-right: 5px;
+    float: left;
+    width: 120px;
+}
+.messageSent .messageInfo {
+    text-align: right;
+ }
+.messageRecieved .messageInfo {
+    text-align: left;
+ }
+
+.messageUsername {
+    font-size: 14px;
+}
+.messageSent .messageUsername {
+    color: white;
+}
+.messageRecieved .messageUsername {
+    color: rgb(136 136 220);
+}
+
+.messageTimestamp {
+    font-size: 10px;
+    color: grey;
+}
+
+.message {
+    border: 1px solid black;
+    padding: 5px;   
+    float:left;
+    max-width: calc(100% - 145px);
+}
+.messageSent .message {
+    background-color: rgb(122 122 122);
+}
+.messageRecieved .message{
+    background-color: rgb(114 114 186);
+}

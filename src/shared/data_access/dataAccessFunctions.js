@@ -1377,7 +1377,7 @@ function insertMessage(senderCognitoSub, recipientCognitoSub, message, cb){
 		message:message
 	};
 
-	dataAccess.dbUpdateAwait("RW_MSG", "ups", {id:id}, obj, async function(err, res){
+	dataAccess.dbUpdateAwait("RW_MSG", "ups", {id:obj.id}, obj, async function(err, res){
 		if (err){
 			logg("DB ERROR - insertMessage(): " + err);
 		}	
@@ -1395,6 +1395,35 @@ function deleteMessage(messageId, cb){
 	});
 
 }
+
+function insertConversation(cognitoSubOne, cognitoSubTwo){
+	var upsertedCognitoSubOne = cognitoSubOne;
+	var upsertedCognitoSubTwo = cognitoSubTwo;
+
+	if (cognitoSubOne.localeCompare(cognitoSubTwo) == -1){
+		upsertedCognitoSubOne = cognitoSubTwo;
+		upsertedCognitoSubTwo = cognitoSubOne;
+	}
+
+	var obj = {
+		id: Math.random(),
+		cognitoSubOne:upsertedCognitoSubOne,
+		cognitoSubOneUnreads:0,
+		cognitoSubTwo: upsertedCognitoSubTwo,
+		cognitoSubTwoUnreads: 0,
+		lastMessageTimestamp: new Date(),
+		lastMessagePreview: "",
+	};
+
+	dataAccess.dbUpdateAwait("RW_CONVERSATION", "ups", {cognitoSubOne:upsertedCognitoSubOne, cognitoSubTwo:upsertedCognitoSubTwo}, obj, async function(err, res){
+		if (err){
+			logg("DB ERROR - insertConversation(): " + err);
+		}	
+		cb(obj);
+	});
+
+}
+
 
 function getConversation(cognitoSubOne, cognitoSubTwo){
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
