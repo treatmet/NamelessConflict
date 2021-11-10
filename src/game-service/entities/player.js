@@ -2037,16 +2037,21 @@ command((socket, matches, data) => {
 		case PERM_DEVELOPER: permstring = "Developer"; break;
 	}
 	socket.emit('addToChat', `You are a ${permstring}`);
-}, "^get(Permission|Perm)(s?)", PERM_NONE);
+}, "^perm$", PERM_NONE);
 
 command((socket, matches, data) => {
 	if (getPlayerById(socket.id).team == 0) spectatePlayer(socket.id);
 	gameEngine.changeTeams(socket.id);
-}, "^team", PERM_NONE);
+}, "^team$", PERM_NONE);
 
 command((socket, matches, data) => {
 	spectatePlayer(socket.id);
-}, "^spec", PERM_NONE);
+}, "^spec$", PERM_NONE);
+
+command((socket, matches, data) => {
+	gameEngine.restartGame();
+}, "^start$", PERM_OWNER);
+
 
 function spectatePlayer(id) {
 	if (getPlayerById(id).team == 0) {
