@@ -1997,7 +1997,7 @@ const PERM_OWNER = 1;
 const PERM_MODERATOR = 2;
 const PERM_DEVELOPER = 3;
 function getPerm(cognitoSub) {
-	var ret = PERM_NONE;
+	let ret = PERM_NONE;
 	if (cognitoSub == createdByCognitoSub)
 		ret = PERM_OWNER;
 	if (ModCognitoSubs.includes(cognitoSub))
@@ -2012,17 +2012,25 @@ const ModCognitoSubs = [ /* There are no moderators yet.*/ ]
 const DevCognitoSubs = [ /* I think... this is RTP? */ "0192fb49-632c-47ee-8928-0d716e05ffea" ]
 
 
-function command(func, /** @type {string} */ match, perm = PERM_NONE)  {
-	this.func = func;
-	this.match = match; /*regex code, see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions */
-	this.perm = perm;
-	command.list.push(this);
+function command(func, /** @type {string} */ match, perm = PERM_NONE) {
+	command.list.push({
+		"func": func,
+		"match": match, /*regex code, see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions */
+		"perm": perm
+	});
 }
 command.list = [];
+function getIDFromName(name) {
+	getPlayerList().forEach(player => {
+		if (String(player.name).startsWith(name))
+			return player.id;
+	})
+	return -1;
+}
 
 // TODO: recreate all the commands -.-
 command((socket, matches, data) => {
-	var permstring = "Citizen";
+	let permstring = "Citizen";
 	switch (getPerm(getPlayerById(socket.id).cognitoSub)) {
 		case PERM_OWNER: permstring = "Custom Owner"; break;
 		case PERM_MODERATOR: permstring = "Moderator"; break;
@@ -2031,21 +2039,49 @@ command((socket, matches, data) => {
 	socket.emit('addToChat', `You are a ${permstring}`);
 }, "^get(Permission|Perm)(s?)", PERM_NONE);
 
+command((socket, matches, data) => {
+	if (getPlayerById(socket.id).team == 0) spectatePlayer(socket.id);
+	gameEngine.changeTeams(socket.id);
+}, "^team( \\w+)?", PERM_NONE);
+
+command((socket, matches, data) => {
+	spectatePlayer(socket.id);
+}, "^spec", PERM_NONE);
+
+function spectatePlayer(id) {
+	if (getPlayerById(id).team == 0) {
+		let teamtochange = 0;
+		if (getActivePlayerListLength() >= maxPlayers){
+			SOCKET_LIST[id].emit('addToChat', "Can't change teams. Game is full!");
+			return;
+		}
+		if (gameEngine.getMoreTeam1Players() >= 1) gameEngine.changeTeams(id, 2);
+		else gameEngine.changeTeams(id, 1);
+		
+	} else {
+		abandonMatch(id);
+		gameEngine.changeTeams(id, 0);
+	}
+}
+
 //Server commands
 function evalServer(socket, data){
 	logg("SERVER COMMAND:" + data);
-	command.list.forEach(c => {
-		var matches = String(data).match(c.match);
+	command.list.forEach((c, i) => {
+		console.log(c);
+		let matches = String(data).match(c.match);
 		if (matches != null) {
 			if (c.perm <= getPerm(getPlayerById(socket.id).cognitoSub)) {
-				c.func(socket, matches, data);
+				c.func(socket, matches, data)
+				return;
 			} else {
 				if (customServer) socket.emit('addToChat', "Insufficient Permissions (try asking the server owner?)");
 				else socket.emit('addToChat', "Insufficient Permissions (try asking a moderator?)");
-				return;
 			}
-		} else socket.emit('addToChat', "Invalid Server Command?");
+			
+		}
 	});
+	socket.emit('addToChat', "Invalid Server Command?");
 	return;
 /*
 	if (!getPlayerById(socket.id))
@@ -2618,7 +2654,7 @@ function evalServer(socket, data){
 	else {
 		socket.emit('addToChat', 'Invalid Command.');
 	}
-	
+	*/
 }
 
 function checkForEmptyWeaponAndSwap(playerId){
@@ -3007,7 +3043,7 @@ function playerEvent(playerId, event){
 			}
 		}
 	}
-	*/
+	
 }
 
 
