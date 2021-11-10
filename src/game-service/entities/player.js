@@ -1992,10 +1992,62 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 	});
 }//End Player.onConnect
 
+const PERM_NONE = 0;
+const PERM_OWNER = 1;
+const PERM_MODERATOR = 2;
+const PERM_DEVELOPER = 3;
+function getPerm(cognitoSub) {
+	var ret = PERM_NONE;
+	if (cognitoSub == createdByCognitoSub)
+		ret = PERM_OWNER;
+	if (ModCognitoSubs.includes(cognitoSub))
+		ret = PERM_MODERATOR;	
+	if (DevCognitoSubs.includes(cognitoSub))
+		ret = PERM_DEVELOPER;	
+	return ret;
+}
+
+// I should put these in a JSON file... TOO BAD
+const ModCognitoSubs = [ /* There are no moderators yet.*/ ]
+const DevCognitoSubs = [ /* I think... this is RTP? */ "0192fb49-632c-47ee-8928-0d716e05ffea" ]
+
+
+function command(func, /** @type {string} */ match, perm = PERM_NONE)  {
+	this.func = func;
+	this.match = match; /*regex code, see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions */
+	this.perm = perm;
+	command.list.push(this);
+}
+command.list = [];
+
+// TODO: recreate all the commands -.-
+command((socket, matches, data) => {
+	var permstring = "Citizen";
+	switch (getPerm(getPlayerById(socket.id).cognitoSub)) {
+		case PERM_OWNER: permstring = "Custom Owner"; break;
+		case PERM_MODERATOR: permstring = "Moderator"; break;
+		case PERM_DEVELOPER: permstring = "Developer"; break;
+	}
+	socket.emit('addToChat', `You are a ${permstring}`);
+}, "^get(Permission|Perm)(s?)", PERM_NONE);
+
 //Server commands
 function evalServer(socket, data){
 	logg("SERVER COMMAND:" + data);
-
+	command.list.forEach(c => {
+		var matches = String(data).match(c.match);
+		if (matches != null) {
+			if (c.perm <= getPerm(getPlayerById(socket.id).cognitoSub)) {
+				c.func(socket, matches, data);
+			} else {
+				if (customServer) socket.emit('addToChat', "Insufficient Permissions (try asking the server owner?)");
+				else socket.emit('addToChat', "Insufficient Permissions (try asking a moderator?)");
+				return;
+			}
+		} else socket.emit('addToChat', "Invalid Server Command?");
+	});
+	return;
+/*
 	if (!getPlayerById(socket.id))
 		return;
 
@@ -2120,6 +2172,10 @@ function evalServer(socket, data){
 	}
 	else if (data == "spectate" || data == "spec"){
 		if (getPlayerById(socket.id).team == 0){
+			if (getActivePlayerListLength() >= maxPlayers){
+				socket.emit('addToChat', "Can't change teams. Game is full!");
+				return;
+			}
 			var team = 1;
 			if (gametype == "horde" || (pregame && pregameIsHorde)){team = 2;}
 			gameEngine.changeTeams(socket.id, team);
@@ -2951,6 +3007,7 @@ function playerEvent(playerId, event){
 			}
 		}
 	}
+	*/
 }
 
 
