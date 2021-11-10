@@ -2072,22 +2072,22 @@ function spectatePlayer(id) {
 //Server commands
 function evalServer(socket, data){
 	logg("SERVER COMMAND:" + data);
+	let called = false;
 	command.list.forEach((c, i) => {
 		console.log(c);
 		let matches = String(data).match(c.match);
 		if (matches != null) {
 			if (c.perm <= getPerm(getPlayerById(socket.id).cognitoSub)) {
+				called = true;
 				c.func(socket, matches, data)
-				return;
 			} else {
 				if (customServer) socket.emit('addToChat', "Insufficient Permissions (try asking the server owner?)");
 				else socket.emit('addToChat', "Insufficient Permissions (try asking a moderator?)");
-				return;
 			}
-			
+			return;	
 		}
 	});
-	socket.emit('addToChat', "Invalid Server Command?");
+	if (!called) socket.emit('addToChat', "Invalid Server Command?");
 	return;
 /*
 	if (!getPlayerById(socket.id))
