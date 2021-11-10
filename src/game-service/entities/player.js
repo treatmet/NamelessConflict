@@ -2077,8 +2077,8 @@ function evalServer(socket, data){
 		console.log(c);
 		let matches = String(data).match(c.match);
 		if (matches != null) {
+			called = true;
 			if (c.perm <= getPerm(getPlayerById(socket.id).cognitoSub)) {
-				called = true;
 				c.func(socket, matches, data)
 			} else {
 				if (customServer) socket.emit('addToChat', "Insufficient Permissions (try asking the server owner?)");
