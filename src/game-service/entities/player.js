@@ -2082,6 +2082,7 @@ function evalServer(socket, data){
 			} else {
 				if (customServer) socket.emit('addToChat', "Insufficient Permissions (try asking the server owner?)");
 				else socket.emit('addToChat', "Insufficient Permissions (try asking a moderator?)");
+				return;
 			}
 			
 		}
