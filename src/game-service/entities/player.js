@@ -2042,7 +2042,7 @@ command((socket, matches, data) => {
 command((socket, matches, data) => {
 	if (getPlayerById(socket.id).team == 0) spectatePlayer(socket.id);
 	gameEngine.changeTeams(socket.id);
-}, "^team( \\w+)?", PERM_NONE);
+}, "^team", PERM_NONE);
 
 command((socket, matches, data) => {
 	spectatePlayer(socket.id);
