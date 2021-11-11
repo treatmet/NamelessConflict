@@ -579,6 +579,13 @@ label#updateInfo {
 	background-color: #529eec;
 }
 
+button#sendMessageProfileButton {
+    height: 30px;
+	padding-top: 0px;
+    padding-left: 7px;
+    padding-right: 7px;
+}
+
 #invitePlayerButtons {
     margin-bottom: 10px;
 }
@@ -1892,6 +1899,15 @@ div#privacyContent {
     overflow-y: auto;
 }
 
+td.messageSent {
+    padding-bottom: 5px;
+}
+
+td.messageRecieved {
+    padding-bottom: 5px;
+}
+
+
 .messagesInputDiv {
     position: absolute; 
     bottom: 0;
@@ -1899,6 +1915,7 @@ div#privacyContent {
     background-color: #3d3d3f;
     border: 1px solid black;
     height: 100px;
+    display: none;
 }
 
 form#chat-form-msg {
@@ -1926,19 +1943,30 @@ textarea#chat-input-msg {
 table.conversationsTable {
     width: 100%;
 }
+table.messagesTable {
+    width: 100%;
+}
 
 div#conversationColumn {
     border-right: 1px solid #404040;
     overflow-y: auto;
+    user-select: none;
 }
 
+div#emptyConversationsInstructions {
+    font-size: 24px;
+    margin-top: 20px;
+}
 
 .conversation {
     background-color: rgb(41 41 41);
     border: 1px solid black;
     padding: 5px;
 }
-
+.conversation.active {
+    background-color: rgb(109 104 148);
+    border: 1px solid white;
+}
 .conversation:hover {
     background-color: rgb(104, 104, 104);
     border: 1px solid white;
@@ -1949,7 +1977,9 @@ div#conversationColumn {
     font-size: 20px;
     font-weight: bold;
 }
-
+.conversationPreview {
+    overflow-wrap: anywhere;
+}
 
 
 .messageInfo {
@@ -1964,6 +1994,7 @@ div#conversationColumn {
     text-align: right;
  }
 .messageRecieved .messageInfo {
+    float: right;
     text-align: left;
  }
 
@@ -1987,10 +2018,26 @@ div#conversationColumn {
     padding: 5px;   
     float:left;
     max-width: calc(100% - 145px);
+    overflow-wrap: anywhere;
+    
 }
 .messageSent .message {
     background-color: rgb(122 122 122);
 }
 .messageRecieved .message{
+    float: right;
     background-color: rgb(114 114 186);
+}
+
+
+#messagingLink a {
+    text-decoration: none;
+}
+
+.messagingLinkUnreads a {
+    color:red;
+}
+
+.messagingLinkUnreads a:hover {
+    color: #b0b0b0;
 }

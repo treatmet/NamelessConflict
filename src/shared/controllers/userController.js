@@ -381,6 +381,80 @@ router.post('/upsertRequest', async function (req, res) {
 	}
 });
 
+router.post('/getOrCreateConversation', async function (req, res) {
+	log("getOrCreateConversation ENDPOINT CALLED WITH:");
+	console.log("--BODY");
+	console.log(req.body);
+
+	dataAccessFunctions.getOrCreateConversation(req.body.cognitoSub, req.body.targetCognitoSub, req.body.username, req.body.targetUsername, function(dbResults){
+		log("Got conversation:");
+		console.log(dbResults);
+		res.status(200);				
+		if (dbResults && dbResults.id){
+			res.send({error:false, conversationId:dbResults.id});
+		}
+		else {
+			res.send({error:"Failed to get or create conversation"});
+		}
+	});			
+});
+
+
+router.get('/getConversations', async function (req, res) {
+	//Transform to get, cog will be at req.query.cognitoSub
+	console.log("getConversations FOR: " + req.query.cognitoSub);
+	console.log(req.query);
+
+	console.log("is there conversation id?");
+	var conversationId = false;
+	if (req.query && req.query.conversationId){
+		console.log("highlight conversation: " + req.query.conversationId);
+		console.log(req.query.conversationId);
+		conversationId = req.query.conversationId;
+	}
+
+	dataAccessFunctions.getUserConversations(req.query.cognitoSub, conversationId, function(dbResults){
+		res.status(200);
+		res.send({error:false, result:dbResults});
+	});
+});
+
+router.get('/getConversationMessages', async function (req, res) {
+	//Transform to get, cog will be at req.query.cognitoSub
+	console.log("getConversationMessages FOR: " + req.query.userOneCognitoSub + " and " + req.query.userTwoCognitoSub);
+	console.log(req.query);
+
+	dataAccessFunctions.getConversationMessages(req.query.userOneCognitoSub, req.query.userTwoCognitoSub, req.query.conversationId, function(dbResults){
+		res.status(200);
+		res.send({error:false, result:dbResults});
+	});
+});
+
+
+router.post('/sendMessage', async function (req, res) {
+	log("sendMessage ENDPOINT CALLED WITH:");
+	console.log("--BODY");
+	console.log(req.body);
+
+	dataAccessFunctions.insertMessage(req.body, function(dbResults){
+		log("sent conversation:");
+		console.log(dbResults);
+		res.status(200);				
+		if (dbResults){
+			res.send({error:false});
+			dataAccessFunctions.updateConversation(req.body.conversationId, req.body.message, req.body.recipientCognitoSub);
+		}
+		else {
+			res.send({error:"Failed to send message"});
+		}
+	});			
+});
+
+
+
+
+// FRIENDS AND PARTY ////////////////////////////////////////////////////////
+
 router.post('/getOnlineFriends', async function (req, res) {
 	//log("getOnlineFriends endpoint called with:");
 	//console.log("--BODY");
@@ -391,6 +465,9 @@ router.post('/getOnlineFriends', async function (req, res) {
 		res.send(dbResults);
 	});
 });
+
+
+
 
 /*	const data = {
 		cognitoSub:cognitoSub
