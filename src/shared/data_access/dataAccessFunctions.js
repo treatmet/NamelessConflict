@@ -288,7 +288,6 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 	] } }; //Bronze
  */
 
-
 	console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:2000}, async function(err, resy){
 		if (resy && resy[0]){ 
@@ -1424,7 +1423,7 @@ function getConversationByCognitoSubs(userOneCognitoSub, userTwoCognitoSub, cb){
 
 function getUserConversations(cognitoSub, conversationId, cb){
 	var params =  { $or: [ {userOneCognitoSub:cognitoSub}, {userTwoCognitoSub:cognitoSub} ] };
-	dataAccess.dbFindOptionsAwait("RW_CONVERSATION", params, {sort:"lastMessageTimestamp"}, function(err, res){
+	dataAccess.dbFindOptionsAwait("RW_CONVERSATION", params, {sort:{lastMessageTimestamp:-1}}, function(err, res){
 		if (err || !res){
 			cb(false);
 		}
@@ -1540,16 +1539,26 @@ function getConversationMessages(cognitoSubOne, cognitoSubTwo, conversationId, c
 	var params =  { $or: [ {senderCognitoSub:cognitoSubOne, recipientCognitoSub:cognitoSubTwo},
 		{senderCognitoSub:cognitoSubTwo, recipientCognitoSub:cognitoSubOne} ] };
 
-	dataAccess.dbFindOptionsAwait("RW_MSG", params, {limit:50, sort:"timestamp"}, async function(err, resy){
+	dataAccess.dbFindOptionsAwait("RW_MSG", params, {limit:50, sort:{timestamp:-1}}, async function(err, resy){
 		if (err){
 			logg("DB ERROR - getConversationMessages(): " + err);
 		}
 		else {
+			if (resy && resy.length > 0)
+				resy = resy.sort(sortByTimestamp);
 			cb(resy);
 		}
 	});
-
 }
+
+function sortByTimestamp(a, b){
+	if (a.timestamp > b.timestamp)
+    return 1;
+  if (a.timestamp < b.timestamp)
+    return -1;
+  return 0;
+}
+
 
 function clearConversationUnreads(conversationId, cognitoSub){
 	conversationId = parseFloat(conversationId);

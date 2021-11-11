@@ -1889,7 +1889,7 @@ div#privacyContent {
 
 /* MESSAGING */
 .messagesSection {
-    height: calc(100% - 170px);
+    height: calc(90% - 185px);
     display: inline-block;
     width: 66.4%;
     position: relative;
@@ -2007,6 +2007,10 @@ div#emptyConversationsInstructions {
 .messageRecieved .messageUsername {
     color: rgb(136 136 220);
 }
+.messageRecieved a {
+    text-decoration: none;
+    color: rgb(136 136 220);
+}
 
 .messageTimestamp {
     font-size: 10px;
@@ -2027,6 +2031,10 @@ div#emptyConversationsInstructions {
 .messageRecieved .message{
     float: right;
     background-color: rgb(114 114 186);
+}
+.unreadMessagesDivider {
+    color: red;
+    text-align: center;
 }
 
 

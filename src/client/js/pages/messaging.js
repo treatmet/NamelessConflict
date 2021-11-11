@@ -113,10 +113,10 @@ function buildConversationHTML(conversation){
     var HTML = "<tr>";
         HTML += "<td>";
             var className = "conversation";
-            if (conversation.active){className += " active";}
+            if (conversation.active){className += " active"; }
             HTML += '<div class="' + className +'" data-conversationId="' + conversation.id + '" onclick="conversationClick(this)">';
                 var unreadHTML = "";
-                if (conversation.myUnreads){unreadHTML = " | <span style='color:red;'>[" + conversation.myUnreads + " Unread]</span>";}
+                if (conversation.myUnreads){unreadHTML = " | <span style='color:red;'>[" + conversation.myUnreads + " Unread]</span>"; conversation.myUnreads = 0;}
                 HTML += '<div class="conversationTitle">' + conversation.partnerUsername + unreadHTML + '</div>';
                 HTML += '<div class="conversationPreview">' + conversation.lastMessagePreview + '</div>'
             HTML + '</div>';    
@@ -141,6 +141,7 @@ function getActiveConversationMessages(cb){
 
     $.get('/getConversationMessages', params, function(data){
         logg("getConversationMessages RESPONSE:");
+        console.log(data.result);
         if (!data.result){
             alert("Error retrieving user ConversationMessages." + data.error);
             cb();
@@ -186,9 +187,10 @@ function conversationClick(conversationDiv) {
     var conversationId = conversationDiv.getAttribute("data-conversationId");
 
     if (conversationId && (!getActiveConversation() || getActiveConversation().id != conversationId)){
-        setActiveConversation(conversationId);
+        var unreads = setActiveConversation(conversationId);
+        console.log("UNREADS: " + unreads);
         getActiveConversationMessages(function(){
-            buildMessagesHTML(globalMessages);
+            buildMessagesHTML(globalMessages, unreads);
         });    
     }
 
@@ -197,23 +199,31 @@ function conversationClick(conversationDiv) {
 }
 
 function setActiveConversation(conversationId){
+    var unreads = 0;
     for (var c = 0; c<globalConversations.length; c++){
         globalConversations[c].active = false;
         if (globalConversations[c].id == conversationId){
+            document.getElementById("sectionTitle2").innerHTML = globalConversations[c].partnerUsername;
             globalConversations[c].active = true;
             if (globalConversations[c].myUnreads){
+                unreads = globalConversations[c].myUnreads;
                 globalConversations[c].myUnreads = 0;
-                buildConversationsHTML(globalConversations);
             }
         }
     }
+    buildConversationsHTML(globalConversations);
+    return unreads;
 }
 
 function getActiveConversation(){
     return globalConversations.find(conv => conv.active == true);
 }
 
-async function buildMessagesHTML(messages){
+async function buildMessagesHTML(messages, unreads = 0){
+
+    if (getActiveConversation() && getActiveConversation().myUnreads){
+        unreads = getActiveConversation().myUnreads;
+    }
 
     var HTML = "";
     var messagesDiv = document.getElementById("messagesTableContainer");
@@ -221,6 +231,10 @@ async function buildMessagesHTML(messages){
 
     HTML += '<table class="messagesTable">';
     for (var c = 0; c<messages.length; c++){
+        if (unreads && c == messages.length - unreads){
+            console.log("DRAW UNREADS");
+            HTML += getUnreadMessagesDividerHTML();
+        }
         HTML += getMessageHTML(messages[c]);
     }        
     HTML += '</table>';
@@ -239,11 +253,11 @@ function getMessageHTML(message){
     HTML += "<tr>";
         HTML += "<td class='" + className + "'>";
             if (sender){
-                HTML += getMessageInfoHTML(message);
+                HTML += getMessageInfoHTML(message, sender);
                 HTML += "<div class='message'>" + message.message + "</div>";
             }
             else {
-                HTML += getMessageInfoHTML(message);
+                HTML += getMessageInfoHTML(message, sender);
                 HTML += "<div class='message'>" + message.message + "</div>";
             }
         HTML += "</td>";
@@ -252,14 +266,26 @@ function getMessageHTML(message){
     return HTML;
 }
 
-function getMessageInfoHTML(message){
+function getMessageInfoHTML(message, sender = false){
     var HTML = "";
 
     HTML += "<div class='messageInfo'>"
-        HTML += "<div class='messageUsername'>" + message.username + "</div>"
+        if (!sender){
+            HTML += "<div class='messageUsername'><a href='" + serverHomePage + "user/" + message.senderCognitoSub + "'>" + message.username + "</a></div>"
+        }
+        else {
+            HTML += "<div class='messageUsername'>" + message.username + "</div>";
+        }
         HTML += "<div class='messageTimestamp'>" + message.timestamp + "</div>"
     HTML += "</div>"
 
+    return HTML;
+}
+
+function getUnreadMessagesDividerHTML(){
+    var HTML = "";
+    HTML += '<tr><td><div class="unreadMessagesDivider">--------------Unread--------------</div></td></tr>';
+    //console.log(HTML);
     return HTML;
 }
 

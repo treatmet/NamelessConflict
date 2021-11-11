@@ -177,7 +177,7 @@ function showSelfProfileOptions(){
         });      
         buildProgressList();
     }
-    else {
+    else if (isLoggedIn()) {
         show("invitePlayerButtons");			
     }
 }

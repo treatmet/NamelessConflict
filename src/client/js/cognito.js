@@ -769,8 +769,6 @@ function getUserWelcomeHTML(printedUsername){
 }
 
 function buildHeaderMessagingLink(){
-	if (page == "messaging"){return;}
-
 	var params = {
         cognitoSub:cognitoSub,
 	};

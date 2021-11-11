@@ -396,7 +396,12 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 			}
 
 
-			//ptsGained = 0; //GRENADES
+			//Thursday Bonus!
+			dt = new Date();
+			if (dt.getDay() == 4 && dt.getHours() > 12){
+				player.updatePropAndSend("cashEarnedThisGame", player.cashEarnedThisGame * 2)
+			}
+		
 			
 			if (customServer){
 				player.cashEarnedThisGame =  Math.round(player.cashEarnedThisGame/2);
