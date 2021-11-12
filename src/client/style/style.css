@@ -354,6 +354,7 @@ div#homepageBanner {
 
 div#customizationColumn {
     text-align: center;
+    height: calc(100% - 155px);
 }
 
 div#progressColumn {
@@ -1036,7 +1037,7 @@ button#createCustomServerButton {
 
 .columnSection {
 	width: 33.33%;
-    height: calc(100% - 155px);
+    /* height: calc(100% - 155px); */
     display: inline-block;
     float: left;
     font-family: electrolize;
@@ -1951,6 +1952,7 @@ div#conversationColumn {
     border-right: 1px solid #404040;
     overflow-y: auto;
     user-select: none;
+    height: calc(90% - 185px);
 }
 
 div#emptyConversationsInstructions {

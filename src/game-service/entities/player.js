@@ -908,7 +908,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.processChargingLaser = function(){	//processLaser
-		if (self.weapon == 5 && self.laserClip > 0 && self.pressingArrowKey() && self.health > 0){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
+		if (self.weapon == 5 && self.laserClip > 0 && self.pressingArrowKey() && self.health > 0 && self.throwingObject != -1){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
 			if (self.chargingLaser < laserMaxCharge && self.fireRate <= 0){
 				self.chargingLaser++;
 				if (self.chargingLaser == 1){ //Only send laser to client when first charing up to initiate sfx
@@ -2071,6 +2071,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 		});
 	});
 }//End Player.onConnect
+
 
 //Server commands
 function evalServer(socket, data){
