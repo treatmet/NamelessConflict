@@ -63,7 +63,7 @@ var page = "";
 var isWebServer = true;
 var myIp = "";
 var cognitoSub = "";
-var username = "SomeGuy";
+var username = "SomeGuy"; //myUsername
 var partyId = "";
 var userCash = 0;
 var federatedUser = false;
@@ -742,16 +742,16 @@ function showDefaultLoginButtons(){
 
 function showAuthorizedLoginButtons(){
 	if (page == "game"){return;}
-	document.getElementById("createAccountH").style.display = "none";
-	
+    hide("createAccountH");
     hide("logInH");
-    document.getElementById("playNowH").style.display = "";
+    showUnset("playNowH");
     show("partyUpMessage");
-    document.getElementById("logOutH").style.display = "";
+    showUnset("logOutH");
     if (document.getElementById('userWelcomeText')){
         var printedUsername = username.substring(0,15);
-        document.getElementById('userWelcomeText').style.display = "inline-block";
 		document.getElementById('userWelcomeText').innerHTML = getUserWelcomeHTML(printedUsername);	
+		document.getElementById('userWelcomeText').style.display = "inline-block";
+		buildHeaderMessagingLink();
 	}
 }
 
@@ -759,12 +759,89 @@ function getUserWelcomeHTML(printedUsername){
 	var HTML = "";
 	var linky = "/user/" + cognitoSub;
 
+
 	if (printedUsername.includes("Facebook_") || printedUsername.includes("Google_") && !getUrl().includes(cognitoSub)){
 		printedUsername += " - <span style='color:red; text-decoration-color: red;'>[click here to update username]</span>"
 		linky += "/?view=username";
 	}
 	HTML += "<span>Logged in as </span>" + "<a href='" + linky + "'>" + printedUsername + "</a>";
 	return HTML;
+}
+
+function buildHeaderMessagingLink(){
+	var params = {
+        cognitoSub:cognitoSub,
+	};
+	
+    $.get('/getConversations', params, function(data){
+        logg("getConversations RESPONSE:");
+        console.log(data);
+        if (!data.result){
+            alert("Error retrieving user conversations." + data.error);
+            cb(false);
+        }
+        else { //success            
+            // globalConversations = convertToClientConversations(data.result);
+            // buildConversationsHTML(globalConversations);
+			// cb(true);
+			var convos = convertToClientConversations(data.result);
+			var unreads = 0;
+			var conversationId = false;
+			for (var c = 0; c < convos.length; c++){
+				if (convos[c].myUnreads){
+					conversationId = convos[c].id;
+					unreads += convos[c].myUnreads;
+				}
+			}
+			if (unreads){document.getElementById("messagingLink").className = "messagingLinkUnreads";}
+			document.getElementById("messagingLink").innerHTML = getMessagingLinkHTML(unreads, conversationId);
+			show("messagingLink");
+        }
+    });
+}
+
+function getMessagingLinkHTML(unreads, conversationId = false){
+	var HTML = "";
+	var msgLink = "/messaging";
+	if (conversationId){msgLink += "/?conversationId=" + conversationId;}
+	if (unreads){
+		HTML += "<a href='" + msgLink + "'>✉ [" + unreads + "]</a>";
+	}
+	else {
+		HTML += "<a href='" + msgLink + "'>✉</a>";
+	}
+	return HTML;
+}
+
+function convertToClientConversations(conversations){
+    var convertedConversations = [];
+
+    for (var c = 0; c<conversations.length; c++){
+        var isUserOne = false;
+        if (conversations[c].userOneCognitoSub == cognitoSub){isUserOne = true;}
+
+        if (isUserOne){
+            conversations[c].myUnreads = conversations[c].userOneUnreads;
+            conversations[c].partnerUsername = conversations[c].userTwoUsername;
+            conversations[c].partnerCognitoSub = conversations[c].userTwoCognitoSub;
+        }
+        else {
+            conversations[c].myUnreads = conversations[c].userTwoUnreads;
+            conversations[c].partnerUsername = conversations[c].userOneUsername;
+            conversations[c].partnerCognitoSub = conversations[c].userOneCognitoSub;
+        }
+
+        delete conversations[c].userOneUnreads;
+        delete conversations[c].userTwoUnreads;
+        delete conversations[c].userTwoUsername;
+        delete conversations[c].userOneUsername;
+        delete conversations[c].userOneCognitoSub;
+        delete conversations[c].userTwoCognitoSub;
+
+        convertedConversations.push(conversations[c]);
+    }
+    console.log(convertedConversations);
+    return convertedConversations;
 }
 
 function showSecondaySectionTitles(){

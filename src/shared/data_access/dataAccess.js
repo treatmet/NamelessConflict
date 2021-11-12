@@ -66,7 +66,6 @@ options:
 {sort:{experience: -1},limit:100}
 */
 var dbFindOptionsAwait = function(table, searchObj, options, cb){
-	
 	if (typeof options === 'undefined'){
 		options = {sort:{},limit:100};
 	}
@@ -78,6 +77,8 @@ var dbFindOptionsAwait = function(table, searchObj, options, cb){
 	}
 	
 	db[table].find(searchObj).limit(options.limit).sort(options.sort, function(err,res){
+
+	
 		if (!err){
 			if (typeof res === 'undefined'){
 				res = [];

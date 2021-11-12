@@ -177,7 +177,7 @@ function showSelfProfileOptions(){
         });      
         buildProgressList();
     }
-    else {
+    else if (isLoggedIn()) {
         show("invitePlayerButtons");			
     }
 }
@@ -823,23 +823,50 @@ function inviteToTradeButtonClick() {
 	}
 }
 
+function sendMessageButtonClick() {
+	console.log("sendMessageButtonClick()");
+
+	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
+		const data = {
+			cognitoSub:cognitoSub,
+            username:username,
+            targetUsername:viewedProfileName,
+			targetCognitoSub:getUrl().split('/user/')[1]
+		};		
+        
+        $.post('/getOrCreateConversation', data, function(response,status){
+            if (response){
+                console.log("getOrCreateConversation response:");
+                console.log(response);
+                if (response.error){
+                    alert("Error initiating conversation. " + response.msg);
+                }
+                else if (response.conversationId){
+                    window.location = serverHomePage + "messaging/?conversationId=" + response.conversationId;
+                }
+            }
+        });
+
+	}
+}
+
 function upsertRequest(data){
 	$.post('/upsertRequest', data, function(response,status){
-	if (response){
-		console.log("upsertRequest response:");
-        console.log(response);
-		if (response.error){
-			alert(response.msg);
-		}
-		else {
-			if (data.type == "trade" && response.url){
-				window.location = response.url;
-			}
-			else {
-				window.location.reload();
-			}
-		}
-	}
+        if (response){
+            console.log("upsertRequest response:");
+            console.log(response);
+            if (response.error){
+                alert(response.msg);
+            }
+            else {
+                if (data.type == "trade" && response.url){
+                    window.location = response.url;
+                }
+                else {
+                    window.location.reload();
+                }
+            }
+        }
 	});
 }
 
