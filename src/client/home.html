@@ -13,21 +13,10 @@
 {{header}}
     
 <div style="display:none;" id="mainContent">
-	<div id="homepageBanner">
-		<h1 style="filter: drop-shadow(0 0 0.35rem black);">Welcome to the SocketShot Alpha</h1>
-		<h2 style="filter: drop-shadow(0 0 0.35rem black);">Free-to-Play Top Down Multiplayer Shooter</h2>
-		<div id="playNowButtonWrapperDiv">
-			<button id="bigAssPlayNow" class="RWButton heavyTextShadow" onclick="getJoinableServer({server:'any'})">Play Now!</button>			<br>
-		</div>
-
-	</div>
-
 	<div id="sectionTitles">
-		<div id="sectionTitle1" class="sectionTitle3">Select Game</div>
-		<div id="sectionTitle2" class="sectionTitle3">Leaderboard</div>
-		<div id="sectionTitle3" class="sectionTitle3">Community</div>
+		<h1>Welcome to the SocketShot Alpha</h1>
+		<h2>Free-to-Play Top Down Multiplayer Shooter</h2>
 	</div>
-
 
 	<div id="serverSelection" class="columnSection">
 		<div id="serversHiddenMsg" style="display:none;">
@@ -38,15 +27,16 @@
 		</div>
 		
 		<div id="serverLoginButtons">
+			<button id="bigAssPlayNow" class="RWButton heavyTextShadow" onclick="getJoinableServer({server:'any'})">Play Now!</button>			<br>
 			(Not logged in)
 			<br>
 			Log in to customize your character, party up with friends, save your progress, and track stats!
 			<br>
-			<button id="createAccount" class="loginButtons" style="margin: 0px;" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://socketshot.io/';">Create Account</button>
+			<button id="createAccount" class="serverSelectButton" style="margin: 0px;" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://socketshot.io/';">Create Account</button>
 			<br>
 			Or
 			<br>
-			<button id="logIn" class="loginButtons" style="margin: 0px;" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://socketshot.io/';">Log In</button>
+			<button id="logIn" class="serverSelectButton" style="margin: 0px;" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://socketshot.io/';">Log In</button>
 			<br>
 			<br>
 		</div>
@@ -80,7 +70,7 @@
 				</div>
 				<div class="controlsElementSmall">
 					<img class="controlsImage" src="/src/client/img/icons/shift.png">
-					<div class="controlsText">Utility</div>
+					<div class="controlsText">Look ahead</div>
 				</div>
 				<div class="controlsElementSmall">
 					<img class="controlsImage" src="/src/client/img/icons/enter.png">
@@ -140,30 +130,19 @@
 	</br>
 	Suggest new features, share clips, meet teammates. </br>
 	<div class="vertCenterContainer" style="margin-top: 10px;"><span style="color:#1f9a5b;">Join Discord to get exclusive equipment!&nbsp</span><img src="/src/client/img/alienGreenHatUpside.png" class="socialIcon vertCenterObj"></div>
-	<br><br>
-	<img src="/src/client/img/icons/bannerThurs.jpg" class="bannerImage" alt="Participate in SocketShot Community Night for doulbe xp and exclusive items!">
 	</br>
-	<a href="https://www.reddit.com/r/SocketShot/" class="socialLink" >
-		<div class="vertCenterContainer">
-			<img src="/src/client/img/icons/reddit.png" class="socialIcon vertCenterObj">
-			<div class="socialText">/r/SocketShot</div>
-		</div>
-	</a>
+		<a href="https://www.reddit.com/r/SocketShot/" class="socialLink" >
+			<div class="vertCenterContainer">
+				<img src="/src/client/img/icons/reddit.png" class="socialIcon vertCenterObj">
+				<div class="socialText">/r/SocketShot</div>
+			</div>
+		</a>
 
 </div>
 
 		<div id="homepageVideo">
 			<iframe width="100%" height="350px" src="https://www.youtube.com/embed/MU4FzvqUfm0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		</div>
-	</br>
-	</br>
-	</br>
-	</br>
-	</br>
-	</br>
-	</br>
-	</br>
-	</br>
 	</br>
 
 	</div>

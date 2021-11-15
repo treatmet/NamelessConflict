@@ -215,6 +215,7 @@ var initializePickups = function(map){
 ///////////////////// INITIALIZE BLOCKS //////////////////////////////////////////////
 var initializeBlocks = function(map){
 	log("RESETTING MAP");
+	console.log("Pretty sure pregameishorde is " + pregameIsHorde);
 
 	block.clearBlockList();
 	
@@ -396,8 +397,6 @@ var initializeBlocks = function(map){
 		
 			
 		//block.createBlocks
-		block.createBlock(17, 6.9, 1, 2.2, "pushRight");	
-		block.createBlock(34, 6.9, 1, 2.2, "pushLeft");	
 		block.createBlock(40, 14, 2, 5.8, "normal");	
 		block.createBlock(10, 6, 2, 6, "normal");	
 		block.createBlock(4, 11, 2, 1, "red");	
@@ -413,12 +412,10 @@ var initializeBlocks = function(map){
 		block.createBlock(5,6, 8, 1, "red");	
 		block.createBlock(15, 6, 3, 1, "red");	
 		block.createBlock(34, 6, 13, 1, "blue");	
-
+		block.createBlock(17, 7, 1, 2.1, "pushRight");	
 		block.createBlock(24, 8, 1, 10, "pushLeft");	
-		block.createBlock(27, 8, 1, 10, "pushRight");	//middle bridge
-
-		block.createBlock(17, 16.9, 1, 2.2, "pushRight");	
-		block.createBlock(34, 16.9, 1, 2.2, "pushLeft");	
+		block.createBlock(27, 8, 1, 10, "pushRight");	
+		block.createBlock(34, 7, 1, 2.1, "pushLeft");	
 		block.createBlock(46, 6, 1, 14, "blue");	
 		block.createBlock(14, 9, 1, 8, "normal");	
 		block.createBlock(17, 9, 1, 3, "red");	
@@ -432,6 +429,8 @@ var initializeBlocks = function(map){
 		block.createBlock(30, 15, 2, 3, "normal");	
 		block.createBlock(34, 14, 1, 3, "blue");	
 		block.createBlock(5, 19, 13, 1, "red");	
+		block.createBlock(17, 17, 1, 2, "pushRight");	
+		block.createBlock(34, 17, 1, 2.1, "pushLeft");	
 		block.createBlock(6, 21, 2, 2, "normal");	
 		block.createBlock(34, 19, 3, 1, "blue");	
 		block.createBlock(39, 19, 8, 1, "blue");	
@@ -467,9 +466,9 @@ var initializeBlocks = function(map){
 
 		//pushblocks
 		block.createBlock(13.9, 15, 1.1, 6, "pushDown");
-		block.createBlock(28, 15, 1.1, 6, "pushDown");
+		block.createBlock(27.9, 15, 1.1, 6, "pushDown");
 		block.createBlock(13.9, 42, 1.1, 6, "pushUp");
-		block.createBlock(28, 42, 1.1, 6, "pushUp");
+		block.createBlock(27.9, 42, 1.1, 6, "pushUp");
 
 			
 		//red north
@@ -480,7 +479,7 @@ var initializeBlocks = function(map){
 		block.createBlock(25, 0, 18, 4, "normal");	
 		block.createBlock(34, 0, 9, 7, "normal");	
 		block.createBlock(42, 0, 1, 20, "normal");	
-		block.createBlock(0, 0, 3, 14, "normal");
+		block.createBlock(2, 0, 1, 14, "normal");
 
 		block.createBlock(12, 5.1, 2, 3.9, "red");	
 		block.createBlock(12, 5, 6, 2, "red");	
@@ -499,7 +498,7 @@ var initializeBlocks = function(map){
 		block.createBlock(29, 15, 1, 33, "normal");	
 		block.createBlock(36, 13, 1, 31, "normal");	
 		block.createBlock(39, 13, 1, 43, "normal");
-		block.createBlock(39, 19, 4, 3, "normal");
+		block.createBlock(39, 19, 4, 1, "normal");
 		block.createBlock(29, 19, 8, 25, "normal");
 		block.createBlock(29, 43, 8, 1, "normal");
 		block.createBlock(29, 47, 5, 1, "normal");
@@ -511,7 +510,7 @@ var initializeBlocks = function(map){
 		block.createBlock(9, 15, 5, 1, "normal");	
 		block.createBlock(6, 19, 8, 25, "normal");	
 		block.createBlock(13, 15, 1, 33, "normal");
-		block.createBlock(0, 41, 4, 3, "normal");
+		block.createBlock(0, 43, 4, 1, "normal");
 		block.createBlock(6, 43, 8, 1, "normal");
 		block.createBlock(9, 47, 5, 1, "normal");
 		block.createBlock(3, 7, 1, 43, "normal");
@@ -535,7 +534,7 @@ var initializeBlocks = function(map){
 		block.createBlock(0, 59, 18, 4, "normal");	
 		block.createBlock(0, 62, 20, 1, "normal");	
 		block.createBlock(23, 62, 18, 1, "normal");	
-		block.createBlock(40, 49, 3, 14, "normal");	
+		block.createBlock(40, 49, 1, 14, "normal");	
 		block.createBlock(25, 59, 16, 4, "normal");	
 
 		block.createBlock(11, 54, 2, 3.9, "blue");	
@@ -570,9 +569,9 @@ var initializeBlocks = function(map){
 
 		//pushblocks
 		block.createBlock(18.9, 20, 1.1, 6, "pushDown");
-		block.createBlock(33, 20, 1.1, 6, "pushDown");
+		block.createBlock(32.9, 20, 1.1, 6, "pushDown");
 		block.createBlock(18.9, 61, 1.1, 6, "pushUp");
-		block.createBlock(33, 61, 1.1, 6, "pushUp");
+		block.createBlock(32.9, 61, 1.1, 6, "pushUp");
 
 			
 		//red north
@@ -582,7 +581,7 @@ var initializeBlocks = function(map){
 		block.createBlock(26, 0, 25, 1, "normal");	
 		block.createBlock(31, 0, 20, 4, "normal");	
 		block.createBlock(41, 0, 10, 8, "normal");	
-		block.createBlock(50, 0, 3, 27, "normal");
+		block.createBlock(50, 0, 1, 27, "normal");
 		block.createBlock(0, 13, 7, 48, "normal");
 
 		block.createBlock(12, 5.1, 3, 4.9, "red");	
@@ -638,7 +637,7 @@ var initializeBlocks = function(map){
 		block.createBlock(24, 58, 5, 1, "normal");	
 
 		//Blue south
-		block.createBlock(0, 60, 3, 27, "normal");	
+		block.createBlock(2, 60, 1, 27, "normal");	
 		block.createBlock(2, 79, 10, 8, "normal");	
 		block.createBlock(2, 83, 20, 4, "normal");	
 		block.createBlock(2, 86, 25, 1, "normal");	
@@ -716,7 +715,7 @@ var initializeBlocks = function(map){
 		block.createBlock(3, 19, 1, 15, "normal");			
 
 		block.createBlock(3, 2, 25, 1, "normal");//Top wall	
-		block.createBlock(30.1, 2, 24.9, 1, "normal");			
+		block.createBlock(30.1, 2, 23.9, 1, "normal");			
 		block.createBlock(30, 1, 1, 2, "normal");			
 
 		block.createBlock(54, 2, 1, 15, "normal"); //right wall			
@@ -724,7 +723,7 @@ var initializeBlocks = function(map){
 		block.createBlock(57, -0.5, 1, mapHeight/75 + 1, "normal");			
 
 		block.createBlock(3, 33, 24.9, 1, "normal");//bottom wall
-		block.createBlock(30, 33, 25, 1, "normal");		
+		block.createBlock(30, 33, 24, 1, "normal");		
 		block.createBlock(27, 33, 1, 2, "normal");		
 		
 		block.createBlock(0, -0.6, (mapWidth)/75, 1/2, "normal");	//Top

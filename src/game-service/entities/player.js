@@ -44,8 +44,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		customizations: customizations,
 		settings: settings,
 		throwingObject:0,
-		grenades:0,
-		grenadeEnergy:-10,
 
 		cash:(gametype == "elim" ? startingCash : 0),
 		cashEarnedThisGame:0,
@@ -145,7 +143,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			var discharge = false;
 			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === false){				
 				if (self.shootingDir != 1){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing)
 							discharge = true;
 					}
@@ -155,7 +153,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === true && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
 				if (self.shootingDir != 2){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 1 || self.shootingDir == 3)) //doubleshots
 							discharge = true;
 					}
@@ -165,7 +163,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === false && self.pressingLeft === false){				
 				if (self.shootingDir != 3){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing) //doubleshots
 							discharge = true;
 					}			
@@ -175,7 +173,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === true && self.pressingDown === true && self.pressingLeft === false){				
 				if (self.shootingDir != 4){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 3 || self.shootingDir == 5)) //doubleshots
 							discharge = true;
 					}
@@ -185,7 +183,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === false){				
 				if (self.shootingDir != 5){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing) //doubleshots
 							discharge = true;
 					}
@@ -195,7 +193,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === true && self.pressingLeft === true){				
 				if (self.shootingDir != 6){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 5 || self.shootingDir == 7)) //doubleshots
 							discharge = true;
 					}
@@ -205,7 +203,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === false && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
 				if (self.shootingDir != 7){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing) //doubleshots
 							discharge = true;
 					}
@@ -215,7 +213,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 			if (self.pressingUp === true && self.pressingRight === false && self.pressingDown === false && self.pressingLeft === true){				
 				if (self.shootingDir != 8){
-					if (!self.pressingShift && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
+					if (!self.pressingShift && self.throwingObject === 0 && (self.weapon == 1 || self.weapon == 2 || self.weapon == 3 || self.weapon == 4)){
 						if (!self.firing || (self.firing && self.shootingDir == 7 || self.shootingDir == 1)) //doubleshots
 							discharge = true;
 					}			
@@ -230,7 +228,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 
 		//Auto shooting for holding down button
-		if (self.firing <= 0 && !self.pressingShift && self.throwingObject == 0 && self.fireRate <= 0 && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight) && self.weapon != 5){
+		if (self.firing <= 0 && !self.pressingShift && self.throwingObject === 0 && self.fireRate <= 0 && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight) && self.weapon != 5){
 			Discharge(self);
 		}
 		if (self.fireRate > 0){
@@ -367,7 +365,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}	
 		} //Shot loop
 
-
 		self.shotList = [];
 
 		
@@ -393,7 +390,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 		/////////////////////// ENERGY /////////////////////
 		if (self.rechargeDelay <= 0 && self.energy < (100 * self.hasBattery)){
-			self.energy += 2;
+			self.energy++;
 			if ((self.hasBattery > 1 && self.energy == 100) || (self.hasBattery > 2 && self.energy == 200) || (self.hasBattery > 3 && self.energy == 300) || (self.hasBattery > 4 && self.energy == 400))
 				self.energy++; //Free extra energy at 100 if more than one battery to avoid stopping the charge sfx at 100 (normally 100 is "charge complete")
 			if (self.hasBattery == 1 && self.energy > 100){
@@ -406,17 +403,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			updatePlayerList.push({id:self.id,property:"energy",value:self.energy,single:true});
 		}
 		if (self.rechargeDelay > 0){self.rechargeDelay--;}
-
-		//GRENADE RECHARGE
-		if (grenadeResource){
-			if (self.grenadeEnergy < 100 && self.grenades < maxGrenades){
-				self.grenadeEnergy += grenadeRechargeSpeed;
-				if (self.grenadeEnergy >= 100){
-					self.grenades++;
-					self.grenadeEnergy = 0;
-				}
-			}
-		}
 				
 		///////////////////////CLOAKING/////////////////////
 		if (self.cloakEngaged && !self.energyExhausted){
@@ -697,7 +683,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (typeof self.afk === 'undefined'){
 		 self.afk = AfkFramesAllowed;
 		}
-		else if (self.afk >= 0 && !pregame && !gameOver){
+		else if (self.afk >= 0 && self.team != 0 && !pregame && !gameOver){
 			self.afk--;
 		}
 		else if (self.afk <= 0 && bootOnAfk && !isLocal) { //Boot em
@@ -710,43 +696,21 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		
 	}//End engine()
 
-	self.getSetting = function(category, key){
-		var val = -1;
-		if (self.settings && self.settings[category]){
-			var setting = self.settings[category].find(set => set.key == key);
-			if (setting){
-				return setting.value;
-			}
-		}
-
-		return val;
-		
-	}
-
 	self.pullGrenade = function(){
 		if (self.throwingObject == 0){
+			self.updatePropAndSend("throwingObject", -1);
+			self.updatePropAndSend("reloading", 0);
+	
 			var floorGrenadeId = entityHelpers.checkPointCollisionWithGroup(self, grenade.getList(), 130);
 			if (floorGrenadeId && grenade.getById(floorGrenadeId) && !grenade.getById(floorGrenadeId).holdingPlayerId){
 				grenade.getById(floorGrenadeId).updatePropAndSend("holdingPlayerId", self.id);
 				grenade.getById(floorGrenadeId).updatePropAndSend("throwingPlayerId", self.id);
-				self.updatePropAndSend("throwingObject", -1);
-				self.updatePropAndSend("reloading", 0);
 			}
-			else if (!grenadeResource && !self.energyExhausted){
+			else if (!self.energyExhausted){ //bagGrenades bag grenade  && !self.holdingBag
 				self.expendEnergy(grenadeEnergyCost);
-				self.pullNewGrenade();
-			}
-			else if (grenadeResource && self.grenades > 0){
-				self.updatePropAndSend("grenades", self.grenades - 1, 1);
-				self.pullNewGrenade();
-			}
+				grenade.create(self.id, self.id, self.x, self.y);
+			}		
 		}
-	}
-
-	self.pullNewGrenade = function(){
-		grenade.create(self.id, self.id, self.x, self.y);
-		self.updatePropAndSend("throwingObject", -1);
-		self.updatePropAndSend("reloading", 0);	
 	}
 
 	self.throwGrenade = function(){
@@ -901,14 +865,12 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.healDelay = healDelayTime;
 		entityHelpers.sprayBloodOntoTarget(direction, self.x, self.y, self.id);
 		if (self.health <= 0){
-			console.log("UPDATE");
-			player.updatePropAndSend("energy", player.energy+50, true);
 			self.kill(player);
 		}		
 	}
 
 	self.processChargingLaser = function(){	//processLaser
-		if (self.weapon == 5 && self.laserClip > 0 && self.pressingArrowKey() && self.health > 0 && self.throwingObject != -1){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
+		if (self.weapon == 5 && self.laserClip > 0 && self.pressingArrowKey() && self.throwingObject === 0){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
 			if (self.chargingLaser < laserMaxCharge && self.fireRate <= 0){
 				self.chargingLaser++;
 				if (self.chargingLaser == 1){ //Only send laser to client when first charing up to initiate sfx
@@ -1144,7 +1106,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 
 	self.hit = function(shootingDir, distance, shooter, targetDistance, shotX, weapon = false){
-		if (!self || !shooter){return;} //shooter may have thrown a nade and logged out
 		if (self.health <= 0){return;}
 		if (!weapon){weapon = shooter.weapon;}
 		if (weapon == 6){
@@ -1182,7 +1143,21 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		
 		var damageInflicted = 0;
-			
+		
+		//Player stagger and cloak interruption stuff
+		if (weapon != 6)
+			self.stagger = staggerTime;		
+		self.healDelay += healDelayTime;
+		if (self.healDelay > healDelayTime){self.healDelay = healDelayTime;} //Ceiling on healDelay
+		if (self.team != shooter.team || gametype == "ffa"){
+			playerEvent(shooter.id, "hit");
+		}
+		if (self.cloakEngaged){
+			self.updatePropAndSend("cloakEngaged", false);
+			damageInflicted += cloakBonusDamage;
+		}
+		
+
 		//Initial damage (all angles)
 		if (weapon == 1){ damageInflicted += pistolDamage; } //Single Pistol
 		else if (weapon == 2){ damageInflicted += DPDamage; } //Double damage for double pistols
@@ -1215,59 +1190,14 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}			
 		}
 		if ((self.team == shooter.team && self.id != shooter.id) && gametype != "ffa"){ //teamDamage
-			if (weapon != 6){shooter.processAllyDamage(damageInflicted, self.id);}			
 			damageInflicted *= friendlyFireDamageScale;
 			if (weapon == 5){damageInflicted = 15;}			
+			if (weapon != 6){shooter.processAllyDamage(damageInflicted, self.id);}			
 		}
 	
-		//Damage push
-		if (weapon != 6){
-			self.pushSpeed += damageInflicted/8 * damagePushScale;
-			self.pushDir = Player.list[shooter.id].shootingDir;			
-		}
-		else if (weapon == 6){
-			var pushX = (shootingDir.xMovRatio * grenadePower) * damageInflicted;
-			// console.log("(" + shootingDir.xMovRatio + " * " + grenadePower + ") * " + damageInflicted);
-			// console.log("PUSH X: " + pushX);
-			var damageForPush = (damageInflicted + 31)/2;
-			if (!isNaN(shootingDir.xMovRatio)){
-				self.speedX += (shootingDir.xMovRatio * grenadePower) * damageForPush;
-				self.speedY += (shootingDir.yMovRatio * grenadePower) * damageForPush;
-			}
-		}
-
-
 		damageInflicted = damageInflicted * damageScale; //Scale damage
-		if (gametype == "horde" || (pregame && pregameIsHorde) || roundOver){
-			damageInflicted = 0;
-		}
+		if (weapon != 6 && (gametype == "horde" || (pregame && pregameIsHorde))){damageInflicted = 0;}
 
-		//Damage floor on grenade damage
-		if (weapon == 6 && damageInflicted < 5){
-			damageInflicted = 0;
-		}
-		else {
-			//Player stagger
-			//if (weapon != 6)
-				self.stagger = staggerTime;
-
-			//Heal delay		
-			self.healDelay += healDelayTime;
-			if (self.healDelay > healDelayTime){self.healDelay = healDelayTime;} //Ceiling on healDelay
-			if (self.team != shooter.team || gametype == "ffa"){
-				playerEvent(shooter.id, "hit");
-			}
-			//Cloak interruption
-			if (self.cloakEngaged){
-				self.updatePropAndSend("cloakEngaged", false);
-				damageInflicted += cloakBonusDamage;
-			}
-		}
-
-
-		//FINAL INFLICTION
-		self.updatePropAndSend("health", self.health - Math.floor(damageInflicted));
-					
 		//Calculate Assists
 		if (self.team != shooter.team && gametype != "ffa"){
 			if (!self.damageDealers){
@@ -1281,6 +1211,24 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 
+		self.health -= Math.floor(damageInflicted); //damageValue
+
+		updatePlayerList.push({id:self.id,property:"health",value:self.health});
+					
+		//Damage push
+		if (weapon != 6){
+			self.pushSpeed += damageInflicted/8 * damagePushScale;
+			self.pushDir = Player.list[shooter.id].shootingDir;			
+		}
+		else if (weapon == 6){
+			var pushX = (shootingDir.xMovRatio * grenadePower) * damageInflicted;
+			// console.log("(" + shootingDir.xMovRatio + " * " + grenadePower + ") * " + damageInflicted);
+			// console.log("PUSH X: " + pushX);
+			if (!isNaN(shootingDir.xMovRatio)){
+				self.speedX += (shootingDir.xMovRatio * grenadePower) * damageInflicted;
+				self.speedY += (shootingDir.yMovRatio * grenadePower) * damageInflicted;
+			}
+		}
 
 		if (self.health <= 0){
 			self.kill(shooter);
@@ -1288,23 +1236,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.processAllyDamage = function(damageInflicted, victimId){
-		self.cumulativeAllyDamage += damageInflicted;
-		console.log("self.damageWarnings" + self.damageWarnings);
 		if (self.cumulativeAllyDamage >= allyDamageWarningThreshold){
 			socket.emit('allyDamageWarning', {playerId:victimId});
 			self.cumulativeAllyDamage = 0;
-
-			if (!self.damageWarnings){
-				self.damageWarnings = 1;
-			}
-			else {
-				self.damageWarnings += 1;
-			}
-			if (self.damageWarnings >= 5 && !customServer){
-				bannedCognitoSubs.push({cognitoSub:self.cognitoSub, reason:"being a Benedict Arnold"});
-				SOCKET_LIST[self.id].emit("betrayalKick");
-			}
-
 		}
 	}
 
@@ -1362,6 +1296,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			updatePlayerList.push({id:self.id,property:"chargingLaser",value:self.chargingLaser});
 		}
 		
+		if (gametype == "elim" && gameOver == false){				
+			var cashToAdd = elimDeathCash;
+			var scoreDif = whiteScore - blackScore;
+
+			if ((self.team == 1 && scoreDif < 0) || (self.team == 2 && scoreDif > 0)){ //Comeback mechanics
+				cashToAdd += Math.abs(scoreDif * elimDeathCash);
+			}
+			self.updatePropAndSend("cash", self.cash + cashToAdd);			
+			gameEngine.checkIfRoundOver();
+		}
+
 		playerEvent(self.id, "death");
 		
 		
@@ -1411,19 +1356,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.laserClip = 0;
 			updatePlayerList.push({id:self.id,property:"laserClip",value:self.laserClip});		
 		}
-
-		if (gametype == "elim" && gameOver == false){				
-			var cashToAdd = elimDeathCash;
-			var scoreDif = whiteScore - blackScore;
-
-			if ((self.team == 1 && scoreDif < 0) || (self.team == 2 && scoreDif > 0)){ //Comeback mechanics
-				cashToAdd += Math.abs(scoreDif * elimDeathCash);
-			}
-			self.updatePropAndSend("cash", self.cash + cashToAdd);			
-			gameEngine.checkIfRoundOver();
-		}
-
-
 	}
 
 	self.expendEnergy = function(amount){ //loseEnergy spendEnergy useEnergy
@@ -1447,9 +1379,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self[propName] = value;
 			if (!singlePlayer)
 				updatePlayerList.push({id:self.id,property:propName,value:value});	
-			else if (singlePlayer == 2) {
-				updatePlayerList.push({id:self.id,property:propName,value:value, single:2});	
-			}
 			else {
 				updatePlayerList.push({id:self.id,property:propName,value:value, single:true});	
 			}
@@ -1475,11 +1404,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.multikill = 0;
 		self.multikillTimer = 0;
 		self.lastEnemyToHit = 0;
-		self.energyExhausted = false;	
-		self.grenades = maxGrenades;
-		updatePlayerList.push({id:self.id,property:"grenades",value:self.grenades});
-		self.grenadeEnergy = 0;
-		updatePlayerList.push({id:self.id,property:"grenadeEnergy",value:self.grenadeEnergy});
+		self.energyExhausted = false;		
 		
 		self.firing = 0; //0-3; 0 = not firing
 		self.aiming = 0;
@@ -1499,7 +1424,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			self.weapon = startingWeapon;
 			updatePlayerList.push({id:self.id,property:"weapon",value:self.weapon});
 			self.hasBattery = maxEnergyMultiplier;
-			//if (self.cognitoSub == "892e9c3d-d9d6-4402-90e5-6c95efa72098"){self.hasBattery = 2;} //!!!Tommy
 			self.DPClip = 0;
 			if (startingWeapon == 2){self.DPClip = DPClipSize;}
 			updatePlayerList.push({id:self.id,property:"DPClip",value:self.DPClip});
@@ -1699,7 +1623,6 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 			
 			socket.emit('addToChat', getObjectiveText(), 0);
 			sendChatToAll("Welcome, " + name + "!");
-			socket.emit('settings', sharedSettings);
 
 			socket.on('keyPress', function(data){
 				player.afk = AfkFramesAllowed;
@@ -2025,7 +1948,6 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 				if (data[1] == "[Team] " || data[1] == "[Team]" || data[1] == "" || data[1] == " "){return;} //blank messages
 
 				if (getPlayerById(data[0])){
-					getPlayerById(data[0]).afk = AfkFramesAllowed;
 					if (data[1].substring(0,2) == "./"){
 						evalServer(socket, data[1].substring(2));
 					}
@@ -2037,22 +1959,20 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							var recipient = getPlayerById(SOCKET_LIST[i].id);
 							if (!recipient){continue;}
 
-							var textToSend = data[1];
-
 							//Profanity filter
 							var profanityFilterSetting = recipient.settings.display.find(setting => setting.key == "profanityFilter")
 							if (!profanityFilterSetting || profanityFilterSetting.value == true){
-								textToSend = profanity.censor(data[1]);
+								data[1] = profanity.censor(data[1]);
 							}
 
 							//Team chat check
-							if (textToSend.substring(0,6) == "[Team]" && getPlayerById(data[0]).team != recipient.team && gametype != "ffa"){continue;}
+							if (data[1].substring(0,6) == "[Team]" && getPlayerById(data[0]).team != recipient.team && gametype != "ffa"){continue;}
 
-							SOCKET_LIST[i].emit('addToChat',getPlayerById(data[0]).name.substring(0,12) + ': ' + textToSend.substring(0,50), getPlayerById(data[0]).id);
-							var overHeadChatMsg = textToSend.substring(0,50);
+							SOCKET_LIST[i].emit('addToChat',getPlayerById(data[0]).name.substring(0,12) + ': ' + data[1].substring(0,50), getPlayerById(data[0]).id);
+							var overHeadChatMsg = data[1].substring(0,50);
 							var overheadChatTeam = 0;
-							if (textToSend.substring(0,6) == "[Team]"){
-								overHeadChatMsg = textToSend.substring(6,50);
+							if (data[1].substring(0,6) == "[Team]"){
+								overHeadChatMsg = data[1].substring(6,50);
 								overheadChatTeam = getPlayerById(data[0]).team;
 							}
 							updateEffectList.push({type:7, playerId:data[0], text:overHeadChatMsg, team:overheadChatTeam});
@@ -2072,11 +1992,104 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 	});
 }//End Player.onConnect
 
+const PERM_NONE = 0;
+const PERM_OWNER = 1;
+const PERM_MODERATOR = 2;
+const PERM_DEVELOPER = 3;
+function getPerm(cognitoSub) {
+	let ret = PERM_NONE;
+	if (cognitoSub == createdByCognitoSub)
+		ret = PERM_OWNER;
+	if (ModCognitoSubs.includes(cognitoSub))
+		ret = PERM_MODERATOR;	
+	if (DevCognitoSubs.includes(cognitoSub))
+		ret = PERM_DEVELOPER;	
+	return ret;
+}
+
+// I should put these in a JSON file... TOO BAD
+const ModCognitoSubs = [ /* There are no moderators yet.*/ ]
+const DevCognitoSubs = [ /* I think... this is RTP? */ "0192fb49-632c-47ee-8928-0d716e05ffea" ]
+
+
+function command(func, /** @type {string} */ match, perm = PERM_NONE) {
+	command.list.push({
+		"func": func,
+		"match": match, /*regex code, see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions */
+		"perm": perm
+	});
+}
+command.list = [];
+function getIDFromName(name) {
+	getPlayerList().forEach(player => {
+		if (String(player.name).startsWith(name))
+			return player.id;
+	})
+	return -1;
+}
+
+// TODO: recreate all the commands -.-
+command((socket, matches, data) => {
+	let permstring = "Citizen";
+	switch (getPerm(getPlayerById(socket.id).cognitoSub)) {
+		case PERM_OWNER: permstring = "Custom Owner"; break;
+		case PERM_MODERATOR: permstring = "Moderator"; break;
+		case PERM_DEVELOPER: permstring = "Developer"; break;
+	}
+	socket.emit('addToChat', `You are a ${permstring}`);
+}, "^perm$", PERM_NONE);
+
+command((socket, matches, data) => {
+	if (getPlayerById(socket.id).team == 0) spectatePlayer(socket.id);
+	gameEngine.changeTeams(socket.id);
+}, "^team$", PERM_NONE);
+
+command((socket, matches, data) => {
+	spectatePlayer(socket.id);
+}, "^spec$", PERM_NONE);
+
+command((socket, matches, data) => {
+	gameEngine.restartGame();
+}, "^start$", PERM_OWNER);
+
+
+function spectatePlayer(id) {
+	if (getPlayerById(id).team == 0) {
+		let teamtochange = 0;
+		if (getActivePlayerListLength() >= maxPlayers){
+			SOCKET_LIST[id].emit('addToChat', "Can't change teams. Game is full!");
+			return;
+		}
+		if (gameEngine.getMoreTeam1Players() >= 1) gameEngine.changeTeams(id, 2);
+		else gameEngine.changeTeams(id, 1);
+		
+	} else {
+		abandonMatch(id);
+		gameEngine.changeTeams(id, 0);
+	}
+}
 
 //Server commands
 function evalServer(socket, data){
 	logg("SERVER COMMAND:" + data);
-
+	let called = false;
+	command.list.forEach((c, i) => {
+		console.log(c);
+		let matches = String(data).match(c.match);
+		if (matches != null) {
+			called = true;
+			if (c.perm <= getPerm(getPlayerById(socket.id).cognitoSub)) {
+				c.func(socket, matches, data)
+			} else {
+				if (customServer) socket.emit('addToChat', "Insufficient Permissions (try asking the server owner?)");
+				else socket.emit('addToChat', "Insufficient Permissions (try asking a moderator?)");
+			}
+			return;	
+		}
+	});
+	if (!called) socket.emit('addToChat', "Invalid Server Command?");
+	return;
+/*
 	if (!getPlayerById(socket.id))
 		return;
 
@@ -2201,6 +2214,10 @@ function evalServer(socket, data){
 	}
 	else if (data == "spectate" || data == "spec"){
 		if (getPlayerById(socket.id).team == 0){
+			if (getActivePlayerListLength() >= maxPlayers){
+				socket.emit('addToChat', "Can't change teams. Game is full!");
+				return;
+			}
 			var team = 1;
 			if (gametype == "horde" || (pregame && pregameIsHorde)){team = 2;}
 			gameEngine.changeTeams(socket.id, team);
@@ -2643,7 +2660,7 @@ function evalServer(socket, data){
 	else {
 		socket.emit('addToChat', 'Invalid Command.');
 	}
-	
+	*/
 }
 
 function checkForEmptyWeaponAndSwap(playerId){
@@ -2703,7 +2720,6 @@ function reload(playerId){
 }
 
 function Discharge(player){
-	player.updatePropAndSend("throwingObject", 0);
 	if (player.reloading > 0 && player.weapon != 4){return;}	
 	else if (player.weapon == 1 && player.PClip <= 0){
 		reload(player.id);
@@ -2983,7 +2999,7 @@ function playerEvent(playerId, event){
 			if (!gameOver && !pregame){
 				Player.list[playerId].benedicts++;
 				dataAccessFunctions.dbUserUpdate("inc", Player.list[playerId].cognitoSub, {benedicts: 1});
-				if (Player.list[playerId].benedicts >= 3){
+				if (Player.list[playerId].benedicts >= 3 && !customServer){
 					bannedCognitoSubs.push({cognitoSub:Player.list[playerId].cognitoSub, reason:"being a Benedict Arnold"});
 					SOCKET_LIST[Player.list[playerId].id].emit("betrayalKick");
 				}
@@ -3033,6 +3049,7 @@ function playerEvent(playerId, event){
 			}
 		}
 	}
+	
 }
 
 

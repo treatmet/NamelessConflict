@@ -63,7 +63,7 @@ var page = "";
 var isWebServer = true;
 var myIp = "";
 var cognitoSub = "";
-var username = "SomeGuy"; //myUsername
+var username = "SomeGuy";
 var partyId = "";
 var userCash = 0;
 var federatedUser = false;
@@ -628,7 +628,6 @@ function requestDeclineClick(id){
 	});
 }
 
-//acceptTradeClick
 function tradeAcceptClick(id){
 	const params = {
 		type:"trade",
@@ -636,7 +635,6 @@ function tradeAcceptClick(id){
 		accept:true
 	};
 	
-	console.log("Accepted Trade request, awaiting response from server");
 	$.post('/requestResponse', params, function(data,status){
 		console.log("requestResponse (party accept) endpoint response from server:");
 		console.log(data);		
@@ -706,12 +704,7 @@ function setLocalStorage(){
 function logOutClick(){
 	cognitoSub = "";
     $.post('/logOut', {}, function(data,status){
-		if (page == "trade"){
-			window.location = serverHomePage;
-		}
-		else {
-			window.location.reload();
-		}
+		window.location.reload();
     });
 }
 
@@ -730,6 +723,7 @@ function localClick(){
 
 function showDefaultLoginButtons(){
 	if (page == "game"){return;}
+	else if (page == "home"){show("sectionTitle1")}
     show("createAccountH");
     show("logInH");
     show("playNowH");
@@ -742,16 +736,16 @@ function showDefaultLoginButtons(){
 
 function showAuthorizedLoginButtons(){
 	if (page == "game"){return;}
-    hide("createAccountH");
+	document.getElementById("createAccountH").style.display = "none";
+	
     hide("logInH");
-    showUnset("playNowH");
+    document.getElementById("playNowH").style.display = "";
     show("partyUpMessage");
-    showUnset("logOutH");
+    document.getElementById("logOutH").style.display = "";
     if (document.getElementById('userWelcomeText')){
         var printedUsername = username.substring(0,15);
+        document.getElementById('userWelcomeText').style.display = "inline-block";
 		document.getElementById('userWelcomeText').innerHTML = getUserWelcomeHTML(printedUsername);	
-		document.getElementById('userWelcomeText').style.display = "inline-block";
-		buildHeaderMessagingLink();
 	}
 }
 
@@ -759,89 +753,12 @@ function getUserWelcomeHTML(printedUsername){
 	var HTML = "";
 	var linky = "/user/" + cognitoSub;
 
-
 	if (printedUsername.includes("Facebook_") || printedUsername.includes("Google_") && !getUrl().includes(cognitoSub)){
 		printedUsername += " - <span style='color:red; text-decoration-color: red;'>[click here to update username]</span>"
 		linky += "/?view=username";
 	}
 	HTML += "<span>Logged in as </span>" + "<a href='" + linky + "'>" + printedUsername + "</a>";
 	return HTML;
-}
-
-function buildHeaderMessagingLink(){
-	var params = {
-        cognitoSub:cognitoSub,
-	};
-	
-    $.get('/getConversations', params, function(data){
-        logg("getConversations RESPONSE:");
-        console.log(data);
-        if (!data.result){
-            alert("Error retrieving user conversations." + data.error);
-            cb(false);
-        }
-        else { //success            
-            // globalConversations = convertToClientConversations(data.result);
-            // buildConversationsHTML(globalConversations);
-			// cb(true);
-			var convos = convertToClientConversations(data.result);
-			var unreads = 0;
-			var conversationId = false;
-			for (var c = 0; c < convos.length; c++){
-				if (convos[c].myUnreads){
-					conversationId = convos[c].id;
-					unreads += convos[c].myUnreads;
-				}
-			}
-			if (unreads){document.getElementById("messagingLink").className = "messagingLinkUnreads";}
-			document.getElementById("messagingLink").innerHTML = getMessagingLinkHTML(unreads, conversationId);
-			show("messagingLink");
-        }
-    });
-}
-
-function getMessagingLinkHTML(unreads, conversationId = false){
-	var HTML = "";
-	var msgLink = "/messaging";
-	if (conversationId){msgLink += "/?conversationId=" + conversationId;}
-	if (unreads){
-		HTML += "<a href='" + msgLink + "'>✉ [" + unreads + "]</a>";
-	}
-	else {
-		HTML += "<a href='" + msgLink + "'>✉</a>";
-	}
-	return HTML;
-}
-
-function convertToClientConversations(conversations){
-    var convertedConversations = [];
-
-    for (var c = 0; c<conversations.length; c++){
-        var isUserOne = false;
-        if (conversations[c].userOneCognitoSub == cognitoSub){isUserOne = true;}
-
-        if (isUserOne){
-            conversations[c].myUnreads = conversations[c].userOneUnreads;
-            conversations[c].partnerUsername = conversations[c].userTwoUsername;
-            conversations[c].partnerCognitoSub = conversations[c].userTwoCognitoSub;
-        }
-        else {
-            conversations[c].myUnreads = conversations[c].userTwoUnreads;
-            conversations[c].partnerUsername = conversations[c].userOneUsername;
-            conversations[c].partnerCognitoSub = conversations[c].userOneCognitoSub;
-        }
-
-        delete conversations[c].userOneUnreads;
-        delete conversations[c].userTwoUnreads;
-        delete conversations[c].userTwoUsername;
-        delete conversations[c].userOneUsername;
-        delete conversations[c].userOneCognitoSub;
-        delete conversations[c].userTwoCognitoSub;
-
-        convertedConversations.push(conversations[c]);
-    }
-    console.log(convertedConversations);
-    return convertedConversations;
 }
 
 function showSecondaySectionTitles(){
@@ -1281,7 +1198,7 @@ function hydrateKeybindingSettings(data){
                 data[r].default = 82;
                 break;
             case "look":
-                data[r].actionName = "Utility";
+                data[r].actionName = "Look Ahead";
                 data[r].default = 16;
                 break;
             case "weapon1":

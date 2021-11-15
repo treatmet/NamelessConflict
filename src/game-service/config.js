@@ -74,7 +74,6 @@ global.hordeGlobalBest = 0;
 global.hordeGlobalBestNames = "RTPM3";
 global.personalHordeMode = true;
 
-//Server settings
 global.minutesLeft = 9;
 global.secondsLeft = 99;
 global.scoreToWin = 3;
@@ -97,7 +96,7 @@ global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
 global.diagMovementScale = (2/3);
 global.maxEnergyMultiplier = 1;
-global.rechargeDelayTime = 120; //Double for breaking under zero energy
+global.rechargeDelayTime = 130; //Double for breaking under zero energy
 global.healDelayTime = 300;
 global.healRate = 5; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal) //regenSpeed healthRegenSpeed
 global.respawnTimeLimit = 3 * 60;
@@ -118,23 +117,12 @@ global.grenadeDrag = 0.2;
 global.grenadeExplosionSize = 400;
 global.grenadeDamage = 30;
 global.grenadeDamageScale = 1;
-global.grenadePower = 0.5;
-global.grenadeRaySpeed = 8;
-global.grenadeResource = true;
-global.grenadeRechargeSpeed = 0.2; // out of 100
-global.maxGrenades = 3;
+global.grenadePower = 0.6;
 
 //Boost config
 global.boostDamage = 34;
 global.boostEnergyCost = 25;
 global.meleeRange = 50;
-
-
-//Block config
-global.blockPushSpeed = 4;
-
-global.clientSideMovement = true;
-
 
 
 /*
@@ -178,7 +166,7 @@ global.damageScale = 1;
 	global.friendlyFireDamageScale = 0.25;
 	global.cloakBonusDamage = 20;
 
-global.allyDamageWarningThreshold = 50;
+global.allyDamageWarningThreshold = 40;
 
 global.startingWeapon = 1;
 global.bulletRange = 19 * 75;
@@ -345,25 +333,6 @@ global.updateGrenadeList = [];
 global.updateMisc = {};
 
 global.SOCKET_LIST = [];
-
-global.sharedSettings = { //Initial 1 time only config settings
-	grenadeTimer: grenadeTimer,
-	grenadeThrowSpeed: grenadeThrowSpeed,
-	grenadeDrag:grenadeDrag,
-	grenadeExplosionSize:grenadeExplosionSize,
-	grenadeDamage:grenadeDamage,
-	grenadeDamageScale:grenadeDamageScale,
-	grenadePower:grenadePower,
-	grappleSpeed:grappleSpeed,
-	pushStrength:pushStrength,
-	blockPushSpeed:blockPushSpeed,
-	speedCap:speedCap,
-	clientSideMovement:clientSideMovement,
-	laserMaxCharge:laserMaxCharge,
-	grenadeResource:grenadeResource,
-	grenadeRechargeSpeed:grenadeRechargeSpeed,
-	maxGrenades:maxGrenades,
-};
 
 // map = "horde";
 // gametype = "horde";

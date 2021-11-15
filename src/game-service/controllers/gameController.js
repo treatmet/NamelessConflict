@@ -59,7 +59,7 @@ router.post('/playNow', async function (req, res) {
 	}
 
 	if (foundBannedPlayer){
-		var msg = "res.send: " + "You are banned from the current game for " + foundBannedPlayer.reason + ".";
+		var msg = "res.send: " + "You are banned from the current game for " + foundBannedPlayer.reason + ". Please try again in a few minutes.";
 		logg(msg);
 		res.send({msg:msg, success:false});
 		return;

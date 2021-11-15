@@ -74,13 +74,4 @@ router.get('/search/:searchText', function(req, res) {
 	res.send(pageContent);
 });
 
-//Messaging
-router.get('/messaging', function(req, res) {
-	var pageData = {};
-	var pageContent =  getClientFile('messaging.html');
-	pageData["header"] =  getClientFile('header.html');		
-	pageContent = replaceValues(pageData, pageContent);	
-	res.send(pageContent);
-});
-
 module.exports = router;

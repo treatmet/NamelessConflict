@@ -280,13 +280,14 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("October 4, 2021 16:00:00");
+	var thresholdDate = new Date("October 14, 2021 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
 		"bigballer4liver"
 	] } }; //Bronze
  */
+
 
 	console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:2000}, async function(err, resy){
@@ -310,18 +311,18 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				  	continue;
 				}
 
-				if (customizationOptions.indexOf("ivoryPistolWeapon") == -1){
-					customizationOptions.push("ivoryPistolWeapon");
-					console.log("Pushing ivoryPistolWeapon");
+				if (customizationOptions.indexOf("ivoryDPWeapon") == -1){
+					customizationOptions.push("ivoryDPWeapon");
+					console.log("Pushing ivoryDPWeapon");
 					updatey = true;
 				}
     
     
-				// if (customizations["1"].pistolColor != "#fffef8"){
-				// 	customizations["1"].pistolColor = "#fffef8"; //CONFIGURATION
-				// 	customizations["2"].pistolColor = "#fffef8"; //CONFIGURATION
-				// 	updatey = true;
-				// }
+				if (customizations["1"].dpColor != "#fffef8"){
+					customizations["1"].dpColor = "#fffef8"; //CONFIGURATION
+					customizations["2"].dpColor = "#fffef8"; //CONFIGURATION
+					updatey = true;
+				}
 
 				//customizationOptions.push("bronze3_0Icon");
 				//customizationOptions.push("silver3_0Icon");
@@ -624,7 +625,7 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 			}
 
 			//manual hardcode
-			//shopList[0] = "batWingsHat";
+			//shopList[0] = "ivoryDPWeapon";
 			// shopList[1] = "redBowHat";
 			// shopList[2] = "blueBowHat";
 			// shopList[3] = "orangeBowHat";
@@ -1365,221 +1366,6 @@ function checkForUnhealthyServers(){
 	});
 }
 
-/// MESSAGING ///////////
-
-function insertMessage(requestObj, cb){
-
-	var obj = {
-		id: Math.random(),
-		senderCognitoSub:requestObj.senderCognitoSub,
-		recipientCognitoSub: requestObj.recipientCognitoSub,
-		timestamp: new Date(),
-		message:requestObj.message
-	};
-
-
-	dataAccess.dbUpdateAwait("RW_MSG", "ups", {id:obj.id}, obj, async function(err, res){
-		if (err){
-			logg("DB ERROR - insertMessage(): " + err);
-			cb(false);
-		}	
-		else {
-			cb(true);
-		}
-	});
-
-}
-
-function deleteMessage(messageId, cb){
-	dataAccess.dbUpdateAwait("RW_MSG", "rem", {id:messageId}, {}, async function(err, res){
-		if (err){
-			logg("DB ERROR - deleteMessage() MessageId: " + messageId + " Error:" + err);
-		}	
-		cb(true);
-	});
-
-}
-
-function getConversationByCognitoSubs(userOneCognitoSub, userTwoCognitoSub, cb){
-	var userOneCognitoSubSorted = userOneCognitoSub;
-	var userTwoCognitoSubSorted = userTwoCognitoSub;
-
-	if (userOneCognitoSub.localeCompare(userTwoCognitoSub) == -1){
-		userOneCognitoSubSorted = userTwoCognitoSub;
-		userTwoCognitoSubSorted = userOneCognitoSub;
-	}
-
-	var params =  {userOneCognitoSub:userOneCognitoSubSorted, userTwoCognitoSub:userTwoCognitoSubSorted}
-	dataAccess.dbFindOptionsAwait("RW_CONVERSATION", params, {}, function(err, res){
-		if (err || !res || !res[0]){
-			console.log("WARNING - Failed to find conversation in getConversationByCognitoSubs " + err);
-			cb(false);
-		}
-		else {
-			cb(res[0]);
-		}
-	});
-}
-
-function getUserConversations(cognitoSub, conversationId, cb){
-	var params =  { $or: [ {userOneCognitoSub:cognitoSub}, {userTwoCognitoSub:cognitoSub} ] };
-	dataAccess.dbFindOptionsAwait("RW_CONVERSATION", params, {sort:{lastMessageTimestamp:-1}}, function(err, res){
-		if (err || !res){
-			cb(false);
-		}
-		else {
-			if (res[0] && conversationId){
-				for (var c = 0; c < res.length; c++){
-					if (res[c].id == conversationId){
-						res[c].active = true;
-					}
-				}
-			}
-			cb(res);
-		}
-	});
-}
-
-function getOrCreateConversation(cognitoSubOne, cognitoSubTwo, usernameOne, usernameTwo, cb){
-	console.log("getOrCreateConversation");
-	var upsertedCognitoSubOne = cognitoSubOne;
-	var upsertedCognitoSubTwo = cognitoSubTwo;
-	var upsertedUsernameOne = usernameOne;
-	var upsertedUsernameTwo = usernameTwo;
-
-	if (cognitoSubOne.localeCompare(cognitoSubTwo) == -1){
-		console.log("swapping usernames");
-		upsertedCognitoSubOne = cognitoSubTwo;
-		upsertedCognitoSubTwo = cognitoSubOne;
-		upsertedUsernameOne = usernameTwo;
-		upsertedUsernameTwo = usernameOne;
-	}
-
-
-	getConversationByCognitoSubs(upsertedCognitoSubOne, upsertedCognitoSubTwo, function(conversation){
-		if (conversation){
-			log("Found conversation:" + conversation.userOneUsername + " and " + conversation.userTwoUsername);
-			cb(conversation);
-		}
-		else { //create new conversation
-			log("Creating new conversation:" + upsertedUsernameOne + " and " + upsertedUsernameTwo);
-			var obj = {
-				id: Math.random(),
-				userOneCognitoSub:upsertedCognitoSubOne,
-				userOneUnreads:0,
-				userOneUsername: upsertedUsernameOne,
-				userTwoCognitoSub: upsertedCognitoSubTwo,
-				userTwoUnreads: 0,
-				userTwoUsername:upsertedUsernameTwo,
-				lastMessageTimestamp: new Date(),
-				lastMessagePreview: " ",
-			};
-		
-			dataAccess.dbUpdateAwait("RW_CONVERSATION", "ups", {userOneCognitoSub:upsertedCognitoSubOne, userTwoCognitoSub:upsertedCognitoSubTwo}, obj, async function(err, res){
-				if (err){
-					logg("DB ERROR - insertConversation(): " + err);
-					cb(false);
-				}	
-				cb(obj);
-			});		
-		}
-	});
-}
-
-function updateConversation(conversationId, message, recipientCognitoSub){
-	conversationId = parseFloat(conversationId);
-	if (typeof message != "string"){log("ERRORR - Invalid messaage value"); return;}
-	getConversation(conversationId, function(conversation){
-		if (!conversation){return;}
-		var obj = {
-			lastMessagePreview:message.substring(0, 100),
-			lastMessageTimestamp:new Date(),
-			
-		}
-		if (recipientCognitoSub == conversation.userOneCognitoSub){
-			obj.userOneUnreads = conversation.userOneUnreads + 1;
-			obj.userTwoUnreads = 0;
-		}
-		else if (recipientCognitoSub == conversation.userTwoCognitoSub){
-			obj.userTwoUnreads = conversation.userTwoUnreads + 1;
-			obj.userOneUnreads = 0;
-		}
-	
-		dataAccess.dbUpdateAwait("RW_CONVERSATION", "ups", {id:conversationId}, obj, async function(err, res){
-		});
-	
-	});
-}
-
-function getConversation(conversationId, cb){
-	conversationId = parseFloat(conversationId);
-	dataAccess.dbFindAwait("RW_CONVERSATION", {id:conversationId}, function(err,res){
-		if (res && res[0]){
-			cb(res[0]);
-		}
-		else {
-			cb(false);
-		}
-	});
-}
-
-
-function getConversationMessages(cognitoSubOne, cognitoSubTwo, conversationId, cb){
-	console.log("CLEARING UNREADS FOR " + cognitoSubOne);
-	clearConversationUnreads(conversationId, cognitoSubOne);
-
-	var upsertedCognitoSubOne = cognitoSubOne;
-	var upsertedCognitoSubTwo = cognitoSubTwo;
-
-	if (cognitoSubOne.localeCompare(cognitoSubTwo) == -1){
-		upsertedCognitoSubOne = cognitoSubTwo;
-		upsertedCognitoSubTwo = cognitoSubOne;
-	}
-
-	var params =  { $or: [ {senderCognitoSub:cognitoSubOne, recipientCognitoSub:cognitoSubTwo},
-		{senderCognitoSub:cognitoSubTwo, recipientCognitoSub:cognitoSubOne} ] };
-
-	dataAccess.dbFindOptionsAwait("RW_MSG", params, {limit:50, sort:{timestamp:-1}}, async function(err, resy){
-		if (err){
-			logg("DB ERROR - getConversationMessages(): " + err);
-		}
-		else {
-			if (resy && resy.length > 0)
-				resy = resy.sort(sortByTimestamp);
-			cb(resy);
-		}
-	});
-}
-
-function sortByTimestamp(a, b){
-	if (a.timestamp > b.timestamp)
-    return 1;
-  if (a.timestamp < b.timestamp)
-    return -1;
-  return 0;
-}
-
-
-function clearConversationUnreads(conversationId, cognitoSub){
-	conversationId = parseFloat(conversationId);
-	getConversation(conversationId, function(conversation){
-		if (conversation){
-			var obj = {};
-			if (conversation.userOneCognitoSub == cognitoSub){
-				obj.userOneUnreads = 0;
-			}
-			else if (conversation.userTwoCognitoSub == cognitoSub){
-				obj.userTwoUnreads = 0;
-			}
-			console.log("DB Clear unreads for " + cognitoSub);
-			console.log(obj);
-			dataAccess.dbUpdateAwait("RW_CONVERSATION", "ups", {id:conversationId}, obj, async function(err, res){
-			});
-		}
-	});
-}
-
-
 module.exports.getUser = getUser;
 module.exports.getAllUsersOnServer = getAllUsersOnServer;
 module.exports.getPartyForUser = getPartyForUser;
@@ -1628,11 +1414,3 @@ module.exports.completeTrade = completeTrade;
 module.exports.defaultCustomizations = defaultCustomizations;
 module.exports.fullShopList = fullShopList;
 module.exports.defaultCustomizationOptions = defaultCustomizationOptions;
-module.exports.insertMessage = insertMessage;
-module.exports.deleteMessage = deleteMessage;
-module.exports.getUserConversations = getUserConversations;
-module.exports.getConversationByCognitoSubs = getConversationByCognitoSubs;
-module.exports.getOrCreateConversation = getOrCreateConversation;
-module.exports.updateConversation = updateConversation;
-module.exports.getConversationMessages = getConversationMessages;
-

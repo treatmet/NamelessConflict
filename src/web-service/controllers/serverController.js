@@ -555,13 +555,10 @@ function processCustomGameServerUpdateRequest(settings){
 			} 
 		}
 		else if (settings[s].name == "damageScale"){
-			if (isNaN(settings[s].value)){
+			if (isNaN(settings[s].value) || settings[s].value > 99){
 				settings[s].value = 1;
 				continue;
 			} 
-			else if (settings[s].value > 3){
-				settings[s].value = 3;
-			}
 		}
 		else if (settings[s].name == "timeBeforeNextGame"){
 			if (isNaN(settings[s].value) || settings[s].value > 99){

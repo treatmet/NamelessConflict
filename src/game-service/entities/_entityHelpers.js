@@ -1,4 +1,13 @@
-var player = require('../entities/player.js');
+var sprayBloodOntoTarget = function(shootingDir, targetX, targetY, targetId) {
+	var data = {};
+	data.targetX = targetX;
+	data.targetY = targetY;
+	data.shootingDir = shootingDir;
+	data.targetId = targetId;
+	for(var i in SOCKET_LIST){
+		SOCKET_LIST[i].emit('sprayBloodOntoTarget',data);
+	}
+}
 
 var organicDiagLeniency = 13;
 var checkIfInLineOfShot = function(shooter, target, shot){ //hitDetection hit detection
@@ -343,7 +352,7 @@ var calculateDrag = function(entity, drag){
 		entity.speedY = 0;
 		return;
 	}
-	drag += fullVelocity/100;
+
 	var speedXRatio = entity.speedX / fullVelocity;
 	var speedYRatio = entity.speedY / fullVelocity;
 	entity.speedX -= speedXRatio * drag;  
@@ -383,7 +392,7 @@ var checkBodyCollisionWithGroupOfBodies = function(self, list){
 					}
 					entity.getSlammed(self.id, self.walkingDir);
 
-/* 					if (entity.health > 0){
+					if (entity.health > 0){
 						self.speedX += dx1/2;
 						self.speedY += dy1/2;
 					}
@@ -391,7 +400,7 @@ var checkBodyCollisionWithGroupOfBodies = function(self, list){
 						self.speedX -= dx1/5;
 						self.speedY -= dy1/5;
 					}
- */
+
 				}
 				else {					
 					self.x += ax1 / (dist1 / 70); //Higher number is greater push
@@ -404,20 +413,6 @@ var checkBodyCollisionWithGroupOfBodies = function(self, list){
 	}
 	if (posUpdated){return true;}
 	else {return false;}
-}
-
-var sprayBloodOntoTarget = function(shootingDir, targetX, targetY, targetId) {
-	var data = {};
-	data.targetX = targetX;
-	data.targetY = targetY;
-	data.shootingDir = shootingDir;
-	data.targetId = targetId;
-	for(var i in SOCKET_LIST){
-		var playa = player.getPlayerById(i);
-		if (playa && playa.getSetting("display", "enableBlood") === true){
-			SOCKET_LIST[i].emit('sprayBloodOntoTarget',data);
-		}
-	}
 }
 
 

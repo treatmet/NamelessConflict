@@ -50,7 +50,7 @@ var resetGameSettingsToStandard = function(){
 	cloakDeinitializeSpeed = 0.1;
 	playerMaxHealth = 175;
 	bootOnAfk = true;
-	AfkFramesAllowed = 60 * 60; //seconds (translated to frames) //timeout
+	AfkFramesAllowed = 120 * 60; //seconds (translated to frames) //timeout
 	damageScale = 1;
 	pistolDamage = 10;
 	pistolSideDamage = 6; //Stacks on above
@@ -112,7 +112,7 @@ var resetGameSettingsToStandard = function(){
 	console.log("I'm setting " + port + " customServer to false");
 	customServer = false;
 	pregameIsHorde = true;
-	serverName = "RANKED " + port.substring(2,4);
+	serverName = "Ranked " + port.substring(2,4);
 	bannedCognitoSubs = [];
 	createdByCognitoSub = "";
 	mapEngine.initializeBlocks();
@@ -396,12 +396,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 			}
 
 
-			//Thursday Bonus!
-			dt = new Date();
-			if (dt.getDay() == 4 && dt.getHours() > 12){
-				player.updatePropAndSend("cashEarnedThisGame", player.cashEarnedThisGame * 2)
-			}
-		
+			//ptsGained = 0; //GRENADES
 			
 			if (customServer){
 				player.cashEarnedThisGame =  Math.round(player.cashEarnedThisGame/2);
@@ -892,7 +887,6 @@ var eliminationRoundWin = function(team) { //endRound //winRound
 	}
 	roundOver = true;
 	nextGameTimer = timeBeforeNextRound;
-	pickup.clearDroppedPickups();
 
 	for (var i in SOCKET_LIST){
 		var socket = SOCKET_LIST[i];	
@@ -1040,7 +1034,7 @@ function tabulateVotes(){
 	if (thePitVotes > longestVotes && thePitVotes > crikVotes && thePitVotes > narrowsVotes && thePitVotes > longNarrowsVotes && thePitVotes > whirlpoolVotes){
 		map = "thepit";
 	}
-	else if (longestVotes > thePitVotes && longestVotes > crikVotes && longestVotes > narrowsVotes && longestVotes > longNarrowsVotes && longestVotes > whirlpoolVotes){
+	else if (longestVotes > thePitVotes && longestVotes > crikVotes && longestVotes > narrowsVotes && longestVotes > longNarrowsVotes && longNarrowsVotes > whirlpoolVotes){
 		map = "longest";
 	}
 	else if (crikVotes > thePitVotes && crikVotes > longestVotes && crikVotes > narrowsVotes && crikVotes > longNarrowsVotes && crikVotes > whirlpoolVotes){
@@ -1312,7 +1306,6 @@ function initializeNewGame(){ //startGame gameStart
 		playerList[i].kills = 0;
 		playerList[i].assists = 0;
 		playerList[i].benedicts = 0;
-		playerList[i].damageWarnings = 0;
 		playerList[i].deaths = 0;
 		playerList[i].steals = 0;
 		playerList[i].returns = 0;
@@ -1489,12 +1482,10 @@ var joinGame = function(cognitoSub, username, team, partyId){
 	}
 
 	var socket = SOCKET_LIST[getSocketIdFromCognitoSub(cognitoSub)];
-	
 	if (!socket){
 		log("ERROR!!! Socket not yet connected to game server, or cognitoSub has not been set on socket!");
 		return;
 	}
-
 	socket.team = team;
 	socket.partyId = partyId;
 	log("!!!!Player signing into game server - socketID: " + socket.id + " cognitoSub: " + cognitoSub + " username: " + username + " team: " + team + " partyId: " + partyId);
@@ -1981,7 +1972,7 @@ profanity.addWords([
 
 function getServerName(){
 	if (!customServer){
-		serverName = "RANKED " + port.substring(2,4);
+		serverName = "Ranked " + port.substring(2,4);
 		if (gametype == "horde"){
 			serverName = "Invasion " + port.substring(2,4);
 		}

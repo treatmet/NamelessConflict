@@ -2,6 +2,7 @@ page = "playerSearch";
 initializePage();
 function initializePage(){
     showLocalElements();
+	populateSearchPage();
 	getTokenFromUrlParameterAndLogin(); 	
 }
 
@@ -15,7 +16,6 @@ function loginFail(){
 }
 
 function loginAlways(){
-	populateSearchPage();
 	showUnset("mainContent");
 }
 

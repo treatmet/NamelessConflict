@@ -260,17 +260,6 @@ var clearNonMedPickups = function(){
 	}
 }
 
-
-var clearDroppedPickups = function(){
-	for (var p in Pickup.list){
-		if (Pickup.list[p].respawnTime == -1){
-			removePickup(Pickup.list[p].id);
-		}
-	}
-}
-
-
-
 var clockTick = function(){
 	for (var i in Pickup.list){
 		if (Pickup.list[i].respawnTime > -1 && gameOver == false){				
@@ -300,4 +289,3 @@ module.exports.clearPickupList = clearPickupList;
 module.exports.clockTick = clockTick;
 module.exports.checkForPickup = checkForPickup;
 module.exports.clearNonMedPickups = clearNonMedPickups;
-module.exports.clearDroppedPickups = clearDroppedPickups;

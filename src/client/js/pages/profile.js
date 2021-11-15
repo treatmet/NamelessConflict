@@ -177,7 +177,7 @@ function showSelfProfileOptions(){
         });      
         buildProgressList();
     }
-    else if (isLoggedIn()) {
+    else {
         show("invitePlayerButtons");			
     }
 }
@@ -192,8 +192,6 @@ function buildDisplaySettings(displaySettings){
 
     var forceTeamNameColors = displaySettings.find(setting => setting.key == "forceTeamNameColors");
     var profanityFilter = displaySettings.find(setting => setting.key == "profanityFilter");
-    var enableBlood = displaySettings.find(setting => setting.key == "enableBlood");
-
     if (forceTeamNameColors){
         var settingValue = forceTeamNameColors.value == true ? 'checked' : '';
         console.log(settingValue);
@@ -205,12 +203,6 @@ function buildDisplaySettings(displaySettings){
         profanityFilterCheckboxValue = '';
     }
     HTML += "<input type='checkbox' class='settingsCheckbox' id='profanityFilter' name='profanityFilter' value='profanityFilter' onclick='profanityFilterClicked()' " + profanityFilterCheckboxValue + "><label for='profanityFilter'> Enable Profanity Filter</label><br></br>";
-    
-    var enableBloodCheckboxValue = '';
-    if (enableBlood && enableBlood.value == true){
-        enableBloodCheckboxValue = 'checked';
-    }
-    HTML += "<input type='checkbox' class='settingsCheckbox' id='enableBlood' name='enableBlood' value='enableBlood' onclick='enableBloodClicked()' " + enableBloodCheckboxValue + "><label for='enableBlood'> Enable Blood Effects</label><br></br>";
     
     
     settingsList.innerHTML = HTML;
@@ -236,21 +228,6 @@ function profanityFilterClicked(){
 
     if (profanityFilter){
         profanityFilter.value = document.getElementById("profanityFilter").checked;
-    }
-}
-
-function enableBloodClicked(){
-    flagUnsavedSettings(true);
-    if (!document.getElementById("enableBlood")){return;}
-
-    var enableBlood = currentSettings.display.find(setting => setting.key == "enableBlood");
-    if (typeof enableBlood === 'undefined'){
-        currentSettings.display.push(newSetting("enableBlood", document.getElementById("enableBlood").checked))
-        enableBlood = currentSettings.display.find(setting => setting.key == "enableBlood");
-    }
-
-    if (enableBlood){
-        enableBlood.value = document.getElementById("enableBlood").checked;
     }
 }
 
@@ -823,50 +800,23 @@ function inviteToTradeButtonClick() {
 	}
 }
 
-function sendMessageButtonClick() {
-	console.log("sendMessageButtonClick()");
-
-	if (document.getElementById("playerProfile") && getUrl().indexOf('/user/') > -1){
-		const data = {
-			cognitoSub:cognitoSub,
-            username:username,
-            targetUsername:viewedProfileName,
-			targetCognitoSub:getUrl().split('/user/')[1]
-		};		
-        
-        $.post('/getOrCreateConversation', data, function(response,status){
-            if (response){
-                console.log("getOrCreateConversation response:");
-                console.log(response);
-                if (response.error){
-                    alert("Error initiating conversation. " + response.msg);
-                }
-                else if (response.conversationId){
-                    window.location = serverHomePage + "messaging/?conversationId=" + response.conversationId;
-                }
-            }
-        });
-
-	}
-}
-
 function upsertRequest(data){
 	$.post('/upsertRequest', data, function(response,status){
-        if (response){
-            console.log("upsertRequest response:");
-            console.log(response);
-            if (response.error){
-                alert(response.msg);
-            }
-            else {
-                if (data.type == "trade" && response.url){
-                    window.location = response.url;
-                }
-                else {
-                    window.location.reload();
-                }
-            }
-        }
+	if (response){
+		console.log("upsertRequest response:");
+        console.log(response);
+		if (response.error){
+			alert(response.msg);
+		}
+		else {
+			if (data.type == "trade" && response.url){
+				window.location = response.url;
+			}
+			else {
+				window.location.reload();
+			}
+		}
+	}
 	});
 }
 

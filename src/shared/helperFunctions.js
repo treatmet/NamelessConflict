@@ -373,7 +373,7 @@ global.getLevelFromExperience = function(experience){
 	var pointsForLevel = 0;
 	var experienceProgressInfo = {};
 
-	for (var x = 1; x < 999; x++){
+	for (var x = 1; x < 99; x++){
 		experienceProgressInfo.level = x;
 		experienceProgressInfo.floor = pointsForLevel;
 		experienceProgressInfo.ceiling = pointsForLevel + pointsBetweenThisLevelAndNext;
@@ -387,7 +387,7 @@ global.getLevelFromExperience = function(experience){
 	}
 
 	return {
-		level: 999,
+		level: 99,
 		floor: experience,
 		ceiling: (experience + 1000000)
 	};
