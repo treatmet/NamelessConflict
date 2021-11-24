@@ -399,9 +399,10 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 			//Thursday Bonus!
 			dt = new Date();
 			if (dt.getDay() == 4 && dt.getHours() > 12){
-				player.updatePropAndSend("cashEarnedThisGame", player.cashEarnedThisGame * 2)
-			}
-		
+				if (player && typeof player.updatePropAndSend != 'undefined'){
+					player.updatePropAndSend("cashEarnedThisGame", player.cashEarnedThisGame * 2);
+				}
+			}	
 			
 			if (customServer){
 				player.cashEarnedThisGame =  Math.round(player.cashEarnedThisGame/2);
@@ -436,8 +437,12 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 
 			var updateParams = {};
 			if (socket){
+				if (player.experience < 1000000 && player.cashEarnedThisGame + player.experience >= 1000000){
+					//Award millionaire icon
+				}
 				updateParams = {kills:player.kills, assists:player.assists, deaths:player.deaths, captures:player.captures, steals:player.steals, returns:player.returns, cash: player.cashEarnedThisGame, experience: player.cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
 				socket.emit('endGameProgressResults', endGameProgressResults);
+
 			}
 			else if ((player.timeInGame < timeInGameRankingThresh) && !customServer){
 				updateParams = {gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};

@@ -5,6 +5,7 @@ global.EBName = process.env.EBName;
 global.serverHealthCheckTimestampThreshold = process.env.serverHealthCheckTimestampThreshold; 
 global.stalePartyRequestThreshold = parseInt(process.env.stalePartyRequestThresholdSeconds); //300 (Seconds)
 global.staleFriendRequestThreshold = parseInt(process.env.staleFriendRequestThresholdDays); //300 (Days)
+global.staleMessageThreshold = parseInt(process.env.staleMessageThresholdDays); //30 (Days)
 global.AWSRegion = process.env.AWSRegion;
 global.minimumPlayableServers = parseInt(process.env.minimumPlayableServers);
 global.serversPerInstance = 4;
@@ -15,6 +16,7 @@ var completedTasks = [];
 const taskList = [
     "removeStaleRequests",
     "removeStaleServers",
+    "removeStaleMessages",
     "removeStaleTargetGroups",
     "updateInstanceCount"
 ];
@@ -46,6 +48,7 @@ if (!EBName){
         serverHealthCheckTimestampThreshold = localConfig.serverHealthCheckTimestampThreshold; 
         stalePartyRequestThreshold = localConfig.stalePartyRequestThresholdSeconds; //300 (Seconds)
         staleFriendRequestThreshold = localConfig.staleFriendRequestThresholdDays; //300 (Days)
+        staleMessageThreshold = localConfig.staleMessageThresholdDays; //30 (Days)
         minimumPlayableServers = localConfig.minimumPlayableServers;
         AWSRegion = localConfig.AWSRegion;
     }
@@ -53,6 +56,9 @@ if (!EBName){
         console.log(logID + " " + "ERROR - NO ENVIRONMENT VARIABLES OR config.json FOUND!!!");
     }
 }
+
+console.log("staleFriendRequestThreshold:" + staleFriendRequestThreshold);
+
 
 require('./code/logEngine.js');
 const dataAccess = require('./code/dataAccess.js');
@@ -85,6 +91,11 @@ function executeFunction(event, context, callback){
 
     removeStaleRequests(function(){
         completedTasks.push("removeStaleRequests");
+        if (checkIfTasksAreComplete())
+            callback(null, "All tasks finished!");
+    });
+    removeStaleMessages(function(){
+        completedTasks.push("removeStaleMessages");
         if (checkIfTasksAreComplete())
             callback(null, "All tasks finished!");
     });
@@ -607,6 +618,25 @@ function removeStaleRequests(cb){
             });
         });
     });
+}
+
+function removeStaleMessages(cb){
+    log(logID + " " + "removing stale messages...");
+
+    var miliInterval = (staleMessageThreshold * 1000 * 60 * 60 * 24); //Convert days to miliseconds
+	var thresholdDate = new Date(Date.now() - miliInterval);
+	var searchParams = {timestamp:{ $lt: thresholdDate } };
+
+	dataAccess.dbUpdateAwait("RW_MESSAGE", "rem", searchParams, {}, async function(err, res){
+		if (err){
+			log(logID + " " + "DB ERROR - removeStaleMessages() - RW_REQUEST.remove: " + err);
+            cb(false);
+		}
+        else {
+            log(logID + " " + "removed " + res + " stale messages");
+            cb(true);
+        }
+	});
 }
 
 function removeStaleFriendRequests(cb){

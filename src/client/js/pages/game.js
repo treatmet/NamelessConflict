@@ -6842,8 +6842,9 @@ class Explosion{
 
 
 					for(var b in this.obstacles){
-						var block = this.obstacles[b];
-						if(isPointIntersectingRect(this.rays[t], block)){
+						var blocky = this.obstacles[b];
+						if (blocky.type.indexOf("push") > -1){continue;}
+						if(isPointIntersectingRect(this.rays[t], blocky)){
 							this.rays[t].collided = true;
 							break;
 						}
@@ -8641,6 +8642,7 @@ function hexToHSL(H) {
 }
 
 
+
 Object.size = function(obj) {
     var size = 0, key;
     for (key in obj) {
@@ -8676,10 +8678,15 @@ var forceToLeave = false;
 
 var timeInGame = 0;
 window.onbeforeunload = function(){
-	if (!gameOver && !pregame && !forceToLeave && !customServer && timeInGame > timeInGameRankingThresh) {
-		return 'Are you sure you want to leave?'; //Leave site? unsaved changes
-	}
+	socket.disconnect();
+	// if (!gameOver && !pregame && !forceToLeave && !customServer && timeInGame > timeInGameRankingThresh) {
+	// 	return 'Are you sure you want to leave?'; //Leave site? unsaved changes
+	// }
 	return;
+};
+
+window.onunload = function(){
+	socket.disconnect();
 };
 
 socket.on('bootAfk', function(){
@@ -8737,8 +8744,10 @@ document.onmousedown=(etx)=>{
 			mutedPlayerIds.push(mouseHoveringPlayerId);
 		}
 	}
-    if (etx.button == 0) mouseDown = 1;
-    else mouseDown = 0;
+	else if (chatInput.style.display == "none"){
+		if (etx.button == 0) mouseDown = 1;
+		else mouseDown = 0;
+	}
 }
 document.onmouseup=(etx)=>{
     mouseDown = 0;

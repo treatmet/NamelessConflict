@@ -18,9 +18,9 @@ router.use(express.urlencoded({extended: true})); //To support URL-encoded bodie
 // });
 
 router.post('/getPlayerRelationship', async function (req, res) {
-	//log("Get player Relationship endpoint called with:");
-	//console.log("--BODY");
-	//console.log(req.body);
+	log("Get player Relationship endpoint called with:");
+	console.log("--BODY");
+	console.log(req.body);
 	dataAccessFunctions.getPlayerRelationshipFromDB(req.body, function(dbResults){
 		res.status(200);
 		res.send(dbResults);
@@ -430,6 +430,16 @@ router.get('/getConversationMessages', async function (req, res) {
 	});
 });
 
+router.get('/getPlaytime', async function (req, res) {
+	//Transform to get, cog will be at req.query.cognitoSub
+	console.log("getPlaytime FOR: " + req.query.cognitoSub);
+	console.log(req.query);
+
+	dataAccessFunctions.getPlaytimeMessage(req.query.cognitoSub, function(dbResults){
+		res.status(200);
+		res.send({error:false, result:dbResults});
+	});
+});
 
 router.post('/sendMessage', async function (req, res) {
 	log("sendMessage ENDPOINT CALLED WITH:");
@@ -747,14 +757,18 @@ router.post('/updateUsername', async function (req, res) {
 	logg("Updating username for sub " + updateCognitoSub + ". New username: " + updateNewUsername);
 	
 	var goodToUpdateUsername = false;
+	var errorMsg = "Error while updating username. Please try again.";
 	try {
 		dataAccess.dbFindAwait("RW_USER", {USERNAME:updateNewUsername}, function(err,result){
 			if (result && result[0]){
 				if (allowDuplicateUsername){
 					goodToUpdateUsername = true;
 				} else {
-					res.send({error:"Another user with that username already exists. Please choose another username."});
+					errorMsg = "Another user with that username already exists. Please choose another username.";
 				}
+			}
+			else if(!isValid(updateNewUsername)){
+				goodToUpdateUsername = false;
 			}
 			else {
 				goodToUpdateUsername = true;
@@ -764,13 +778,19 @@ router.post('/updateUsername', async function (req, res) {
 					res.send({msg:"Updated username to " + updateNewUsername});
 				});			
 			}
+			else {
+				res.send({error:errorMsg});
+			}
 		});
 	}
 	catch(e) {
-		res.send({error:"Error while updating username. Please try again."});
+		res.send({error:errorMsg});
 	}
 });
 
+function isValid(str){
+	return /^[0-9a-zA-Z_.-]+$/g.test(str);
+}
 
 router.post('/logOut', async function (req, res) {
 	log("Logging out user");

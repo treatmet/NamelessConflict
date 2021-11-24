@@ -130,8 +130,12 @@ global.compareCurrentPlayerSize = function(a,b) { //order
 	
 	var aIsCustom = a.customServer;
 	var bIsCustom = b.customServer;
-	
-  if (aCurrentPlayers < bCurrentPlayers)
+
+  if (!aIsCustom && bIsCustom && aCurrentPlayers > 0)
+	return -1;
+  else if (!bIsCustom && aIsCustom && bCurrentPlayers > 0)
+	return 1;
+  else if (aCurrentPlayers < bCurrentPlayers)
     return 1;
   else if (aCurrentPlayers > bCurrentPlayers)
     return -1;

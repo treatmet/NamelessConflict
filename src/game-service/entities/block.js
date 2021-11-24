@@ -88,6 +88,8 @@ var checkCollision = function(obj, isBouncable = false){
 	var extendBottomOfBlock = 0;
 	var extendLeftOfBlock = 0;
 
+	var movedByHardBlock = false;
+
 	if (obj.weapon == 5) {
 		switch(obj.shootingDir) {
 			case 1:
@@ -146,6 +148,7 @@ var checkCollision = function(obj, isBouncable = false){
 				var overlapRight = Math.abs((blockList[i].x + blockList[i].width) - obj.x);			
 				if (overlapTop <= overlapBottom && overlapTop <= overlapRight && overlapTop <= overlapLeft){	
 					obj.y = blockList[i].y - (extendTopOfBlock);
+					movedByHardBlock = true;
 					if (typeof obj.speedX != 'undefined'){
 						if (obj.speedY > 0){
 							if (isBouncable){obj.speedY = -Math.abs(obj.speedY)/2;}
@@ -156,6 +159,7 @@ var checkCollision = function(obj, isBouncable = false){
 				}
 				else if (overlapBottom <= overlapTop && overlapBottom <= overlapRight && overlapBottom <= overlapLeft){
 					obj.y = blockList[i].y + blockList[i].height + extendBottomOfBlock;
+					movedByHardBlock = true;
 					if (typeof obj.speedX != 'undefined'){
 						if (obj.speedY < 0){
 							if (isBouncable){obj.speedY = Math.abs(obj.speedY)/2;}
@@ -166,6 +170,7 @@ var checkCollision = function(obj, isBouncable = false){
 				}
 				else if (overlapLeft <= overlapTop && overlapLeft <= overlapRight && overlapLeft <= overlapBottom){
 					obj.x = blockList[i].x - extendLeftOfBlock;
+					movedByHardBlock = true;
 					if (typeof obj.speedX != 'undefined'){
 						if (obj.speedX > 0){
 							if (isBouncable){obj.speedX = -Math.abs(obj.speedX)/2;}
@@ -176,6 +181,7 @@ var checkCollision = function(obj, isBouncable = false){
 				}
 				else if (overlapRight <= overlapTop && overlapRight <= overlapLeft && overlapRight <= overlapBottom){
 					obj.x = blockList[i].x + blockList[i].width + extendRightOfBlock;
+					movedByHardBlock = true;
 					if (typeof obj.speedX != 'undefined'){
 						if (obj.speedX < 0){
 							if (isBouncable){obj.speedX = Math.abs(obj.speedX)/2;}
@@ -236,6 +242,23 @@ var checkCollision = function(obj, isBouncable = false){
 			}
 		}// End check if player is overlapping block
 	}//End blockList loop	
+
+	if (movedByHardBlock){
+		for(var b in blockList){
+			var blocky = blockList[b];
+			if (blocky.type.indexOf("push") > -1){continue;}
+			if(isPointIntersectingRect(obj, blocky)){
+				console.log("GOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+				if (typeof obj.timeInBlock == 'undefined'){obj.timeInBlock = 1;}
+				obj.timeInBlock++;
+				break;
+			}
+		}
+	}
+	else {
+		obj.timeInBlock = 0;
+	}
+	//console.log(obj.timeInBlock);
 
 	if (posUpdated){
 		return true;

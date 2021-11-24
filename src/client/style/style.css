@@ -5,6 +5,11 @@
     background-color: #12c03e;
 }
 
+html {
+    background-color: #2c2f31;;
+    /* background-color: #293843; */
+}
+
 body{
     font-family: Electrolize;
     color: white;
@@ -174,6 +179,7 @@ div#warningBar {
     background-color: #490000;
     text-align: center;
     width: 100%;
+    font-size: 22px;
     display: none;
 }
 
