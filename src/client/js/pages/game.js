@@ -787,10 +787,18 @@ Img.gold2 = new Image();
 Img.gold2.src = "/src/client/img/ranks/full-size/gold2.png";
 Img.gold3 = new Image();
 Img.gold3.src = "/src/client/img/ranks/full-size/gold3.png";
-Img.diamond = new Image();
-Img.diamond.src = "/src/client/img/ranks/full-size/diamond.png";
+Img.diamond1 = new Image();
+Img.diamond1.src = "/src/client/img/ranks/full-size/diamond.png";
 Img.diamond2 = new Image();
 Img.diamond2.src = "/src/client/img/ranks/full-size/diamond2.png";
+Img.diamond3 = new Image();
+Img.diamond3.src = "/src/client/img/ranks/full-size/diamond3.png";
+Img.master1 = new Image();
+Img.master1.src = "/src/client/img/ranks/full-size/master1.png";
+Img.master2 = new Image();
+Img.master2.src = "/src/client/img/ranks/full-size/master2.png";
+Img.master3 = new Image();
+Img.master3.src = "/src/client/img/ranks/full-size/master3.png";
 
 
 //----------------------------- Final image to load--------------------------------
@@ -5782,10 +5790,18 @@ function getFullRankName(rank){
 			return "Gold II";
 		case "gold3":
 			return "Gold III";
-		case "diamond":
+		case "diamond1":
 			return "Diamond";
 		case "diamond2":
 			return "Super Diamond";
+		case "diamond3":
+			return "Hyper Diamond";
+		case "master1":
+			return "Master";
+		case "master2":
+			return "Ascended Master";
+		case "master3":
+			return "Absolute Master";
 		default:
 			return "Bronze I";
 	}

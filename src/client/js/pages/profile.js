@@ -1086,8 +1086,12 @@ function isRank(value){
 		"gold1",
 		"gold2",
 		"gold3",
-		"diamond",
-		"diamond2"
+		"diamond1",
+		"diamond2",
+		"diamond3",
+		"master1",
+		"master2",
+		"master3"
     ];
     
     if (rankings.indexOf(value) > -1){

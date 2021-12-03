@@ -562,6 +562,8 @@ router.post('/validateToken', async function (req, res) {
 			}
 			
 			result = await authenticationEngine.validateTokenOrRefresh(tokens);
+
+
 		}
 	}
 	if (!result.cognitoSub){
@@ -631,6 +633,11 @@ router.post('/validateToken', async function (req, res) {
 	//(Auth success) Get or create mongo username, and then return to the client
 	dataAccessFunctions.getUser(httpResult.cognitoSub, function(mongoRes){
 		if (mongoRes && mongoRes.username){
+
+			if (!mongoRes.cognitoUsername){
+				dataAccessFunctions.updateDBCognitoUsername(mongoRes.cognitoSub, httpResult.username);
+			}
+
 			httpResult.username = mongoRes.username;
 			httpResult.cash = mongoRes.cash;
 			res.send(httpResult);

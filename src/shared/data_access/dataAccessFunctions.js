@@ -232,6 +232,8 @@ var addUser = function(cognitoSub, username, cb){ //createUser create User add m
 		cb({});
 		return;
 	}
+	var cognitoUsername = username;
+
 	var today = new Date();
 	var date = today.getUTCFullYear()+'-'+(today.getUTCMonth()+1)+'-'+today.getUTCDate();
 
@@ -243,7 +245,7 @@ var addUser = function(cognitoSub, username, cb){ //createUser create User add m
 		username = generateTempName("Google_");
 	}
 
-	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, assists:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:myUrl};
+	var obj = {cognitoSub:cognitoSub, cognitoUsername:cognitoUsername, USERNAME:username, experience:0, cash:0, level:0, kills:0, assists:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:myUrl};
 
 	dataAccess.dbUpdateAwait("RW_USER", "ups", {cognitoSub:cognitoSub}, obj, async function(err, res){
 		if (err){
@@ -277,6 +279,15 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 	});		
 }
 
+var updateDBCognitoUsername = function(cognitoSub, cognitoUsername){
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {cognitoUsername: cognitoUsername}, async function(err, res){
+		if (err){
+			logg("DB ERROR - updateDBCognitoUsername() - RW_USER.update: " + err);
+		}	
+		//logg("Updated player[" + cognitoSub + "] onlineTimestamp to " + newDate);
+	});		
+}
+
 var giveUserAnItem = function(cognitoSub, itemId){
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 	/* 	var params = { USERNAME: { $in: [ 
@@ -284,86 +295,6 @@ var giveUserAnItem = function(cognitoSub, itemId){
 		] } }; //Bronze
 	 */
 	
-		console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
-		dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:2000}, async function(err, resy){
-			if (resy && resy[0]){ 
-				for (let k = 0; k < resy.length; k++) {
-					var updatey = false;
-					var cognitoSub = resy[k].cognitoSub;
-					var customizationOptions = resy[k].customizationOptions; 
-					var customizations = resy[k].customizations; 
-						 
-					console.log("Updating " + resy[k].USERNAME);
-	
-	//				console.log("Timestamp " + resy[k].onlineTimestamp);
-			   
-					 if (!customizationOptions){
-						console.log("ERROR - no customizationOptions");
-						continue;
-					}
-					if (!customizations || !customizations["1"] || !customizations["2"] ){
-						  console.log("ERROR - no customizations");
-						  continue;
-					}
-	
-					if (customizationOptions.indexOf("ivoryPistolWeapon") == -1){
-						customizationOptions.push("ivoryPistolWeapon");
-						console.log("Pushing ivoryPistolWeapon");
-						updatey = true;
-					}
-		
-		
-					// if (customizations["1"].pistolColor != "#fffef8"){
-					// 	customizations["1"].pistolColor = "#fffef8"; //CONFIGURATION
-					// 	customizations["2"].pistolColor = "#fffef8"; //CONFIGURATION
-					// 	updatey = true;
-					// }
-	
-					//customizationOptions.push("bronze3_0Icon");
-					//customizationOptions.push("silver3_0Icon");
-					//customizationOptions.push("gold3_0Icon");
-					//customizationOptions.push("diamond_0Icon");
-					var obj = {
-						customizationOptions:customizationOptions,
-						customizations:customizations
-					};
-	
-					if (!updatey){
-						console.log("Nothing to update...");
-						continue;
-					}
-					if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
-						console.log("SAFETYS ON");
-						continue;
-					}
-					// if (resy[k]._id == "60776761f660555073ed3168"){ //Get User
-					// 	console.log("UPDATE!!!!!!!!!!!!!!!");
-					// 	delete resy[k]._id;
-					// 	delete resy[k].USERNAME;
-					// 	delete resy[k].cognitoSub;
-					// 	dbUserUpdate("ups", "1bd31e42-7885-415a-a022-e8e2ee9e254d", resy[k]);
-					// 	break;
-					// }
-	
-					dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
-					});			
-					await sleep(10);	
-	
-				}				
-			}
-		});
-}
-
-
-var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("October 4, 2021 16:00:00");
-	//var params = {};
-	var params = {onlineTimestamp:{ $gt: thresholdDate }};
-/* 	var params = { USERNAME: { $in: [ 
-		"bigballer4liver"
-	] } }; //Bronze
- */
-
 	console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:2000}, async function(err, resy){
 		if (resy && resy[0]){ 
@@ -372,18 +303,18 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				var cognitoSub = resy[k].cognitoSub;
 				var customizationOptions = resy[k].customizationOptions; 
 				var customizations = resy[k].customizations; 
-					 
+						
 				console.log("Updating " + resy[k].USERNAME);
 
 //				console.log("Timestamp " + resy[k].onlineTimestamp);
-		   
- 				if (!customizationOptions){
+			
+					if (!customizationOptions){
 					console.log("ERROR - no customizationOptions");
 					continue;
 				}
 				if (!customizations || !customizations["1"] || !customizations["2"] ){
-				  	console.log("ERROR - no customizations");
-				  	continue;
+						console.log("ERROR - no customizations");
+						continue;
 				}
 
 				if (customizationOptions.indexOf("ivoryPistolWeapon") == -1){
@@ -391,8 +322,8 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 					console.log("Pushing ivoryPistolWeapon");
 					updatey = true;
 				}
-    
-    
+	
+	
 				// if (customizations["1"].pistolColor != "#fffef8"){
 				// 	customizations["1"].pistolColor = "#fffef8"; //CONFIGURATION
 				// 	customizations["2"].pistolColor = "#fffef8"; //CONFIGURATION
@@ -425,6 +356,102 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				// 	break;
 				// }
 
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
+				});			
+				await sleep(10);	
+
+			}				
+		}
+	});
+}
+
+
+var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
+	var thresholdDate = new Date("October 4, 2021 16:00:00");
+	//var params = {};
+	var params = {onlineTimestamp:{ $gt: thresholdDate }};
+/* 	var params = { USERNAME: { $in: [ 
+		"bigballer4liver"
+	] } }; //Bronze
+ */
+
+	console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
+	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:100000}, async function(err, resy){
+		if (resy && resy[0]){ 
+			for (let k = 0; k < resy.length; k++) {
+				var updatey = false;
+				var cognitoSub = resy[k].cognitoSub;
+				var customizationOptions = resy[k].customizationOptions; 
+				var customizations = resy[k].customizations; 
+					 
+				console.log("Updating " + resy[k].USERNAME);
+
+//				console.log("Timestamp " + resy[k].onlineTimestamp);
+		   
+ 				if (!customizationOptions){
+					console.log("ERROR - no customizationOptions");
+					continue;
+				}
+				if (!customizations || !customizations["1"] || !customizations["2"] ){
+				  	console.log("ERROR - no customizations");
+				  	continue;
+				}
+
+				customizationOptions = customizationOptions.filter(e => e !== 'bronze_02Icon' && e !== 'silver_02Icon' && e !== 'gold_02Icon' && e !== 'diamond_02Icon');
+
+				if (resy[k].rating > 100 && customizationOptions.indexOf("bronze_02Icon") == -1){
+					customizationOptions.push("bronze_02Icon");
+					console.log("Pushing bronze_02Icon");
+					updatey = true;
+				}
+				if (resy[k].rating > 300 && customizationOptions.indexOf("silver_02Icon") == -1){
+					customizationOptions.push("silver_02Icon");
+					console.log("Pushing silver_02Icon");
+					updatey = true;
+				}
+				if (resy[k].rating > 1000 && customizationOptions.indexOf("gold_02Icon") == -1){
+					customizationOptions.push("gold_02Icon");
+					console.log("Pushing gold_02Icon");
+					updatey = true;
+				}
+				if (resy[k].rating > 1800 && customizationOptions.indexOf("diamond_02Icon") == -1){
+					customizationOptions.push("diamond_02Icon");
+					console.log("Pushing diamond_02Icon");
+					updatey = true;
+				}
+    
+				// if (customizations["1"].pistolColor != "#fffef8"){
+				// 	customizations["1"].pistolColor = "#fffef8"; //CONFIGURATION
+				// 	customizations["2"].pistolColor = "#fffef8"; //CONFIGURATION
+				// 	updatey = true;
+				// }
+
+				//customizationOptions.push("bronze3_0Icon");
+				//customizationOptions.push("silver3_0Icon");
+				//customizationOptions.push("gold3_0Icon");
+				//customizationOptions.push("diamond_0Icon");
+				var obj = {
+					customizationOptions:customizationOptions
+					// customizations:customizations
+				};
+
+				if (!updatey){
+					//console.log("Nothing to update...");
+					continue;
+				}
+				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+				// 	//console.log("SAFETYS ON");
+				// 	continue;
+				// }
+				// if (resy[k]._id == "60776761f660555073ed3168"){ //Get User
+				// 	console.log("UPDATE!!!!!!!!!!!!!!!");
+				// 	delete resy[k]._id;
+				// 	delete resy[k].USERNAME;
+				// 	delete resy[k].cognitoSub;
+				// 	dbUserUpdate("ups", "1bd31e42-7885-415a-a022-e8e2ee9e254d", resy[k]);
+				// 	break;
+				// }
+					console.log("UPDATING!!!!!!");
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});			
 				await sleep(10);	
@@ -515,8 +542,12 @@ function isRank(value){
 		"gold1",
 		"gold2",
 		"gold3",
-		"diamond",
-		"diamond2"
+		"diamond1",
+		"diamond2",
+		"diamond3",
+		"master1",
+		"master2",
+		"master3"
     ];
     
     if (rankings.indexOf(value) > -1){
@@ -699,13 +730,14 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 				});
 			}
 
-			//manual hardcode
-			//shopList[0] = "batWingsHat";
-			// shopList[1] = "redBowHat";
-			// shopList[2] = "blueBowHat";
-			// shopList[3] = "orangeBowHat";
-			// shopList[4] = "greenBowHat";
-
+			//manual hardcode hard code shop
+			if (isLocal){
+				shopList[0] = "bronze_02Icon";
+				shopList[1] = "silver_02Icon";
+				shopList[2] = "gold_02Icon";
+				shopList[3] = "diamond_02Icon";
+				shopList[4] = "greenBowHat";
+			}
 			var clientShopList = transformToClientShop(shopList, nextMidnight);
 
 			console.log("RETURNING SHOP LIST FOR " + cognitoSub);
@@ -1746,6 +1778,7 @@ module.exports.getEmptyServersFromDB = getEmptyServersFromDB;
 module.exports.dbGameServerUpdate = dbGameServerUpdate;
 module.exports.checkForUnhealthyServers = checkForUnhealthyServers;
 module.exports.addUser = addUser;
+module.exports.updateDBCognitoUsername = updateDBCognitoUsername;
 module.exports.setHordePersonalBest = setHordePersonalBest;
 module.exports.setHordeGlobalBest = setHordeGlobalBest;
 module.exports.getHordePersonalBest = getHordePersonalBest;

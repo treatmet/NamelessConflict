@@ -221,10 +221,18 @@ global.getFullRankName = function(rank){
 			return "Gold II";
 		case "gold3":
 			return "Gold III";
-		case "diamond":
+		case "diamond1":
 			return "Diamond";
 		case "diamond2":
 			return "Super Diamond";
+		case "diamond3":
+			return "Hyper Diamond";
+		case "master1":
+			return "Master";
+		case "master2":
+			return "Ascended Master";
+		case "master3":
+			return "Absolute Master";
 		default:
 			return "Bronze I";
 	}
@@ -348,14 +356,24 @@ global.getRankFromRating = function(rating){
 		{rank:"gold1",rating:1000},
 		{rank:"gold2",rating:1300},
 		{rank:"gold3",rating:1600},
-		{rank:"diamond",rating:2000},
-		{rank:"diamond2",rating:9999}
+		{rank:"diamond1",rating:1900},
+		{rank:"diamond2",rating:2300},
+		{rank:"diamond3",rating:2700},
+		{rank:"master1",rating:3100},
+		{rank:"master2",rating:3600},
+		{rank:"master3",rating:4100}
 	];
 
 	for (var r in rankings){
 		var rPlus = parseInt(r)+1; //ToInt32
 		var rMinus = parseInt(r)-1;
-		if (rating < rankings[rPlus].rating){
+
+		var nextRankThreshold = 9999;
+		if (rankings[rPlus]){
+			nextRankThreshold = rankings[rPlus].rating;
+		}
+
+		if (rating < nextRankThreshold){
 			log(rankings[r].rank + " is his rank");
 			var response = {rank:rankings[r].rank, floor:rankings[r].rating, previousRank:"bronze1", nextRank:"diamond2", ceiling:9999};
 			if (rankings[rPlus]){

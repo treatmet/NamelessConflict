@@ -1273,8 +1273,12 @@ function getRankFromRating(rating){
 		{rank:"gold1",rating:1000},
 		{rank:"gold2",rating:1300},
 		{rank:"gold3",rating:1600},
-		{rank:"diamond",rating:2000},
-		{rank:"diamond2",rating:9999}
+		{rank:"diamond1",rating:1900},
+		{rank:"diamond2",rating:2300},
+		{rank:"diamond3",rating:2700},
+		{rank:"master1",rating:3100},
+		{rank:"master2",rating:3600},
+		{rank:"master3",rating:4100}
 	];
 
 	for (var r in rankings){
@@ -1282,7 +1286,7 @@ function getRankFromRating(rating){
 		var rMinus = parseInt(r)-1;
 		if (rating < rankings[rPlus].rating){
 			log(rankings[r].rank + " is his rank");
-			var response = {rank:rankings[r].rank, floor:rankings[r].rating, previousRank:"bronze1", nextRank:"diamond2", ceiling:9999};
+			var response = {rank:rankings[r].rank, floor:rankings[r].rating, previousRank:"bronze1", nextRank:"bronze1", ceiling:9999};
 			if (rankings[rPlus]){
 				response.nextRank = rankings[rPlus].rank;
 				response.ceiling = rankings[rPlus].rating;
@@ -1598,11 +1602,16 @@ function getShopItemHTML(item, active, type, disableDefaultItems = false, cashVa
             rarityText = "Legendary";
             rarityColor = "#ffd200";
             break;
+        case 5:
+            rarityImg = "rarities/legendary.png";
+            rarityText = "[Exclusive]";
+            rarityColor = "#ff3600";
+            break;
         default:            
             break;
     }
 
-    if (item.hideFromShop){
+    if (item.hideFromShop && item.rarity > 4){
         rarityText = "[Exclusive]";   
         rarityColor = "#ff3600";
     }

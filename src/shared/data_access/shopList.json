@@ -1459,6 +1459,54 @@
 		"canvasValue":"diamond_0"
 	},	
 	{
+		"id":"bronze_02Icon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Season Zero-2 Bronze",
+		"text":"Achieved a Bronze rank in Season Zero-2",
+		"price": 0,
+		"team":0,
+		"rarity":0,
+		"hideFromShop":true,
+		"canvasValue":"bronze3_02"
+	},	
+	{
+		"id":"silver_02Icon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Season Zero-2 Silver",
+		"text":"Achieved a Silver rank in Season Zero-2",
+		"price": 0,
+		"team":0,
+		"rarity":1,
+		"hideFromShop":true,
+		"canvasValue":"silver3_02"
+	},	
+	{
+		"id":"gold_02Icon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Season Zero-2 Gold",
+		"text":"Achieved a Gold rank in Season Zero-2",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"hideFromShop":true,
+		"canvasValue":"gold3_02"
+	},	
+	{
+		"id":"diamond_02Icon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Season Zero-2 Diamond",
+		"text":"Achieved a Diamond rank in Season Zero-2",
+		"price": 0,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":true,
+		"canvasValue":"diamond_02"
+	},	
+	{
 		"id":"flagUSAIcon",
         "category":"icon",
 		"subCategory":"type",
