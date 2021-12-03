@@ -399,7 +399,6 @@ router.post('/getOrCreateConversation', async function (req, res) {
 	});			
 });
 
-
 router.get('/getConversations', async function (req, res) {
 	//Transform to get, cog will be at req.query.cognitoSub
 	console.log("getConversations FOR: " + req.query.cognitoSub);
