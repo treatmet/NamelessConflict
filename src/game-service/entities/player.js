@@ -1331,7 +1331,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					if (shooter.multikill >= 2){
 						playerEvent(shooter.id, "multikill");
 					}
-					if (shooter.spree == 5 || shooter.spree == 10 || shooter.spree == 15 || shooter.spree == 20){
+					if (shooter.spree == 5 || shooter.spree == 10 || shooter.spree == 15 || shooter.spree == 20 || shooter.spree == 25){
 						playerEvent(shooter.id, "spree");
 					}
 				}
@@ -2950,7 +2950,7 @@ function playerEvent(playerId, event){
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
 				updateNotificationList.push({text:"****MASSACRE!!***",playerId:playerId});				
-			}		
+			}
 			else if (Player.list[playerId].spree == 15){
 				Player.list[playerId].cash+=rampageCash;
 				Player.list[playerId].cashEarnedThisGame+=rampageCash;
@@ -2958,7 +2958,7 @@ function playerEvent(playerId, event){
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
 				updateNotificationList.push({text:"****GENOCIDE!!!****",playerId:playerId});				
 			}		
-			else if (Player.list[playerId].spree == 20){
+			else if (Player.list[playerId].spree >= 20){
 				Player.list[playerId].cash+=unbelievableCash;
 				Player.list[playerId].cashEarnedThisGame+=unbelievableCash;
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});

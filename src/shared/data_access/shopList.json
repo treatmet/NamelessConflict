@@ -1290,6 +1290,54 @@
 		"canvasValue":"slimePurple"
 	},	
 	{
+		"id":"bronze02Boost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Season Zero-2 Bronze Thrust",
+		"text":"Jets signifying you achieved Bronze rank",
+		"price": 0,
+		"team":0,
+		"rarity":0,
+		"hideFromShop":true,
+		"canvasValue":"bronze02"
+	},	
+	{
+		"id":"silver02Boost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Season Zero-2 Silver Thrust",
+		"text":"Jets signifying you achieved Silver rank",
+		"price": 0,
+		"team":0,
+		"rarity":1,
+		"hideFromShop":true,
+		"canvasValue":"silver02"
+	},	
+	{
+		"id":"gold02Boost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Season Zero-2 Gold Thrust",
+		"text":"Jets signifying you achieved Gold rank",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"hideFromShop":true,
+		"canvasValue":"gold02"
+	},	
+	{
+		"id":"diamond02Boost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Season Zero-2 Diamond Thrust",
+		"text":"Jets signifying you achieved Diamond rank",
+		"price": 0,
+		"team":0,
+		"rarity":3,
+		"hideFromShop":true,
+		"canvasValue":"diamond02"
+	},	
+	{
 		"id":"whiteName",
         "category":"name",
 		"subCategory":"color",

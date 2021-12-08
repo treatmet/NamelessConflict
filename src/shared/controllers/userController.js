@@ -668,7 +668,6 @@ function generateTempName(){
 	//return "tempName";
 }
 
-
 router.post('/getLeaderboard', async function (req, res) {
 	console.log("GET LEADERBOARD");
 	var leaderboard = {
@@ -676,7 +675,7 @@ router.post('/getLeaderboard', async function (req, res) {
 		rating:[]
 	};
 
-	dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}]}, {sort:{experience: -1},limit:100}, async function(err, dbRes){
+	dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*|scorekeeper/}}]}, {sort:{experience: -1},limit:100}, async function(err, dbRes){
 		if (dbRes && dbRes[0]){
 			for (var i = 0; i < dbRes.length; i++){
 				if (dbRes[i].USERNAME){
@@ -690,7 +689,7 @@ router.post('/getLeaderboard', async function (req, res) {
 			}
 		}
 
-		dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}, {"rating":{$ne:310}} ] }, {sort:{rating: -1},limit:100}, async function(err, ratingRes){
+		dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*|scorekeeper/}}, {"rating":{$ne:310}} ] }, {sort:{rating: -1},limit:100}, async function(err, ratingRes){
 			if (ratingRes && ratingRes[0]){
 				for (var i = 0; i < ratingRes.length; i++){
 					if (ratingRes[i].USERNAME){

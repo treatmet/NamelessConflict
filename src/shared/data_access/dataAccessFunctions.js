@@ -367,7 +367,7 @@ var giveUserAnItem = function(cognitoSub, itemId){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("October 4, 2021 16:00:00");
+	var thresholdDate = new Date("December 9, 2019 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -388,37 +388,42 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 
 //				console.log("Timestamp " + resy[k].onlineTimestamp);
 		   
- 				if (!customizationOptions){
-					console.log("ERROR - no customizationOptions");
-					continue;
-				}
-				if (!customizations || !customizations["1"] || !customizations["2"] ){
-				  	console.log("ERROR - no customizations");
-				  	continue;
-				}
+ 				// if (!customizationOptions){
+				// 	console.log("ERROR - no customizationOptions");
+				// 	continue;
+				// }
+				// if (!customizations || !customizations["1"] || !customizations["2"] ){
+				//   	console.log("ERROR - no customizations");
+				//   	continue;
+				// }
 
-				customizationOptions = customizationOptions.filter(e => e !== 'bronze_02Icon' && e !== 'silver_02Icon' && e !== 'gold_02Icon' && e !== 'diamond_02Icon');
+				// if (resy[k].rating > 1 && customizationOptions.indexOf("bronze02Boost") == -1){
+				// 	customizationOptions.push("bronze02Boost");
+				// 	console.log("Pushing bronze02Boost");
+				// 	updatey = true;
+				// }
+				// if (resy[k].rating > 300 && customizationOptions.indexOf("silver02Boost") == -1){
+				// 	customizationOptions.push("silver02Boost");
+				// 	console.log("Pushing silver02Boost");
+				// 	updatey = true;
+				// }
+				// if (resy[k].rating > 1000 && customizationOptions.indexOf("gold02Boost") == -1){
+				// 	customizationOptions.push("gold02Boost");
+				// 	console.log("Pushing gold02Boost");
+				// 	updatey = true;
+				// }
+				// if (resy[k].rating > 2000 && customizationOptions.indexOf("diamond02Boost") == -1){
+				// 	customizationOptions.push("diamond02Boost");
+				// 	console.log("Pushing diamond02Boost");
+				// 	updatey = true;
+				// }
 
-				if (resy[k].rating > 100 && customizationOptions.indexOf("bronze_02Icon") == -1){
-					customizationOptions.push("bronze_02Icon");
-					console.log("Pushing bronze_02Icon");
-					updatey = true;
-				}
-				if (resy[k].rating > 300 && customizationOptions.indexOf("silver_02Icon") == -1){
-					customizationOptions.push("silver_02Icon");
-					console.log("Pushing silver_02Icon");
-					updatey = true;
-				}
-				if (resy[k].rating > 1000 && customizationOptions.indexOf("gold_02Icon") == -1){
-					customizationOptions.push("gold_02Icon");
-					console.log("Pushing gold_02Icon");
-					updatey = true;
-				}
-				if (resy[k].rating > 1800 && customizationOptions.indexOf("diamond_02Icon") == -1){
-					customizationOptions.push("diamond_02Icon");
-					console.log("Pushing diamond_02Icon");
-					updatey = true;
-				}
+
+				// if (customizationOptions.indexOf("ivoryPistolWeapon") == -1){
+				// 	customizationOptions.push("ivoryPistolWeapon");
+				// 	console.log("Pushing ivoryPistolWeapon");
+				// 	updatey = true;
+				// }
     
 				// if (customizations["1"].pistolColor != "#fffef8"){
 				// 	customizations["1"].pistolColor = "#fffef8"; //CONFIGURATION
@@ -431,14 +436,15 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				//customizationOptions.push("gold3_0Icon");
 				//customizationOptions.push("diamond_0Icon");
 				var obj = {
-					customizationOptions:customizationOptions
+					rating:310
+					// customizationOptions:customizationOptions
 					// customizations:customizations
 				};
 
-				if (!updatey){
-					//console.log("Nothing to update...");
-					continue;
-				}
+				// if (!updatey){
+				// 	//console.log("Nothing to update...");
+				// 	continue;
+				// }
 				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
 				// 	//console.log("SAFETYS ON");
 				// 	continue;
@@ -732,10 +738,10 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 
 			//manual hardcode hard code shop
 			if (isLocal){
-				shopList[0] = "bronze_02Icon";
-				shopList[1] = "silver_02Icon";
-				shopList[2] = "gold_02Icon";
-				shopList[3] = "diamond_02Icon";
+				shopList[0] = "bronze02Boost";
+				shopList[1] = "silver02Boost";
+				shopList[2] = "gold02Boost";
+				shopList[3] = "diamond02Boost";
 				shopList[4] = "greenBowHat";
 			}
 			var clientShopList = transformToClientShop(shopList, nextMidnight);
@@ -810,8 +816,6 @@ var setUserSetting = function(cognitoSub, section, key, value){
 			else
 				logg("Successfully updated setting: " + key + " to " + value);
 		});
-	
-
 	})
 
 }
@@ -835,11 +839,11 @@ function getNewShopItem(currentShopList){
 		shopIndex = randomInt(2, fullShopList.length - 1); //Random element from shop, starting with index 2 (to skip unlock and refresh)
 		//New shop rules
 		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT part of default unlocks?
-		if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT already added to new shop?
-		if (!fullShopList[shopIndex].hideFromShop){ //Hide from shop
-			break; //PASSED RULES, ADD THIS ITEM
-		}
-		}
+			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT already added to new shop?
+				if (!fullShopList[shopIndex].hideFromShop){ //Hide from shop
+					break; //PASSED RULES, ADD THIS ITEM
+				}
+			}
 		}
 		loopCount++;
 	}

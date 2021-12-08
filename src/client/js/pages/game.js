@@ -488,8 +488,6 @@ Img.moon = new Image();
 Img.moon.src = "/src/client/img/map/moon.png";
 
 
-Img.statOverlay = new Image();
-Img.statOverlay.src = "/src/client/img/stat-overlay.png";
 Img.statArrow = new Image();
 Img.statArrow.src = "/src/client/img/arrow.png";
 Img.statCamera = new Image();
@@ -560,6 +558,14 @@ Img.boostBlast = new Image();
 Img.boostBlast.src = "/src/client/img/shot-flash.png";
 Img.boostLightning2 = new Image();
 Img.boostLightning2.src = "/src/client/img/dynamic/boost/lightning2.png";
+Img.boostBronze2 = new Image();
+Img.boostBronze2.src = "/src/client/img/dynamic/boost/bronze02_2.png";
+Img.boostSilver2 = new Image();
+Img.boostSilver2.src = "/src/client/img/dynamic/boost/silver02_2.png";
+Img.boostGold2 = new Image();
+Img.boostGold2.src = "/src/client/img/dynamic/boost/gold02_2.png";
+Img.boostDiamond2 = new Image();
+Img.boostDiamond2.src = "/src/client/img/dynamic/boost/diamond02_2.png";
 
 Img.blackPlayerPistol = new Image();
 Img.blackPlayerPistol.src = "/src/client/img/blackPlayerPistolNaked.png";
@@ -900,6 +906,7 @@ var sfxBoostLightning = new Howl({src: ['/src/client/sfx/boostLightning.mp3']});
 var sfxBoostIon = new Howl({src: ['/src/client/sfx/boostIon.mp3']});
 var sfxBoostSlime = new Howl({src: ['/src/client/sfx/boostSlime.mp3']});
 var sfxBoostEmpty = new Howl({src: ['/src/client/sfx/boostEmpty.mp3']});
+var sfxBoostPowerful = new Howl({src: ['/src/client/sfx/boostPowerful.mp3']});
 sfxBoostEmpty.volume(1);
 var sfxCloak = new Howl({src: ['/src/client/sfx/cloak2.mp3']});
 sfxCloak.volume(.6);
@@ -1657,6 +1664,9 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 
 		//Add blue border for armor
 		if (playerDataPack[i].property == "health"){
+			if (playerDataPack[i].value < Player.list[playerDataPack[i].id].health){
+				Player.list[playerDataPack[i].id].inCombat = 55;
+			}
 			if (playerDataPack[i].value == 175){
 				determineBorderStyle();
 			}
@@ -1950,6 +1960,9 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				}
 				else if (Player.list[id].customizations[team].boost == "lightning"){
 					playerBoostSfx = sfxBoostLightning;
+				}
+				else if (Player.list[id].customizations[team].boost.indexOf("02") > -1){
+					playerBoostSfx = sfxBoostPowerful;
 				}
 				else if (Player.list[id].customizations[team].boost.indexOf("slime") > -1){
 					playerBoostSfx = sfxBoostSlime;
@@ -4286,6 +4299,21 @@ function drawBoosts(){
 						if (blast.alpha >= .8)
 							drawImage(imgblast, (-blast.width/2) * zoom, 10 * zoom, blast.width * zoom, blast.height * zoom);
 					}
+					else if (Player.list[i].customizations[Player.list[i].team].boost == "bronze02" || Player.list[i].customizations[Player.list[i].team].boost == "silver02" || Player.list[i].customizations[Player.list[i].team].boost == "gold02" || Player.list[i].customizations[Player.list[i].team].boost == "diamond02"){
+						blast.width = 150;
+						blast.alpha += 0.1;
+						if (randomInt(0,1) >= .5){
+							if (Player.list[i].customizations[Player.list[i].team].boost == "bronze02")
+								imgblast = Img.boostBronze2;
+							if (Player.list[i].customizations[Player.list[i].team].boost == "silver02")
+								imgblast = Img.boostSilver2;
+							if (Player.list[i].customizations[Player.list[i].team].boost == "gold02")
+								imgblast = Img.boostGold2;
+							if (Player.list[i].customizations[Player.list[i].team].boost == "diamond02")
+								imgblast = Img.boostDiamond2;
+						}
+						drawImage(imgblast, (-blast.width/2) * zoom, 10 * zoom, blast.width * zoom, blast.height * zoom);
+					}
 					else if (Player.list[i].customizations[Player.list[i].team].boost == "hearts2"){
 						drawImage(imgblast, (-blast.width/2) * zoom, 20 * zoom, blast.width * zoom, blast.height * zoom);
 					}
@@ -4676,7 +4704,7 @@ function drawUILayer(){
 
 const indicatorEdgeOffset = 60;
 const scaleBubbleSize = false;
-function drawIndicators(){ //playerIndicators offscreenIndicators
+function drawIndicators(){ //playerIndicators offscreenIndicators drawPlayerIndicators
 	if (!myPlayer.team || gametype == "ffa" || gameOver){return;}
 	noShadow();
 
@@ -4685,8 +4713,24 @@ function drawIndicators(){ //playerIndicators offscreenIndicators
 		if (Player.list[p].team != myPlayer.team || Player.list[p].holdingBag == true){ //Will be drawn in bag drawings
 			continue;
 		}
+
+		//ally in combat flashing
+		var flash = false;
+		if (typeof Player.list[p].inCombat == undefined){Player.list[p].inCombat = 0;}
+		if (Player.list[p].inCombat > 0){
+			if (Player.list[p].inCombat > 0 && Player.list[p].inCombat < 5){flash = true;}
+			if (Player.list[p].inCombat > 10 && Player.list[p].inCombat < 15){flash = true;}
+			if (Player.list[p].inCombat > 20 && Player.list[p].inCombat < 25){flash = true;}
+			if (Player.list[p].inCombat > 30 && Player.list[p].inCombat < 35){flash = true;}
+			if (Player.list[p].inCombat > 40 && Player.list[p].inCombat < 45){flash = true;}
+			if (Player.list[p].inCombat > 50 && Player.list[p].inCombat < 55){flash = true;}
+			Player.list[p].inCombat--;
+		}
+		
+
 		var imgIndicator = Img.hudIndicatorBlue;
-		if (myPlayer.team == 1){imgIndicator = Img.hudIndicatorRed;}
+		if ((myPlayer.team == 1 && !flash) || (myPlayer.team == 2 && flash)){imgIndicator = Img.hudIndicatorRed;}
+		if ((myPlayer.team == 2 && !flash) || (myPlayer.team == 1 && flash)){imgIndicator = Img.hudIndicatorBlue;}
 		var object = Player.list[p];
 		var imgIcon = Img.hudIndicatorHeart;
 		if (Player.list[p].health <= 0){imgIcon = Img.hudIndicatorDead;}
@@ -6303,7 +6347,7 @@ function drawPlayerNamesAndStats(teamScoreBoard){
 	var team2PlayerY = scoreBoardY + scoreBoardHeight/2 + scoreBoardMargin + teamBannerHeight + scoreboardPlayerNameGap/2; //245 difference in these 2
 	for (var a in team1){
 		if (!team1[a] || !team1[a].id){continue;}
-		processChatMute(team1[a].id, team1PlayerY);
+		processPlayerNameHover(team1[a].id, team1PlayerY);
 		drawLeftIcon(team1[a].id, team1PlayerY);
 		drawPlayerName(team1[a], team1PlayerY);
 		drawPlayerStats(team1[a], team1PlayerY);
@@ -6311,7 +6355,7 @@ function drawPlayerNamesAndStats(teamScoreBoard){
 	}	
 	for (var a in team2){
 		if (!team2[a] || !team2[a].id){continue;}
-		processChatMute(team2[a].id, team2PlayerY);
+		processPlayerNameHover(team2[a].id, team2PlayerY);
 		drawLeftIcon(team2[a].id, team2PlayerY);
 		drawPlayerName(team2[a], team2PlayerY);
 		drawPlayerStats(team2[a], team2PlayerY);
@@ -6356,10 +6400,9 @@ function drawPlayerName(player, y){
 	ctx.textAlign="left";		
 	if (player.health <= 0){ctx.fillStyle="#FF0000";}
 	strokeAndFillText(player.name.substring(0, 15),143,y);
-
 }
 
-function processChatMute(hoverPlayerId, y){
+function processPlayerNameHover(hoverPlayerId, y){
 	if (checkIfMouseHovering(y - 21)){
 		drawImage(Img.redLaser, scoreBoardX, y - 21, 300, scoreboardPlayerNameGap);
 		ctx.fillStyle="#FF0000";
@@ -6367,7 +6410,7 @@ function processChatMute(hoverPlayerId, y){
 		if (mutedPlayerIds.filter(playerId => playerId == hoverPlayerId).length > 0){
 			strokeAndFillText("UNMUTE", scoreBoardX - 5, y);
 		}
-		else {
+		else if(hoverPlayerId != myPlayer.id){
 			strokeAndFillText("MUTE", scoreBoardX - 5, y);
 		}
 		mouseHoveringPlayerId = hoverPlayerId;
@@ -8754,10 +8797,10 @@ var mouseDown = 0;
 document.onmousedown=(etx)=>{
 	if (mouseHoveringPlayerId != 0){
 		if (mutedPlayerIds.filter(playerId => playerId == mouseHoveringPlayerId).length > 0){
-			removeItemAll(mutedPlayerIds, mouseHoveringPlayerId);
+			removeItemAll(mutedPlayerIds, mouseHoveringPlayerId); //unmute
 		}
-		else {
-			mutedPlayerIds.push(mouseHoveringPlayerId);
+		else if (mouseHoveringPlayerId != myPlayer.id){
+			mutedPlayerIds.push(mouseHoveringPlayerId); //mute
 		}
 	}
 	else if (chatInput.style.display == "none"){
