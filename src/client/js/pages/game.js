@@ -384,7 +384,7 @@ socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
 	
 	if (parseInt(minutesLeft)*60 + parseInt(secondsLeftPlusZeroData) == 60){
 		if (!mute){
-			sfxTimeWarning.play();
+			sfx.TimeWarning.play();
 		}
 		clockHeight = 266;
 	}
@@ -392,7 +392,7 @@ socket.on('sendClock', function(secondsLeftPlusZeroData, minutesLeftData){
 	//var timerleft = parseInt(minutesLeft)*60 + parseInt(secondsLeftPlusZeroData);
 	//log("timeleft:" + timerleft);
 	if (parseInt(minutesLeft)*60 + parseInt(secondsLeftPlusZeroData) == 0 && suddenDeath == false && blackScore == whiteScore && timeLimit == true && !mute){
-		sfxSuddenDeath.play();
+		sfx.SuddenDeath.play();
 		suddenDeath = true;
 	}
 	
@@ -445,471 +445,7 @@ var pregameIsHorde = true;
 var suddenDeath = false;
 
 var healthFlashTimer = 100;
-
-//----------------Loading Images----------------
-var Img = {};
-Img.small = new Image();
-Img.small.src = "/src/client/img/small.png";
-
-Img.quickChatKeys = new Image();
-Img.quickChatKeys.src = "/src/client/img/quickChatKeys.png";
-Img.redDeath = new Image();
-Img.redDeath.src = "/src/client/img/red-death.png";
-
-Img.block = new Image();
-Img.block.src = "/src/client/img/map/block.png";
-Img.redBlock = new Image();
-Img.redBlock.src = "/src/client/img/map/blockRed.png";
-Img.blueBlock = new Image();
-Img.blueBlock.src = "/src/client/img/map/blockBlue.png";
-Img.pushUpBlock = new Image();
-Img.pushUpBlock.src = "/src/client/img/map/blockPushUp.png";
-Img.pushRightBlock = new Image();
-Img.pushRightBlock.src = "/src/client/img/map/blockPushRight.png";
-Img.pushDownBlock = new Image();
-Img.pushDownBlock.src = "/src/client/img/map/blockPushDown.png";
-Img.pushLeftBlock = new Image();
-Img.pushLeftBlock.src = "/src/client/img/map/blockPushLeft.png";
-Img.tile = new Image();
-Img.tile.src = "/src/client/img/map/tile.png";
-Img.tileWhite = new Image();
-Img.tileWhite.src = "/src/client/img/map/tileWhite.png";
-Img.tileBlack = new Image();
-Img.tileBlack.src = "/src/client/img/map/tileBlack.png";
-Img.warp1 = new Image();
-Img.warp1.src = "/src/client/img/beam1.png";
-Img.warp2 = new Image();
-Img.warp2.src = "/src/client/img/beam2.png";
-Img.warp3 = new Image();
-Img.warp3.src = "/src/client/img/beam3.png";
-Img.warp4 = new Image();
-Img.warp4.src = "/src/client/img/beam4.png";
-Img.moon = new Image();
-Img.moon.src = "/src/client/img/map/moon.png";
-
-
-Img.statOverlay = new Image();
-Img.statOverlay.src = "/src/client/img/stat-overlay.png";
-Img.statArrow = new Image();
-Img.statArrow.src = "/src/client/img/arrow.png";
-Img.statCamera = new Image();
-Img.statCamera.src = "/src/client/img/cameraIconScoreboard.png";
-Img.mute = new Image();
-Img.mute.src = "/src/client/img/mute.png";
-Img.voteNextGame = new Image();
-Img.voteNextGame.src = "/src/client/img/voteNextGame.png";
-
-
-Img.yellow = new Image();
-Img.yellow.src = "/src/client/img/yellow.png";
-Img.orange = new Image();
-Img.orange.src = "/src/client/img/orange.png";
-Img.lightGreen = new Image();
-Img.lightGreen.src = "/src/client/img/light-green.png";
-Img.lightYellow = new Image();
-Img.lightYellow.src = "/src/client/img/light-yellow.png";
-Img.redLaser = new Image();
-Img.redLaser.src = "/src/client/img/red-pixel-trans.png";
-Img.laserCanonBeam = new Image();
-Img.laserCanonBeam.src = "/src/client/img/laserBeam.png";
-Img.laserRing = new Image();
-Img.laserRing.src = "/src/client/img/laserRing.png";
-Img.laserFlare = new Image();
-Img.laserFlare.src = "/src/client/img/laserFlare.png";
-Img.laserFlare2 = new Image();
-Img.laserFlare2.src = "/src/client/img/laserFlare2.png";
-Img.spectatingOverlay = new Image();
-Img.spectatingOverlay.src = "/src/client/img/spectating-overlay.png";
-
-Img.hudIndicatorCaptBlue = new Image();
-Img.hudIndicatorCaptBlue.src = "/src/client/img/hudIndicatorCaptureBlue.png";
-Img.hudIndicatorHeart = new Image();
-Img.hudIndicatorHeart.src = "/src/client/img/hudIndicatorHeart.png";
-Img.hudIndicatorBringHome = new Image();
-Img.hudIndicatorBringHome.src = "/src/client/img/hudIndicatorBringHome.png";
-Img.hudIndicatorCaptRed = new Image();
-Img.hudIndicatorCaptRed.src = "/src/client/img/hudIndicatorCaptureRed.png";
-Img.hudIndicatorRed = new Image();
-Img.hudIndicatorRed.src = "/src/client/img/hudIndicatorRed.png";
-Img.hudIndicatorBlue = new Image();
-Img.hudIndicatorBlue.src = "/src/client/img/hudIndicatorBlue.png";
-Img.hudIndicatorProtectRed = new Image();
-Img.hudIndicatorProtectRed.src = "/src/client/img/hudIndicatorProtectRed.png";
-Img.hudIndicatorProtectBlue = new Image();
-Img.hudIndicatorProtectBlue.src = "/src/client/img/hudIndicatorProtectBlue.png";
-Img.hudIndicatorDead = new Image();
-Img.hudIndicatorDead.src = "/src/client/img/hudIndicatorDead.png";
-
-Img.redFlash = new Image();
-Img.redFlash.src = "/src/client/img/red-flash.png";
-Img.whiteFlash = new Image();
-Img.whiteFlash.src = "/src/client/img/white-flash.png";
-Img.smashRed = new Image();
-Img.smashRed.src = "/src/client/img/smash-red.png";
-Img.smashBlue = new Image();
-Img.smashBlue.src = "/src/client/img/smash-blue.png";
-Img.smashYellow = new Image();
-Img.smashYellow.src = "/src/client/img/smash-yellow.png";
-Img.smashGreen = new Image();
-Img.smashGreen.src = "/src/client/img/smash-green.png";
-
-Img.grappleChain = new Image();
-Img.grappleChain.src = "/src/client/img/grappleChain.png";
-
-Img.boostBlast = new Image();
-Img.boostBlast.src = "/src/client/img/shot-flash.png";
-Img.boostLightning2 = new Image();
-Img.boostLightning2.src = "/src/client/img/dynamic/boost/lightning2.png";
-
-Img.blackPlayerPistol = new Image();
-Img.blackPlayerPistol.src = "/src/client/img/blackPlayerPistolNaked.png";
-
-
-Img.whitePlayerPistol = new Image();
-Img.whitePlayerPistol.src = "/src/client/img/whitePlayerPistolNaked.png";
-
-
-Img.shot = new Image();
-Img.shot.src = "/src/client/img/shot-streak2.png";
-Img.shotFlash = new Image();
-Img.shotFlash.src = "/src/client/img/shot-flash.png";
-Img.shotSpark = new Image();
-Img.shotSpark.src = "/src/client/img/shot-spark.png";
-Img.laserSpark = new Image();
-Img.laserSpark.src = "/src/client/img/laserFlare2.png";
-Img.shotShotgun = new Image();
-Img.shotShotgun.src = "/src/client/img/shotgun-shot.png";
-
-
-Img.ammo9mm = new Image();
-Img.ammo9mm.src = "/src/client/img/ammo-9mm-30.png";
-Img.ammoMG = new Image();
-Img.ammoMG.src = "/src/client/img/ammo-MG-60.png";
-Img.ammoDP = new Image();
-Img.ammoDP.src = "/src/client/img/ammo-double-9mm-30.png";
-Img.ammoSG = new Image();
-Img.ammoSG.src = "/src/client/img/ammo-SG-24.png";
-Img.ammoLZ = new Image();
-Img.ammoLZ.src = "/src/client/img/ammo-laser-10.png";
-Img.infinity = new Image();
-Img.infinity.src = "/src/client/img/infinity2.png";
-Img.weapon1Key = new Image();
-Img.weapon1Key.src = "/src/client/img/1p.png";
-Img.weapon2Key = new Image();
-Img.weapon2Key.src = "/src/client/img/2dp.png";
-Img.weapon3Key = new Image();
-Img.weapon3Key.src = "/src/client/img/3mg.png";
-Img.weapon4Key = new Image();
-Img.weapon4Key.src = "/src/client/img/4sg.png";
-Img.weapon5Key = new Image();
-Img.weapon5Key.src = "/src/client/img/5lz.png";
-Img.grenadeCountIcon = new Image();
-Img.grenadeCountIcon.src = "/src/client/img/grenadeUI.png";
-Img.grenadeCountIconRed = new Image();
-Img.grenadeCountIconRed.src = "/src/client/img/grenadeUIRed.png";
-Img.energyIcon = new Image();
-Img.energyIcon.src = "/src/client/img/energyIcon.png";
-Img.energyBoostIcon = new Image();
-Img.energyBoostIcon.src = "/src/client/img/energyBoostIcon.png";
-Img.energyEyeIcon = new Image();
-Img.energyEyeIcon.src = "/src/client/img/energyEyeIcon.png";
-Img.energyIconRed = new Image();
-Img.energyIconRed.src = "/src/client/img/energyIconRed.png";
-Img.energyIconX = new Image();
-Img.energyIconX.src = "/src/client/img/energyIconX.png";
-Img.energyBoostIconRed = new Image();
-Img.energyBoostIconRed.src = "/src/client/img/energyBoostIconRed.png";
-Img.energyEyeIconRed = new Image();
-Img.energyEyeIconRed.src = "/src/client/img/energyEyeIconRed.png";
-Img.energyIconYellow = new Image();
-Img.energyIconYellow.src = "/src/client/img/energyIconYellow.png";
-Img.energyBoostIconYellow = new Image();
-Img.energyBoostIconYellow.src = "/src/client/img/energyBoostIconYellow.png";
-Img.energyEyeIconYellow = new Image();
-Img.energyEyeIconYellow.src = "/src/client/img/energyEyeIconYellow.png";
-
-
-Img.pickupDP = new Image();
-Img.pickupDP.src = "/src/client/img/DPammo.png";
-Img.pickupDP2 = new Image();
-Img.pickupDP2.src = "/src/client/img/DPammo2.png";
-Img.pickupSG = new Image();
-Img.pickupSG.src = "/src/client/img/SGammo.png";
-Img.pickupSG2 = new Image();
-Img.pickupSG2.src = "/src/client/img/SGammo2.png";
-Img.pickupMG = new Image();
-Img.pickupMG.src = "/src/client/img/MGammo.png";
-Img.pickupMG2 = new Image();
-Img.pickupMG2.src = "/src/client/img/MGammo2.png";
-Img.pickupBA = new Image();
-Img.pickupBA.src = "/src/client/img/BAammo.png";
-Img.pickupBA2 = new Image();
-Img.pickupBA2.src = "/src/client/img/BAammo2.png";
-Img.pickupLaser = new Image();
-Img.pickupLaser.src = "/src/client/img/LaserAmmo.png";
-Img.pickupLaser2 = new Image();
-Img.pickupLaser2.src = "/src/client/img/LaserAmmo2.png";
-Img.pickupMD = new Image();
-Img.pickupMD.src = "/src/client/img/MDammo.png";
-Img.pickupMD2 = new Image();
-Img.pickupMD2.src = "/src/client/img/MDammo2.png";
-
-Img.grenade = new Image();
-Img.grenade.src = "/src/client/img/grenade.png";
-Img.grenadeRed = new Image();
-Img.grenadeRed.src = "/src/client/img/grenadeRed.png";
-Img.blastGrenade = new Image();
-Img.blastGrenade.src = "/src/client/img/blastGrenade.png"; //grenadeBlast grenadeExplosion
-
-Img.pressShiftInstructions = new Image();
-Img.pressShiftInstructions.src = "/src/client/img/pressShiftInstructions.png";
-Img.wasdInstructions = new Image();
-Img.wasdInstructions.src = "/src/client/img/wasdInstructions.png";
-Img.arrowInstructions = new Image();
-Img.arrowInstructions.src = "/src/client/img/arrowInstructions.png";
-Img.cloakInstructions = new Image();
-Img.cloakInstructions.src = "/src/client/img/cloakInstructions.png";
-Img.boostInstructions = new Image();
-Img.boostInstructions.src = "/src/client/img/boostInstructions.png";
-Img.utilityInstructions = new Image();
-Img.utilityInstructions.src = "/src/client/img/utilityInstructions.png";
-Img.teamInstructions = new Image();
-Img.teamInstructions.src = "/src/client/img/teamInstructions.png";
-Img.allyDamageWarningRed = new Image();
-Img.allyDamageWarningRed.src = "/src/client/img/allyDamageWarningRed.png";
-Img.allyDamageWarningBlue = new Image();
-Img.allyDamageWarningBlue.src = "/src/client/img/allyDamageWarningBlue.png";
-
-
-
-Img.blackPlayerLegs = new Image();
-Img.blackPlayerLegs.src = "/src/client/img/blackPlayerLegs.png";
-Img.blackPlayerLegs2 = new Image();
-Img.blackPlayerLegs2.src = "/src/client/img/blackPlayerLegs2.png";
-	
-Img.blood1 = new Image();
-Img.blood1.src = "/src/client/img/blood1.png";
-Img.blood2 = new Image();
-Img.blood2.src = "/src/client/img/blood2.png";
-Img.blood3 = new Image();
-Img.blood3.src = "/src/client/img/blood3.png";
-Img.blood4 = new Image();
-Img.blood4.src = "/src/client/img/blood4.png";
-
-Img.bodyBlack = new Image();
-Img.bodyBlack.src = "/src/client/img/body-black.png";
-Img.bodyWhite = new Image();
-Img.bodyWhite.src = "/src/client/img/body-white.png";
-Img.bodyBlackWall1 = new Image();
-Img.bodyBlackWall1.src = "/src/client/img/body-black-wall1.png";
-Img.bodyWhiteWall1 = new Image();
-Img.bodyWhiteWall1.src = "/src/client/img/body-white-wall1.png";
-Img.bloodPool = new Image();
-Img.bloodPool.src = "/src/client/img/blood-pool.png";
-
-Img.blackThugTorso = new Image();
-Img.blackThugTorso.src = "/src/client/img/blackThugTorso.png";
-Img.blackThugLegs = new Image();
-Img.blackThugLegs.src = "/src/client/img/blackThugLegs.png";
-Img.blackThugLegs2 = new Image();
-Img.blackThugLegs2.src = "/src/client/img/blackThugLegs2.png";
-Img.whiteThugTorso = new Image();
-Img.whiteThugTorso.src = "/src/client/img/whiteThugTorso.png";
-Img.whiteThugLegs = new Image();
-Img.whiteThugLegs.src = "/src/client/img/whiteThugLegs.png";
-Img.whiteThugLegs2 = new Image();
-Img.whiteThugLegs2.src = "/src/client/img/whiteThugLegs2.png";
-
-Img.bagRed = new Image();
-Img.bagRed.src = "/src/client/img/bag-red.png";
-Img.bagRedStrap = new Image();
-Img.bagRedStrap.src = "/src/client/img/bag-black-strap.png";
-Img.bagBlue = new Image();
-Img.bagBlue.src = "/src/client/img/bag-blue.png";
-Img.bagBlueStrap = new Image();
-Img.bagBlueStrap.src = "/src/client/img/bag-black-strap.png";
-Img.bagMissing = new Image();
-Img.bagMissing.src = "/src/client/img/bag-missing.png";
-
-Img.bmDoorWhite = new Image();
-Img.bmDoorWhite.src = "/src/client/img/black-market-white.png";
-Img.bmDoorBlack = new Image();
-Img.bmDoorBlack.src = "/src/client/img/black-market-black.png";
-Img.shopEB2 = new Image();
-Img.shopEB2.src = "/src/client/img/shop-eb2.png";
-Img.shopBA2 = new Image();
-Img.shopBA2.src = "/src/client/img/shop-ba2.png";
-Img.shopDP2 = new Image();
-Img.shopDP2.src = "/src/client/img/shop-dp2.png";
-Img.shopSG2 = new Image();
-Img.shopSG2.src = "/src/client/img/shop-sg2.png";
-Img.shopMG2 = new Image();
-Img.shopMG2.src = "/src/client/img/shop-mg2.png";
-Img.shopLZ2 = new Image();
-Img.shopLZ2.src = "/src/client/img/shop-lz2.png";
-Img.downArrow = new Image();
-Img.downArrow.src = "/src/client/img/down-arrow-small.png";
-Img.rightArrow = new Image();
-Img.rightArrow.src = "/src/client/img/right-arrow-small.png";
-Img.leftArrow = new Image();
-Img.leftArrow.src = "/src/client/img/left-arrow-small.png";
-Img.upArrow = new Image();
-Img.upArrow.src = "/src/client/img/up-arrow-small.png";
-Img.shopInventory = new Image();
-Img.shopInventory.src = "/src/client/img/shop-inventory.png";
-Img.spy = new Image();
-Img.spy.src = "/src/client/img/spy-new.png";
-
-Img.black50 = new Image();
-Img.black50.src = "/src/client/img/black50.png";
-Img.white = new Image();
-Img.white.src = "/src/client/img/white.png";
-Img.red = new Image();
-Img.red.src = "/src/client/img/red.png";
-Img.energyRed = new Image();
-Img.energyRed.src = "/src/client/img/energy-red.png";
-
-Img.bronze1 = new Image();
-Img.bronze1.src = "/src/client/img/ranks/full-size/bronze1.png";
-Img.bronze2 = new Image();
-Img.bronze2.src = "/src/client/img/ranks/full-size/bronze2.png";
-Img.bronze3 = new Image();
-Img.bronze3.src = "/src/client/img/ranks/full-size/bronze3.png";
-Img.silver1 = new Image();
-Img.silver1.src = "/src/client/img/ranks/full-size/silver1.png";
-Img.silver2 = new Image();
-Img.silver2.src = "/src/client/img/ranks/full-size/silver2.png";
-Img.silver3 = new Image();
-Img.silver3.src = "/src/client/img/ranks/full-size/silver3.png";
-Img.gold1 = new Image();
-Img.gold1.src = "/src/client/img/ranks/full-size/gold1.png";
-Img.gold2 = new Image();
-Img.gold2.src = "/src/client/img/ranks/full-size/gold2.png";
-Img.gold3 = new Image();
-Img.gold3.src = "/src/client/img/ranks/full-size/gold3.png";
-Img.diamond = new Image();
-Img.diamond.src = "/src/client/img/ranks/full-size/diamond.png";
-Img.diamond2 = new Image();
-Img.diamond2.src = "/src/client/img/ranks/full-size/diamond2.png";
-
-
-//----------------------------- Final image to load--------------------------------
-Img.bloodyBorder = new Image();
-Img.bloodyBorder.src = "/src/client/img/bloody-border.png";
-//-----------------------------Loading Sounds-------------------------------
 var mute = false;
-
-var sfx = {};
-var sfxPistol = new Howl({src: ['/src/client/sfx/pistol.mp3']});
-var sfxPistolMine = new Howl({src: ['/src/client/sfx/pistol.mp3']});
-var sfxMG = new Howl({src: ['/src/client/sfx/mgShot.mp3']});
-var sfxMGMine = new Howl({src: ['/src/client/sfx/mgShot.mp3']});
-var sfxDP = new Howl({src: ['/src/client/sfx/double_pistolsLoud.mp3']});
-var sfxDPMine = new Howl({src: ['/src/client/sfx/double_pistolsLoud.mp3']});
-var sfxSG = new Howl({src: ['/src/client/sfx/shotgun.mp3']});
-var sfxCapture = new Howl({src: ['/src/client/sfx/capture1.mp3']});
-var sfxHit1 = new Howl({src: ['/src/client/sfx/hit1.mp3']});
-//sfxHit1.volume(.5);
-var sfxHit2 = new Howl({src: ['/src/client/sfx/hit2.mp3']});
-var sfxKill = new Howl({src: ['/src/client/sfx/kill.mp3']});
-sfxKill.volume(.8);
-var sfxExplosion1 = new Howl({src: ['/src/client/sfx/explosion1.mp3']});
-var sfxExplosion2 = new Howl({src: ['/src/client/sfx/explosion2.mp3']});
-var sfxExplosion3 = new Howl({src: ['/src/client/sfx/explosion3.mp3']});
-var sfxExplosion4 = new Howl({src: ['/src/client/sfx/explosion4.mp3']});
-var sfxClink1 = new Howl({src: ['/src/client/sfx/clink1.mp3']});
-var sfxClink2 = new Howl({src: ['/src/client/sfx/clink2.mp3']});
-var sfxClink3 = new Howl({src: ['/src/client/sfx/clink1.mp3']});
-var sfxClink4 = new Howl({src: ['/src/client/sfx/clink2.mp3']});
-var sfxPinPull1 = new Howl({src: ['/src/client/sfx/pinPull1.mp3']});
-var sfxPinPull2 = new Howl({src: ['/src/client/sfx/pinPull2.mp3']});
-var sfxGetItem = new Howl({src: ['/src/client/sfx/getItem.mp3']});
-sfxPinPull1.volume(.6);
-sfxPinPull2.volume(.4);
-
-var sfxStealGood = new Howl({src: ['/src/client/sfx/drumroll.mp3']});
-var sfxStealBad = new Howl({src: ['/src/client/sfx/steal2.mp3']});
-sfxStealGood.volume(0.75);
-sfxStealBad.volume(0.75);
-var sfxBagGrab = new Howl({src: ['/src/client/sfx/bagGrab.mp3']});
-sfxBagGrab.volume(.6);
-var sfxTimeWarning = new Howl({src: ['/src/client/sfx/30sec.mp3']});
-sfxTimeWarning.volume(.7);
-var sfxSuddenDeath = new Howl({src: ['/src/client/sfx/suddenDeath.mp3']});
-
-var sfxPistolReload = new Howl({src: ['/src/client/sfx/pistolReload.mp3']});
-var sfxDPReload = new Howl({src: ['/src/client/sfx/DPReload.mp3']});
-var sfxMGReload = new Howl({src: ['/src/client/sfx/MGReload.mp3']});
-var sfxSGReload1 = new Howl({src: ['/src/client/sfx/SGReload3.mp3']});
-var sfxSGReload2 = new Howl({src: ['/src/client/sfx/SGReload4.mp3']});
-var sfxSGReload3 = new Howl({src: ['/src/client/sfx/SGReload2.mp3']});
-var sfxSGReload4 = new Howl({src: ['/src/client/sfx/SGReload1.mp3']});
-
-var sfxPistolEquip = new Howl({src: ['/src/client/sfx/Pistolequip2.mp3']});
-var sfxDPEquip = new Howl({src: ['/src/client/sfx/dpPick.mp3']});
-var sfxMGEquip = new Howl({src: ['/src/client/sfx/MGequip.mp3']});
-var sfxSGEquip = new Howl({src: ['/src/client/sfx/SGequipLoud.mp3']});
-var sfxLaserEquip = new Howl({src: ['/src/client/sfx/laserEquip.mp3']});
-var sfxLaserCharging = new Howl({src: ['/src/client/sfx/laserChargingFast.mp3']});
-sfxLaserCharging.volume(0.6);
-var sfxLaserDischarge = new Howl({src: ['/src/client/sfx/laserDischarge.mp3']});
-
-var sfxClick = new Howl({src: ['/src/client/sfx/click.mp3']});
-sfxClick.volume(0.6);
-var sfxHealthPackGrab = new Howl({src: ['/src/client/sfx/healthPackGrab.mp3']});
-sfxHealthPackGrab.volume(.5);
-var sfxWeaponDrop = new Howl({src: ['/src/client/sfx/weaponDrop2.mp3']});
-sfxWeaponDrop.volume(.3);
-
-var sfxPurchase = new Howl({src: ['/src/client/sfx/purchase.mp3']});
-var sfxError = new Howl({src: ['/src/client/sfx/error2.mp3']});
-var sfxMenuMove = new Howl({src: ['/src/client/sfx/comp-beep.wav']});
-sfxMenuMove.volume(.5);
-
-var sfxWhoosh = new Howl({src: ['/src/client/sfx/whoosh.mp3']});
-sfxWhoosh.volume(.25);
-var sfxPunch = new Howl({src: ['/src/client/sfx/punch.mp3']});
-var sfxWarning = new Howl({src: ['/src/client/sfx/warning.mp3']}); //energyWarning
-sfxWarning.on('fade', function(){
-	sfxWarning.stop();
-});
-var sfxWarning2 = new Howl({src: ['/src/client/sfx/warning2.mp3']});
-sfxWarning2.on('fade', function(){
-	sfxWarning2.stop();
-});
-var sfxCharge = new Howl({src: ['/src/client/sfx/charging3.mp3']});
-//sfxCharge.volume(.9);
-sfxCharge.on('fade', function(){
-	sfxCharge.stop();
-});
-var sfxDecharge = new Howl({src: ['/src/client/sfx/decharge3.mp3']});
-//sfxDecharge.volume(.6);
-var sfxBoost = new Howl({src: ['/src/client/sfx/boost5.mp3']});
-var sfxBoostRainbow = new Howl({src: ['/src/client/sfx/boostRainbow.mp3']});
-var sfxBoostLaser = new Howl({src: ['/src/client/sfx/boostLaser.mp3']});
-var sfxBoostBlast = new Howl({src: ['/src/client/sfx/boostBlast.mp3']});
-var sfxBoostLightning = new Howl({src: ['/src/client/sfx/boostLightning.mp3']});
-var sfxBoostIon = new Howl({src: ['/src/client/sfx/boostIon.mp3']});
-var sfxBoostSlime = new Howl({src: ['/src/client/sfx/boostSlime.mp3']});
-var sfxBoostEmpty = new Howl({src: ['/src/client/sfx/boostEmpty.mp3']});
-sfxBoostEmpty.volume(1);
-var sfxCloak = new Howl({src: ['/src/client/sfx/cloak2.mp3']});
-sfxCloak.volume(.6);
-var sfxWarp = new Howl({src: ['/src/client/sfx/warp.mp3']});
-var sfxGrappleShot = new Howl({src: ['/src/client/sfx/grappleShot.mp3']});
-
-var sfxNextGameTimer = new Howl({src: ['/src/client/sfx/haloStartBeeps.mp3']});
-var sfxLevelUp = new Howl({src: ['/src/client/sfx/gsLevelUp.mp3']});
-sfxLevelUp.volume(.7);
-
-var sfxDefeatMusic = new Howl({src: ['/src/client/sfx/music/theme-sad-short.mp3']});
-var sfxVictoryMusic = new Howl({src: ['/src/client/sfx/music/theme-victory-short.mp3']});
-sfxDefeatMusic.volume(.3);
-sfxVictoryMusic.volume(.3);
-var sfxProgressBar = new Howl({src: ['/src/client/sfx/progressBar.mp3']});
-sfxProgressBar.volume(.18);
-var sfxProgressBarReverse = new Howl({src: ['/src/client/sfx/progressBarReverse.mp3']});
-sfxProgressBarReverse.volume(.18);
 
 
 //-----------------------------PLAYER INITIALIZATION-------------------------------
@@ -1397,7 +933,7 @@ socket.on('score', function(team, dataWhiteCaptures, dataBlackCaptures){
 		whiteScoreHeight = 266;
 	}
 	if (!mute)
-		sfxCapture.play();
+		sfx.Capture.play();
 });
 
 socket.on('gameStart', function(){ //startGame restartGame
@@ -1413,11 +949,11 @@ socket.on('gameStart', function(){ //startGame restartGame
 	savedEndgameStatus = {text:"", victory:false};
 	suddenDeathAlpha = 1.0;
 	document.getElementById("voteMenu").style.display = 'none';
-	sfxDefeatMusic.volume(.3);
-	sfxVictoryMusic.volume(.3);
-	sfxVictoryMusic.stop();
-	sfxDefeatMusic.stop();
-	sfxProgressBar.stop();
+	sfx.DefeatMusic.volume(.3);
+	sfx.VictoryMusic.volume(.3);
+	sfx.VictoryMusic.stop();
+	sfx.DefeatMusic.stop();
+	sfx.ProgressBar.stop();
 	Body.list = [];
 	drawMapElementsOnMapCanvas();
 	drawBlocksOnBlockCanvas();
@@ -1520,58 +1056,14 @@ socket.on('evalAnswer', function(data){
 socket.on('sfx', function(sfx){
 	sfxPlay(sfx);
 });
-function sfxPlay(sfx, volume = false){
-	if (volume){
-		eval(sfx + ".volume(" + volume + ");");
-	}
-	if (!mute)
-		eval(sfx + ".play();");	
-}
 
 socket.on('sfxStop', function(sfx){
 	sfxStop(sfx);
 });
-function sfxStop(sfx){
-	if (!mute)
-		eval(sfx + ".stop();");	
-}
 
 socket.on('sfxRanged', function(sfx, x, y){
 	sfxRanged(sfx, x, y);
 });
-
-function sfxRangedLoud(sfx, x, y, maxDist = 1000, minDist = 100){ //playSfx //distanceSfx 
-	var dx1 = myPlayer.x - x;
-	var dy1 = myPlayer.y - y;
-	var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-	if (dist1 < minDist){dist1 = 0;}
-	var vol = (Math.round((1 - (dist1 / maxDist)) * 100)/100);
-	if (vol > 1)
-		vol = 1;
-	else if (vol < 0 && vol >= -.1)
-		vol = 0.01;
-	if (vol < -.1 || mute)
-		return;
-
-	eval(sfx + ".volume(" + vol + ");");	
-	eval(sfx + ".play();");	
-}
-
-function sfxRanged(sfx, x, y){ //playSfx //distanceSfx 
-	var dx1 = myPlayer.x - x;
-	var dy1 = myPlayer.y - y;
-	var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-	var vol = (Math.round((1 - (dist1 / 1000)) * 100)/100) - .3;
-	if (vol > 1)
-		vol = 1;
-	else if (vol < 0 && vol >= -.1)
-		vol = 0.01;
-	if (vol < -.1 || mute)
-		return;
-
-	eval(sfx + ".volume(" + vol + ");");	
-	eval(sfx + ".play();");	
-}
 
 //----------------Player Functionality----------------
 socket.on('sendPlayerNameToClient',function(data){
@@ -1611,20 +1103,20 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		if (playerDataPack[i].id == myPlayer.id && !mute){
 			if (playerDataPack[i].property == "energy" && playerDataPack[i].value == 0){
 				myPlayer.energyExhausted = true;
-				sfxDecharge.play();
-				sfxCharge.fade(.3, 0, 100);
+				sfx.Decharge.play();
+				sfx.Charge.fade(.3, 0, 100);
 
-				sfxWarning.fade(warningVol, 0, 100);
-				sfxWarning2.volume(warningVol);
-				sfxWarning2.play();
+				sfx.Warning.fade(warningVol, 0, 100);
+				sfx.Warning2.volume(warningVol);
+				sfx.Warning2.play();
 			}
-			else if (playerDataPack[i].property == "energy" && playerDataPack[i].value > Player.list[playerDataPack[i].id].energy && !sfxCharge.playing()){
-				sfxCharge.volume(.3);
-				sfxCharge.play();
-				sfxWarning2.fade(warningVol, 0, 100);
+			else if (playerDataPack[i].property == "energy" && playerDataPack[i].value > Player.list[playerDataPack[i].id].energy && !sfx.Charge.playing()){
+				sfx.Charge.volume(.3);
+				sfx.Charge.play();
+				sfx.Warning2.fade(warningVol, 0, 100);
 			}
-			else if (playerDataPack[i].property == "energy" && (playerDataPack[i].value % 100 == 0 || playerDataPack[i].value == 1 || playerDataPack[i].value < Player.list[playerDataPack[i].id].energy) && sfxCharge.playing()){
-				sfxCharge.fade(.3, 0, 100);
+			else if (playerDataPack[i].property == "energy" && (playerDataPack[i].value % 100 == 0 || playerDataPack[i].value == 1 || playerDataPack[i].value < Player.list[playerDataPack[i].id].energy) && sfx.Charge.playing()){
+				sfx.Charge.fade(.3, 0, 100);
 			}
 
 			//Using Energy flag
@@ -1633,17 +1125,17 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			}
 			
 			//Warning sounds			
-			if (playerDataPack[i].property == "energy" && playerDataPack[i].value <= 25 && playerDataPack[i].value < Player.list[playerDataPack[i].id].energy && !sfxWarning.playing()){
-				sfxWarning.volume(warningVol);
-				sfxWarning.play();
+			if (playerDataPack[i].property == "energy" && playerDataPack[i].value <= 25 && playerDataPack[i].value < Player.list[playerDataPack[i].id].energy && !sfx.Warning.playing()){
+				sfx.Warning.volume(warningVol);
+				sfx.Warning.play();
 			}
-			else if (playerDataPack[i].property == "energy" && playerDataPack[i].value > 25 && sfxWarning.playing()){
-				sfxWarning.fade(warningVol, 0, 100);
-				//sfxWarning.stop();
+			else if (playerDataPack[i].property == "energy" && playerDataPack[i].value > 25 && sfx.Warning.playing()){
+				sfx.Warning.fade(warningVol, 0, 100);
+				//sfx.Warning.stop();
 			}
 			else if (playerDataPack[i].property == "throwingObject" && playerDataPack[i].value > 0 && playerDataPack[i].id == myPlayer.id && !mute){
-				sfxWhoosh.play();
-				//sfxWarning.stop();
+				sfx.Whoosh.play();
+				//sfx.Warning.stop();
 			}
 		}
 
@@ -1663,10 +1155,10 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		if (playerDataPack[i].property == "chargingLaser"){
 			if (playerDataPack[i].id == myPlayer.id){ //sfx only for myPlayer charging laser
 				if (playerDataPack[i].value == 1 && !Player.list[playerDataPack[i].id].chargingLaser){
-					sfxPlay("sfxLaserCharging");
+					sfxPlay("LaserCharging");
 				}
 				else if (playerDataPack[i].value == 0 && Player.list[playerDataPack[i].id].chargingLaser){
-					sfxStop("sfxLaserCharging");
+					sfxStop("LaserCharging");
 				}
 			}
 			if (playerDataPack[i].value == 0){
@@ -1742,8 +1234,8 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				vol = 0.01;
 			if (vol < -.1 || mute)
 				vol = 0;
-			sfxBagGrab.volume(vol);
-			sfxBagGrab.play();
+			sfx.BagGrab.volume(vol);
+			sfx.BagGrab.play();
 		}
 		
 		//Play/Stop Reload SFX upon reload property update
@@ -1759,27 +1251,27 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			if (vol < -.1 || mute)
 				vol = 0;
 			if (Player.list[playerDataPack[i].id].weapon == 1){
-				sfxPistolReload.volume(vol);
-				sfxPistolReload.play();
+				sfx.PistolReload.volume(vol);
+				sfx.PistolReload.play();
 			}
 			else if (Player.list[playerDataPack[i].id].weapon == 2){
-				sfxDPReload.volume(vol);
-				sfxDPReload.play();
+				sfx.DPReload.volume(vol);
+				sfx.DPReload.play();
 			}
 			else if (Player.list[playerDataPack[i].id].weapon == 3){
-				sfxMGReload.volume(vol);
-				sfxMGReload.play();
+				sfx.MGReload.volume(vol);
+				sfx.MGReload.play();
 			}
 		}
 		else if (playerDataPack[i].property == "reloading" && playerDataPack[i].value == 0){			
 			if (Player.list[playerDataPack[i].id].weapon == 1){
-				sfxPistolReload.stop();
+				sfx.PistolReload.stop();
 			}
 			else if (Player.list[playerDataPack[i].id].weapon == 2){
-				sfxDPReload.stop();
+				sfx.DPReload.stop();
 			}
 			else if (Player.list[playerDataPack[i].id].weapon == 3){
-				sfxMGReload.stop();
+				sfx.MGReload.stop();
 			}
 		}
 		
@@ -1796,28 +1288,28 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			if (vol < -.1 || mute)
 				vol = 0;
 			if (playerDataPack[i].value == 1){
-				sfxPistolEquip.volume(vol);
-				sfxPistolEquip.play();
+				sfx.PistolEquip.volume(vol);
+				sfx.PistolEquip.play();
 			}
 			else if (playerDataPack[i].value == 2){
-				sfxDPEquip.volume(vol);
-				sfxDPEquip.play();
+				sfx.DPEquip.volume(vol);
+				sfx.DPEquip.play();
 			}				
 			else if (playerDataPack[i].value == 3){
-				sfxMGEquip.volume(vol);
-				sfxMGEquip.play();
+				sfx.MGEquip.volume(vol);
+				sfx.MGEquip.play();
 			}
 			else if (playerDataPack[i].value == 4){
-				sfxSGEquip.volume(vol);
-				sfxSGEquip.play();
+				sfx.SGEquip.volume(vol);
+				sfx.SGEquip.play();
 			}			//Stop all reloading sfx upon weapon change
 			else if (playerDataPack[i].value == 5){
-				sfxLaserEquip.volume(vol);
-				sfxLaserEquip.play();
+				sfx.LaserEquip.volume(vol);
+				sfx.LaserEquip.play();
 			}			//Stop all reloading sfx upon weapon change
-			sfxDPReload.stop();
-			sfxMGReload.stop();
-			sfxPistolReload.stop();
+			sfx.DPReload.stop();
+			sfx.MGReload.stop();
+			sfx.PistolReload.stop();
 			
 			Player.list[playerDataPack[i].id].triggerTapLimitTimer = 0;
 		}
@@ -1825,10 +1317,10 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		//Grapple Sfx
 		if (playerDataPack[i].property == "grapple"){
 			if (playerDataPack[i].value.firing == true){
-				sfxGrappleShot.play();
+				sfx.GrappleShot.play();
 			}
 			else {
-				sfxGrappleShot.stop();
+				sfx.GrappleShot.stop();
 			}
 		}
 	}//END Player loop
@@ -1848,7 +1340,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				logg("Update pickup:" + pickupDataPack[i].id + " x:" + pickupDataPack[i].x + " y:" + pickupDataPack[i].y + " type:" + pickupDataPack[i].type + " amount:" + pickupDataPack[i].amount + " width:" + pickupDataPack[i].width + " height:" + pickupDataPack[i].height);
 			}
 			if (pickupDataPack[i].respawnTimer == 0 && !mute){
-				sfxWeaponDrop.play();
+				sfx.WeaponDrop.play();
 			}
 				
 			Pickup.list[pickupDataPack[i].id] = pickupDataPack[i];
@@ -1888,10 +1380,10 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		var notification = Notification(noteText, notePlayerId);
 		if (noteText.includes("Stolen") && !mute){
 			if (Player.list[notePlayerId].team == myPlayer.team || myPlayer.team == 0){
-				sfxStealGood.play();
+				sfx.StealGood.play();
 			}
 			else {
-				sfxStealBad.play();
+				sfx.StealBad.play();
 			}
 		}
 		if (debugUpdates){
@@ -1924,27 +1416,27 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				if (vol < -.1 || mute)
 					vol = 0;
 
-				var playerBoostSfx = sfxBoost;
+				var playerBoostSfx = sfx.Boost;
 				if (!Player.list[id])
 					continue;
 
 				if (Player.list[id].customizations[team].boost == "hearts2" || Player.list[id].customizations[team].boost == "rainbow"){
-					playerBoostSfx = sfxBoostRainbow;
+					playerBoostSfx = sfx.BoostRainbow;
 				}
 				else if (Player.list[id].customizations[team].boost.indexOf("streaks") > -1){
-					playerBoostSfx = sfxBoostIon;
+					playerBoostSfx = sfx.BoostIon;
 				}
 				else if (Player.list[id].customizations[team].boost.indexOf("laser") > -1){
-					playerBoostSfx = sfxBoostLaser;
+					playerBoostSfx = sfx.BoostLaser;
 				}
 				else if (Player.list[id].customizations[team].boost == "blast"){
-					playerBoostSfx = sfxBoostBlast;
+					playerBoostSfx = sfx.BoostBlast;
 				}
 				else if (Player.list[id].customizations[team].boost == "lightning"){
-					playerBoostSfx = sfxBoostLightning;
+					playerBoostSfx = sfx.BoostLightning;
 				}
 				else if (Player.list[id].customizations[team].boost.indexOf("slime") > -1){
-					playerBoostSfx = sfxBoostSlime;
+					playerBoostSfx = sfx.BoostSlime;
 				}
 				playerBoostSfx.volume(vol);
 				playerBoostSfx.play();
@@ -1964,8 +1456,8 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				vol = 0.01;
 			if (vol < -.1 || mute)
 				vol = 0;
-			sfxPunch.volume(vol);
-			sfxPunch.play();
+			sfx.Punch.volume(vol);
+			sfx.Punch.play();
 			Smash(Player.list[id].x, Player.list[id].y);	
 		}
 		else if (updateEffectPack[i].type == 5){ //body
@@ -1991,10 +1483,10 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			Grenade(updateGrenadePack[i].id, updateGrenadePack[i].value.grenadeTimer, updateGrenadePack[i].value.team, updateGrenadePack[i].value.holdingPlayerId);
 			if (!mute && updateGrenadePack[i].value.holdingPlayerId == myPlayer.id){
 				if (Math.random() > 0.5){
-					sfxPinPull1.play();
+					sfx.PinPull1.play();
 				}
 				else {
-					sfxPinPull2.play();
+					sfx.PinPull2.play();
 				}
 			}
 		}
@@ -2078,7 +1570,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 	if (miscPack.nextGameTimer){
 		nextGameTimer = miscPack.nextGameTimer;
 		if (nextGameTimer == 4 && !mute){
-			sfxNextGameTimer.play();
+			sfx.NextGameTimer.play();
 		}
 	}
 	if (miscPack.shopEnabled){
@@ -2281,7 +1773,7 @@ function endGame(){
 	shop.active = false;
 	determineBorderStyle();
 	if (!mute){
-		sfxStealGood.play();		
+		sfx.StealGood.play();		
 	}	
 }
 
@@ -2297,84 +1789,84 @@ function purchase(){
 		shop.uniqueText = "Not enough cash, stranger!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 2 && Player.list[myPlayer.id].cash < shop.price2){
 		shop.uniqueText = "Not enough cash, stranger!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 3 && Player.list[myPlayer.id].cash < shop.price3){
 		shop.uniqueText = "Not enough cash, stranger!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 4 && Player.list[myPlayer.id].cash < shop.price4){
 		shop.uniqueText = "Not enough cash, stranger!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 5 && Player.list[myPlayer.id].cash < shop.price5){
 		shop.uniqueText = "Not enough cash, stranger!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 6 && Player.list[myPlayer.id].cash < shop.price6){
 		shop.uniqueText = "Not enough cash, stranger!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 5 && (myPlayer.health >= 175 || myPlayer.willHaveBA)){
 		shop.uniqueText = "You're already wearing body armor, mate.";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 6 && myPlayer.energy > 100){
 		shop.uniqueText = "You're already overcharged ya greedy bast!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 1 && myPlayer.MGAmmo >= 120){
 		shop.uniqueText = "You can't carry any more!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 2 && myPlayer.SGAmmo >= 18){
 		shop.uniqueText = "You can't carry any more!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 3 && myPlayer.DPAmmo >= 45){
 		shop.uniqueText = "You can't carry any more!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 	else if (shop.selection == 4 && myPlayer.laserClip >= 10){
 		shop.uniqueText = "You can't carry any more!";
 		shop.uniqueTextTimer = 90;
 		if (!mute)
-			sfxError.play();
+			sfx.Error.play();
 		return;
 	}
 
@@ -2396,7 +1888,7 @@ function purchase(){
 
 	socket.emit('purchase',{selection:shop.selection,playerId:myPlayer.id});
 	if (!mute)
-		sfxPurchase.play();
+		sfx.Purchase.play();
 	shop.uniqueText = "Heh heh heh heh... Thank you.";
 	shop.uniqueTextTimer = 60;
 }
@@ -2680,40 +2172,40 @@ function playGrenadeExplosionSfx(x, y){ //playExplosionSfx
 
 	if (!mute){
 		var randy = Math.random();
-		if (randy < 0.25 && !sfxExplosion1.playing()){
-			sfxRangedLoud("sfxExplosion1", x, y, maxDist, minDist);
+		if (randy < 0.25 && !sfx.Explosion1.playing()){
+			sfxRangedLoud("Explosion1", x, y, maxDist, minDist);
 			//log("1 on first");
 		}
-		else if (((randy >= 0.25 && randy < 0.5) || (sfxExplosion1.playing())) && !sfxExplosion2.playing()){
-			sfxRangedLoud("sfxExplosion2", x, y, maxDist, minDist);
+		else if (((randy >= 0.25 && randy < 0.5) || (sfx.Explosion1.playing())) && !sfx.Explosion2.playing()){
+			sfxRangedLoud("Explosion2", x, y, maxDist, minDist);
 			//log("2 on first");
 
 		}
-		else if (((randy >= 0.5 && randy < 0.75) || (sfxExplosion1.playing() && sfxExplosion2.playing())) && !sfxExplosion3.playing()){
+		else if (((randy >= 0.5 && randy < 0.75) || (sfx.Explosion1.playing() && sfx.Explosion2.playing())) && !sfx.Explosion3.playing()){
 			//log("3 on first");
-			sfxRangedLoud("sfxExplosion3", x, y, maxDist, minDist);
+			sfxRangedLoud("Explosion3", x, y, maxDist, minDist);
 		}
-		else if (((randy >= 0.75 && randy < 1) || (sfxExplosion1.playing() && sfxExplosion2.playing() && sfxExplosion3.playing())) && !sfxExplosion4.playing()){
+		else if (((randy >= 0.75 && randy < 1) || (sfx.Explosion1.playing() && sfx.Explosion2.playing() && sfx.Explosion3.playing())) && !sfx.Explosion4.playing()){
 			//log("4 on first");
-			sfxRangedLoud("sfxExplosion4", x, y, maxDist, minDist);
+			sfxRangedLoud("Explosion4", x, y, maxDist, minDist);
 		}
 		else {
 			if (randy < 0.25){
-				sfxRangedLoud("sfxExplosion1", x, y, maxDist, minDist);
+				sfxRangedLoud("Explosion1", x, y, maxDist, minDist);
 				//log("1 on second");
 
 			}
 			else if (randy >= 0.25 && randy < 0.5){
-				sfxRangedLoud("sfxExplosion2", x, y, maxDist, minDist);
+				sfxRangedLoud("Explosion2", x, y, maxDist, minDist);
 				//log("2 on second");
 			}
 			else if (randy >= 0.5 && randy < 0.75){
-				sfxRangedLoud("sfxExplosion3", x, y, maxDist, minDist);
+				sfxRangedLoud("Explosion3", x, y, maxDist, minDist);
 				//log("3 on second");
 			}
 			else {
 				//log("4 on second");
-				sfxRangedLoud("sfxExplosion4", x, y, maxDist, minDist);
+				sfxRangedLoud("Explosion4", x, y, maxDist, minDist);
 			}	
 		}
 	}
@@ -2722,40 +2214,40 @@ function playGrenadeExplosionSfx(x, y){ //playExplosionSfx
 function playGrenadeClinkSfx(x, y){ //playExplosionSfx
 	if (!mute){
 		var randy = Math.random();
-		if (randy < 0.25 && !sfxClink1.playing()){
-			sfxRangedLoud("sfxClink1", x, y);
+		if (randy < 0.25 && !sfx.Clink1.playing()){
+			sfxRangedLoud("Clink1", x, y);
 			//log("1 on first");
 		}
-		else if (((randy >= 0.25 && randy < 0.5) || (sfxClink1.playing())) && !sfxClink2.playing()){
-			sfxRangedLoud("sfxClink2", x, y);
+		else if (((randy >= 0.25 && randy < 0.5) || (sfx.Clink1.playing())) && !sfx.Clink2.playing()){
+			sfxRangedLoud("Clink2", x, y);
 			//log("2 on first");
 
 		}
-		else if (((randy >= 0.5 && randy < 0.75) || (sfxClink1.playing() && sfxClink2.playing())) && !sfxClink3.playing()){
+		else if (((randy >= 0.5 && randy < 0.75) || (sfx.Clink1.playing() && sfx.Clink2.playing())) && !sfx.Clink3.playing()){
 			//log("3 on first");
-			sfxRangedLoud("sfxClink3", x, y);
+			sfxRangedLoud("Clink3", x, y);
 		}
-		else if (((randy >= 0.75 && randy < 1) || (sfxClink1.playing() && sfxClink2.playing() && sfxClink3.playing())) && !sfxClink4.playing()){
+		else if (((randy >= 0.75 && randy < 1) || (sfx.Clink1.playing() && sfx.Clink2.playing() && sfx.Clink3.playing())) && !sfx.Clink4.playing()){
 			//log("4 on first");
-			sfxRangedLoud("sfxClink4", x, y);
+			sfxRangedLoud("Clink4", x, y);
 		}
 		else {
 			if (randy < 0.25){
-				sfxRangedLoud("sfxClink1", x, y);
+				sfxRangedLoud("Clink1", x, y);
 				//log("1 on second");
 
 			}
 			else if (randy >= 0.25 && randy < 0.5){
-				sfxRangedLoud("sfxClink2", x, y);
+				sfxRangedLoud("Clink2", x, y);
 				//log("2 on second");
 			}
 			else if (randy >= 0.5 && randy < 0.75){
-				sfxRangedLoud("sfxClink3", x, y);
+				sfxRangedLoud("Clink3", x, y);
 				//log("3 on second");
 			}
 			else {
 				//log("4 on second");
-				sfxRangedLoud("sfxClink4", x, y);
+				sfxRangedLoud("Clink4", x, y);
 			}	
 		}
 	}
@@ -3576,13 +3068,13 @@ function drawTorsos(){
 								if (Player.list[i].reloading == 20 && !mute){								
 									var randy = randomInt(0,2);
 									if (randy == 0)
-										sfxSGReload1.play();
+										sfx.SGReload1.play();
 									else if (randy == 1)
-										sfxSGReload2.play();
+										sfx.SGReload2.play();
 									else if (randy == 2)
-										sfxSGReload3.play();
+										sfx.SGReload3.play();
 									else
-										sfxSGReload1.play();
+										sfx.SGReload1.play();
 								}
 							}
 						}
@@ -3591,7 +3083,7 @@ function drawTorsos(){
 							Player.list[i].triggerTapLimitTimer--;
 							if (Player.list[i].weapon == 4){
 								if (Player.list[i].triggerTapLimitTimer == 30 && !mute){
-									sfxSGEquip.play();
+									sfx.SGEquip.play();
 								}
 								if (Player.list[i].triggerTapLimitTimer > 30)
 									img = Player.list[i].images[team].SG;
@@ -4978,7 +4470,7 @@ function drawHUD(){
 				myPlayer.grenadeEnergy += grenadeRechargeSpeed;
 				if (myPlayer.grenadeEnergy >= 100){
 					myPlayer.grenades++;
-					sfxPlay("sfxGetItem", 0.6);
+					sfxPlay("GetItem", 0.6);
 					myPlayer.grenadeEnergy = 0;
 					showWhiteGrenadeRect = 15;
 				}
@@ -5481,10 +4973,10 @@ function drawPostGameProgress(){
 				postGameProgressRatingGainedSize = 11;
 				if (!mute){
 					if (postGameProgressInfo.ratingDif >= 0){
-						sfxProgressBar.play();
+						sfx.ProgressBar.play();
 					}
 					else {
-						sfxProgressBarReverse.play();
+						sfx.ProgressBarReverse.play();
 					}
 				}
 			}
@@ -5519,9 +5011,9 @@ function drawPostGameProgress(){
 							//rank down
 							postGameProgressRankUpDown = true;
 							postGameProgressStopRatingTicks = true;
-							if (!mute){sfxDecharge.play();}
-							sfxProgressBar.stop();
-							sfxProgressBarReverse.stop();
+							if (!mute){sfx.Decharge.play();}
+							sfx.ProgressBar.stop();
+							sfx.ProgressBarReverse.stop();
 						}
 					}
 					else if (postGameProgressRatingTicks < postGameProgressInfo.ratingDif){
@@ -5530,12 +5022,12 @@ function drawPostGameProgress(){
 							//rank up
 							postGameProgressRankUpDown = true;
 							postGameProgressStopRatingTicks = true;
-							sfxProgressBar.stop();
-							sfxProgressBarReverse.stop();
+							sfx.ProgressBar.stop();
+							sfx.ProgressBarReverse.stop();
 							if (!mute && isLoggedIn()){
-								sfxDefeatMusic.volume(.2);
-								sfxVictoryMusic.volume(.2);
-								sfxLevelUp.play();
+								sfx.DefeatMusic.volume(.2);
+								sfx.VictoryMusic.volume(.2);
+								sfx.LevelUp.play();
 							}
 						}
 					}
@@ -5543,8 +5035,8 @@ function drawPostGameProgress(){
 				}
 				else if (postGameProgressRatingTicks >= postGameProgressInfo.ratingDif){
 					postGameProgressStopRatingTicks = true;
-					sfxProgressBar.stop();
-					sfxProgressBarReverse.stop();
+					sfx.ProgressBar.stop();
+					sfx.ProgressBarReverse.stop();
 				}
 			}
 		
@@ -5657,7 +5149,7 @@ function drawPostGameProgress(){
 			}
 			else if (postGameProgressExpGainedSize < 11){
 				postGameProgressExpGainedSize = 11;
-				if (!mute){sfxProgressBar.play();}
+				if (!mute){sfx.ProgressBar.play();}
 			}
 			ctx.textAlign="center";
 			ctx.font = 'bold '+postGameProgressExpGainedSize+'px Electrolize';
@@ -5675,18 +5167,18 @@ function drawPostGameProgress(){
 					if (postGameProgressInfo.originalExp + postGameProgressExpTicks >= postGameProgressInfo.expCeiling){ //LEVEL UP
 						postGameProgressLevelUp = true;
 						postGameProgressStopExpTicks = true;
-						sfxProgressBar.stop();
+						sfx.ProgressBar.stop();
 						if (!mute && isLoggedIn()){
-							sfxDefeatMusic.volume(.2);
-							sfxVictoryMusic.volume(.2);
-							sfxLevelUp.play();
+							sfx.DefeatMusic.volume(.2);
+							sfx.VictoryMusic.volume(.2);
+							sfx.LevelUp.play();
 						}
 					}
 				}
 				postGameProgressExpTicks = Math.round(postGameProgressExpTicks);
 			}
 			else if (postGameProgressExpTicks >= postGameProgressInfo.expDif){
-				sfxProgressBar.stop();
+				sfx.ProgressBar.stop();
 				postGameProgressStopExpTicks = true;
 			}
 		
@@ -6046,14 +5538,14 @@ function getEndgameStatus(){
 					if (i+1 > sortedList.length/2){ 
 						status.victory = false;
 						if (!mute){
-							sfxDefeatMusic.play();
+							sfx.DefeatMusic.play();
 						}			
 					}
 					else {
 						status.text = status.text + "!";
 						status.victory = true;
 						if (!mute){
-							sfxVictoryMusic.play();
+							sfx.VictoryMusic.play();
 						}
 					}
 					break;
@@ -6063,14 +5555,14 @@ function getEndgameStatus(){
 		else {
 			if ((myPlayer.team == 1 && whiteScore > blackScore) || (myPlayer.team == 2 && whiteScore < blackScore)){
 				if (!mute){
-					sfxVictoryMusic.play();
+					sfx.VictoryMusic.play();
 				}
 				status.text = "VICTORY!!!";	
 				status.victory = true;	
 			}
 			else {
 				if (!mute){
-					sfxDefeatMusic.play();
+					sfx.DefeatMusic.play();
 				}			
 				status.text = "DEFEAT...";
 				status.victory = false;	
@@ -7609,12 +7101,12 @@ function sprayBloodOntoTargetFunction(data){
 		
 		var rand = Math.floor((Math.random() * 2) + 1);
 		if (rand == 1){
-			sfxHit1.volume(vol);
-			sfxHit1.play();
+			sfx.Hit1.volume(vol);
+			sfx.Hit1.play();
 		}
 		else {
-			sfxHit2.volume(vol);
-			sfxHit2.play();
+			sfx.Hit2.volume(vol);
+			sfx.Hit2.play();
 		}
 	}
 }
@@ -7761,56 +7253,56 @@ function shootUpdateFunction(shotData){
 	if (newShot == true){
 		if (shotData.weapon == 3){
 			if (shotData.playerId == myPlayer.id && !mute){
-				sfxMGMine.volume(vol * .35);
-				sfxMGMine.play();
+				sfx.MGMine.volume(vol * .35);
+				sfx.MGMine.play();
 				if (Player.list[shotData.playerId].MGClip <= 7){
-					sfxClick.play();
+					sfx.Click.play();
 				}
 			}
 			else {
-				sfxMG.volume(vol * .35);
-				sfxMG.play();	
+				sfx.MG.volume(vol * .35);
+				sfx.MG.play();	
 			}
 		}
 		else if (shotData.weapon == 2 && !mute) {
 			if (shotData.playerId == myPlayer.id){
-				sfxDPMine.volume(vol);
-				sfxDPMine.play();	
+				sfx.DPMine.volume(vol);
+				sfx.DPMine.play();	
 
 				if (Player.list[shotData.playerId].DPClip <= 4){
-					sfxClick.play();
+					sfx.Click.play();
 				}
 			}
 			else {
-				sfxDP.volume(vol);
-				sfxDP.play();	
+				sfx.DP.volume(vol);
+				sfx.DP.play();	
 			}
 		}
 		else if (shotData.weapon == 1 && !mute) {
 			if (shotData.playerId == myPlayer.id){				
-				sfxPistolMine.volume(vol);
-				sfxPistolMine.play();
+				sfx.PistolMine.volume(vol);
+				sfx.PistolMine.play();
 				if (Player.list[shotData.playerId].PClip <= 4){
-					sfxClick.play();
+					sfx.Click.play();
 				}
 			}
 			else {
-				sfxPistol.volume(vol);
-				sfxPistol.play();	
+				sfx.Pistol.volume(vol);
+				sfx.Pistol.play();	
 			}
 		}
 		else if (shotData.weapon == 5 && !mute) {
-			sfxLaserDischarge.volume(vol * 0.8);
-			sfxLaserDischarge.play();
+			sfx.LaserDischarge.volume(vol * 0.8);
+			sfx.LaserDischarge.play();
 			if (dist1 < 1000){
 				screenShakeCounter = 8;
 			}
 		}
 		else if (shotData.weapon == 4) {
-			sfxSG.volume(vol);
-			sfxSG.play();
+			sfx.SG.volume(vol);
+			sfx.SG.play();
 			if (shotData.playerId == myPlayer.id && Player.list[shotData.playerId].SGClip <= 3 && !mute){
-				sfxClick.play();
+				sfx.Click.play();
 			}
 			Player.list[shotData.playerId].triggerTapLimitTimer = SGTriggerTapLimitTimer;
 		}
@@ -7869,8 +7361,8 @@ function createBody(killerPlayerId, pushSpeed, shootingDir, playerId){
 			vol = 0;
 		
 		if (vol <= 0.6 && myPlayer.id == killerPlayerId){vol = 0.8;}
-		sfxKill.volume(vol);
-		sfxKill.play();	
+		sfx.Kill.volume(vol);
+		sfx.Kill.play();	
 	}	
 }
 
@@ -7985,7 +7477,7 @@ document.onkeydown = function(event){
 			else if (shop.selection < 6) {
 				shop.selection++;
 				if (!mute)
-					sfxMenuMove.play();
+					sfx.MenuMove.play();
 			}
 			if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true && !shop.active){
 				spectatePlayers = true;
@@ -8026,7 +7518,7 @@ document.onkeydown = function(event){
 			else if (shop.selection > 1) {
 				shop.selection--;
 				if (!mute)
-					sfxMenuMove.play();			
+					sfx.MenuMove.play();			
 			}
 			if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true && !shop.active){
 				spectatePlayers = true;
@@ -8088,10 +7580,10 @@ document.onkeydown = function(event){
 				if (!Player.list[myPlayer.id].holdingBag && !myPlayer.energyExhausted){
 					//Boosting!
 				}				
-				else if (!Player.list[myPlayer.id].holdingBag && myPlayer.energyExhausted && !sfxBoostEmpty.playing())
-					sfxBoostEmpty.play();
+				else if (!Player.list[myPlayer.id].holdingBag && myPlayer.energyExhausted && !sfx.BoostEmpty.playing())
+					sfx.BoostEmpty.play();
 				else if (Player.list[myPlayer.id].holdingBag)
-					sfxWhoosh.play();
+					sfx.Whoosh.play();
 			}
 			myPlayer.pressingSpace = true;
 		}
@@ -8253,8 +7745,8 @@ document.onkeydown = function(event){
 			}
 			else{
 				mute = true;		
-				sfxVictoryMusic.stop();
-				sfxDefeatMusic.stop();
+				sfx.VictoryMusic.stop();
+				sfx.DefeatMusic.stop();
 			}
 		}
 	}
