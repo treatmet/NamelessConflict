@@ -1441,6 +1441,9 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				else if (Player.list[id].customizations[team].boost.indexOf("02") > -1){
 					playerBoostSfx = sfx.BoostPowerful;
 				}
+				else if (Player.list[id].customizations[team].boost.indexOf("02") > -1){
+					playerBoostSfx = sfxBoostPowerful;
+				}
 				else if (Player.list[id].customizations[team].boost.indexOf("slime") > -1){
 					playerBoostSfx = sfx.BoostSlime;
 				}
