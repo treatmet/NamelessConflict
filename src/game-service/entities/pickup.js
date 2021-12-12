@@ -78,7 +78,7 @@ var pickupPickup = function(playerId, pickupId, pickupOverride = false){
 				playerPickingUp.health = 100;
 			}
 			updatePlayerList.push({id:playerId,property:"health",value:playerPickingUp.health});											
-			sfx = "HealthPackGrab";
+			sfx = "sfxHealthPackGrab";
 			removePickup(pickupId);
 		}
 		else {
@@ -95,7 +95,7 @@ var pickupPickup = function(playerId, pickupId, pickupOverride = false){
 			updatePlayerList.push({id:playerId,property:"weapon",value:playerPickingUp.weapon});	
 		}
 		else {
-			sfx = "DPEquip";
+			sfx = "sfxDPEquip";
 		}
 		if (playerPickingUp.DPClip <= 0 && playerPickingUp.DPAmmo <= 0){
 			if (pickup.amount <= DPClipSize){
@@ -126,7 +126,7 @@ var pickupPickup = function(playerId, pickupId, pickupOverride = false){
 			updatePlayerList.push({id:playerId,property:"weapon",value:playerPickingUp.weapon});	
 		}
 		else {
-			sfx = "MGEquip";
+			sfx = "sfxMGEquip";
 		}
 		if (playerPickingUp.MGClip <= 0 && playerPickingUp.MGAmmo <= 0){
 			if (pickup.amount <= MGClipSize){
@@ -157,7 +157,7 @@ var pickupPickup = function(playerId, pickupId, pickupOverride = false){
 			updatePlayerList.push({id:playerId,property:"weapon",value:playerPickingUp.weapon});	
 		}
 		else { //because the sfx will already trigger automatically clientside if switching weapons to SG
-			sfx = "SGEquip";
+			sfx = "sfxSGEquip";
 		}
 		if (playerPickingUp.SGClip <= 0 && playerPickingUp.SGAmmo <= 0){
 			if (pickup.amount <= SGClipSize){
@@ -188,7 +188,7 @@ var pickupPickup = function(playerId, pickupId, pickupOverride = false){
 			updatePlayerList.push({id:playerId,property:"weapon",value:playerPickingUp.weapon});	
 		}
 		else { //because the sfx will already trigger automatically clientside if switching weapons to SG
-			sfx = "LaserEquip";
+			sfx = "sfxLaserEquip";
 		}
 		playerPickingUp.laserClip += pickup.amount;
 		if (playerPickingUp.laserClip > maxLaserAmmo){playerPickingUp.laserClip = maxLaserAmmo;}
@@ -201,7 +201,7 @@ var pickupPickup = function(playerId, pickupId, pickupOverride = false){
 			playerPickingUp.health = playerMaxHealth;
 		}
 		updatePlayerList.push({id:playerId,property:"health",value:playerPickingUp.health});											
-		sfx = "BagGrab";
+		sfx = "sfxBagGrab";
 		removePickup(pickupId);
 	}
 	
