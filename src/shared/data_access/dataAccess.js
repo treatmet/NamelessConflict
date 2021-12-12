@@ -54,7 +54,7 @@ var dbUpdateAwait = function(table, action, searchObj, updateObj, cb){
 }
 
 var dbFindAwait = function(table, searchObj, cb){
-	dbFindOptionsAwait(table, searchObj, {sort:{},limit:100}, async function(err, res){
+	dbFindOptionsAwait(table, searchObj, {sort:{},limit:1000}, async function(err, res){
 		if (!err){
 			cb(false, res);
 		}

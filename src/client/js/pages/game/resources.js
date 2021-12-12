@@ -1,3 +1,4 @@
+
 //----------------Loading Images----------------
 var Img = {};
 Img.small = new Image();
@@ -40,8 +41,6 @@ Img.moon = new Image();
 Img.moon.src = "/src/client/img/map/moon.png";
 
 
-Img.statOverlay = new Image();
-Img.statOverlay.src = "/src/client/img/stat-overlay.png";
 Img.statArrow = new Image();
 Img.statArrow.src = "/src/client/img/arrow.png";
 Img.statCamera = new Image();
@@ -112,6 +111,14 @@ Img.boostBlast = new Image();
 Img.boostBlast.src = "/src/client/img/shot-flash.png";
 Img.boostLightning2 = new Image();
 Img.boostLightning2.src = "/src/client/img/dynamic/boost/lightning2.png";
+Img.boostBronze2 = new Image();
+Img.boostBronze2.src = "/src/client/img/dynamic/boost/bronze02_2.png";
+Img.boostSilver2 = new Image();
+Img.boostSilver2.src = "/src/client/img/dynamic/boost/silver02_2.png";
+Img.boostGold2 = new Image();
+Img.boostGold2.src = "/src/client/img/dynamic/boost/gold02_2.png";
+Img.boostDiamond2 = new Image();
+Img.boostDiamond2.src = "/src/client/img/dynamic/boost/diamond02_2.png";
 
 Img.blackPlayerPistol = new Image();
 Img.blackPlayerPistol.src = "/src/client/img/blackPlayerPistolNaked.png";
@@ -339,15 +346,21 @@ Img.gold2 = new Image();
 Img.gold2.src = "/src/client/img/ranks/full-size/gold2.png";
 Img.gold3 = new Image();
 Img.gold3.src = "/src/client/img/ranks/full-size/gold3.png";
-Img.diamond = new Image();
-Img.diamond.src = "/src/client/img/ranks/full-size/diamond.png";
+Img.diamond1 = new Image();
+Img.diamond1.src = "/src/client/img/ranks/full-size/diamond.png";
 Img.diamond2 = new Image();
 Img.diamond2.src = "/src/client/img/ranks/full-size/diamond2.png";
-
-//----------------------------- Final image to load--------------------------------
+Img.diamond3 = new Image();
+Img.diamond3.src = "/src/client/img/ranks/full-size/diamond3.png";
+Img.master1 = new Image();
+Img.master1.src = "/src/client/img/ranks/full-size/master1.png";
+Img.master2 = new Image();
+Img.master2.src = "/src/client/img/ranks/full-size/master2.png";
+Img.master3 = new Image();
+Img.master3.src = "/src/client/img/ranks/full-size/master3.png";
 Img.bloodyBorder = new Image();
 Img.bloodyBorder.src = "/src/client/img/bloody-border.png";
-//-----------------------------Loading Sounds-------------------------------
+
 window.Img = Img;
 
 var sfx = {};
@@ -443,6 +456,7 @@ sfx.BoostLightning = new Howl({src: ['/src/client/sfx/boostLightning.mp3']});
 sfx.BoostIon = new Howl({src: ['/src/client/sfx/boostIon.mp3']});
 sfx.BoostSlime = new Howl({src: ['/src/client/sfx/boostSlime.mp3']});
 sfx.BoostEmpty = new Howl({src: ['/src/client/sfx/boostEmpty.mp3']});
+sfx.BoostPowerful = new Howl({src: ['/src/client/sfx/boostPowerful.mp3']});
 sfx.BoostEmpty.volume(1);
 sfx.Cloak = new Howl({src: ['/src/client/sfx/cloak2.mp3']});
 sfx.Cloak.volume(.6);

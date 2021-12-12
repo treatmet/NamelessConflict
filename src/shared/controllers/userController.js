@@ -18,9 +18,9 @@ router.use(express.urlencoded({extended: true})); //To support URL-encoded bodie
 // });
 
 router.post('/getPlayerRelationship', async function (req, res) {
-	//log("Get player Relationship endpoint called with:");
-	//console.log("--BODY");
-	//console.log(req.body);
+	log("Get player Relationship endpoint called with:");
+	console.log("--BODY");
+	console.log(req.body);
 	dataAccessFunctions.getPlayerRelationshipFromDB(req.body, function(dbResults){
 		res.status(200);
 		res.send(dbResults);
@@ -399,7 +399,6 @@ router.post('/getOrCreateConversation', async function (req, res) {
 	});			
 });
 
-
 router.get('/getConversations', async function (req, res) {
 	//Transform to get, cog will be at req.query.cognitoSub
 	console.log("getConversations FOR: " + req.query.cognitoSub);
@@ -430,6 +429,16 @@ router.get('/getConversationMessages', async function (req, res) {
 	});
 });
 
+router.get('/getPlaytime', async function (req, res) {
+	//Transform to get, cog will be at req.query.cognitoSub
+	console.log("getPlaytime FOR: " + req.query.cognitoSub);
+	console.log(req.query);
+
+	dataAccessFunctions.getPlaytimeMessage(req.query.cognitoSub, function(dbResults){
+		res.status(200);
+		res.send({error:false, result:dbResults});
+	});
+});
 
 router.post('/sendMessage', async function (req, res) {
 	log("sendMessage ENDPOINT CALLED WITH:");
@@ -552,6 +561,8 @@ router.post('/validateToken', async function (req, res) {
 			}
 			
 			result = await authenticationEngine.validateTokenOrRefresh(tokens);
+
+
 		}
 	}
 	if (!result.cognitoSub){
@@ -621,6 +632,11 @@ router.post('/validateToken', async function (req, res) {
 	//(Auth success) Get or create mongo username, and then return to the client
 	dataAccessFunctions.getUser(httpResult.cognitoSub, function(mongoRes){
 		if (mongoRes && mongoRes.username){
+
+			if (!mongoRes.cognitoUsername){
+				dataAccessFunctions.updateDBCognitoUsername(mongoRes.cognitoSub, httpResult.username);
+			}
+
 			httpResult.username = mongoRes.username;
 			httpResult.cash = mongoRes.cash;
 			res.send(httpResult);
@@ -652,7 +668,6 @@ function generateTempName(){
 	//return "tempName";
 }
 
-
 router.post('/getLeaderboard', async function (req, res) {
 	console.log("GET LEADERBOARD");
 	var leaderboard = {
@@ -660,7 +675,7 @@ router.post('/getLeaderboard', async function (req, res) {
 		rating:[]
 	};
 
-	dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}]}, {sort:{experience: -1},limit:100}, async function(err, dbRes){
+	dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*|scorekeeper/}}]}, {sort:{experience: -1},limit:100}, async function(err, dbRes){
 		if (dbRes && dbRes[0]){
 			for (var i = 0; i < dbRes.length; i++){
 				if (dbRes[i].USERNAME){
@@ -674,7 +689,7 @@ router.post('/getLeaderboard', async function (req, res) {
 			}
 		}
 
-		dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*/}}, {"rating":{$ne:310}} ] }, {sort:{rating: -1},limit:100}, async function(err, ratingRes){
+		dataAccess.dbFindOptionsAwait("RW_USER", {$and:[{"USERNAME":{$exists:true}}, {"USERNAME":{$not:/^testuser.*|scorekeeper/}}, {"rating":{$ne:310}} ] }, {sort:{rating: -1},limit:100}, async function(err, ratingRes){
 			if (ratingRes && ratingRes[0]){
 				for (var i = 0; i < ratingRes.length; i++){
 					if (ratingRes[i].USERNAME){
@@ -747,14 +762,18 @@ router.post('/updateUsername', async function (req, res) {
 	logg("Updating username for sub " + updateCognitoSub + ". New username: " + updateNewUsername);
 	
 	var goodToUpdateUsername = false;
+	var errorMsg = "Error while updating username. Please try again.";
 	try {
 		dataAccess.dbFindAwait("RW_USER", {USERNAME:updateNewUsername}, function(err,result){
 			if (result && result[0]){
 				if (allowDuplicateUsername){
 					goodToUpdateUsername = true;
 				} else {
-					res.send({error:"Another user with that username already exists. Please choose another username."});
+					errorMsg = "Another user with that username already exists. Please choose another username.";
 				}
+			}
+			else if(!isValid(updateNewUsername)){
+				goodToUpdateUsername = false;
 			}
 			else {
 				goodToUpdateUsername = true;
@@ -764,13 +783,19 @@ router.post('/updateUsername', async function (req, res) {
 					res.send({msg:"Updated username to " + updateNewUsername});
 				});			
 			}
+			else {
+				res.send({error:errorMsg});
+			}
 		});
 	}
 	catch(e) {
-		res.send({error:"Error while updating username. Please try again."});
+		res.send({error:errorMsg});
 	}
 });
 
+function isValid(str){
+	return /^[0-9a-zA-Z_.-]+$/g.test(str);
+}
 
 router.post('/logOut', async function (req, res) {
 	log("Logging out user");

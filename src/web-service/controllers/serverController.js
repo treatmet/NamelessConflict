@@ -150,14 +150,8 @@ var getJoinableServer = function(options, cb){
 				
 					////////////////////RULES////////////////////////////////					
 					var team = -1;
-					//Server full dis-qualifier
-					var currentActualPlayers = 0;
-					for (var u in serv[i].currentUsers){
-						if (serv[i].currentUsers[u].team){
-							currentActualPlayers++;
-						}
-					}
 
+					//Server full dis-qualifier
 					if (getCurrentPlayersFromUsers(serv[i].currentUsers).length + options.party.length > serv[i].maxPlayers){						
 						console.log("SHOULD BE SPECTATING TEAM!1" + allowFullGameSpectating);
 						logg("SERVER (" + serv[i].url + ") is too full for " + options.party.length + " more. We got " + getCurrentPlayersFromUsers(serv[i].currentUsers) + " already.");

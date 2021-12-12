@@ -272,7 +272,7 @@ function compareKills(a,b) {
 
 
   //abandoningCognitoSubs
-function calculateEndgameStats(){ //calculate endgame calculate ranking calculatePostgameStats
+function calculateEndgameStats(){ //calculate endgame calculate ranking calculatePostgameStats calculate postgame
 	logg("---CALCULATING ENDGAME STATS!---");
 	var eligiblePlayerList = player.getEligiblePlayerList();
 	if (gametype == "ffa"){
@@ -390,7 +390,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 				console.log("FFA! Time elapsed is " + timeElapsed + ". So time required to play is " + timeInGameRankingThresh);
 			}
 			log("player.timeInGame: " + player.timeInGame + " have they played longer than " + timeInGameRankingThresh);
-			if ((player.timeInGame < timeInGameRankingThresh) || customServer){
+			if ((player.timeInGame < timeInGameRankingThresh && !isLocal) || customServer){
 				logg("Player ineligible for rank influence this game");
 				ptsGained = 0;				
 			}
@@ -399,9 +399,10 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 			//Thursday Bonus!
 			dt = new Date();
 			if (dt.getDay() == 4 && dt.getHours() > 12){
-				player.updatePropAndSend("cashEarnedThisGame", player.cashEarnedThisGame * 2)
-			}
-		
+				if (player && typeof player.updatePropAndSend != 'undefined'){
+					player.updatePropAndSend("cashEarnedThisGame", player.cashEarnedThisGame * 2);
+				}
+			}	
 			
 			if (customServer){
 				player.cashEarnedThisGame =  Math.round(player.cashEarnedThisGame/2);
@@ -436,8 +437,12 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 
 			var updateParams = {};
 			if (socket){
+				if (player.experience < 1000000 && player.cashEarnedThisGame + player.experience >= 1000000){
+					//Award millionaire icon
+				}
 				updateParams = {kills:player.kills, assists:player.assists, deaths:player.deaths, captures:player.captures, steals:player.steals, returns:player.returns, cash: player.cashEarnedThisGame, experience: player.cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
 				socket.emit('endGameProgressResults', endGameProgressResults);
+
 			}
 			else if ((player.timeInGame < timeInGameRankingThresh) && !customServer){
 				updateParams = {gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
@@ -1479,7 +1484,7 @@ var updatePlayersRatingAndExpFromDB = function(playerList, cb){
 }
 
 var joinGame = function(cognitoSub, username, team, partyId){
-	//if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" && isLocal){dataAccessFunctions.giveUsersItemsByTimestamp();}
+	if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" && isLocal){dataAccessFunctions.giveUsersItemsByTimestamp();}
 
 	log("Attempting to join game..." + cognitoSub);
 

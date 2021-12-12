@@ -49,6 +49,8 @@ function checkViewedProfileIsFriendOrParty(){
 	};
 
 	$.post('/getPlayerRelationship', params, function(data,status){
+        log("/getPlayerRelationship response:");
+        console.log(data);
 		if (data.friends == true){
 			hide("addFriendButton");
             show("removeFriendButton");
@@ -1084,8 +1086,12 @@ function isRank(value){
 		"gold1",
 		"gold2",
 		"gold3",
-		"diamond",
-		"diamond2"
+		"diamond1",
+		"diamond2",
+		"diamond3",
+		"master1",
+		"master2",
+		"master3"
     ];
     
     if (rankings.indexOf(value) > -1){
@@ -1172,29 +1178,7 @@ function removeConfirmationMessage(rarityTextId){
     }    
 }
 
-function secondsToTimer(seconds){
-    var colon = seconds % 2 == 0 ? ":" : " ";
 
-    var hours = Math.floor(seconds / (60 * 60));
-    seconds -= hours * (60 * 60);
-    if (hours < 10){
-        hours = "0" + hours;
-    }
-
-    var minutes = Math.floor(seconds / (60));
-    seconds -= minutes * (60);
-    if (minutes < 10){
-        minutes = "0" + minutes;
-    }
-        
-    if (seconds < 10){
-        seconds = "0" + seconds;
-    }
-
-    var formattedTime = hours + colon + minutes + " " + seconds + "s";
-
-    return formattedTime;
-}
 
 function getRefreshTimerTextHTML(){
     return '<div id="refreshTimerText">⟳ in </div><div id="refreshTimerTimer">' + secondsToTimer(shopRefreshTimer) + '</div>';

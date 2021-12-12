@@ -116,7 +116,7 @@ function buildConversationHTML(conversation){
             if (conversation.active){className += " active"; }
             HTML += '<div class="' + className +'" data-conversationId="' + conversation.id + '" onclick="conversationClick(this)">';
                 var unreadHTML = "";
-                if (conversation.myUnreads){unreadHTML = " | <span style='color:red;'>[" + conversation.myUnreads + " Unread]</span>"; conversation.myUnreads = 0;}
+                if (conversation.myUnreads){unreadHTML = " | <span style='color:red;'>[" + conversation.myUnreads + " Unread]</span>"; if (conversation.active){conversation.myUnreads = 0;}}
                 HTML += '<div class="conversationTitle">' + conversation.partnerUsername + unreadHTML + '</div>';
                 HTML += '<div class="conversationPreview">' + conversation.lastMessagePreview + '</div>'
             HTML + '</div>';    
