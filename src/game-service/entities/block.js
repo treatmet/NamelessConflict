@@ -238,7 +238,7 @@ var checkCollision = function(obj, isBouncable = false){
 				obj.y = blockList[i].warpY;
 				posUpdated = true;
 				if (SOCKET_LIST[obj.id])
-					SOCKET_LIST[obj.id].emit('sfx', "sfxWarp");
+					SOCKET_LIST[obj.id].emit('sfx', "Warp");
 			}
 		}// End check if player is overlapping block
 	}//End blockList loop	

@@ -1769,7 +1769,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						else if ((!player.pressingW && !player.pressingD && !player.pressingS && !player.pressingA) && player.energy > 0){
 							if (!player.cloakEngaged && cloakingEnabled){
 								player.cloakEngaged = true;
-								SOCKET_LIST[player.id].emit('sfx', "sfxCloak");
+								SOCKET_LIST[player.id].emit('sfx', "Cloak");
 							}
 							else if (player.cloakEngaged){
 								player.cloakEngaged = false;
