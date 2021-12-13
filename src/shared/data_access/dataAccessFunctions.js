@@ -436,7 +436,6 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				//customizationOptions.push("gold3_0Icon");
 				//customizationOptions.push("diamond_0Icon");
 				var obj = {
-					rating:310
 					// customizationOptions:customizationOptions
 					// customizations:customizations
 				};
