@@ -436,19 +436,18 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				//customizationOptions.push("gold3_0Icon");
 				//customizationOptions.push("diamond_0Icon");
 				var obj = {
-					rating:310
-					// customizationOptions:customizationOptions
+					customizationOptions:customizationOptions
 					// customizations:customizations
 				};
 
-				// if (!updatey){
-				// 	//console.log("Nothing to update...");
-				// 	continue;
-				// }
-				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
-				// 	//console.log("SAFETYS ON");
-				// 	continue;
-				// }
+				if (!updatey){
+					//console.log("Nothing to update...");
+					continue;
+				}
+				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+					//console.log("SAFETYS ON");
+					continue;
+				}
 				// if (resy[k]._id == "60776761f660555073ed3168"){ //Get User
 				// 	console.log("UPDATE!!!!!!!!!!!!!!!");
 				// 	delete resy[k]._id;
@@ -738,11 +737,11 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 
 			//manual hardcode hard code shop
 			if (isLocal){
-				shopList[0] = "bronze02Boost";
-				shopList[1] = "silver02Boost";
-				shopList[2] = "gold02Boost";
-				shopList[3] = "diamond02Boost";
-				shopList[4] = "greenBowHat";
+				shopList[0] = "03Boost";
+				shopList[1] = "03Hat";
+				shopList[2] = "03Icon";
+				// shopList[3] = "diamond02Boost";
+				// shopList[4] = "greenBowHat";
 			}
 			var clientShopList = transformToClientShop(shopList, nextMidnight);
 

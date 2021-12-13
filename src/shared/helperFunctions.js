@@ -59,6 +59,21 @@ global.removeCognitoSubFromArray = function(incomingUsers, cognitoSub){
 	
 	return updatedIncomingUsers;
 }
+
+
+global.removeDuplicatesFromArray = function(array){ //remove duplicates
+	var updatedArray = [];
+	
+	for (var u = 0; u < array.length; u++){
+		if (updatedArray.indexOf(array[u]) == -1){
+			updatedArray.push(array[u]);
+		}
+	}
+	
+	return updatedArray;
+}
+
+
 global.getSocketIdFromCognitoSub = function(cognitoSub){ //byCognitoSub
 	for(var s in SOCKET_LIST){
 		if (SOCKET_LIST[s].cognitoSub == cognitoSub){

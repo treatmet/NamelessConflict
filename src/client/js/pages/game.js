@@ -566,6 +566,8 @@ Img.boostGold2 = new Image();
 Img.boostGold2.src = "/src/client/img/dynamic/boost/gold02_2.png";
 Img.boostDiamond2 = new Image();
 Img.boostDiamond2.src = "/src/client/img/dynamic/boost/diamond02_2.png";
+Img.boost032 = new Image();
+Img.boost032.src = "/src/client/img/dynamic/boost/03_2.png";
 
 Img.blackPlayerPistol = new Image();
 Img.blackPlayerPistol.src = "/src/client/img/blackPlayerPistolNaked.png";
@@ -1961,7 +1963,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				else if (Player.list[id].customizations[team].boost == "lightning"){
 					playerBoostSfx = sfxBoostLightning;
 				}
-				else if (Player.list[id].customizations[team].boost.indexOf("02") > -1){
+				else if (Player.list[id].customizations[team].boost.indexOf("02") > -1 || Player.list[id].customizations[team].boost == "03"){
 					playerBoostSfx = sfxBoostPowerful;
 				}
 				else if (Player.list[id].customizations[team].boost.indexOf("slime") > -1){
@@ -4256,9 +4258,12 @@ function drawBoosts(){
 				blastDir = Player.list[i].walkingDir;
 			}
 
-			var imgblast = Player.list[i].images[Player.list[i].team].boost;
-			if (typeof imgblast == 'undefined'){ //Load default images if animation frames not yet drawn
+			let imgblast;
+			if (typeof Player.list[i].images[Player.list[i].team] == 'undefined' || typeof Player.list[i].images[Player.list[i].team].boost == 'undefined'){ //Load default images if animation frames not yet drawn
 				imgblast = Img.boostBlast;
+			}
+			else {
+				imgblast = Player.list[i].images[Player.list[i].team].boost;
 			}
             
             ctx.save();
@@ -4299,7 +4304,7 @@ function drawBoosts(){
 						if (blast.alpha >= .8)
 							drawImage(imgblast, (-blast.width/2) * zoom, 10 * zoom, blast.width * zoom, blast.height * zoom);
 					}
-					else if (Player.list[i].customizations[Player.list[i].team].boost == "bronze02" || Player.list[i].customizations[Player.list[i].team].boost == "silver02" || Player.list[i].customizations[Player.list[i].team].boost == "gold02" || Player.list[i].customizations[Player.list[i].team].boost == "diamond02"){
+					else if (Player.list[i].customizations[Player.list[i].team].boost == "bronze02" || Player.list[i].customizations[Player.list[i].team].boost == "silver02" || Player.list[i].customizations[Player.list[i].team].boost == "gold02" || Player.list[i].customizations[Player.list[i].team].boost == "diamond02" || Player.list[i].customizations[Player.list[i].team].boost == "03"){
 						blast.width = 150;
 						blast.alpha += 0.1;
 						if (randomInt(0,1) >= .5){
@@ -4311,6 +4316,8 @@ function drawBoosts(){
 								imgblast = Img.boostGold2;
 							if (Player.list[i].customizations[Player.list[i].team].boost == "diamond02")
 								imgblast = Img.boostDiamond2;
+							if (Player.list[i].customizations[Player.list[i].team].boost == "03")
+								imgblast = Img.boost032;
 						}
 						drawImage(imgblast, (-blast.width/2) * zoom, 10 * zoom, blast.width * zoom, blast.height * zoom);
 					}
@@ -6176,6 +6183,7 @@ var team1Name = "RED";
 var team2Name = "BLUE";
 var noTeamName = "PLAYERS";
 var scoreBoardMargin = 10;
+var statDrillDownPlayer = "";
 
 function drawStatOverlay(){	
 	noShadow();
@@ -6186,22 +6194,27 @@ function drawStatOverlay(){
 
 	if (showStatOverlay == true){
 		chatStale = 0;		
-		
-		//drawImage(Img.statOverlay, scoreBoardX, scoreBoardY);	
-
 		//Black background
 		ctx.fillStyle = "rgba(0, 0, 0, .5)";
 		roundRect(ctx, scoreBoardX, scoreBoardY, scoreBoardWidth, scoreBoardHeight, 5, true, false); //(ctx, x, y, width, height, radius, fill, stroke)
-
 		drawVoteOnLeft();
 		drawRankedIndicator();
-		drawScoreBoardSeparatingLines(teamScoreBoard);
-		drawColumnNames(teamScoreBoard);
-		drawTeamBanners(teamScoreBoard);
-		drawPlayerNamesAndStats(teamScoreBoard);
+		
+		if (statDrillDownPlayer.length > 0){ //Stat drilldown
+			drawStatsDrilldown();
+		}
+		else { //Normal scoreboard
+			drawScoreBoardSeparatingLines(teamScoreBoard);
+			drawColumnNames(teamScoreBoard);
+			drawTeamBanners(teamScoreBoard);
+			drawPlayerNamesAndStats(teamScoreBoard);
+		}
 	}
 }
 
+function drawStatsDrilldown(){
+
+}
 
 function drawVoteOnLeft(){ //Vote Next game
 if (!postGameProgressStopExpTicks || !gameOver){return;}
@@ -6404,15 +6417,12 @@ function drawPlayerName(player, y){
 
 function processPlayerNameHover(hoverPlayerId, y){
 	if (checkIfMouseHovering(y - 21)){
-		drawImage(Img.redLaser, scoreBoardX, y - 21, 300, scoreboardPlayerNameGap);
-		ctx.fillStyle="#FF0000";
+		ctx.globalAlpha = 0.5;
+		ctx.fillRect(scoreBoardX, y - 21, teamBannerWidth, scoreboardPlayerNameGap);
+		ctx.globalAlpha = 1;
+		ctx.fillStyle="#FFFFFF";
 		ctx.textAlign="right";
-		if (mutedPlayerIds.filter(playerId => playerId == hoverPlayerId).length > 0){
-			strokeAndFillText("UNMUTE", scoreBoardX - 5, y);
-		}
-		else if(hoverPlayerId != myPlayer.id){
-			strokeAndFillText("MUTE", scoreBoardX - 5, y);
-		}
+		strokeAndFillText("VIEW STATS", scoreBoardX - 5, y);
 		mouseHoveringPlayerId = hoverPlayerId;
 	}
 	if (mutedPlayerIds.filter(playerId => playerId == hoverPlayerId).length > 0){
@@ -6432,6 +6442,83 @@ function drawLeftIcon(playerId, y){
 		ctx.fillStyle="#AAAAAA";
 	}
 }
+
+var statsPages = ["overview","medals","weapon breakdown"];
+var allPlayersStats = [];
+
+function getAllPlayersStats(){
+	for (var p = 0; p < orderedPlayerList.length; p++){
+		var plyr = orderedPlayerList[p];
+		var playerStats = {
+			main:{},
+			pages:[]
+		};
+
+		//main
+		playerStats.main.cashEarnedThisGame = plyr.cashEarnedThisGame;
+		playerStats.medals = [];
+		if (plyr.medals){
+			playerStats.medals = removeDuplicatesFromArray(plyr.medals);
+		}
+
+		//pages
+		for (var p = 0; p < statsPages.length; p++){
+			var stats = [];
+			switch (statsPages[i]){
+				case "overview":
+					stats.push({name:"kills", value:plyr.kills});
+					stats.push({name:"deaths", value:plyr.deaths});
+					stats.push({name:"assists", value:plyr.assists});
+					var kda = plyr.kills - plyr.deaths + (plyr.assists/2);
+					stats.push({name:"kda", value:kda});
+					if (plyr.damageDealt)
+						stats.push({name:"damage dealt", value:plyr.damageDealt});
+					if (plyr.damageRecieved)
+						stats.push({name:"damage recieved", value:plyr.damageRecieved});
+					if (plyr.highestKillstreak)
+						stats.push({name:"highest killstreak", value:plyr.highestKillstreak});
+					if (plyr.betrayals)
+						stats.push({name:"betrayals", value:plyr.betrayals});
+					break;
+				case "medals":
+					break;
+				case "weapon breakdown":
+					break;
+				default:
+					break;
+			}
+			playerStats.pages.push({name:statsPages[i], stats:stats});
+
+	
+		}
+
+
+		allPlayersStats.push(playerStats);
+	}	
+
+}
+
+function getPlayerStatsDrilldown(playerId){
+
+	var plyr = Player.list[playerId];
+
+	playerStats.kills = plyr.kills;
+
+}
+
+var removeDuplicatesFromArray = function(array){ //remove duplicates
+	var updatedArray = [];
+	
+	for (var u = 0; u < array.length; u++){
+		if (updatedArray.indexOf(array[u]) == -1){
+			updatedArray.push(array[u]);
+		}
+	}
+	
+	return updatedArray;
+}
+
+
 var team1 = [];
 var team2 = [];		
 function sortPlayers(isTeamGame){
@@ -8778,8 +8865,14 @@ function removeItemAll(arr, value) {
 
 logg("game.js loaded");
 
-
-
+function muteUnmutePlayer(mutingPlayer){
+	if (mutedPlayerIds.filter(playerId => playerId == mutingPlayer).length > 0){
+		removeItemAll(mutedPlayerIds, mutingPlayer); //unmute
+	}
+	else if (mutingPlayer != myPlayer.id){
+		mutedPlayerIds.push(mutingPlayer); //mute
+	}
+}
 //////////MODS///////////////
 
 //Frog's Mouse Mod
@@ -8794,14 +8887,9 @@ var release=(c)=>{
 };
 
 var mouseDown = 0;
-document.onmousedown=(etx)=>{
+document.onmousedown=(etx)=>{ //mouse click mouseClick
 	if (mouseHoveringPlayerId != 0){
-		if (mutedPlayerIds.filter(playerId => playerId == mouseHoveringPlayerId).length > 0){
-			removeItemAll(mutedPlayerIds, mouseHoveringPlayerId); //unmute
-		}
-		else if (mouseHoveringPlayerId != myPlayer.id){
-			mutedPlayerIds.push(mouseHoveringPlayerId); //mute
-		}
+		showStatsDrilldown(mouseHoveringPlayerId);
 	}
 	else if (chatInput.style.display == "none"){
 		if (etx.button == 0) mouseDown = 1;

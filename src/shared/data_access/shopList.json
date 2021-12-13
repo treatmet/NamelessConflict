@@ -308,6 +308,16 @@
 		"team":0,
 		"rarity":2,
 		"canvasValue":"googlyHat"
+	},	{
+		"id":"03Hat",
+        "category":"hat",
+		"subCategory":"type",
+		"title":"Season Zero-3 Bandana",
+		"text":"Show your gang colors. All of them!",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"season03Hat"
 	},
 	{
 		"id":"batWingsHat",
@@ -892,6 +902,16 @@
 		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"#dfdfdf"
+	},		{
+		"id":"whiteShirtColor12",
+        "category":"shirt",
+		"subCategory":"color",
+		"title":"Giggity",
+		"text":"#b00b69",
+		"price": 0,
+		"team":1,
+		"rarity":4,
+		"canvasValue":"#b00b69"
 	},	
 	{
 		"id":"noSleevesShirtType",
@@ -1336,6 +1356,16 @@
 		"rarity":3,
 		"hideFromShop":true,
 		"canvasValue":"diamond02"
+	},		{
+		"id":"03Boost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Season Zero-3 Boost",
+		"text":"Boost your way into Season Zero-3! You were here!",
+		"price": 0,
+		"team":0,
+		"rarity":2,
+		"canvasValue":"03"
 	},	
 	{
 		"id":"whiteName",
@@ -1910,6 +1940,16 @@
 		"team":0,
 		"rarity":1,
 		"canvasValue":"bitcoin"
+	},		{
+		"id":"03Icon",
+        "category":"icon",
+		"subCategory":"type",
+		"title":"Season Zero-3 Icon",
+		"text":"Psychedelic",
+		"price": 0,
+		"team":0,
+		"rarity":3,
+		"canvasValue":"03"
 	},	
 	{
 		"id":"defaultPistolWeapon",
