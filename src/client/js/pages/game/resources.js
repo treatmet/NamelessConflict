@@ -119,6 +119,8 @@ Img.boostGold2 = new Image();
 Img.boostGold2.src = "/src/client/img/dynamic/boost/gold02_2.png";
 Img.boostDiamond2 = new Image();
 Img.boostDiamond2.src = "/src/client/img/dynamic/boost/diamond02_2.png";
+Img.boost032 = new Image();
+Img.boost032.src = "/src/client/img/dynamic/boost/03_2.png";
 
 Img.blackPlayerPistol = new Image();
 Img.blackPlayerPistol.src = "/src/client/img/blackPlayerPistolNaked.png";
