@@ -436,7 +436,7 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				//customizationOptions.push("gold3_0Icon");
 				//customizationOptions.push("diamond_0Icon");
 				var obj = {
-					rating:310
+					//rating:310
 					// customizationOptions:customizationOptions
 					// customizations:customizations
 				};
@@ -445,10 +445,10 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				// 	//console.log("Nothing to update...");
 				// 	continue;
 				// }
-				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
-				// 	//console.log("SAFETYS ON");
-				// 	continue;
-				// }
+				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+					//console.log("SAFETYS ON");
+					continue;
+				}
 				// if (resy[k]._id == "60776761f660555073ed3168"){ //Get User
 				// 	console.log("UPDATE!!!!!!!!!!!!!!!");
 				// 	delete resy[k]._id;
