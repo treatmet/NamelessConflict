@@ -15,7 +15,7 @@ if (config["obfuscate"] || !isLocal) {
               obfuscated_code[file] = obfuscator.obfuscate(
                 String(fs.readFileSync(file)),
                 config.ObfuscationOptions || {
-                    compact: false,
+                    compact: true,
                     controlFlowFlattening: true,
                     controlFlowFlatteningThreshold: 1,
                     numbersToExpressions: true,
