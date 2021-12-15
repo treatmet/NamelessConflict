@@ -5661,7 +5661,7 @@ var team1Name = "RED";
 var team2Name = "BLUE";
 var noTeamName = "PLAYERS";
 var scoreBoardMargin = 10;
-var statDrillDownPlayer = "";
+
 
 function drawStatOverlay(){	
 	noShadow();
@@ -5678,8 +5678,8 @@ function drawStatOverlay(){
 		drawVoteOnLeft();
 		drawRankedIndicator();
 		
-		if (statDrillDownPlayer.length > 0){ //Stat drilldown
-			drawStatsDrilldown();
+		if (statDrillDownPlayer != 0){ //Stat drilldown
+			drawStatsDrilldown(ctx);
 		}
 		else { //Normal scoreboard
 			drawScoreBoardSeparatingLines(teamScoreBoard);
@@ -5690,9 +5690,6 @@ function drawStatOverlay(){
 	}
 }
 
-function drawStatsDrilldown(){
-
-}
 
 function drawVoteOnLeft(){ //Vote Next game
 if (!postGameProgressStopExpTicks || !gameOver){return;}
@@ -5922,9 +5919,11 @@ function drawLeftIcon(playerId, y){
 }
 
 var statsPages = ["overview","medals","weapon breakdown"];
-var allPlayersStats = [];
+var allPlayersStats = {};
+var statDrillDownPlayer = 0;
 
 function getAllPlayersStats(){
+	updateOrderedPlayerList();
 	for (var p = 0; p < orderedPlayerList.length; p++){
 		var plyr = orderedPlayerList[p];
 		var playerStats = {
@@ -5934,6 +5933,8 @@ function getAllPlayersStats(){
 
 		//main
 		playerStats.main.cashEarnedThisGame = plyr.cashEarnedThisGame;
+		playerStats.main.name = plyr.name;
+		playerStats.main.team = plyr.team;
 		playerStats.medals = [];
 		if (plyr.medals){
 			playerStats.medals = removeDuplicatesFromArray(plyr.medals);
@@ -5959,29 +5960,123 @@ function getAllPlayersStats(){
 						stats.push({name:"betrayals", value:plyr.betrayals});
 					break;
 				case "medals":
+					if (plyr.medals){
+						for (var m = 0; m < plyr.medals; m++) {
+							var stackedMedal = stats.find(medal => medal == plyr.medals[p]);
+							if (stackedMedal){
+								stackedMedal.value++;
+							}
+							else {
+								stats.push({name:plyr.medals[p], value:1});
+							}
+						}
+					}
 					break;
 				case "weapon breakdown":
+					if (plyr.pistolKills)
+						stats.push({name:"pistol kills", value:plyr.pistolKills});
+					if (plyr.dpKills)
+						stats.push({name:"dual pistol kills", value:plyr.dpKills});
+					if (plyr.mgKills)
+						stats.push({name:"machine gun kills", value:plyr.mgKills});
+					if (plyr.sgKills)
+						stats.push({name:"shotgun kills", value:plyr.sgKills});
+					if (plyr.laserKills)
+						stats.push({name:"laser kills", value:plyr.laserKills});
+					if (plyr.meleeKills)
+						stats.push({name:"melee kills", value:plyr.meleeKills});
+					if (plyr.grenadeKills)
+						stats.push({name:"grenade kills", value:plyr.grenadeKills});
 					break;
 				default:
 					break;
 			}
 			playerStats.pages.push({name:statsPages[i], stats:stats});
-
-	
 		}
 
 
-		allPlayersStats.push(playerStats);
+		allPlayersStats[plyr.id] = playerStats;
 	}	
 
 }
 
+const leftPaneLeftEdge = 40;
+const marginTop = 10;
+const playerIconSquareHeight = 120;
+const playerIconSquareWidth = 150;
+const playerIconZoom = 1.5;
+const playerIconMarginTop = 25;
+const cashEarnedTitleMargin = 50;
+const cashEarnedMargin = 35;
+const medalsEarnedTitleMargin = 50;
+const medalsEarnedMargin = 40;
+
+const rightPaneWidth = 500;
+const leftRightArrowDist = 100;
+const statSquaresMargin = 10;
+const statSquareWidth = 80;
+const statSquareHeight = 60;
+const statSquareTitleMargin = 5;
+const statSquareTitleHeight = 20;
+const statSquareTitleTextMargin = 5;
+const statSquareValueMargin = 20;
+
+function drawStatsDrilldown(sCtx){
+	var playa = Player.list[statDrillDownPlayer];
+
+	if (allPlayersStats[statDrillDownPlayer]){
+		sCtx.save();
+		sCtx.translate(scoreBoardX, scoreBoardY);
+			var centerX = (leftPaneLeftEdge + (leftPaneLeftEdge+playerIconSquareWidth))/2;
+			sCtx.textAlign="center";
+
+			//Boxes
+			sCtx.fillStyle = "black";
+			sCtx.strokeStyle = "white";
+			sCtx.lineWidth = 2;
+			sCtx.globalAlpha = 0.5;
+			sCtx.fillRect(leftPaneLeftEdge, marginTop, playerIconSquareWidth, playerIconSquareWidth);
+			sCtx.strokeRect(leftPaneLeftEdge, marginTop, playerIconSquareWidth, playerIconSquareWidth);
+
+
+			sCtx.globalAlpha = 1;
+
+			var imagePlayer = Img.whitePlayerPistol;
+			try {
+				imagePlayer = playa.images[playa.team].pistol;
+			}
+			catch(e) {
+				imagePlayer = Img.whitePlayerPistol;
+				if (allPlayersStats[statDrillDownPlayer].team == 2){imagePlayer = Img.blackPlayerPistol;}
+			}
+			if (imagePlayer){
+				sCtx.drawImage(imagePlayer, centerX - (imagePlayer.width * playerIconZoom)/2, marginTop + playerIconMarginTop, imagePlayer.width * playerIconZoom, imagePlayer.height * playerIconZoom);
+			}
+
+			//Name
+			sCtx.fillStyle="#FFFFFF";
+			drawName(sCtx, allPlayersStats[statDrillDownPlayer].main.name, "white", centerX, marginTop + 22, false, false, '18px Electrolize');
+
+			//Cash earned
+			sCtx.font = '26px Bebas Neue'
+			var ySum = marginTop + playerIconMarginTop + playerIconSquareHeight + cashEarnedTitleMargin;
+			sCtx.fillText("cash earned", centerX, ySum);
+			ctx.beginPath();
+			sCtx.moveTo(leftPaneLeftEdge+10, ySum + 4);
+			sCtx.lineTo(leftPaneLeftEdge+playerIconSquareWidth-10, ySum + 4);
+			sCtx.stroke();
+
+			sCtx.font = '26px Electrolize';
+			sCtx.fillStyle="#19BE44";
+			sCtx.fillText(getCashFormat(allPlayersStats[statDrillDownPlayer].main.cashEarnedThisGame), centerX, ySum + cashEarnedMargin);
+			
+
+
+		sCtx.restore();
+	}
+}
+
 function getPlayerStatsDrilldown(playerId){
-
-	var plyr = Player.list[playerId];
-
-	playerStats.kills = plyr.kills;
-
 }
 
 var removeDuplicatesFromArray = function(array){ //remove duplicates
@@ -7866,6 +7961,8 @@ document.onkeydown = function(event){
 			}
 			else if (showStatOverlay == true){
 				showStatOverlay = false;
+				statDrillDownPlayer = 0;
+				mouseHoveringPlayerId = 0;
 			}	
 			shop.active = false;
 		}
@@ -8084,7 +8181,7 @@ function drawRect(x, y, width, height, strokeWidth = 0, strokeColor = "black"){
 	}
 }
 
-function drawGrid(){
+function drawGrid(){ //draw lines drawLine
 	ctx.beginPath();
 	for (var x = 0; x <= mapWidth*zoom; x += 75*zoom) { //Draw Vertial (Y) lines
 		if (x-cameraX < 0 || x-cameraX > canvasWidth){continue;}
@@ -8367,13 +8464,15 @@ var release=(c)=>{
 var mouseDown = 0;
 document.onmousedown=(etx)=>{ //mouse click mouseClick
 	if (mouseHoveringPlayerId != 0){
-		showStatsDrilldown(mouseHoveringPlayerId);
+		getAllPlayersStats();
+		statDrillDownPlayer = mouseHoveringPlayerId;
 	}
 	else if (chatInput.style.display == "none"){
 		if (etx.button == 0) mouseDown = 1;
 		else mouseDown = 0;
 	}
 }
+
 document.onmouseup=(etx)=>{
     mouseDown = 0;
 }

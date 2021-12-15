@@ -1471,6 +1471,11 @@ table.keybindingConfigTable td.keybindingUnclickableCell {
     src: url("/src/client/style/vermin_vibes.ttf");
 } */
 
+@font-face {
+    font-family: 'KulminoituvaRegular';
+    src: url('http://www.miketaylr.com/f/kulminoituva.ttf');
+}
+
 div#chat-window {
     text-align: left;
     -webkit-user-select: none; /* Safari */        

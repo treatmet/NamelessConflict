@@ -737,9 +737,9 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 
 			//manual hardcode hard code shop
 			if (isLocal){
-				shopList[0] = "03Boost";
-				shopList[1] = "03Hat";
-				shopList[2] = "03Icon";
+				// shopList[0] = "03Boost";
+				// shopList[1] = "03Hat";
+				// shopList[2] = "03Icon";
 				// shopList[3] = "diamond02Boost";
 				// shopList[4] = "greenBowHat";
 			}

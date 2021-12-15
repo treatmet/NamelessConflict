@@ -1148,10 +1148,15 @@ var hexDigits = new Array
         ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); 
 
 
-function drawName(drawingCanvas, playerUsername, color, x, y, icon = false, stroke = false){
+function drawName(drawingCanvas, playerUsername, color, x, y, icon = false, stroke = false, font = false){
 	drawingCanvas.save();
-        drawingCanvas.textAlign="center";
-        drawingCanvas.font = 'bold 12px Electrolize';        
+		drawingCanvas.textAlign="center";
+		if (font){
+			drawingCanvas.font = font;        
+		}
+		else {
+			drawingCanvas.font = 'bold 12px Electrolize';        
+		}
 		drawingCanvas.fillStyle = color;
 		drawingCanvas.shadowColor = "#FFFFFF";
 		drawingCanvas.shadowOffsetX = 0; 
