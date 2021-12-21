@@ -22,25 +22,29 @@ global.pcMode = 2; //1 = no, 2= yes
 
 //Cash Values for Events
 global.killCash = 100;
-global.doubleKillCash = 200;
-global.tripleKillCash = 300;
-global.quadKillCash = 400;
+global.doubleKillCash = 100;
+global.tripleKillCash = 200;
+global.quadKillCash = 300;
 global.spreeCash = 250;
 global.frenzyCash = 500;
 global.rampageCash = 750;
 global.unbelievableCash = 1000;
 global.assistCash = 50;
 global.thugCash = 25;
-global.assassinationCash = 150;
 global.stealCash = 50;
 global.captureCash= 300;
 global.killEnemyBagHolder = 150;
 global.returnCash = 100;
+global.snipeCash = 50;
+global.assassinationCash = 100;
+global.lastLaughCash = 50;
+
 global.winCash = 1000;
 global.loseCash = 100;
 global.mvpCash = 300;
 global.hitCash = 5;
 global.elimDeathCash = 50;
+
 global.multikillTimer = 4.5 * 60;
 global.startingCash = 50;
 

@@ -717,15 +717,14 @@ function logOutClick(){
 
 function showLocalElements(){
   $(document).ready(function() {
-    if (window.location.href.indexOf("localhost") > -1) {
+    if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" && window.location.href.indexOf("localhost") > -1) {
       showUnset("localPlayNow");
     }
   });
 }
 
 function localClick(){
-
-
+	socket.emit('test', cognitoSub);
 }
 
 function showDefaultLoginButtons(){
@@ -995,11 +994,6 @@ function submitPlayerSearch(e){ //Used in header as well
 		return;		
 	}
 	window.location.href = serverHomePage + "search/" + e.target.elements[0].value;
-}
-
-function localPlayNowClick(){
-	socket.emit('test', "123456");
-	//window.location.href = '/?join=true';
 }
 
 function show(element){

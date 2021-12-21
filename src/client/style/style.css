@@ -483,6 +483,12 @@ a.socialLink:hover {
     border: solid 1px white;
 }
 
+div#roadmapDiv {
+    font-size: 23px;
+    background-color: #324b5b;
+}
+
+
 .bannerImage {
     width:100%;
 }

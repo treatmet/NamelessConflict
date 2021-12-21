@@ -857,18 +857,19 @@ Pickup.list = [];
 
 
 //-----------------------------POINTS NOTIFICATION-------------------------------
-var Notification = function(notificationText,playerId){
+var Notification = function(notificationText,playerId,medal = false){
 	var self = {
 		id:Math.random(),
 		playerId:playerId,
 		text:notificationText,
+		medal:medal,
 		age:0,
 		yOffset:0,
 	}
 	//Check for other notifications, update yOffset accordingly.
 	for (var n in Notification.list){
-		if (Notification.list[n].playerId == playerId && Notification.list[n].age < 10){
-			self.yOffset +=25;
+		if (Notification.list[n].playerId == playerId){
+			Notification.list[n].yOffset +=30;
 		}		
 	}
 		
@@ -1047,6 +1048,10 @@ function clearChat(){
 clearChat();
 chatText.innerHTML = '<div class="chatElement" style="font-weight:600">Welcome to SocketShot!</div>';
 
+var cashAwardedOnscreen = 0;
+var cashAwardedOnscreenAge = 0;
+var cashAwardedOnscreenAgeMax = 200;
+
 socket.on('evalAnswer', function(data){
 	if (data)
 		logg(data);	
@@ -1153,6 +1158,16 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 				}
 			}
 		}
+
+		//Achievement cash addition
+		if (playerDataPack[i].property == "cashEarnedThisGame" && playerDataPack[i].id == myPlayer.id){
+			var netGain = playerDataPack[i].value - Player.list[playerDataPack[i].id].cashEarnedThisGame;
+			if (netGain > 20){
+				cashAwardedOnscreen += netGain;
+				cashAwardedOnscreenAge = cashAwardedOnscreenAgeMax;
+			}
+		}
+
 
 		//Laser charging sounds
 		if (playerDataPack[i].property == "chargingLaser"){
@@ -1380,13 +1395,23 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			continue;
 		}
 		
-		var notification = Notification(noteText, notePlayerId);
+		if (notificationPack[i].medal){
+			if (!Player.list[notePlayerId].medals){Player.list[notePlayerId].medals = [];}
+			Player.list[notePlayerId].medals.push(notificationPack[i].medal);
+		}
+
+		Notification(noteText, notePlayerId, notificationPack[i].medal);
 		if (noteText.includes("Stolen") && !mute){
 			if (Player.list[notePlayerId].team == myPlayer.team || myPlayer.team == 0){
 				sfx.StealGood.play();
 			}
 			else {
 				sfx.StealBad.play();
+			}
+		}
+		else if ((noteText.includes("Enemy Killed") || noteText.includes("Assist")) && !mute){
+			if (Player.list[notePlayerId].id == myPlayer.id){
+				sfx.killAchieved.play();
 			}
 		}
 		if (debugUpdates){
@@ -1442,7 +1467,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 					playerBoostSfx = sfx.BoostPowerful;
 				}
 				else if (Player.list[id].customizations[team].boost.indexOf("02") > -1 || Player.list[id].customizations[team].boost == "03"){
-					playerBoostSfx = sfxBoostPowerful;
+					playerBoostSfx = sfx.BoostPowerful;
 				}
 				else if (Player.list[id].customizations[team].boost.indexOf("slime") > -1){
 					playerBoostSfx = sfx.BoostSlime;
@@ -3855,7 +3880,7 @@ function drawSmashes(){
 	ctx.globalAlpha = 1;
 }
 
-function drawNotifications(){	
+function drawNotifications() {
 	for (var n in Notification.list){
 		if (!Player.list[Notification.list[n].playerId]){
 			delete Notification.list[n];
@@ -3864,12 +3889,13 @@ function drawNotifications(){
 		Notification.list[n].age++;
 		
 		var noteY = ((-Img.whitePlayerPistol.height/2 - Notification.list[n].age/1.5 + 25) - Notification.list[n].yOffset);
-	
+		
 		if (Player.list[Notification.list[n].playerId].x * zoom + 47 * zoom + drawDistance > cameraX && Player.list[Notification.list[n].playerId].x * zoom - 47 * zoom - drawDistance < cameraX + canvasWidth && Player.list[Notification.list[n].playerId].y * zoom + 47 * zoom + drawDistance > cameraY && Player.list[Notification.list[n].playerId].y * zoom - 47 * zoom - drawDistance < cameraY + canvasHeight){
 			var noteFontSize = (60 - Notification.list[n].age * 2) * zoom;
 			if (noteFontSize < 20 * zoom){noteFontSize = 20 * zoom;}
 			ctx.save();
-            ctx.globalAlpha = Math.round((1 - ((Notification.list[n].age / 50) - 0.7)) * 100) / 100;
+			var value = Math.round((1 - ((Notification.list[n].age / 50) - 0.7)) * 100) / 100; if (value < 0){value = 0;}
+			ctx.globalAlpha = value;
 			ctx.translate(centerX + Player.list[Notification.list[n].playerId].x * zoom - myPlayer.x * zoom, centerY + Player.list[Notification.list[n].playerId].y * zoom - myPlayer.y  * zoom); //Center camera on controlled player
 				noShadow();
 				ctx.lineWidth=4 * zoom;
@@ -3879,14 +3905,34 @@ function drawNotifications(){
 				if (Notification.list[n].text.includes("**")){ctx.fillStyle="#1583e4"; noteFontSize += 10;}
 				ctx.font = 'bold ' + noteFontSize + 'px Electrolize';
 				strokeAndFillText(Notification.list[n].text,0, noteY * zoom);
+
 			//ctx.translate(-(centerX + Player.list[Notification.list[n].playerId].x * zoom - myPlayer.x * zoom), -(centerY + Player.list[Notification.list[n].playerId].y * zoom - myPlayer.y  * zoom)); //Center camera on controlled player
             ctx.restore();
 		}
-		if (Notification.list[n].age > 84){
-			delete Notification.list[n];
-			continue;
+
+		//Medal & Cash total
+		if (Notification.list[n].playerId == myPlayer.id){
+			if (Notification.list[n].medal && Img[Notification.list[n].medal]){
+				var medalWidth = (200 - Notification.list[n].age * 8) * zoom;
+				if (medalWidth < 75 * zoom){medalWidth = 75 * zoom;}
+				ctx.globalAlpha = 1;
+				drawImage(Img[Notification.list[n].medal], (250 - medalWidth/2), ((canvasHeight/2+50) - (Notification.list[n].yOffset*2) - medalWidth/2) * zoom, medalWidth, medalWidth);
+			}
+			if (Notification.list[n].age > cashAwardedOnscreenAgeMax){
+				delete Notification.list[n];
+				continue;
+			}
 		}
 	}	
+	if (cashAwardedOnscreen > 0){
+		ctx.lineWidth=2;
+		var cashAwardedFontSize = 100 - (cashAwardedOnscreenAgeMax*4 - cashAwardedOnscreenAge*4);
+		if (cashAwardedFontSize < 30){cashAwardedFontSize = 30;}
+		ctx.fillStyle="#19BE44";
+		ctx.textAlign="center";
+		ctx.font = 'bold ' + cashAwardedFontSize + 'px Electrolize';
+		strokeAndFillText("+" + getCashFormat(cashAwardedOnscreen), 250, canvasHeight/2);
+	}
 	normalShadow();
 	ctx.globalAlpha = 1;
 }
@@ -4043,8 +4089,8 @@ function drawShop(){
 		ctx.fillStyle = 'black';
 		ctx.fillRect(50, 0, 564, canvasHeight);
 		drawImage(Img.shopInventory, 124 + teamBlackMarketXOffset, 250 + inventoryYoffset);
-		drawImage(Img.upArrow, 249 + moveArrow + teamBlackMarketXOffset, 175 + inventoryYoffset - shop.purchaseEffectTimer);
-		drawImage(Img.downArrow, 241.5 + teamBlackMarketXOffset, 370 + inventoryYoffset);
+		drawImage(Img.enterPurchase, 249 + moveArrow + teamBlackMarketXOffset, 175 + inventoryYoffset - shop.purchaseEffectTimer);
+		drawImage(Img.escExit, 241.5 + teamBlackMarketXOffset, 370 + inventoryYoffset);
 		drawImage(Img.leftArrow, leftArrowX + teamBlackMarketXOffset, 275 + inventoryYoffset);
 		drawImage(Img.rightArrow, rightArrowX + teamBlackMarketXOffset, 275 + inventoryYoffset);
 
@@ -5924,8 +5970,8 @@ var statDrillDownPlayer = 0;
 
 function getAllPlayersStats(){
 	updateOrderedPlayerList();
-	for (var p = 0; p < orderedPlayerList.length; p++){
-		var plyr = orderedPlayerList[p];
+	for (var o = 0; o < orderedPlayerList.length; o++){
+		var plyr = orderedPlayerList[o];
 		var playerStats = {
 			main:{},
 			pages:[]
@@ -5935,9 +5981,9 @@ function getAllPlayersStats(){
 		playerStats.main.cashEarnedThisGame = plyr.cashEarnedThisGame;
 		playerStats.main.name = plyr.name;
 		playerStats.main.team = plyr.team;
-		playerStats.medals = [];
+		playerStats.main.medals = [];
 		if (plyr.medals){
-			playerStats.medals = removeDuplicatesFromArray(plyr.medals);
+			playerStats.main.medals = removeDuplicatesFromArray(plyr.medals);
 		}
 
 		//pages
@@ -5991,16 +6037,24 @@ function getAllPlayersStats(){
 				default:
 					break;
 			}
-			playerStats.pages.push({name:statsPages[i], stats:stats});
-		}
 
+
+
+			playerStats.pages.push({name:statsPages[i], stats:stats});
+		}//End pages for loop
+
+		console.log("adding player orderedPlayerList.length");
+		var q = o +1;
+		console.log(q + "/" + orderedPlayerList.length);
+		console.log("plyr.id");
+		console.log(plyr.id);
 
 		allPlayersStats[plyr.id] = playerStats;
-	}	
+	}//End player for loop
 
 }
 
-const leftPaneLeftEdge = 40;
+const leftPaneLeftEdge = 50;
 const marginTop = 10;
 const playerIconSquareHeight = 120;
 const playerIconSquareWidth = 150;
@@ -6008,10 +6062,12 @@ const playerIconZoom = 1.5;
 const playerIconMarginTop = 25;
 const cashEarnedTitleMargin = 50;
 const cashEarnedMargin = 35;
-const medalsEarnedTitleMargin = 50;
-const medalsEarnedMargin = 40;
+const medalsEarnedTitleMargin = 70;
+const medalsEarnedMargin = 20;
+const mainMedalsScale = 0.5;
+const arrowsScale = 1;
 
-const rightPaneWidth = 500;
+const rightPaneWidth = 590;
 const leftRightArrowDist = 100;
 const statSquaresMargin = 10;
 const statSquareWidth = 80;
@@ -6037,6 +6093,17 @@ function drawStatsDrilldown(sCtx){
 			sCtx.globalAlpha = 0.5;
 			sCtx.fillRect(leftPaneLeftEdge, marginTop, playerIconSquareWidth, playerIconSquareWidth);
 			sCtx.strokeRect(leftPaneLeftEdge, marginTop, playerIconSquareWidth, playerIconSquareWidth);
+			sCtx.fillRect(leftPaneLeftEdge + playerIconSquareWidth + leftPaneLeftEdge, 0, rightPaneWidth, scoreBoardHeight);
+
+			ctx.beginPath();
+			sCtx.moveTo(leftPaneLeftEdge + playerIconSquareWidth + leftPaneLeftEdge, 0);
+			sCtx.lineTo(leftPaneLeftEdge+playerIconSquareWidth + leftPaneLeftEdge, scoreBoardHeight);
+			sCtx.stroke();
+			ctx.beginPath();
+			sCtx.moveTo(leftPaneLeftEdge + playerIconSquareWidth + leftPaneLeftEdge + rightPaneWidth, 0);
+			sCtx.lineTo(leftPaneLeftEdge + playerIconSquareWidth + leftPaneLeftEdge + rightPaneWidth, scoreBoardHeight);
+			sCtx.stroke();
+
 
 
 			sCtx.globalAlpha = 1;
@@ -6052,10 +6119,14 @@ function drawStatsDrilldown(sCtx){
 			if (imagePlayer){
 				sCtx.drawImage(imagePlayer, centerX - (imagePlayer.width * playerIconZoom)/2, marginTop + playerIconMarginTop, imagePlayer.width * playerIconZoom, imagePlayer.height * playerIconZoom);
 			}
-
 			//Name
 			sCtx.fillStyle="#FFFFFF";
 			drawName(sCtx, allPlayersStats[statDrillDownPlayer].main.name, "white", centerX, marginTop + 22, false, false, '18px Electrolize');
+			//Updown arrows
+			sCtx.drawImage(Img.upArrow, 3, marginTop, Img.upArrow.width * arrowsScale, Img.upArrow.height * arrowsScale);
+			sCtx.drawImage(Img.downArrow, 3, marginTop + (Img.upArrow.height*arrowsScale), Img.downArrow.width * arrowsScale, Img.downArrow.height * arrowsScale);
+			sCtx.drawImage(Img.muteButton, leftPaneLeftEdge + playerIconSquareWidth + 4, marginTop, Img.muteButton.width * arrowsScale, Img.muteButton.height * arrowsScale);
+			
 
 			//Cash earned
 			sCtx.font = '26px Bebas Neue'
@@ -6066,10 +6137,33 @@ function drawStatsDrilldown(sCtx){
 			sCtx.lineTo(leftPaneLeftEdge+playerIconSquareWidth-10, ySum + 4);
 			sCtx.stroke();
 
-			sCtx.font = '26px Electrolize';
+			sCtx.font = '28px Electrolize';
 			sCtx.fillStyle="#19BE44";
 			sCtx.fillText(getCashFormat(allPlayersStats[statDrillDownPlayer].main.cashEarnedThisGame), centerX, ySum + cashEarnedMargin);
 			
+			//Medals
+			sCtx.fillStyle="#FFFFFF";
+			sCtx.font = '26px Bebas Neue'
+			sCtx.fillText("medals earned", centerX, ySum + cashEarnedMargin + medalsEarnedTitleMargin);
+			ctx.beginPath();
+			sCtx.moveTo(leftPaneLeftEdge+10, ySum + cashEarnedMargin + medalsEarnedTitleMargin + 4);
+			sCtx.lineTo(leftPaneLeftEdge+playerIconSquareWidth-10, ySum + cashEarnedMargin + medalsEarnedTitleMargin + 4);
+			sCtx.stroke();
+
+			var medalCount = allPlayersStats[statDrillDownPlayer].main.medals.length;
+			var medalXOffset = 0;
+			if (medalCount == 1){medalXOffset += (Img.doubleKill.width*mainMedalsScale/2)*4;}
+			if (medalCount == 2){medalXOffset += (Img.doubleKill.width*mainMedalsScale/2)*3;}
+			if (medalCount == 3){medalXOffset += (Img.doubleKill.width*mainMedalsScale/2)*2;}
+			if (medalCount == 4){medalXOffset += (Img.doubleKill.width*mainMedalsScale/2)*1;}
+			var medalX = 0;
+			var medalY = 0;
+			for (var m = 0; m < medalCount; m++){
+				sCtx.drawImage(Img[allPlayersStats[statDrillDownPlayer].main.medals[m]], medalXOffset + (medalX*Img.doubleKill.width*mainMedalsScale), ySum + cashEarnedMargin + medalsEarnedTitleMargin + medalsEarnedMargin + medalY, Img.doubleKill.width * mainMedalsScale, Img.doubleKill.height * mainMedalsScale);	
+				medalX++;
+				if (m == 4 || m == 9 || m == 14){medalY += (Img.doubleKill.height * mainMedalsScale); medalX = 0;}
+			}
+
 
 
 		sCtx.restore();
@@ -6077,6 +6171,7 @@ function drawStatsDrilldown(sCtx){
 }
 
 function getPlayerStatsDrilldown(playerId){
+
 }
 
 var removeDuplicatesFromArray = function(array){ //remove duplicates
@@ -6265,6 +6360,13 @@ function timer1Misc(){
 	if (chatSpam > 0)
 		chatSpam--;
 	
+	if (cashAwardedOnscreenAge > 0){
+		cashAwardedOnscreenAge--;
+	}
+	else {
+		cashAwardedOnscreen = 0;
+	}
+
 
 	processDynamicZoom();
 }
@@ -6614,7 +6716,7 @@ explosionExpansionFactor = 50;
 function drawExplosions(){
 	noShadow();
 
-	var expandingExplosionLowGraph = true;
+	var expandingExplosionLowGraph = false;
 
 	for (var e in explosions){
 		if (isObjVisible(explosions[e], true)){
@@ -6643,7 +6745,7 @@ function drawExplosions(){
 
 		if (explosions[e].timer > 0){
 			explosions[e].timer--;
-			//if (reallyLowGraphicsMode){explosions[e].timer--;}
+			if (reallyLowGraphicsMode && !expandingExplosionLowGraph){explosions[e].timer--;}
 		}
 		else {
 			delete explosions[e];
@@ -7991,8 +8093,11 @@ document.onkeydown = function(event){
 			if (gametype == "elim" && !gameOver)
 				shop.active = true;
 			if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" || isLocal){
+				keyPress(85, true);
 				//targetZoom -= zoomRate;
-				totalMessagesRecieved = 0;
+				// totalMessagesRecieved = 0;
+				// Notification("**DOUBLE KILL!!**", myPlayer.id, "doubleKill");
+
 			}
 		}
 	}
