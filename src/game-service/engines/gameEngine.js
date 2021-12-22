@@ -395,7 +395,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 				ptsGained = 0;				
 			}
 
-
+ 
 			//Thursday Bonus!
 			dt = new Date();
 			if (dt.getDay() == 4 && dt.getHours() > 12){
