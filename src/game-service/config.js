@@ -95,7 +95,26 @@ global.framesOfAiming = 60;
 global.boostAmount = 19;
 global.playerMaxSpeed = 5;
 global.playerAcceleration = 1;
-global.diagMovementScale = (2/3);
+
+// TRIGONOMETRY 
+global.dir2radunit = (Math.PI/4);
+global.rad2dir = (rad) => {
+	var value = ((rad + 3*dir2radunit)/dir2radunit) % 9;
+	while (value <= 0) value += 8;
+	return value;
+}
+global.dir2rad = (dir) => {
+	return (dir-3)*dir2radunit;
+}
+
+if (global.dir2rad(global.rad2dir(3)) != 3) {
+	throw Error("Trigonemtry has failed us :'(")
+}
+
+
+
+
+
 global.maxEnergyMultiplier = 1;
 global.rechargeDelayTime = 120; //Double for breaking under zero energy
 global.healDelayTime = 300;
