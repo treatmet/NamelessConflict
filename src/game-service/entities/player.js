@@ -16,6 +16,11 @@ profanity.removeWords([
 profanity.addWords([
 	'5h1t','d1ck','dick','5hit','a55','ass-fucker','assfucker','assfukka','asshole','assholes','asswhole','beastiality','bestiality','bullshit','c0ck','c0cksucker','cawk','chink','clit','clitoris','clits','cock','cock-sucker','cockface','cockhead','cockmunch','cockmuncher','cocks','cocksuck','cocksucked','cocksucker','cocksucking','cocksucks','cocksuka','cocksukka','cok','cokmuncher','coksucka','coon','cox','cum','cummer','cumming','cums','cumshot','cunilingus','cunillingus','cunnilingus','cunt','cuntlick','cuntlicker','cuntlicking','cunts','dog-fucker','dyke','f u c k','f u c k e r','fag','fagging','faggitt','faggot','faggs','fagot','fagots','fags','fannyfucker','fcuk','fcuker','fcuking','felching','fellate','fellatio','fingerfuck','fingerfucked','fingerfucker','fingerfuckers','fingerfucking','fingerfucks','fistfuck','fistfucked','fistfucker','fistfuckers','fistfucking','fistfuckings','fistfucks','fuck','fucka','fucked','fucker','fuckers','fuckhead','fuckheads','fuckin','fucking','fuckings','fuckingshitmotherfucker','fuckme','fucks','fuckwhit','fuckwit','fudge packer','fudgepacker','fuk','fuker','fukker','fukkin','fuks','fukwhit','fukwit','fux','fux0r','f_u_c_k','gangbang','gangbanged','gangbangs','gaysex','goatse','hardcoresex','homo','hore','jack-off','jackoff','jap','jerk-off','jism','jiz','jizm','jizz','kawk','kock','kum','kummer','kumming','kums','kunilingus','labia','m45terbate','ma5terb8','ma5terbate','masochist','master-bate','masterb8','masterbat*','masterbat3','masterbate','masterbation','masterbations','masturbate','mo-fo','mof0','mofo','mothafuck','mothafucka','mothafuckas','mothafuckaz','mothafucked','mothafucker','mothafuckers','mothafuckin','mothafucking','mothafuckings','mothafucks','motherfuck','motherfucked','motherfucker','motherfuckers','motherfuckin','motherfucking','motherfuckings','motherfuckka','motherfucks','muthafecker','muthafuckker','mutherfucker','n1gga','n1gger','nigg3r','nigg4h','nigga','niggah','niggas','niggaz','nigger','niggers','penis','penisfucker','phuck','phuk','phuked','phuking','phukked','phukking','phuks','phuq','pigfucker','pussies','pussy','pussys','retard','rimjaw','rimming','s hit','sh!+','sh!t','sh1t','shi+','shit','shitdick','shite','shited','shitey','shitfuck','shitfull','shithead','shiting','shitings','shits','shitted','shitter','shitters','shitting','shittings','shitty','slut','sluts','smegma','s_h_i_t','titfuck','tittiefucker','titties','tittyfuck','tittywank','titwank','tw4t','twat','twathead','twatty','twunt','twunter','vagina','vulva','whore'
 ])
+
+
+
+
+
 	
 var Player = function(id, cognitoSub, name, team, customizations, settings, partyId){
 	log("Player initializing... cognitoSub=" + cognitoSub + " id:" + id);
@@ -755,46 +760,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			var myNade = grenade.getPlayerNade(self.id);
 			if (myNade){
 				myNade.updatePropAndSend("holdingPlayerId", false);
-				switch (self.shootingDir){
-					case 1:
-						myNade.updatePropAndSend("speedX", self.speedX);
-						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed);
-						break;
-					case 2:
-						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed*(2/3));
-						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed*(2/3));
-						break;
-					case 3:
-						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed);
-						myNade.updatePropAndSend("speedY", self.speedY);
-						break;
-					case 4:
-						myNade.updatePropAndSend("speedX", self.speedX + grenadeThrowSpeed*(2/3));
-						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed*(2/3));
-						break;
-					case 5:
-						myNade.updatePropAndSend("speedX", self.speedX);
-						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed);
-						break;
-					case 6:
-						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed*(2/3));
-						myNade.updatePropAndSend("speedY", self.speedY + grenadeThrowSpeed*(2/3));
-						break;
-					case 7:
-						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed);
-						myNade.updatePropAndSend("speedY", self.speedY);
-						break;
-					case 8:
-						myNade.updatePropAndSend("speedX", self.speedX - grenadeThrowSpeed*(2/3));
-						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed*(2/3));
-						break;
-					default:
-						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed);
-						break;						
-				}
-
-
-
+				let rad = dir2rad(self.shootingDir);
+				myNade.updatePropAndSend("speedX", self.speedX + (Math.cos(rad)*grenadeThrowSpeed));
+				myNade.updatePropAndSend("speedY", self.speedX + (Math.sin(rad)*grenadeThrowSpeed));
 			}
 		}
 	}
@@ -812,15 +780,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	self.releaseGrapple = function(){
 		self.updatePropAndSend("grapple", {});
 		var releaseSpeed = grappleStrength * 2;
-		if (self.walkingDir == 1){self.speedY -= releaseSpeed;}
-		if (self.walkingDir == 2){self.speedY -= releaseSpeed * (2/3); self.speedX += releaseSpeed * (2/3);}
-		if (self.walkingDir == 3){self.speedX += releaseSpeed;}
-		if (self.walkingDir == 4){self.speedY += releaseSpeed * (2/3); self.speedX += releaseSpeed * (2/3);}
-		if (self.walkingDir == 5){self.speedY += releaseSpeed;}
-		if (self.walkingDir == 6){self.speedY += releaseSpeed * (2/3); self.speedX -= releaseSpeed * (2/3);}
-		if (self.walkingDir == 7){self.speedX -= releaseSpeed;}
-		if (self.walkingDir== 8){self.speedY -= releaseSpeed * (2/3); self.speedX -= releaseSpeed * (2/3);}
-
+		var rad = dir2rad(self.walkingDir)
+		
+		self.speedX += cos(rad)*releaseSpeed;
+		self.speedY += sin(rad)*releaseSpeed;
 	}
 
 	self.processGrapple = function(){
@@ -828,14 +791,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		//console.log("x:" + self.x + " y:" + self.y + " Gx:" + self.grapple.x + " Gy:" + self.grapple.y);
 		if (getDistance(self, self.grapple) > grappleLength){self.grapple = {}; console.log("HALT");}
 		if (self.grapple.firing){
-			if (self.grapple.dir == 1){self.grapple.y -= grappleSpeed;}
-			if (self.grapple.dir == 2){self.grapple.y -= grappleSpeed * (2/3); self.grapple.x += grappleSpeed * (2/3);}
-			if (self.grapple.dir == 3){self.grapple.x += grappleSpeed;}
-			if (self.grapple.dir == 4){self.grapple.y += grappleSpeed * (2/3); self.grapple.x += grappleSpeed * (2/3);}
-			if (self.grapple.dir == 5){self.grapple.y += grappleSpeed;}
-			if (self.grapple.dir == 6){self.grapple.y += grappleSpeed * (2/3); self.grapple.x -= grappleSpeed * (2/3);}
-			if (self.grapple.dir == 7){self.grapple.x -= grappleSpeed;}
-			if (self.grapple.dir == 8){self.grapple.y -= grappleSpeed * (2/3); self.grapple.x -= grappleSpeed * (2/3);}
+			var rad = dir2rad(self.grapple.dir);
+			self.grapple.x += cos(rad)*grappleSpeed;
+			self.grapple.y += sin(rad)*grappleSpeed
 			if (block.checkCollision(self.grapple)){
 				self.grapple.firing = false;
 			}	
@@ -949,144 +907,21 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			selfMaxSpeed = selfMaxSpeed * bagDrag;
 		}
 
-
-		if(self.pressingW && !self.pressingS && !self.pressingD && !self.pressingA){
-			const targetSpeedX = 0;
-			const targetSpeedY = -selfMaxSpeed;
-			var incrementX = playerAcceleration * diagMovementScale;
-			var incrementY = playerAcceleration;
-
-			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);
-			if (Math.abs(self.speedX) != 0){
-				incrementY = playerAcceleration * diagMovementScale;
-			}
-			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-
-			if (self.walkingDir != 1){
-				self.walkingDir = 1;
+		let movement = [self.pressingS - self.pressingW, self.pressingD - self.pressingA];
+		if (movement[0] != 0 || movement[1] != 0) {
+			let radians = Math.atan2(movement[0], movement[1]);
+			let direction = rad2dir(radians);
+			if (self.walkingDir != direction){
+				self.walkingDir = direction;
 				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
 			}
-		}
-		else if(self.pressingD && !self.pressingS && !self.pressingW && !self.pressingA){
-			const targetSpeedX = selfMaxSpeed;
-			const targetSpeedY = 0;
-			var incrementX = playerAcceleration;
-			var incrementY = playerAcceleration * diagMovementScale;
-
-			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-			if (Math.abs(self.speedY) != 0){
-				incrementX = playerAcceleration * diagMovementScale;
-			}
-			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);
-
-			if (self.walkingDir != 3){
-				self.walkingDir = 3;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
-		}
-		else if(self.pressingS && !self.pressingA && !self.pressingW && !self.pressingD){
-			const targetSpeedX = 0;
-			const targetSpeedY = selfMaxSpeed;
-			var incrementX = playerAcceleration * diagMovementScale;
-			var incrementY = playerAcceleration;
-
-			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);
-			if (Math.abs(self.speedX) != 0){
-				incrementY = playerAcceleration * diagMovementScale;
-			}
-			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-
-			if (self.walkingDir != 5){
-				self.walkingDir = 5;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
-		}
-		else if(self.pressingA && !self.pressingS && !self.pressingW && !self.pressingD){
-			const targetSpeedX = -selfMaxSpeed;
-			const targetSpeedY = 0;
-			var incrementX = playerAcceleration;
-			var incrementY = playerAcceleration * diagMovementScale;
-
-			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-			if (Math.abs(self.speedY) != 0){
-				incrementX = playerAcceleration * diagMovementScale;
-			}
-			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);
-
-			if (self.walkingDir != 7){
-				self.walkingDir = 7;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
-		} //Diags
-		else if(self.pressingW && self.pressingD){
-			const targetSpeedX = selfMaxSpeed * diagMovementScale;
-			const targetSpeedY = -selfMaxSpeed * diagMovementScale;
-			var incrementX = playerAcceleration * diagMovementScale;
-			var incrementY = playerAcceleration * diagMovementScale;
-			
-			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
-
-			if (self.walkingDir != 2){
-				self.walkingDir = 2;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
-		}
-		else if(self.pressingD && self.pressingS){
-			const targetSpeedX = selfMaxSpeed * diagMovementScale;
-			const targetSpeedY = selfMaxSpeed * diagMovementScale;
-			var incrementX = playerAcceleration * diagMovementScale;
-			var incrementY = playerAcceleration * diagMovementScale;
-			
-			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
-
-			if (self.walkingDir != 4){
-				self.walkingDir = 4;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
-		}
-		else if(self.pressingA && self.pressingS){
-			const targetSpeedX = -selfMaxSpeed * diagMovementScale;
-			const targetSpeedY = selfMaxSpeed * diagMovementScale;
-			var incrementX = playerAcceleration * diagMovementScale;
-			var incrementY = playerAcceleration * diagMovementScale;
-			
-			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
-
-			if (self.walkingDir != 6){
-				self.walkingDir = 6;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
-		}
-		else if(self.pressingW && self.pressingA){
-			const targetSpeedX = -selfMaxSpeed * diagMovementScale;
-			const targetSpeedY = -selfMaxSpeed * diagMovementScale;
-			var incrementX = playerAcceleration * diagMovementScale;
-			var incrementY = playerAcceleration * diagMovementScale;
-			
-			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
-
-			if (self.walkingDir != 8){
-				self.walkingDir = 8;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
-		}
-		else if ((!self.pressingW && !self.pressingA && !self.pressingS && !self.pressingD) || (self.pressingD && self.pressingA) || (self.pressingS && self.pressingW)){
-			const targetSpeedX = 0;
-			const targetSpeedY = 0;
-			var incrementX = playerAcceleration * diagMovementScale;
-			var incrementY = playerAcceleration * diagMovementScale;
-			
-			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, incrementY);
-			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, incrementX);	
-
-			if (self.walkingDir != 0){
-				self.walkingDir = 0;
-				updatePlayerList.push({id:self.id,property:"walkingDir",value:self.walkingDir});
-			}
+			const targetSpeedX = Math.cos(radians)*selfMaxSpeed;
+			const targetSpeedY = Math.sin(radians)*selfMaxSpeed;
+			self.speedX = getSpeedAdjust(self.speedX, targetSpeedX, playerAcceleration); //TODO replace with lerp
+			self.speedY = getSpeedAdjust(self.speedY, targetSpeedY, playerAcceleration); 
+		} else {
+			self.speedX = getSpeedAdjust(self.speedX, 0, playerAcceleration); //TODO replace with lerp
+			self.speedY = getSpeedAdjust(self.speedY, 0, playerAcceleration); 
 		}
 
 
@@ -1104,34 +939,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	self.boost = function(){
 		self.expendEnergy(boostEnergyCost);
 		self.boosting = 1;
-		if(self.walkingDir == 1){
-			self.speedY -= boostAmount;
-		}
-		else if(self.walkingDir == 3){
-			self.speedX += boostAmount;
-		}
-		else if(self.walkingDir == 5){
-			self.speedY += boostAmount;
-		}
-		else if(self.walkingDir == 7){
-			self.speedX -= boostAmount;
-		}
-		else if(self.walkingDir == 2){
-			self.speedX += boostAmount * diagMovementScale;
-			self.speedY -= boostAmount * diagMovementScale;
-		}
-		else if(self.walkingDir == 4){
-			self.speedX += boostAmount * diagMovementScale;
-			self.speedY += boostAmount * diagMovementScale;
-		}
-		else if(self.walkingDir == 6){
-			self.speedX -= boostAmount * diagMovementScale;
-			self.speedY += boostAmount * diagMovementScale;
-		}
-		else if(self.walkingDir == 8){
-			self.speedX -= boostAmount * diagMovementScale;
-			self.speedY -= boostAmount * diagMovementScale;
-		}	
+		let movement = [self.pressingS - self.pressingW, self.pressingD - self.pressingA];
+		let radians = Math.atan2(movement[0], movement[1]);
+		self.speedX += Math.cos(radians)*boostAmount;
+		self.speedY += Math.sin(radians)*boostAmount;
 		if (self.speedX > speedCap)
 			self.speedX = speedCap;
 		else if (self.speedX < -speedCap)

@@ -447,6 +447,20 @@ var suddenDeath = false;
 var healthFlashTimer = 100;
 var mute = false;
 
+const  dir2radunit = (Math.PI/4);
+var rad2dir = (rad) => {
+	var value = ((rad + 3*dir2radunit)/dir2radunit) % 9;
+	while (value <= 0) value += 8;
+	return value;
+}
+var dir2rad = (dir) => {
+	return (dir-3)*dir2radunit;
+}
+
+if (dir2rad(rad2dir(3)) != 3) {
+	throw Error("Trigonemtry has failed us :'(")
+}
+
 
 //-----------------------------PLAYER INITIALIZATION-------------------------------
 var numPlayers = 0;
@@ -2412,6 +2426,8 @@ function drawBlackMarkets(){
 	}
 }
 
+
+
 function drawBodies(){
 	for (var b in Body.list) {
 		var body = Body.list[b];
@@ -2442,35 +2458,9 @@ function drawBodies(){
 		if (body.speed > 0){
 			var subtractPushSpeed = Math.floor(body.speed / 15); 
 			body.speed -= subtractPushSpeed;
-			
-			if (body.direction == 1){
-				body.y -= body.speed; 
-			}
-			if (body.direction == 2){
-				body.x += body.speed * (2/3); 
-				body.y -= body.speed * (2/3); 
-			}
-			if (body.direction == 3){
-				body.x += body.speed; 
-			}
-			if (body.direction == 4){
-				body.x += body.speed * (2/3); 
-				body.y += body.speed * (2/3); 
-			}
-			if (body.direction == 5){
-				body.y += body.speed; 
-			}
-			if (body.direction == 6){
-				body.x -= body.speed * (2/3); 
-				body.y += body.speed * (2/3); 
-			}
-			if (body.direction == 7){
-				body.x -= body.speed; 
-			}
-			if (body.direction == 8){
-				body.x -= body.speed * (2/3); 
-				body.y -= body.speed * (2/3); 
-			}			
+			var rads = dir2rad(body.direction);
+			body.y += Math.sin(rads)*body.speed; 
+			body.x += Math.cos(rads)*body.speed; 
 			if (body.x < 10)
 				body.x = 10;
 			if (body.y < 10)
@@ -6778,14 +6768,9 @@ function drawGrapples(){
 function processGrapple(player){
 	if (getDistance(player, player.grapple) > 500){player.grapple = {};}
 	if (player.grapple.firing){
-		if (player.grapple.dir == 1){player.grapple.y -= grappleSpeed;}
-		if (player.grapple.dir == 2){player.grapple.y -= grappleSpeed * (2/3); player.grapple.x += grappleSpeed * (2/3);}
-		if (player.grapple.dir == 3){player.grapple.x += grappleSpeed;}
-		if (player.grapple.dir == 4){player.grapple.y += grappleSpeed * (2/3); player.grapple.x += grappleSpeed * (2/3);}
-		if (player.grapple.dir == 5){player.grapple.y += grappleSpeed;}
-		if (player.grapple.dir == 6){player.grapple.y += grappleSpeed * (2/3); player.grapple.x -= grappleSpeed * (2/3);}
-		if (player.grapple.dir == 7){player.grapple.x -= grappleSpeed;}
-		if (player.grapple.dir == 8){player.grapple.y -= grappleSpeed * (2/3); player.grapple.x -= grappleSpeed * (2/3);}
+		let rads = dir2rad(player.grapple.dir);
+		player.grapple.y += Math.sin(rads)*grappleSpeed;
+		player.grapple.x += Math.cos(rads)*grappleSpeed;
 		if (checkBlockCollision(player.grapple)){
 			player.grapple.firing = false;
 		}	
