@@ -3938,8 +3938,6 @@ function drawNotifications() {
 }
 
 //draw usernames drawNames
-var nameFlashingTimer = 0;
-var nameFlashingTimerMax = 5;
 var nameFlashingColor1 = "red";
 var nameFlashingColor2 = "blue";
 var nameFlashingColor = nameFlashingColor1;
@@ -3947,17 +3945,11 @@ var leaderIds = [];
 
 function calcLeaderNameFlashing(){	//flashingNames
 	if (gametype == "ffa"){
-		if (nameFlashingTimer <= 0){
-			nameFlashingTimer = nameFlashingTimerMax;
-			if (nameFlashingColor == nameFlashingColor1){
-				nameFlashingColor = nameFlashingColor2;
-			}
-			else {
-				nameFlashingColor = nameFlashingColor1;
-			}
+		if (flashOn){
+			nameFlashingColor = nameFlashingColor2;
 		}
 		else {
-			nameFlashingTimer--;
+			nameFlashingColor = nameFlashingColor1;
 		}
 	}
 }
@@ -4266,7 +4258,7 @@ function drawIndicators(){ //playerIndicators offscreenIndicators drawPlayerIndi
 		var imgIcon = Img.hudIndicatorHeart;
 		if (Player.list[p].health <= 0){imgIcon = Img.hudIndicatorDead;}
 		drawIndicator(object, imgIndicator, imgIcon);
-	}	
+	}
 
 	//Bag indicators
 	if (gametype == "ctf" && !(pregame && pregameIsHorde)){ 
@@ -4278,6 +4270,7 @@ function drawIndicators(){ //playerIndicators offscreenIndicators drawPlayerIndi
 			imgIndicator = Img.hudIndicatorBlue;
 			object = bagBlue;
 			if (myPlayer.holdingBag){
+				if (flashOn){imgIndicator = Img.hudIndicatorRed;}
 				imgIcon = Img.hudIndicatorBringHome;
 				object = {x:bagRed.homeX, y:bagRed.homeY};
 			}
@@ -4293,6 +4286,7 @@ function drawIndicators(){ //playerIndicators offscreenIndicators drawPlayerIndi
 			imgIndicator = Img.hudIndicatorRed;
 			object = bagRed;
 			if (myPlayer.holdingBag){
+				if (flashOn){imgIndicator = Img.hudIndicatorBlue;}
 				imgIcon = Img.hudIndicatorBringHome;
 				object = {x:bagBlue.homeX, y:bagBlue.homeY};
 			}
@@ -4332,7 +4326,7 @@ function drawIndicator(object, img, imgIcon){
 		if (indicatorEdgeOffsetAdjusted > 60){indicatorEdgeOffsetAdjusted = 60;}
 	}
 	if (imgIcon == Img.hudIndicatorHeart || imgIcon == Img.hudIndicatorDead){imageDimensions.width *= indicatorTypeScale; imageDimensions.height *= indicatorTypeScale; indicatorEdgeOffsetAdjusted *= indicatorTypeScale;}
-	else if (imgIcon == Img.hudIndicatorBringHome){imageDimensions.width /= indicatorTypeScale*1.2; imageDimensions.height /= indicatorTypeScale*1.2; indicatorEdgeOffsetAdjusted /= indicatorTypeScale*1.2;}
+	else if (imgIcon == Img.hudIndicatorBringHome){imageDimensions.width /= indicatorTypeScale; imageDimensions.height /= indicatorTypeScale; indicatorEdgeOffsetAdjusted /= indicatorTypeScale;}
 
 	if (onScreenPos.x < indicatorEdgeOffsetAdjusted){onScreenPos.x = indicatorEdgeOffsetAdjusted;}
 	if (onScreenPos.x > canvasWidth - indicatorEdgeOffsetAdjusted){onScreenPos.x = canvasWidth - indicatorEdgeOffsetAdjusted;}
@@ -5464,7 +5458,7 @@ function drawGameEventText(){
 		ctx.fillStyle="#FFFFFF";
 		ctx.font = '70px Electrolize';
 		ctx.textAlign="right";
-		strokeAndFillText("Chat: './start' to start game",canvasWidth - 10,750);
+		strokeAndFillText("Chat: '/start' to start game",canvasWidth - 10,750);
 	}
 	//HORDE EVENT TEXT
 	else if (showStatOverlay == false && (gametype == "horde" || (pregame && pregameIsHorde))){
@@ -7189,7 +7183,6 @@ var newTipTicker = newTipSeconds;
 var reloadOnServerTimeout = false; //Server Afk
 var countdownToRedrawGraphics = 0;
 
-//EVERY 1 SECOND
 function getLeaderIds(){
 	leaderIds = [];
 	highscore = 0;
@@ -7201,6 +7194,22 @@ function getLeaderIds(){
 	}
 }
 
+//Flashing Interval timer
+var flashRate = 17*6;
+var flashOn = true;
+setInterval(
+	function(){
+		if (flashOn){
+			flashOn = false;
+		}
+		else {
+			flashOn = true;
+		}
+	},
+	flashRate
+);
+
+//EVERY 1 SECOND
 setInterval( 
 	function(){
 		if (targetZoom == spectateZoom && myPlayer.team != 0){targetZoom = defaultZoom;}
@@ -8092,7 +8101,7 @@ document.onkeydown = function(event){
 		if (isLocal || myPlayer.eliminationSpectate || (myPlayer.team != 0) ){	
 			if (gametype == "elim" && !gameOver)
 				shop.active = true;
-			if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" || isLocal){
+			if (isLocal){ //cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" && 
 				keyPress(85, true);
 				//targetZoom -= zoomRate;
 				// totalMessagesRecieved = 0;
