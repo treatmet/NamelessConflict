@@ -3914,7 +3914,7 @@ function drawNotifications() {
 		if (Notification.list[n].playerId == myPlayer.id){
 			if (Notification.list[n].medal && Img[Notification.list[n].medal]){
 				var medalWidth = (200 - Notification.list[n].age * 8) * zoom;
-				if (medalWidth < 75 * zoom){medalWidth = 75 * zoom;}
+				if (medalWidth < 75 * zoom || reallyLowGraphicsMode){medalWidth = 75 * zoom;}
 				ctx.globalAlpha = 1;
 				drawImage(Img[Notification.list[n].medal], (250 - medalWidth/2), ((canvasHeight/2+50) - (Notification.list[n].yOffset*2) - medalWidth/2) * zoom, medalWidth, medalWidth);
 			}
@@ -8527,6 +8527,7 @@ window.onunload = function(){
 socket.on('bootAfk', function(){
 	forceToLeave = true;
 	socket.disconnect();
+	alert("You were booted for being AFK");
 	window.location.href = serverHomePage;
 });
 

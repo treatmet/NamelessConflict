@@ -1001,6 +1001,7 @@ function startNewRound(){ //restartRound //initializeRound //startRound //roundS
 	roundOver = false;
 	updateMisc.roundOver = roundOver;
 	pickup.clearNonMedPickups();
+	grenade.clearGrenades();
 	assignSpectatorsToTeam(false);
 	respawnAllNonSpectators();
 	gameServerSync();		

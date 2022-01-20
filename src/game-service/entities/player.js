@@ -2096,9 +2096,23 @@ function evalServer(socket, data){
 	if (!getPlayerById(socket.id))
 		return;
 
-	//socket = socketBak;
 	if (data == "start" && (customServer && (pregame || getPlayerById(socket.id).cognitoSub == createdByCognitoSub))){
-		gameEngine.restartGame();
+		gameEngine.restartGame();		
+	}
+	else if (data.substring(0,4) == "kick" && (customServer && getPlayerById(socket.id).cognitoSub == createdByCognitoSub)){
+		var playerList = getPlayerList();
+		for (var p in playerList){
+			if (playerList[p].name == data.substring(4) || playerList[p].name == data.substring(5)){
+				var id = playerList[p].id;
+
+				var name = playerList[p].name;
+				bannedCognitoSubs.push({cognitoSub:playerList[p].cognitoSub, reason:"asking for it"});
+				playerDisconnect(id);
+				delete SOCKET_LIST[id];
+				socket.emit('addToChat', 'Kicked ' + name + ' from game.');
+				return;
+			}
+		}
 	}
 
 	if(!allowServerCommands){
@@ -2163,20 +2177,7 @@ function evalServer(socket, data){
 	else if (data == "respawn9" || data == "spawn9"){
 		respawnTimeLimit = 9 * 60;
 	}
-	else if (data.substring(0,4) == "kick"){
-		var playerList = getPlayerList();
-		for (var p in playerList){
-			if (playerList[p].name == data.substring(4)){
-				var id = playerList[p].id;
 
-				var name = playerList[p].name;
-				playerDisconnect(id);
-				delete SOCKET_LIST[id];
-				socket.emit('addToChat', 'Kicked ' + name + ' from game.');
-				break;
-			}
-		}
-	}
 	else if (data == "team" || data == "teams" || data == "change" || data == "switch" || data == "changeTeams" || data == "changeTeam"){
 		if (gametype == "horde" || (pregame && pregameIsHorde)){
 			var playerList = getPlayerList();
