@@ -367,7 +367,7 @@ var giveUserAnItem = function(cognitoSub, itemId){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("December 16, 2020 16:00:00");
+	var thresholdDate = new Date("January 21, 2022 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -419,17 +419,17 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				// }
 
 
-				if (customizationOptions.indexOf("santaHat") == -1){
-					customizationOptions.push("santaHat");
-					console.log("Pushing santaHat");
+				if (customizationOptions.indexOf("ivorySGWeapon") == -1){
+					customizationOptions.push("ivorySGWeapon");
+					console.log("Pushing ivorySGWeapon");
 					updatey = true;
 				}
     
-				if (customizations["1"].hat != "santaHat" || customizations["2"].hat != "santaHat"){
-					customizations["1"].hat = "santaHat"; //CONFIGURATION
-					customizations["2"].hat = "santaHat"; //CONFIGURATION
-					updatey = true;
-				}
+				// if (customizations["1"].hat != "santaHat" || customizations["2"].hat != "santaHat"){
+				// 	customizations["1"].hat = "santaHat"; //CONFIGURATION
+				// 	customizations["2"].hat = "santaHat"; //CONFIGURATION
+				// 	updatey = true;
+				// }
 
 				//customizationOptions.push("bronze3_0Icon");
 				//customizationOptions.push("silver3_0Icon");
@@ -437,17 +437,17 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				//customizationOptions.push("diamond_0Icon");
 				var obj = {
 					customizationOptions:customizationOptions,
-					customizations:customizations
+					//customizations:customizations
 				};
 
 				if (!updatey){
 					//console.log("Nothing to update...");
 					continue;
 				}
-				// if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
-				// 	console.log("SAFETYS ON");
-				// 	continue;
-				// }
+				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+					console.log("SAFETYS ON");
+					continue;
+				}
 				// if (resy[k]._id == "60776761f660555073ed3168"){ //Get User
 				// 	console.log("UPDATE!!!!!!!!!!!!!!!");
 				// 	delete resy[k]._id;
