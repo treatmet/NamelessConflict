@@ -271,7 +271,7 @@ function compareKills(a,b) {
 }
 
 
-  //abandoningCognitoSubs
+//abandoningCognitoSubs
 function calculateEndgameStats(){ //calculate endgame calculate ranking calculatePostgameStats calculate postgame
 	logg("---CALCULATING ENDGAME STATS!---");
 	var eligiblePlayerList = player.getEligiblePlayerList();
@@ -280,7 +280,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 	}
 	var averageTeamPlayersCash = player.getAverageTeamPlayersCash();
 
-	updatePlayersRatingAndExpFromDB(eligiblePlayerList, function(eligiblePlayerListUpdated){
+	updatePlayersRatingAndExpFromDB(eligiblePlayerList, function(eligiblePlayerListUpdated, mongoRes){
 		var team1EligiblePlayerCount = getEligibleTeamCount(eligiblePlayerListUpdated, 1);
 		var team2EligiblePlayerCount = getEligibleTeamCount(eligiblePlayerListUpdated, 2);		
 		var averageRating = calculateAvgRating(eligiblePlayerListUpdated, false);
@@ -292,14 +292,13 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 		//Calculate progress made, and send to client (and then update user's DB stats)
 		for (var p in eligiblePlayerListUpdated){
 			var player = eligiblePlayerListUpdated[p];
+			var dbPlayer = getPlayerDBEntry(player.cognitoSub, mongoRes);
 			var socket = SOCKET_LIST[player.id];
 			logg("Processing " + player.name + "'s results");
 
 			if (player.team == 0)
 				continue;
 						
-			var gamesLostInc = 0;
-			var gamesWonInc = 0;
 			var personalPerformancePoints = 0;	
 			var ptsGained = 0;
 
@@ -319,13 +318,13 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 				console.log("pts gained before cap: " + ptsGained);
 
 				if (placement > eligiblePlayerList.length/2){ //Placed bottom half
-					gamesLostInc++;
+					player.gamesLost = 1;
 					if (ptsGained > -1 || playersAverageRating === -1){console.log("loss min(" + ptsGained + ") or playersAverageRating was -1"); ptsGained = -1; }		
 					if (ptsGained < -20){console.log("loss max(" + ptsGained + ")"); ptsGained = -20;} //Loss cap	
 					player.cashEarnedThisGame+=loseCash; 	
 				}
 				else { //Placed top half, or middle
-					gamesWonInc++;
+					player.gamesWon = 1;
 					if (ptsGained < minWinPointsGained || playersAverageRating === -1){console.log("win min(" + ptsGained + ") or playersAverageRating was -1"); ptsGained = minWinPointsGained;}		
 					if (ptsGained > 25){console.log("win max(" + ptsGained + ")"); ptsGained = 25;} //Gain cap		
 					player.cashEarnedThisGame+=loseCash; 
@@ -349,7 +348,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 
 				if ( ((player.team == 1 && whiteScore > blackScore) || (player.team == 2 && whiteScore < blackScore)) && socket){
 					//win
-					gamesWonInc++;
+					player.gamesWon = 1;
 					console.log("matchWinLossBonus: " + matchWinLossRatingBonus);
 					ptsGained += Math.round(matchWinLossRatingBonus + teamSkillDifferencePoints);
 					if (ptsGained < minWinPointsGained || enemyAverageRating === -1){console.log("win min(" + ptsGained + ") or enemyAverageRating was -1"); ptsGained = minWinPointsGained;}		
@@ -359,7 +358,7 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 				}
 				else {
 					//loss
-					gamesLostInc++;
+					player.gamesLost = 1;
 					ptsGained += Math.round(-matchWinLossRatingBonus + teamSkillDifferencePoints);
 					console.log("matchWinLossBonus: -" + matchWinLossRatingBonus);
 					if (ptsGained > -1 || enemyAverageRating === -1){console.log("loss min(" + ptsGained + ") or enemyAverageRating was -1"); ptsGained = -1; }		
@@ -435,24 +434,74 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 			log(player.name + "'s endGameProgressResults:");
 			console.log(endGameProgressResults);
 
-			var updateParams = {};
+			//convert back to all stats being incremental
+			player.rating = ptsGained;
+			player.experience = player.cashEarnedThisGame;
+			player.cash = player.cashEarnedThisGame;
+			var updateParams = getEndgameUpdateParams(player, dbPlayer);
+
 			if (socket){
-				if (player.experience < 1000000 && player.cashEarnedThisGame + player.experience >= 1000000){
+				if (dbPlayer.experience < 1000000 && player.cashEarnedThisGame + dbPlayer.experience >= 1000000){
 					//Award millionaire icon
 				}
-				updateParams = {kills:player.kills, assists:player.assists, deaths:player.deaths, captures:player.captures, steals:player.steals, returns:player.returns, cash: player.cashEarnedThisGame, experience: player.cashEarnedThisGame, gamesWon:gamesWonInc, gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
-				socket.emit('endGameProgressResults', endGameProgressResults);
-
+				socket.emit('endGameProgressResults', endGameProgressResults);		
 			}
 			else if ((player.timeInGame < timeInGameRankingThresh) && !customServer){
-				updateParams = {gamesLost:gamesLostInc, gamesPlayed: 1, rating: ptsGained};
+				updateParams = {gamesLost:dbPlayer.gamesLost+1, gamesPlayed:dbPlayer.gamesPlayed+1, rating:dbPlayer.rating + ptsGained};
 				logg("Hitting cognito sub with a hard L for abandoning");
 				player.cashEarnedThisGame = 0;
 			}
-			//increase user's DB stats
-			dataAccessFunctions.dbUserUpdate("inc", player.cognitoSub, updateParams);
+		
+
+			dataAccessFunctions.dbUserUpdate("set", player.cognitoSub, updateParams);
 		}
 	});
+}
+
+function getPlayerDBEntry(cognitoSub, mongoRes){
+	var dbPlayer = mongoRes.find(plyr => plyr.cognitoSub == cognitoSub);
+	return dbPlayer;
+}
+
+function getEndgameUpdateParams(player, dbPlayer){
+	var updateParams = {};
+
+	var fieldsToIncrement = [
+		"kills", 
+		"assists",
+		"deaths",
+		"captures",
+		"steals",
+		"returns",
+		"cash",
+		"experience",
+		"gamesWon",
+		"gamesLost",
+		rating:ptsGained
+	];
+	"gamesPlayed",
+		
+
+	updateParams = {
+		kills:player.kills, 
+		assists:player.assists,
+		deaths:player.deaths,
+		captures:player.captures,
+		steals:player.steals,
+		returns:player.returns,
+		cash:player.cashEarnedThisGame,
+		experience:player.cashEarnedThisGame,
+		gamesWon:gamesWonInc,
+		gamesLost:gamesLostInc,
+		gamesPlayed: 1,
+		rating:ptsGained
+	};
+
+
+	return updateParams;
+	//upsert User to DB
+	//dataAccessFunctions.dbUserUpdate("inc", player.cognitoSub, updateParams);
+
 }
 
 function getPlacement(list, prop, playerValue){
@@ -1468,7 +1517,7 @@ var updatePlayersRatingAndExpFromDB = function(playerList, cb){
 				for (var r in res){
 					if (playerList[p].cognitoSub == res[r].cognitoSub){		
 						playerList[p].rating = res[r].rating;
-						playerList[p].experience = res[r].experience;				
+						playerList[p].experience = res[r].experience;			
 						break;
 					}
 				}
@@ -1476,10 +1525,10 @@ var updatePlayersRatingAndExpFromDB = function(playerList, cb){
 				if (typeof playerList[p].rating === 'undefined'){playerList[p].experience = 0;}
 			}	
 
-			cb(playerList);
+			cb(playerList, res);
 		}
 		else {
-			cb(false);
+			cb(false, false);
 		}
 	});
 }
