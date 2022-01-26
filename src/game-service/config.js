@@ -126,7 +126,7 @@ global.grenadePower = 0.5;
 global.grenadeRaySpeed = 8;
 global.grenadeResource = true;
 global.grenadeRechargeSpeed = 0.2; // out of 100
-global.maxGrenades = 3;
+global.maxGrenades = 2;
 
 //Boost config
 global.boostDamage = 34;
@@ -368,6 +368,24 @@ global.sharedSettings = { //Initial 1 time only config settings
 	grenadeRechargeSpeed:grenadeRechargeSpeed,
 	maxGrenades:maxGrenades,
 };
+
+global.playerMedals = [
+	"annihilation",
+	"assassin",
+	"bestFriend",
+	"doubleKill",
+	"friendsTillTheEnd",
+	"genocide",
+	"goodFriend",
+	"killception",
+	"killingSpree",
+	"lastLaugh",
+	"massacre",
+	"overKill",
+	"snipe",
+	"tripleKill",
+	"yoDawg"
+];
 
 // map = "horde";
 // gametype = "horde";

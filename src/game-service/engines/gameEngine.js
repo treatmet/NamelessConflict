@@ -438,12 +438,15 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 			player.rating = ptsGained;
 			player.experience = player.cashEarnedThisGame;
 			player.cash = player.cashEarnedThisGame;
+
+			if (!dbPlayer){continue;}
 			var updateParams = getEndgameUpdateParams(player, dbPlayer);
 
+			if (dbPlayer.experience < 1000000 && player.cashEarnedThisGame + dbPlayer.experience >= 1000000){
+				//Award millionaire icon
+			}
+
 			if (socket){
-				if (dbPlayer.experience < 1000000 && player.cashEarnedThisGame + dbPlayer.experience >= 1000000){
-					//Award millionaire icon
-				}
 				socket.emit('endGameProgressResults', endGameProgressResults);		
 			}
 			else if ((player.timeInGame < timeInGameRankingThresh) && !customServer){
@@ -451,10 +454,9 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 				logg("Hitting cognito sub with a hard L for abandoning");
 				player.cashEarnedThisGame = 0;
 			}
-		
 
 			dataAccessFunctions.dbUserUpdate("set", player.cognitoSub, updateParams);
-		}
+		} //eligible player loop
 	});
 }
 
@@ -463,9 +465,12 @@ function getPlayerDBEntry(cognitoSub, mongoRes){
 	return dbPlayer;
 }
 
-function getEndgameUpdateParams(player, dbPlayer){
+function getEndgameUpdateParams(player, dbPlayer) {
+	if (!player || !dbPlayer){return false;}
+
 	var updateParams = {};
 
+	//Normal fields
 	var fieldsToIncrement = [
 		"kills", 
 		"assists",
@@ -477,26 +482,27 @@ function getEndgameUpdateParams(player, dbPlayer){
 		"experience",
 		"gamesWon",
 		"gamesLost",
-		rating:ptsGained
-	];
-	"gamesPlayed",
+		"rating"
+	];		
+	for (var f = 0; f < fieldsToIncrement.length; f++){
+		if (!dbPlayer[fieldsToIncrement[f]]){dbPlayer[fieldsToIncrement[f]] = 0;}
+		if (!player[fieldsToIncrement[f]]){player[fieldsToIncrement[f]] = 0;}
+		updateParams[fieldsToIncrement[f]] = player[fieldsToIncrement[f]] + dbPlayer[fieldsToIncrement[f]];
+	}
+	updateParams.gamesPlayed = dbPlayer.gamesPlayed+1;
+
+	//Medals
+	if (!dbPlayer.medals){dbPlayer.medals = {};}
+	if (!player.medals){player.medals = {};}
+	updateParams.medals = {};
+	for (var m = 0; m < playerMedals.length; m++){
+		if (!dbPlayer["medals"][playerMedals[m]])
+			dbPlayer["medals"][playerMedals[m]] = 0;
+		if (!player["medals"][playerMedals[m]])
+			player["medals"][playerMedals[m]] = 0;
 		
-
-	updateParams = {
-		kills:player.kills, 
-		assists:player.assists,
-		deaths:player.deaths,
-		captures:player.captures,
-		steals:player.steals,
-		returns:player.returns,
-		cash:player.cashEarnedThisGame,
-		experience:player.cashEarnedThisGame,
-		gamesWon:gamesWonInc,
-		gamesLost:gamesLostInc,
-		gamesPlayed: 1,
-		rating:ptsGained
-	};
-
+		updateParams["medals"][playerMedals[m]] = dbPlayer["medals"][playerMedals[m]] + player["medals"][playerMedals[m]];	
+	}
 
 	return updateParams;
 	//upsert User to DB
