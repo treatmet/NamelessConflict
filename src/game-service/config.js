@@ -139,8 +139,6 @@ global.blockPushSpeed = 4;
 
 global.clientSideMovement = true;
 
-
-
 /*
 {rank:"bronze1",rating:0},
 {rank:"bronze2",rating:100},
@@ -154,7 +152,6 @@ global.clientSideMovement = true;
 {rank:"diamond",rating:2000},
 {rank:"diamond2",rating:9999}
 */
-
 
 //Cloaking config
 global.cloakingEnabled = true;
