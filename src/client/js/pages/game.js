@@ -87,7 +87,7 @@ var localGame = false;
 
 
 //-----------------Config----------------------
-var version = "v 0.6.0 - the grenade update"; //Scalable + customizations
+var version = "v 0.6.1 - the medals update"; //Scalable + customizations
 
 const spectateMoveSpeed = 10;
 var screenShakeScale = 0.5;
@@ -189,15 +189,63 @@ var laserMaxCharge = 0;
 var grenadeResource = false;
 
 //-------------------------------------------------------------------------------------
+// STAT OVERLAY scoreboard drawScoreBoard
+var scoreBoardX = 0;
+var scoreBoardY = 0;
+var scoreboardPlayerNameGap = 29;
+var mouseHoveringPlayerId = 0;
+var scoreBoardWidth = 861;
+var scoreBoardHeight = 513;
+var teamBannerWidth = 283;
+var teamBannerHeight = 56;
+var team1Name = "RED";
+var team2Name = "BLUE";
+var noTeamName = "PLAYERS";
+var scoreBoardMargin = 10;
 
+
+var maxCanvasWidth = 1100;
+var maxCanvasHeight = 900;
+var canvasRatio = maxCanvasWidth/maxCanvasHeight;
 var canvasWidth = parseInt(document.getElementById("ctx").width); //1100
 var canvasHeight = parseInt(document.getElementById("ctx").height); //900
 var centerX = canvasWidth/2; //450
 var centerY = canvasHeight/2; //400
-var targetCenterX = canvasWidth/2; //450
-var targetCenterY = canvasWidth/2; //450
 var cameraX = 0; //This defines the upper-left XY coord of the camera. For camera center, add canvasWidth/2 and canvasHeight/2
 var cameraY = 0;
+
+getCanvasSpecifications();
+window.addEventListener('resize', resizeCanvas, false);       
+
+function getCanvasSpecifications(){
+	resizeCanvas()
+}
+
+function resizeCanvas() {
+	canvasWidth = window.innerWidth;
+	canvasHeight = window.innerHeight;
+	if (canvasWidth > maxCanvasWidth){canvasWidth = maxCanvasWidth;}
+	if (canvasHeight > maxCanvasHeight){canvasHeight = maxCanvasHeight;}
+
+	document.getElementById("ctx").style.width = canvasWidth;
+	document.getElementById("ctx").style.height = canvasHeight;
+	document.getElementById("chat-window").style.top = canvasHeight - 200;
+	document.getElementById("canvasDiv").style.left= (window.innerWidth/2) - (canvasWidth/2);
+
+	canvas.width = canvasWidth;
+	canvas.height = canvasHeight;
+	centerX = canvasWidth/2;
+	centerY = canvasHeight/2;
+	scoreBoardX = Math.round(canvasWidth/2 - scoreBoardWidth/2); scoreBoardY = Math.round(canvasHeight/2 - scoreBoardHeight/2 + -50);
+
+
+		 //targetZoom = (window.innerHeight / 900) * defaultZoom;	  
+}
+
+var targetCenterX = canvasWidth/2; //450
+var targetCenterY = canvasWidth/2; //450
+
+
 var grenadesEnabled = true;
 
 var screenShakeCounter = 0;
@@ -4468,7 +4516,7 @@ function drawInformation(){
 			fillText("" + version, 5, 75); //debug
 		}
 		if (isLocal){
-			fillText("totalMessagesRecieved: " + totalMessagesRecieved, 5, 95); //debug info
+			//fillText("totalMessagesRecieved: " + totalMessagesRecieved, 5, 95); //debug info
 			// fillText("boosting: " + Player.list[myPlayer.id].boosting, 5, 55); //debug info
 			// fillText("speedX: " + Player.list[myPlayer.id].speedX, 5, 75); //debug
 			// fillText("speedY: " + Player.list[myPlayer.id].speedY, 5, 95); //debug
@@ -5688,24 +5736,11 @@ function getPlaceFormat(i){
 	return text;
 }
 
-// STAT OVERLAY scoreboard drawScoreBoard
-var scoreBoardX = 0;
-var scoreBoardY = 0;
-var scoreboardPlayerNameGap = 29;
-var mouseHoveringPlayerId = 0;
-var scoreBoardWidth = 861;
-var scoreBoardHeight = 513;
-var teamBannerWidth = 283;
-var teamBannerHeight = 56;
-var team1Name = "RED";
-var team2Name = "BLUE";
-var noTeamName = "PLAYERS";
-var scoreBoardMargin = 10;
+
 
 
 function drawStatOverlay(){	
 	noShadow();
-	if (!scoreBoardX){scoreBoardX = Math.round(canvasWidth/2 - scoreBoardWidth/2); scoreBoardY = Math.round(canvasHeight/2 - scoreBoardHeight/2 + -50);}	
 	if (gameOver){showStatOverlay = true;}
 	var teamScoreBoard = true;
 	if (gametype == "ffa" || gametype == "horde" || (pregame && pregameIsHorde)){teamScoreBoard = false;}
@@ -5927,7 +5962,7 @@ function getKDSpread(player){
 function drawPlayerName(player, y){
 	ctx.textAlign="left";		
 	if (player.health <= 0){ctx.fillStyle="#FF0000";}
-	strokeAndFillText(player.name.substring(0, 15),143,y);
+	strokeAndFillText(player.name.substring(0, 15),scoreBoardX + 20,y);
 }
 
 function processPlayerNameHover(hoverPlayerId, y){
@@ -6421,6 +6456,9 @@ function drawEverything(){
 	drawUILayer();
 	fpsCounter++;
 }
+
+
+
 
 //new Grenade create Grenade newGrenade createGrenade
 var Grenade = function(id, grenadeTimer = 2*60, team = 0, holdingPlayerId = false){

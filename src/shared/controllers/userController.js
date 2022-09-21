@@ -729,6 +729,18 @@ router.post('/getProfile', async function (req, res) {
 			pageData["experience"] = numberWithCommas(pageData["experience"]);
 			pageData["success"] = true;
 
+			//medals
+			if (pageData.medals){
+				for (const medal of playerMedals){
+					if (pageData.medals[medal]){
+						pageData[medal] = pageData.medals[medal];
+					}
+					else {
+						pageData[medal] = 0;
+					}
+				}
+			}
+
 			res.send(pageData);
 		}
 		else {
@@ -736,6 +748,24 @@ router.post('/getProfile', async function (req, res) {
 		}
 	});	
 });
+
+var playerMedals = [
+	"annihilation",
+	"assassin",
+	"bestFriend",
+	"doubleKill",
+	"friendsTillTheEnd",
+	"genocide",
+	"goodFriend",
+	"killception",
+	"killingSpree",
+	"lastLaugh",
+	"massacre",
+	"overKill",
+	"snipe",
+	"tripleKill",
+	"yoDawg"
+];
 
 router.post('/getPlayerSearchResults', async function (req, res) {
 	var searchText = req.body.searchText;		

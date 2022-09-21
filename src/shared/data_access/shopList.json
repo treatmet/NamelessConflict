@@ -902,7 +902,8 @@
 		"rarity":5,
 		"hideFromShop":true,
 		"canvasValue":"#dfdfdf"
-	},		{
+	},		
+	{
 		"id":"whiteShirtColor12",
         "category":"shirt",
 		"subCategory":"color",
@@ -1215,11 +1216,23 @@
         "category":"boost",
 		"subCategory":"type",
 		"title":"Magenta Laser Beam",
-		"text":"Careful where you point your rear.",
+		"text":"Careful where you point your rear...",
 		"price": 0,
 		"team":0,
 		"rarity":2,
 		"canvasValue":"laserRed"
+	},	
+	{
+		"id":"laserRainbowBoost",
+        "category":"boost",
+		"subCategory":"type",
+		"title":"Rainbow Laser Beam",
+		"text":"Earned for high placement on an official tournament",
+		"price": 0,
+		"team":0,
+		"rarity":4,
+		"hideFromShop":true,
+		"canvasValue":"laserRainbow"
 	},	
 	{
 		"id":"heartsBoost",

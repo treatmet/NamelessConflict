@@ -175,7 +175,7 @@ global.damageScale = 1;
 	global.SGDamage = 30;
 	global.SGSideDamage = SGDamage/2;
 	global.SGBackDamage = SGDamage/2;
-	global.LaserDamage = 250;
+	global.LaserDamage = 175;
 	global.friendlyFireDamageScale = 0.25;
 	global.cloakBonusDamage = 20;
 
@@ -264,8 +264,8 @@ global.matchWinLossRatingBonus = 30;
 global.enemySkillDifferenceDivider = 30;
 global.ratingCalcThresh = 200; //Rating threshold for team rating evaluation
 global.minWinPointsGained = 5;
-global.timeInGameRankingThresh = 60; //seconds
-global.abandonLimit = 5; //seconds
+global.timeInGameRankingThresh = 1; //seconds //!!!
+global.abandonLimit = 5;
 
 
 //----------------------SERVER GLOBAL VARIABLES---------------------------------
@@ -364,6 +364,7 @@ global.sharedSettings = { //Initial 1 time only config settings
 	grenadeResource:grenadeResource,
 	grenadeRechargeSpeed:grenadeRechargeSpeed,
 	maxGrenades:maxGrenades,
+	timeInGameRankingThresh:timeInGameRankingThresh
 };
 
 global.playerMedals = [
@@ -383,6 +384,9 @@ global.playerMedals = [
 	"tripleKill",
 	"yoDawg"
 ];
+
+
+
 
 // map = "horde";
 // gametype = "horde";

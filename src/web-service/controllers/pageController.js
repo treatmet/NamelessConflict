@@ -42,7 +42,7 @@ router.get('/ping', function(req, res) {
 router.get('/user/:cognitoSub', function(req, res) {
 	var pageData = {};
 	var pageContent = getClientFile('profile.html');
-	pageData["header"] = getClientFile('header.html');		
+	pageData["header"] = getClientFile('header.html');
 	pageContent = replaceValues(pageData, pageContent);	
 	res.send(pageContent);
 });

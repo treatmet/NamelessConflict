@@ -136,6 +136,7 @@ function showSelfProfileOptions(){
         show("appearanceOptions");			
         show("shopCustomizeToggle");			
         show("statsOptionsToggle");			
+        show("infoMedalsToggle");			
         showSecondaySectionTitles();
 		
 		getCustomizationOptions(viewedProfileCognitoSub, function(data){
@@ -922,6 +923,23 @@ function toggleStatsSettings(divId) {
     else {
         log("DETECTED NONEXISTANT DIV");
     }     
+}
+
+function toggleDivTab(elements, activeElement) {
+    for (const element of elements){
+        if (document.getElementById(element + "Tab")){
+            document.getElementById(element + "Tab").className = document.getElementById(element + "Tab").className.replace(" active", "");
+            if (element == activeElement){
+                document.getElementById(element + "Tab").className += " active";
+            }
+        }        
+        if (document.getElementById(element + "Content")){
+            document.getElementById(element + "Content").style.display = "none";
+            if (element == activeElement){
+                document.getElementById(element + "Content").style.display = "block";
+            }
+        }        
+    }
 }
 
 function toggleEquipBuy(divId) {

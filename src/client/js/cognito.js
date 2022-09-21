@@ -1429,7 +1429,7 @@ function createCustomizationOptionDivs(){
 }
 
 function getCustomizationOptions(requestCognitoSub, cb){
-	$.get( '/getUserCustomizationOptions', {cognitoSub:requestCognitoSub}, function(data) {
+	$.get('/getUserCustomizationOptions', {cognitoSub:requestCognitoSub}, function(data) {
 		logg("GET CUSTOMIZATION OPTIONS RESPONSE:");
 		console.log(data);
 		cb(data);

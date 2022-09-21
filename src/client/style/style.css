@@ -1488,6 +1488,9 @@ div#chat-window {
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
+    width: 400px;
+    position:relative;
+    top:0;
 }
 
 div#chat-window-trade {
@@ -1530,6 +1533,15 @@ div#moneyOfferingSection {
 	white-space: nowrap;
 	font-size: 15px;
     height:18px;
+}
+
+div#infoMedalsToggle {
+    width: 66%;
+}
+
+table.statsTable th img {
+    height: 20px;
+    margin-bottom: -5px;
 }
 
 .columnTabContainer {
@@ -1590,15 +1602,22 @@ div#moneyOfferingSection {
     text-align: center;
     position: absolute;
     left: calc(50% - 550px);
-    
+    /* z-index: -1; */    
 }
 
 #ctx {
     border: 2px solid rgb(0, 0, 0);
     background-color: rgb(19, 19, 19);
-    position: relative;
+    position: absolute;
+    left:0;
     box-sizing: border-box;
 }
+
+#appearance #ctx {
+    position: unset;
+}
+
+/* PROFILE PAGE STYLES */
 
 #shopOptions {
     /*border-left: 1px solid #ccc;

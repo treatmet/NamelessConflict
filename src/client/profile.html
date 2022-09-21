@@ -50,145 +50,139 @@
 			</div>
 			<br>
 			<div id="statsTables">
-				<table class="statsTable profileStats">
-					<tr>
-						<th>Rating</th>
-						<td>{{rating}}</td>
-					</tr>
-					<tr>
-						<th>Experience</th>
-						<td>{{experience}}</td>
-					</tr>
-				</table>
-				<br>
-				<table class="statsTable profileStats">
-					<tr>
-						<th>Kills</th>
-						<td>{{kills}}</td>
-					</tr>
-					<tr>
-						<th>Captures</th>
-						<td>{{captures}}</td>
-					</tr>
-					<tr>
-						<th>Deaths</th>
-						<td>{{deaths}}</td>
-					</tr>
-					<tr>
-						<th>Betrayals</th>
-						<td>{{benedicts}}</td>
-					</tr>
-					<tr>
-						<th>Steals</th>
-						<td>{{steals}}</td>
-					</tr>
-					<tr>
-						<th>Returns</th>
-						<td>{{returns}}</td>
-					</tr>
-					<tr>
-						<th>Games Played</th>
-						<td>{{gamesPlayed}}</td>
-					</tr>
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-				</table>
-				<br>
-				<table class="statsTable profileStats">
-					<tr>
-						<th>Date Joined</th>
-						<td>{{dateJoined}}</td>
-					</tr>
-				</table>
-				<br>
-				<table id="medalsTable" class="statsTable profileStats">
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-					<tr>
-						<th>Games Won</th>
-						<td>{{gamesWon}}</td>
-					</tr>
-					<tr>
-						<th>Games Lost</th>
-						<td>{{gamesLost}}</td>
-					</tr>
-				</table>
+
+				<div class="columnTabContainer" id="infoMedalsToggle">
+					<div class="columnTab active" id="statsTableTab" onclick="toggleDivTab(['statsTable', 'medalsTable'], 'statsTable')">
+							<span>Info</span>
+							<img src="/src/client/img/lensToggle.png">
+					</div>
+					<div class="columnTab" id="medalsTableTab" onclick="toggleDivTab(['statsTable', 'medalsTable'], 'medalsTable')">
+							<img src="/src/client/img/medalsToggle.png">
+							<span>Medals</span>
+					</div>							
+				</div>
+				<div id="statsTableContent">
+					<table class="statsTable profileStats">
+						<tr>
+							<th>Rating</th>
+							<td>{{rating}}</td>
+						</tr>
+						<tr>
+							<th>Experience</th>
+							<td>{{experience}}</td>
+						</tr>
+					</table>
+					<br>
+					<table class="statsTable profileStats">
+						<tr>
+							<th>Kills</th>
+							<td>{{kills}}</td>
+						</tr>
+						<tr>
+							<th>Captures</th>
+							<td>{{captures}}</td>
+						</tr>
+						<tr>
+							<th>Deaths</th>
+							<td>{{deaths}}</td>
+						</tr>
+						<tr>
+							<th>Betrayals</th>
+							<td>{{benedicts}}</td>
+						</tr>
+						<tr>
+							<th>Steals</th>
+							<td>{{steals}}</td>
+						</tr>
+						<tr>
+							<th>Returns</th>
+							<td>{{returns}}</td>
+						</tr>
+						<tr>
+							<th>Games Played</th>
+							<td>{{gamesPlayed}}</td>
+						</tr>
+						<tr>
+							<th>Games Won</th>
+							<td>{{gamesWon}}</td>
+						</tr>
+						<tr>
+							<th>Games Lost</th>
+							<td>{{gamesLost}}</td>
+						</tr>
+					</table>
+					<br>
+					<table class="statsTable profileStats">
+						<tr>
+							<th>Date Joined</th>
+							<td>{{dateJoined}}</td>
+						</tr>
+					</table>
+				</div>
+				<div id="medalsTableContent" style="display: none;">
+					<table id="medalsTable" class="statsTable profileStats">
+						<tr>
+							<th> <img src="/src/client/img/medals/doubleKill.png"> Double Kills</th>
+							<td>{{doubleKill}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/tripleKill.png">Triple Kills</th>
+							<td>{{tripleKill}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/overKill.png">Overkills</th>
+							<td>{{overKill}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/killception.png">Killceptions</th>
+							<td>{{killception}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/yoDawg.png">Yo Dawgs</th>
+							<td>{{yoDawg}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/killingSpree.png">Killing Sprees</th>
+							<td>{{killingSpree}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/massacre.png">Massacres</th>
+							<td>{{massacre}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/genocide.png">Genocides</th>
+							<td>{{genocide}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/annihilation.png">Annihilations</th>
+							<td>{{annihilation}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/goodFriend.png">Good Friends</th>
+							<td>{{goodFriend}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/bestFriend.png">Best Friends</th>
+							<td>{{bestFriend}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/friendsTillTheEnd.png">Friends Till The Ends</th>
+							<td>{{friendsTillTheEnd}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/assassin.png">Assassinations</th>
+							<td>{{assassin}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/lastLaugh.png">Last Laughs</th>
+							<td>{{lastLaugh}}</td>
+						</tr>
+						<tr>
+							<th><img src="/src/client/img/medals/snipe.png">Snipes</th>
+							<td>{{snipe}}</td>
+						</tr>
+					</table>
+				</div>
 			</div>
 		</div>
 

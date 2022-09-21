@@ -367,7 +367,7 @@ var giveUserAnItem = function(cognitoSub, itemId){
 
 
 var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("January 21, 2022 16:00:00");
+	var thresholdDate = new Date("March 24, 2022 16:00:00");
 	//var params = {};
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
 /* 	var params = { USERNAME: { $in: [ 
@@ -737,7 +737,7 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 
 			//manual hardcode hard code shop
 			if (isLocal){
-				// shopList[0] = "03Boost";
+				//shopList[0] = "laserRainbowBoost";
 				// shopList[1] = "03Hat";
 				// shopList[2] = "03Icon";
 				// shopList[3] = "diamond02Boost";

@@ -383,13 +383,13 @@ function calculateEndgameStats(){ //calculate endgame calculate ranking calculat
 			}
 
 			//Eligible for rank up/down this game?
+			var calcaultedTimeInGameRankingThresh = timeInGameRankingThresh;
 			if (gametype == "ffa"){
-				var timeElapsed = (gameMinutesLength * 60 + gameSecondsLength) - (minutesLeft * 60 + secondsLeft);
-				timeInGameRankingThresh = timeElapsed * 0.90;
-				console.log("FFA! Time elapsed is " + timeElapsed + ". So time required to play is " + timeInGameRankingThresh);
+				calcaultedTimeInGameRankingThresh = timeElapsed * 0.90;
+				console.log("FFA! Time elapsed is " + timeElapsed + ". So time required to play is " + calcaultedTimeInGameRankingThresh);
 			}
-			log("player.timeInGame: " + player.timeInGame + " have they played longer than " + timeInGameRankingThresh);
-			if ((player.timeInGame < timeInGameRankingThresh && !isLocal) || customServer){
+			log("player.timeInGame: " + player.timeInGame + " have they played longer than " + calcaultedTimeInGameRankingThresh);
+			if ((player.timeInGame < calcaultedTimeInGameRankingThresh && !isLocal) || customServer){
 				logg("Player ineligible for rank influence this game");
 				ptsGained = 0;				
 			}
@@ -1302,6 +1302,7 @@ function initializeNewGame(){ //startGame gameStart
 	gameOver = false;
 	roundOver = false;
 	pregame = false;
+	timeElapsed = 0;
 	bannedCognitoSubs = [];
 	abandoningCognitoSubs = [];
 	if (!(pregameIsHorde && pregame) && gametype != "horde"){spawnOpposingThug = false;}
@@ -1323,7 +1324,6 @@ function initializeNewGame(){ //startGame gameStart
 		gameMinutesLength = 0;
 		gameSecondsLength = 0;
 	}
-	timeInGameRankingThresh = 60;
 
 	minutesLeft = gameMinutesLength;
 	secondsLeft = gameSecondsLength;
@@ -1880,8 +1880,10 @@ function secondIntervalLoop(){
 var secondIntervalFunction = function(){
 
 	//ranked Eligibility on timeout
-	if (!pregame && !gameOver)
+	if (!pregame && !gameOver){
 		incrementTimeInGameForPlayers();
+		timeElapsed++;
+	}
 
 	//log("ticksSinceLastSecond:" + ticksSinceLastSecond + " Time:" + Date.now() + " TargetNextSecond:" + nextSecond + " WARNING_COUNT:" + warnCount);
 	warnCount = 0;

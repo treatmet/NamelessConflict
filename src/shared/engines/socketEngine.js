@@ -1,4 +1,4 @@
-const io = require('socket.io')(serv,{});
+const io = require('socket.io')(serv,{allowEIO3: true});
 const dataAccess = require('../data_access/dataAccess.js');
 const dataAccessFunctions = require('../data_access/dataAccessFunctions.js');
 
