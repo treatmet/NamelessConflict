@@ -1,4 +1,4 @@
-<html style="background-color: #2c2f31;">
+<html>
 
 <head>	
 	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-25330054-2"></script>
@@ -29,7 +29,8 @@
 <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet'>
 <link type="text/css" rel="stylesheet" href="/src/client/style/style.css">
 
-<script src="/src/client/js/socket.io-1.4.5.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<!-- <script src="/src/client/js/socket.io-1.4.5.js"></script> -->
 <script src="/src/client/js/howler.core.js"></script>
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script> 
 <script src="/src/client/js/amazon-cognito-auth.min.js"></script>
@@ -67,7 +68,7 @@
 			<button id="logInH" class="RWButton" style="display: none" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/login?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://socketshot.io/';">Log In</button>
 			<button id="createAccountH" class="RWButton" style="display: none" onclick="window.location.href='https://treatmetcalfgames.auth.us-east-2.amazoncognito.com/signup?response_type=code&client_id=70ru3b3jgosqa5fpre6khrislj&redirect_uri=https://socketshot.io/';">Create Account</button>
 			<button id="playNowH" class="RWButton" style="display: none" onclick="getJoinableServer({server:'any'})">Play Now!</button>
-			<button id="localPlayNow" class="RWButton" style="display: none" onclick="localClick()">Local Server</button>
+			<button id="localPlayNow" class="RWButton" style="display: none" onclick="localClick()">Test</button>
 		</div>
 	</div>
 	<div id="friendsBar">

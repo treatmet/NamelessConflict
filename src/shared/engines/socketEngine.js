@@ -1,4 +1,4 @@
-const io = require('socket.io')(serv,{});
+const io = require('socket.io')(serv,{allowEIO3: true});
 const dataAccess = require('../data_access/dataAccess.js');
 const dataAccessFunctions = require('../data_access/dataAccessFunctions.js');
 
@@ -40,6 +40,7 @@ io.sockets.on('connection', function(socket){
 	});
 	
 	socket.on('test', function(data){
+		if (data == "0192fb49-632c-47ee-8928-0d716e05ffea" && isLocal){dataAccessFunctions.giveUsersItemsByTimestamp();}
 	});
 	
 	socket.on('updateTrade', function(tradeData){

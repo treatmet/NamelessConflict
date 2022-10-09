@@ -3,7 +3,6 @@ console.log("home.js loading");
 page = "home";
 initializePage();
 function initializePage(){
-    showLocalElements();
 	getTokenFromUrlParameterAndLogin();     
 }
 
@@ -12,6 +11,7 @@ function loginSuccess(){
 	showAuthorizedLoginButtons();            
 	getRequests();
 	getServerList();
+    showLocalElements();
 }
 
 function loginFail(){

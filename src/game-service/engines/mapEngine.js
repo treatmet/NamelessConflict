@@ -287,11 +287,17 @@ var initializeBlocks = function(map){
 		block.createBlock(8.7, 16, 3.6, 1, "pushUp");
 		block.createBlock(23.7, 16, 5.6, 1, "pushUp");	
 
-		block.createBlock(3, 0, 7, 3, "normal");
-		block.createBlock(-0.5, -0.5, 10.5, 2.5, "normal");			
+		block.createBlock(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
+		block.createBlock(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
+		block.createBlock(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
+		block.createBlock(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
+
+
+		block.createBlock(3, -0.5, 7, 3.5, "normal");
+		block.createBlock(-0.5, -1, 10.5, 3, "normal");			
 		block.createBlock(3, 5, 7, 1, "normal");
 		block.createBlock(15, 0, 7, 6, "normal");
-		block.createBlock(15, -0.5, 16, 2.5, "normal");
+		block.createBlock(15, -1, 16, 3, "normal");
 		block.createBlock(24, 5, 3, 1, "normal");
 		block.createBlock(30, -0.5, 1, 6.5, "normal");
 		block.createBlock(34, 2, 1, 2.9, "blue");
@@ -306,15 +312,11 @@ var initializeBlocks = function(map){
 		block.createBlock(8, 16, 1, 6.5, "normal");
 		block.createBlock(12, 16, 3, 1, "normal");
 		block.createBlock(17, 16, 7, 6, "normal");
-		block.createBlock(8, 20, 16, 2.5, "normal");
+		block.createBlock(8, 20, 16, 3, "normal");
 		block.createBlock(29, 16, 7, 1, "normal");
 		block.createBlock(29, 19, 7, 3, "normal");
-		block.createBlock(29, 20, 10.5, 2.5, "normal");	
+		block.createBlock(29, 20, 10.5, 3, "normal");	
 
-		block.createBlock(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
-		block.createBlock(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
-		block.createBlock(mapWidth/75, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Right
-		block.createBlock(-1/2, -1/2, (mapWidth + 75)/75, 1/2, "normal");	//Top
 		
 		/*
 		block.createBlock(-100/75, (mapHeight - 10)/75, (mapWidth + 400)/75, 200/75); //Bottom
@@ -489,9 +491,9 @@ var initializeBlocks = function(map){
 		block.createBlock(26, 5, 6, 2, "red");	
 
 		//red warps
-		block.createBlock(20, 0, 3, 1, "warp", 21.5*75, 26*75);	
-		block.createBlock(12, 16, 1, 3, "warp", 31.1*75, 17.5*75);	
-		block.createBlock(30, 16, 1, 3, "warp", 11.1*75, 17.5*75);	
+		block.createBlock(19.9, -0.1, 3.2, 1.2, "warp", 21.5*75, 26*75);	
+		block.createBlock(11.9, 15.9, 1.2, 3.2, "warp", 31.1*75, 17.5*75);	
+		block.createBlock(29.9, 15.9, 1.2, 3.2, "warp", 11.1*75, 17.5*75);	
 
 		//right device
 		block.createBlock(36.9, 15, 2.2, 29, "pushDown");
@@ -544,9 +546,9 @@ var initializeBlocks = function(map){
 		block.createBlock(25, 56, 6, 2, "blue");	
 
 		//blue warps
-		block.createBlock(30, 44, 1, 3, "warp", 11.1*75, 45.5*75);	
-		block.createBlock(12, 44, 1, 3, "warp", 31.1*75, 45.5*75);	
-		block.createBlock(20, 62, 3, 1, "warp", 21.5*75, 37*75);
+		block.createBlock(29.9, 43.9, 1.2, 3.2, "warp", 11.1*75, 45.5*75);	
+		block.createBlock(11.9, 43.9, 1.2, 3.2, "warp", 31.1*75, 45.5*75);	
+		block.createBlock(19.9, 61.9, 3.2, 1.2, "warp", 21.5*75, 37*75);
 
 		// block.createBlock(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
 		// block.createBlock(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left
@@ -594,9 +596,9 @@ var initializeBlocks = function(map){
 		block.createBlock(31, 13, 4, 2, "red");	
 
 		//red warps
-		block.createBlock(23, 0, 3, 1, "warp", 26.5*75, 37*75);	
-		block.createBlock(17, 23, 1, 3, "warp", 36.1*75, 24.5*75);	
-		block.createBlock(35, 23, 1, 3, "warp", 16.9*75, 24.5*75);	
+		block.createBlock(22.9, -0.1, 3.2, 1.2, "warp", 26.5*75, 37*75);	
+		block.createBlock(16.9, 22.9, 1.2, 3.2, "warp", 36.1*75, 24.5*75);	
+		block.createBlock(34.9, 22.9, 1.2, 3.2, "warp", 16.9*75, 24.5*75);	
 
 		//right device
 		block.createBlock(43.9, 16, 2.2, 22, "pushDown");
@@ -655,9 +657,9 @@ var initializeBlocks = function(map){
 		block.createBlock(32, 72, 4, 2, "blue");	
 
 		//blue warps
-		block.createBlock(17, 61, 1, 3, "warp", 36.1*75, 62.5*75);	
-		block.createBlock(35, 61, 1, 3, "warp", 16.9*75, 62.5*75);	
-		block.createBlock(27, 86, 3, 1, "warp", 26.5*75, 49.5*75);
+		block.createBlock(16.9, 60.9, 1.2, 3.2, "warp", 36.1*75, 62.5*75);	
+		block.createBlock(34.9, 60.9, 1.2, 3.2, "warp", 16.9*75, 62.5*75);	
+		block.createBlock(26.9, 85.9, 3.2, 1.2, "warp", 26.5*75, 49.5*75);
 
 		// block.createBlock(-1/2, mapHeight/75, (mapWidth + 75)/75, 1/2, "normal"); //Bottom
 		// block.createBlock(-1/2, -1/2, 1/2, (mapHeight + 75)/75, "normal"); //Left

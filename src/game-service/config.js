@@ -22,25 +22,29 @@ global.pcMode = 2; //1 = no, 2= yes
 
 //Cash Values for Events
 global.killCash = 100;
-global.doubleKillCash = 200;
-global.tripleKillCash = 300;
-global.quadKillCash = 400;
+global.doubleKillCash = 100;
+global.tripleKillCash = 200;
+global.quadKillCash = 300;
 global.spreeCash = 250;
 global.frenzyCash = 500;
 global.rampageCash = 750;
 global.unbelievableCash = 1000;
 global.assistCash = 50;
 global.thugCash = 25;
-global.assassinationCash = 150;
 global.stealCash = 50;
 global.captureCash= 300;
 global.killEnemyBagHolder = 150;
 global.returnCash = 100;
+global.snipeCash = 50;
+global.assassinationCash = 100;
+global.lastLaughCash = 50;
+
 global.winCash = 1000;
 global.loseCash = 100;
 global.mvpCash = 300;
 global.hitCash = 5;
 global.elimDeathCash = 50;
+
 global.multikillTimer = 4.5 * 60;
 global.startingCash = 50;
 
@@ -122,7 +126,7 @@ global.grenadePower = 0.5;
 global.grenadeRaySpeed = 8;
 global.grenadeResource = true;
 global.grenadeRechargeSpeed = 0.2; // out of 100
-global.maxGrenades = 3;
+global.maxGrenades = 2;
 
 //Boost config
 global.boostDamage = 34;
@@ -134,8 +138,6 @@ global.meleeRange = 50;
 global.blockPushSpeed = 4;
 
 global.clientSideMovement = true;
-
-
 
 /*
 {rank:"bronze1",rating:0},
@@ -150,7 +152,6 @@ global.clientSideMovement = true;
 {rank:"diamond",rating:2000},
 {rank:"diamond2",rating:9999}
 */
-
 
 //Cloaking config
 global.cloakingEnabled = true;
@@ -174,7 +175,7 @@ global.damageScale = 1;
 	global.SGDamage = 30;
 	global.SGSideDamage = SGDamage/2;
 	global.SGBackDamage = SGDamage/2;
-	global.LaserDamage = 250;
+	global.LaserDamage = 175;
 	global.friendlyFireDamageScale = 0.25;
 	global.cloakBonusDamage = 20;
 
@@ -263,8 +264,8 @@ global.matchWinLossRatingBonus = 30;
 global.enemySkillDifferenceDivider = 30;
 global.ratingCalcThresh = 200; //Rating threshold for team rating evaluation
 global.minWinPointsGained = 5;
-global.timeInGameRankingThresh = 60; //seconds
-global.abandonLimit = 5; //seconds
+global.timeInGameRankingThresh = 1; //seconds //!!!
+global.abandonLimit = 5;
 
 
 //----------------------SERVER GLOBAL VARIABLES---------------------------------
@@ -363,7 +364,29 @@ global.sharedSettings = { //Initial 1 time only config settings
 	grenadeResource:grenadeResource,
 	grenadeRechargeSpeed:grenadeRechargeSpeed,
 	maxGrenades:maxGrenades,
+	timeInGameRankingThresh:timeInGameRankingThresh
 };
+
+global.playerMedals = [
+	"annihilation",
+	"assassin",
+	"bestFriend",
+	"doubleKill",
+	"friendsTillTheEnd",
+	"genocide",
+	"goodFriend",
+	"killception",
+	"killingSpree",
+	"lastLaugh",
+	"massacre",
+	"overKill",
+	"snipe",
+	"tripleKill",
+	"yoDawg"
+];
+
+
+
 
 // map = "horde";
 // gametype = "horde";

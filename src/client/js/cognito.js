@@ -661,7 +661,7 @@ function isValidUsername(newUsername){
         alert("Username is too long.\nPlease enter a Username that is less than 15 characters.");
         return false;
     }
-    else if (!isValid(newUsername) || newUsername.indexOf(' ') > -1 || newUsername.indexOf('@') > -1 || newUsername.indexOf('%') > -1 || newUsername.indexOf(')') > -1 || newUsername.indexOf('(') > -1 || newUsername.indexOf('}') > -1 || newUsername.indexOf('{') > -1 || newUsername.indexOf('nigger') > -1 || newUsername.indexOf('cunt') > -1){
+    else if (!isValid(newUsername) || newUsername.indexOf('nigger') > -1 || newUsername.indexOf('cunt') > -1){
         alert("Spaces and special characters (\"@\", \"%\", etc) are not allowed in Usernames.");
         return false;
     }
@@ -670,7 +670,7 @@ function isValidUsername(newUsername){
 }
 
 function isValid(str){
- return !/[~`!#$%\^&*+=\[\]\\';,\/{}|\\"@:<>\?]/g.test(str);
+ return /^[0-9a-zA-Z_.-]+$/g.test(str);
 }
 
 
@@ -717,15 +717,14 @@ function logOutClick(){
 
 function showLocalElements(){
   $(document).ready(function() {
-    if (window.location.href.indexOf("localhost") > -1) {
+    if (cognitoSub == "0192fb49-632c-47ee-8928-0d716e05ffea" && window.location.href.indexOf("localhost") > -1) {
       showUnset("localPlayNow");
     }
   });
 }
 
 function localClick(){
-
-
+	socket.emit('test', cognitoSub);
 }
 
 function showDefaultLoginButtons(){
@@ -752,6 +751,7 @@ function showAuthorizedLoginButtons(){
 		document.getElementById('userWelcomeText').innerHTML = getUserWelcomeHTML(printedUsername);	
 		document.getElementById('userWelcomeText').style.display = "inline-block";
 		buildHeaderMessagingLink();
+		//buildNextPlaytimeHeader();
 	}
 }
 
@@ -811,6 +811,89 @@ function getMessagingLinkHTML(unreads, conversationId = false){
 		HTML += "<a href='" + msgLink + "'>✉</a>";
 	}
 	return HTML;
+}
+
+var playtimeSeconds = 0;
+var tournamentLive = false;
+function buildNextPlaytimeHeader(){
+	tournamentLive = true;
+
+	var params = {
+        cognitoSub:cognitoSub,
+	};
+	
+    $.get('/getPlaytime', params, function(data){
+        logg("getPlaytime RESPONSE:");
+        console.log(data);
+        if (data.result){
+			console.log(data.result + " seconds to playtime");
+			playtimeSeconds = data.result;
+			document.getElementById("warningBar").innerHTML = getPlaytimeCountdownHTML();
+			show("warningBar");
+        }
+    });
+}
+function getPlaytimeCountdownHTML(){
+	return "Tournament matchtime in: " + secondsToTimerLong(playtimeSeconds);
+}
+
+setInterval( 
+	function(){	
+		//Tick tick tock clock
+        if (playtimeSeconds > 0 && tournamentLive){
+            playtimeSeconds--;
+            document.getElementById("warningBar").innerHTML = getPlaytimeCountdownHTML();
+        }
+	},
+	1000 //Millisecond tick length
+);
+
+function secondsToTimerLong(seconds){
+    var colon = seconds % 2 == 0 ? ":" : " ";
+
+    var hours = Math.floor(seconds / (60 * 60));
+    seconds -= hours * (60 * 60);
+    if (hours < 10){
+        hours = "0" + hours;
+    }
+
+    var minutes = Math.floor(seconds / (60));
+    seconds -= minutes * (60);
+    if (minutes < 10){
+        minutes = "0" + minutes;
+    }
+        
+    if (seconds < 10){
+        seconds = "0" + seconds;
+    }
+
+    var formattedTime = hours + " hours " + minutes + " minutes " + seconds + " seconds";
+
+    return formattedTime;
+}
+
+function secondsToTimer(seconds){
+    var colon = seconds % 2 == 0 ? ":" : " ";
+
+    var hours = Math.floor(seconds / (60 * 60));
+    seconds -= hours * (60 * 60);
+    if (hours < 10){
+        hours = "0" + hours;
+    }
+
+    var minutes = Math.floor(seconds / (60));
+    seconds -= minutes * (60);
+    if (minutes < 10){
+        minutes = "0" + minutes;
+    }
+        
+    if (seconds < 10){
+        seconds = "0" + seconds;
+    }
+
+    var formattedTime = hours + colon + minutes + " " + seconds + "s";
+
+    return formattedTime;
 }
 
 function convertToClientConversations(conversations){
@@ -911,11 +994,6 @@ function submitPlayerSearch(e){ //Used in header as well
 		return;		
 	}
 	window.location.href = serverHomePage + "search/" + e.target.elements[0].value;
-}
-
-function localPlayNowClick(){
-	socket.emit('test', "123456");
-	//window.location.href = '/?join=true';
 }
 
 function show(element){
@@ -1064,10 +1142,15 @@ var hexDigits = new Array
         ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); 
 
 
-function drawName(drawingCanvas, playerUsername, color, x, y, icon = false, stroke = false){
+function drawName(drawingCanvas, playerUsername, color, x, y, icon = false, stroke = false, font = false){
 	drawingCanvas.save();
-        drawingCanvas.textAlign="center";
-        drawingCanvas.font = 'bold 12px Electrolize';        
+		drawingCanvas.textAlign="center";
+		if (font){
+			drawingCanvas.font = font;        
+		}
+		else {
+			drawingCanvas.font = 'bold 12px Electrolize';        
+		}
 		drawingCanvas.fillStyle = color;
 		drawingCanvas.shadowColor = "#FFFFFF";
 		drawingCanvas.shadowOffsetX = 0; 
@@ -1189,8 +1272,12 @@ function getRankFromRating(rating){
 		{rank:"gold1",rating:1000},
 		{rank:"gold2",rating:1300},
 		{rank:"gold3",rating:1600},
-		{rank:"diamond",rating:2000},
-		{rank:"diamond2",rating:9999}
+		{rank:"diamond1",rating:1900},
+		{rank:"diamond2",rating:2300},
+		{rank:"diamond3",rating:2700},
+		{rank:"master1",rating:3100},
+		{rank:"master2",rating:3600},
+		{rank:"master3",rating:4100}
 	];
 
 	for (var r in rankings){
@@ -1198,7 +1285,7 @@ function getRankFromRating(rating){
 		var rMinus = parseInt(r)-1;
 		if (rating < rankings[rPlus].rating){
 			log(rankings[r].rank + " is his rank");
-			var response = {rank:rankings[r].rank, floor:rankings[r].rating, previousRank:"bronze1", nextRank:"diamond2", ceiling:9999};
+			var response = {rank:rankings[r].rank, floor:rankings[r].rating, previousRank:"bronze1", nextRank:"bronze1", ceiling:9999};
 			if (rankings[rPlus]){
 				response.nextRank = rankings[rPlus].rank;
 				response.ceiling = rankings[rPlus].rating;
@@ -1342,7 +1429,7 @@ function createCustomizationOptionDivs(){
 }
 
 function getCustomizationOptions(requestCognitoSub, cb){
-	$.get( '/getUserCustomizationOptions', {cognitoSub:requestCognitoSub}, function(data) {
+	$.get('/getUserCustomizationOptions', {cognitoSub:requestCognitoSub}, function(data) {
 		logg("GET CUSTOMIZATION OPTIONS RESPONSE:");
 		console.log(data);
 		cb(data);
@@ -1514,11 +1601,16 @@ function getShopItemHTML(item, active, type, disableDefaultItems = false, cashVa
             rarityText = "Legendary";
             rarityColor = "#ffd200";
             break;
+        case 5:
+            rarityImg = "rarities/legendary.png";
+            rarityText = "[Exclusive]";
+            rarityColor = "#ff3600";
+            break;
         default:            
             break;
     }
 
-    if (item.hideFromShop){
+    if (item.hideFromShop && item.rarity > 4){
         rarityText = "[Exclusive]";   
         rarityColor = "#ff3600";
     }
