@@ -137,8 +137,9 @@ function explode(x, y, playerResponsibleId){
 						var rawDist = getDistance({x:x, y:y}, {x:hitPlayer.x, y:hitPlayer.y});
 						if (rawDist < 1){rawDist = 1;}//Divide by zero
 						playersHit.push(hitPlayer.id);
+						var hitPlayerHealthBefore = hitPlayer.health;
 						hitPlayer.hit({xMovRatio:(hitPlayer.x - x)/rawDist, yMovRatio:(hitPlayer.y - y)/rawDist}, 0, player.getPlayerById(playerResponsibleId), rawDist, 0, 6);
-						if (hitPlayer.health > 0)
+						if (hitPlayer.health < hitPlayerHealthBefore)
 							entityHelpers.sprayBloodOntoTarget(1, hitPlayer.x, hitPlayer.y, hitPlayer.id);
 
 					}
@@ -176,6 +177,7 @@ function explode(x, y, playerResponsibleId){
 				//Check if ray is hitting block at this step
 				for(var b in blocks){
 					var blocky = blocks[b];
+					if (blocky.type.indexOf("push") > -1){continue;}
 					if(isPointIntersectingRect(rays[t], blocky)){
 						rays[t].collided = true;
 						break;

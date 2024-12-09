@@ -232,6 +232,8 @@ var addUser = function(cognitoSub, username, cb){ //createUser create User add m
 		cb({});
 		return;
 	}
+	var cognitoUsername = username;
+
 	var today = new Date();
 	var date = today.getUTCFullYear()+'-'+(today.getUTCMonth()+1)+'-'+today.getUTCDate();
 
@@ -243,7 +245,7 @@ var addUser = function(cognitoSub, username, cb){ //createUser create User add m
 		username = generateTempName("Google_");
 	}
 
-	var obj = {cognitoSub:cognitoSub, USERNAME:username, experience:0, cash:0, level:0, kills:0, assists:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:myUrl};
+	var obj = {cognitoSub:cognitoSub, cognitoUsername:cognitoUsername, USERNAME:username, experience:0, cash:0, level:0, kills:0, assists:0, benedicts:0, deaths:0, captures:0, steals:0, returns:0, gamesPlayed:0, gamesWon:0, gamesLost:0, rating:0, dateJoined:date, onlineTimestamp:today, partyId:'', serverUrl:myUrl};
 
 	dataAccess.dbUpdateAwait("RW_USER", "ups", {cognitoSub:cognitoSub}, obj, async function(err, res){
 		if (err){
@@ -277,17 +279,22 @@ var updateOnlineTimestampForUser = function(cognitoSub){
 	});		
 }
 
+var updateDBCognitoUsername = function(cognitoSub, cognitoUsername){
+	dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, {cognitoUsername: cognitoUsername}, async function(err, res){
+		if (err){
+			logg("DB ERROR - updateDBCognitoUsername() - RW_USER.update: " + err);
+		}	
+		//logg("Updated player[" + cognitoSub + "] onlineTimestamp to " + newDate);
+	});		
+}
 
-
-var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
-	var thresholdDate = new Date("October 4, 2021 16:00:00");
-	//var params = {};
+var giveUserAnItem = function(cognitoSub, itemId){
 	var params = {onlineTimestamp:{ $gt: thresholdDate }};
-/* 	var params = { USERNAME: { $in: [ 
-		"bigballer4liver"
-	] } }; //Bronze
- */
-
+	/* 	var params = { USERNAME: { $in: [ 
+			"bigballer4liver"
+		] } }; //Bronze
+	 */
+	
 	console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
 	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:2000}, async function(err, resy){
 		if (resy && resy[0]){ 
@@ -296,18 +303,18 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				var cognitoSub = resy[k].cognitoSub;
 				var customizationOptions = resy[k].customizationOptions; 
 				var customizations = resy[k].customizations; 
-					 
+						
 				console.log("Updating " + resy[k].USERNAME);
 
 //				console.log("Timestamp " + resy[k].onlineTimestamp);
-		   
- 				if (!customizationOptions){
+			
+					if (!customizationOptions){
 					console.log("ERROR - no customizationOptions");
 					continue;
 				}
 				if (!customizations || !customizations["1"] || !customizations["2"] ){
-				  	console.log("ERROR - no customizations");
-				  	continue;
+						console.log("ERROR - no customizations");
+						continue;
 				}
 
 				if (customizationOptions.indexOf("ivoryPistolWeapon") == -1){
@@ -315,8 +322,8 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 					console.log("Pushing ivoryPistolWeapon");
 					updatey = true;
 				}
-    
-    
+	
+	
 				// if (customizations["1"].pistolColor != "#fffef8"){
 				// 	customizations["1"].pistolColor = "#fffef8"; //CONFIGURATION
 				// 	customizations["2"].pistolColor = "#fffef8"; //CONFIGURATION
@@ -349,6 +356,107 @@ var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
 				// 	break;
 				// }
 
+				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
+				});			
+				await sleep(10);	
+
+			}				
+		}
+	});
+}
+
+
+var giveUsersItemsByTimestamp = function(){ //BasedOffTimestamp
+	var thresholdDate = new Date("March 24, 2022 16:00:00");
+	//var params = {};
+	var params = {onlineTimestamp:{ $gt: thresholdDate }};
+/* 	var params = { USERNAME: { $in: [ 
+		"bigballer4liver"
+	] } }; //Bronze
+ */
+
+	console.log("DB MANIPULATION!!!!!!!!!!!!!!!!!!!!!");
+	dataAccess.dbFindOptionsAwait("RW_USER", params, {limit:100000}, async function(err, resy){
+		if (resy && resy[0]){ 
+			for (let k = 0; k < resy.length; k++) {
+				var updatey = false;
+				var cognitoSub = resy[k].cognitoSub;
+				var customizationOptions = resy[k].customizationOptions; 
+				var customizations = resy[k].customizations; 
+					 
+				console.log("Updating " + resy[k].USERNAME);
+
+//				console.log("Timestamp " + resy[k].onlineTimestamp);
+		   
+ 				if (!customizationOptions){
+					console.log("ERROR - no customizationOptions");
+					continue;
+				}
+				if (!customizations || !customizations["1"] || !customizations["2"] ){
+				  	console.log("ERROR - no customizations");
+				  	continue;
+				}
+
+				// if (resy[k].rating > 1 && customizationOptions.indexOf("bronze02Boost") == -1){
+				// 	customizationOptions.push("bronze02Boost");
+				// 	console.log("Pushing bronze02Boost");
+				// 	updatey = true;
+				// }
+				// if (resy[k].rating > 300 && customizationOptions.indexOf("silver02Boost") == -1){
+				// 	customizationOptions.push("silver02Boost");
+				// 	console.log("Pushing silver02Boost");
+				// 	updatey = true;
+				// }
+				// if (resy[k].rating > 1000 && customizationOptions.indexOf("gold02Boost") == -1){
+				// 	customizationOptions.push("gold02Boost");
+				// 	console.log("Pushing gold02Boost");
+				// 	updatey = true;
+				// }
+				// if (resy[k].rating > 2000 && customizationOptions.indexOf("diamond02Boost") == -1){
+				// 	customizationOptions.push("diamond02Boost");
+				// 	console.log("Pushing diamond02Boost");
+				// 	updatey = true;
+				// }
+
+
+				if (customizationOptions.indexOf("ivorySGWeapon") == -1){
+					customizationOptions.push("ivorySGWeapon");
+					console.log("Pushing ivorySGWeapon");
+					updatey = true;
+				}
+    
+				// if (customizations["1"].hat != "santaHat" || customizations["2"].hat != "santaHat"){
+				// 	customizations["1"].hat = "santaHat"; //CONFIGURATION
+				// 	customizations["2"].hat = "santaHat"; //CONFIGURATION
+				// 	updatey = true;
+				// }
+
+				//customizationOptions.push("bronze3_0Icon");
+				//customizationOptions.push("silver3_0Icon");
+				//customizationOptions.push("gold3_0Icon");
+				//customizationOptions.push("diamond_0Icon");
+				var obj = {
+					customizationOptions:customizationOptions,
+					//customizations:customizations
+				};
+
+				if (!updatey){
+					//console.log("Nothing to update...");
+					continue;
+				}
+				if (cognitoSub != "0192fb49-632c-47ee-8928-0d716e05ffea"){ //Safety
+					console.log("SAFETYS ON");
+					continue;
+				}
+				// if (resy[k]._id == "60776761f660555073ed3168"){ //Get User
+				// 	console.log("UPDATE!!!!!!!!!!!!!!!");
+				// 	delete resy[k]._id;
+				// 	delete resy[k].USERNAME;
+				// 	delete resy[k].cognitoSub;
+				// 	dbUserUpdate("ups", "1bd31e42-7885-415a-a022-e8e2ee9e254d", resy[k]);
+				// 	break;
+				// }
+					console.log("UPDATING!!!!!!");
 				dataAccess.dbUpdateAwait("RW_USER", "set", {cognitoSub: cognitoSub}, obj, async function(err, res){
 				});			
 				await sleep(10);	
@@ -439,8 +547,12 @@ function isRank(value){
 		"gold1",
 		"gold2",
 		"gold3",
-		"diamond",
-		"diamond2"
+		"diamond1",
+		"diamond2",
+		"diamond3",
+		"master1",
+		"master2",
+		"master3"
     ];
     
     if (rankings.indexOf(value) > -1){
@@ -623,13 +735,14 @@ var getUserShopList = function(cognitoSub,cb){ //getShopList
 				});
 			}
 
-			//manual hardcode
-			//shopList[0] = "batWingsHat";
-			// shopList[1] = "redBowHat";
-			// shopList[2] = "blueBowHat";
-			// shopList[3] = "orangeBowHat";
-			// shopList[4] = "greenBowHat";
-
+			//manual hardcode hard code shop
+			if (isLocal){
+				//shopList[0] = "laserRainbowBoost";
+				// shopList[1] = "03Hat";
+				// shopList[2] = "03Icon";
+				// shopList[3] = "diamond02Boost";
+				// shopList[4] = "greenBowHat";
+			}
 			var clientShopList = transformToClientShop(shopList, nextMidnight);
 
 			console.log("RETURNING SHOP LIST FOR " + cognitoSub);
@@ -702,8 +815,6 @@ var setUserSetting = function(cognitoSub, section, key, value){
 			else
 				logg("Successfully updated setting: " + key + " to " + value);
 		});
-	
-
 	})
 
 }
@@ -727,11 +838,11 @@ function getNewShopItem(currentShopList){
 		shopIndex = randomInt(2, fullShopList.length - 1); //Random element from shop, starting with index 2 (to skip unlock and refresh)
 		//New shop rules
 		if (defaultCustomizationOptions.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT part of default unlocks?
-		if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT already added to new shop?
-		if (!fullShopList[shopIndex].hideFromShop){ //Hide from shop
-			break; //PASSED RULES, ADD THIS ITEM
-		}
-		}
+			if (currentShopList.indexOf(fullShopList[shopIndex].id) == -1){ //Item NOT already added to new shop?
+				if (!fullShopList[shopIndex].hideFromShop){ //Hide from shop
+					break; //PASSED RULES, ADD THIS ITEM
+				}
+			}
 		}
 		loopCount++;
 	}
@@ -1124,7 +1235,7 @@ var getPlayerRelationshipFromDB = function(data,cb){
 	}
 	try {
 		//log("searching for user: " + data.callerCognitoSub);
-		dataAccess.dbFindAwait("RW_FRIEND", {cognitoSub:data.callerCognitoSub}, function(err,friendRes){
+		dataAccess.dbFindOptionsAwait("RW_FRIEND", {cognitoSub:data.callerCognitoSub}, {limit:300}, function(err,friendRes){
 			if (friendRes[0]){
 				for (let j = 0; j < friendRes.length; j++) {
 					if (friendRes[j].friendCognitoSub == data.targetCognitoSub){
@@ -1524,6 +1635,57 @@ function getConversation(conversationId, cb){
 }
 
 
+function getPlaytimeMessage(cognitoSub, cb){
+
+	var re = new RegExp("!playtime","i");
+	var params =  {senderCognitoSub:"0192fb49-632c-47ee-8928-0d716e05ffea", recipientCognitoSub:cognitoSub, message:re};
+
+	dataAccess.dbFindOptionsAwait("RW_MSG", params, {limit:1, sort:{timestamp:-1}}, async function(err, resy){
+		if (err){
+			logg("DB ERROR - getPlaytimeMessage(): " + err);
+		}
+		else {
+			console.log(resy);
+			if (resy && resy[0]){
+				var timeString = resy[0].message.substring(9);
+				if (timeString.length > 0){
+					console.log("timeString:" + timeString);
+					var rightNow = new Date();
+
+					var playtimeHours = parseInt(timeString.substring(0,2));
+					playtimeHours = playtimeHours + 6;
+
+					var playtimeDate = rightNow.getDate();
+					if (playtimeHours >= 24){
+						playtimeHours -= 24;
+						playtimeDate += 1;
+					}
+					// console.log("playtimeHours:" + playtimeHours);
+					// console.log("timeString:" + timeString);
+					var playtimeMinutes = parseInt(timeString.substring(3));
+					// console.log("playtimeMinutes:" + playtimeMinutes);
+					// console.log("rightNow:" + rightNow.toString());
+					var playTime = new Date(rightNow.getFullYear(), rightNow.getMonth(), playtimeDate, playtimeHours, playtimeMinutes, 0);
+					// console.log("playTime:" + playTime.toString());
+
+					
+					var dif = playTime.getTime() - rightNow.getTime();
+					var secondsDif = Math.round(dif / 1000);	
+
+					console.log(secondsDif + " SECONDS TIL YOU PLAY!");
+					if (secondsDif < -900){
+						cb(false);
+					}
+					else {
+						if (secondsDif < 1){secondsDif = 1;}
+						cb(secondsDif);
+					}
+				}
+			}
+		}
+	});
+}
+
 function getConversationMessages(cognitoSubOne, cognitoSubTwo, conversationId, cb){
 	console.log("CLEARING UNREADS FOR " + cognitoSubOne);
 	clearConversationUnreads(conversationId, cognitoSubOne);
@@ -1619,6 +1781,7 @@ module.exports.getEmptyServersFromDB = getEmptyServersFromDB;
 module.exports.dbGameServerUpdate = dbGameServerUpdate;
 module.exports.checkForUnhealthyServers = checkForUnhealthyServers;
 module.exports.addUser = addUser;
+module.exports.updateDBCognitoUsername = updateDBCognitoUsername;
 module.exports.setHordePersonalBest = setHordePersonalBest;
 module.exports.setHordeGlobalBest = setHordeGlobalBest;
 module.exports.getHordePersonalBest = getHordePersonalBest;
@@ -1635,4 +1798,5 @@ module.exports.getConversationByCognitoSubs = getConversationByCognitoSubs;
 module.exports.getOrCreateConversation = getOrCreateConversation;
 module.exports.updateConversation = updateConversation;
 module.exports.getConversationMessages = getConversationMessages;
+module.exports.getPlaytimeMessage = getPlaytimeMessage;
 

@@ -32,6 +32,8 @@ app.use(userRouter);
 app.use(serverRouter);
 app.use(pageRouter);
 app.use("/favicon.ico", express.static(getClientPath('favicon.ico')));
+
+require("../shared/obfuscate.js");
 app.use("/src", express.static(getRootPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
@@ -85,7 +87,7 @@ function processArgs(){
 	isLocal = !hostname.toLowerCase().includes("compute");
   
   config.EBName = process.env.EBName;
-  logg("ElasticBeastalk (EBName) is " + process.env.EBName);
+  logg("ElasticBeastalk`   (EBName) is " + process.env.EBName);
 
 	if (isLocal){
 		logg("Updating app to run locally");

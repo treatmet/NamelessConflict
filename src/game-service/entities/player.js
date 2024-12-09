@@ -58,6 +58,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		captures:0,	
 		rating:0,
 		experience:0,
+		medals:{},
 		ticksSinceLastPing:0,
 		cumulativeAllyDamage:0
 	}
@@ -894,7 +895,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	
 		//Assassinations
 		if (!sameTeam && bagSlam == false && entityHelpers.getDirDif(player.walkingDir, self.shootingDir) <= 1){
-			self.health = 0;			
+			self.health = 0;	
+			playerEvent(playerId, "assassination");		
 		}
 
 		updatePlayerList.push({id:self.id,property:"health",value:self.health})
@@ -934,7 +936,12 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		else if (self.weapon == 5 && self.laserClip <= 0 && self.pressingArrowKey() && self.fireRate <= 0){ // || self.pressingDown || self.pressingUp || self.pressingRight || self.pressingLeft
 			gunCycle(self, false);
 		}
+	}
 
+	self.gainMedal = function(medal){
+		if (!self.medals){self.medals = {};}
+		if (!self.medals[medal]){self.medals[medal] = 0;}
+		self.medals[medal]++;
 	}
 
 	self.move = function(){
@@ -1331,8 +1338,11 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					if (shooter.multikill >= 2){
 						playerEvent(shooter.id, "multikill");
 					}
-					if (shooter.spree == 5 || shooter.spree == 10 || shooter.spree == 15 || shooter.spree == 20){
+					if (shooter.spree == 5 || shooter.spree == 10 || shooter.spree == 15 || shooter.spree == 20 || shooter.spree == 25){
 						playerEvent(shooter.id, "spree");
+					}
+					if (getDistance(shooter, self) > 820){
+						playerEvent(shooter.id, "snipe");
 					}
 				}
 
@@ -1769,7 +1779,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						else if ((!player.pressingW && !player.pressingD && !player.pressingS && !player.pressingA) && player.energy > 0){
 							if (!player.cloakEngaged && cloakingEnabled){
 								player.cloakEngaged = true;
-								SOCKET_LIST[player.id].emit('sfx', "sfxCloak");
+								SOCKET_LIST[player.id].emit('sfx', "Cloak");
 							}
 							else if (player.cloakEngaged){
 								player.cloakEngaged = false;
@@ -1876,11 +1886,17 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 					//TESTING KEY
 					else if (data.inputId == 85){ //U (TESTING BUTTON) 
 					
-					/* hurt player
-						player.health -= 10;
-						player.healDelay = 300;
-						updatePlayerList.push({id:player.id,property:"health",value:player.health});\
-					*/				
+						/* hurt player
+							player.health -= 10;
+							player.healDelay = 300;
+							updatePlayerList.push({id:player.id,property:"health",value:player.health});\
+						*/		
+						console.log("KILL");
+						for (var p in Player.list){
+							if (Player.list[p].id != player.id){
+								Player.list[p].kill(player);
+							}
+						}					
 					}
 
 
@@ -2080,9 +2096,23 @@ function evalServer(socket, data){
 	if (!getPlayerById(socket.id))
 		return;
 
-	//socket = socketBak;
 	if (data == "start" && (customServer && (pregame || getPlayerById(socket.id).cognitoSub == createdByCognitoSub))){
-		gameEngine.restartGame();
+		gameEngine.restartGame();		
+	}
+	else if (data.substring(0,4) == "kick" && (customServer && getPlayerById(socket.id).cognitoSub == createdByCognitoSub)){
+		var playerList = getPlayerList();
+		for (var p in playerList){
+			if (playerList[p].name == data.substring(4) || playerList[p].name == data.substring(5)){
+				var id = playerList[p].id;
+
+				var name = playerList[p].name;
+				bannedCognitoSubs.push({cognitoSub:playerList[p].cognitoSub, reason:"asking for it"});
+				playerDisconnect(id);
+				delete SOCKET_LIST[id];
+				socket.emit('addToChat', 'Kicked ' + name + ' from game.');
+				return;
+			}
+		}
 	}
 
 	if(!allowServerCommands){
@@ -2147,20 +2177,7 @@ function evalServer(socket, data){
 	else if (data == "respawn9" || data == "spawn9"){
 		respawnTimeLimit = 9 * 60;
 	}
-	else if (data.substring(0,4) == "kick"){
-		var playerList = getPlayerList();
-		for (var p in playerList){
-			if (playerList[p].name == data.substring(4)){
-				var id = playerList[p].id;
 
-				var name = playerList[p].name;
-				playerDisconnect(id);
-				delete SOCKET_LIST[id];
-				socket.emit('addToChat', 'Kicked ' + name + ' from game.');
-				break;
-			}
-		}
-	}
 	else if (data == "team" || data == "teams" || data == "change" || data == "switch" || data == "changeTeams" || data == "changeTeam"){
 		if (gametype == "horde" || (pregame && pregameIsHorde)){
 			var playerList = getPlayerList();
@@ -2885,10 +2902,32 @@ function playerEvent(playerId, event){
 			Player.list[playerId].kills++;			
 			Player.list[playerId].cash+=killCash;
 			Player.list[playerId].cashEarnedThisGame+=killCash;
+			if (Player.list[playerId].health <= 0){
+				Player.list[playerId].cash+=lastLaughCash;
+				Player.list[playerId].cashEarnedThisGame+=lastLaughCash;
+				Player.list[playerId].gainMedal("lastLaugh");
+				updateNotificationList.push({text:"**LAST LAUGH**", medal:"lastLaugh", playerId:playerId});
+			}
 			updatePlayerList.push({id:playerId,property:"kills",value:Player.list[playerId].kills});
 			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
 			updateNotificationList.push({text:"+$" + killCash + " - Enemy Killed",playerId:playerId});
+		}
+		else if (event == "snipe"){
+			Player.list[playerId].cash+=snipeCash;
+			Player.list[playerId].cashEarnedThisGame+=snipeCash;
+			Player.list[playerId].gainMedal("snipe");
+			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
+			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
+			updateNotificationList.push({text:"**SNIPE**", medal:"snipe", playerId:playerId});
+		}
+		else if (event == "assassination"){
+			Player.list[playerId].cash+=assassinationCash;
+			Player.list[playerId].cashEarnedThisGame+=assassinationCash;
+			Player.list[playerId].gainMedal("assassination");
+			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
+			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
+			updateNotificationList.push({text:"**ASSASSINATION**", medal:"assassin", playerId:playerId});
 		}
 		else if (event == "assist"){
 			Player.list[playerId].assists++;			
@@ -2898,72 +2937,93 @@ function playerEvent(playerId, event){
 			updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 			updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
 			updateNotificationList.push({text:"+$" + assistCash + " - Assist",playerId:playerId});
+			if (Player.list[playerId].assists == 5){
+				Player.list[playerId].gainMedal("goodFriend");
+				updateNotificationList.push({text:"**GOOD FRIEND**", medal:"goodFriend", playerId:playerId});
+			}
+			else if (Player.list[playerId].assists == 10){
+				Player.list[playerId].gainMedal("bestFriend");
+				updateNotificationList.push({text:"***BEST FRIEND***", medal:"bestFriend", playerId:playerId});
+			}
+			else if (Player.list[playerId].assists == 15){
+				Player.list[playerId].gainMedal("friendsTillTheEnd");
+				updateNotificationList.push({text:"****FRIENDS TILL THE END****", medal:"friendsTillTheEnd", playerId:playerId});
+			}
 		}
 		else if (event == "multikill"){
 			if (Player.list[playerId].multikill == 2){
 				Player.list[playerId].cash+=doubleKillCash;
 				Player.list[playerId].cashEarnedThisGame+=doubleKillCash;
+				Player.list[playerId].gainMedal("doubleKill");
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**DOUBLE KILL!!**",playerId:playerId});				
+				updateNotificationList.push({text:"**DOUBLE KILL!!**", medal:"doubleKill", playerId:playerId});				
 			}
 			else if (Player.list[playerId].multikill == 3){
 				Player.list[playerId].cash+=tripleKillCash;
 				Player.list[playerId].cashEarnedThisGame+=tripleKillCash;
+				Player.list[playerId].gainMedal("tripleKill");
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"***TRIPLE KILL!!!***",playerId:playerId});				
+				updateNotificationList.push({text:"***TRIPLE KILL!!!***", medal:"tripleKill", playerId:playerId});				
 			}
 			else if (Player.list[playerId].multikill == 4){
 				Player.list[playerId].cash+=quadKillCash;
 				Player.list[playerId].cashEarnedThisGame+=quadKillCash;
+				Player.list[playerId].gainMedal("overKill");
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"****OVERKILL!!!!****",playerId:playerId});				
+				updateNotificationList.push({text:"****OVERKILL!!!!****", medal:"overKill",playerId:playerId});				
 			}
 			else if (Player.list[playerId].multikill == 5){
 				Player.list[playerId].cash+=quadKillCash;
 				Player.list[playerId].cashEarnedThisGame+=quadKillCash;
+				Player.list[playerId].gainMedal("killception");
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"*****KILLCEPTION!!!!*****",playerId:playerId});				
+				updateNotificationList.push({text:"*****KILLCEPTION!!!!*****", medal:"killception",playerId:playerId});				
 			}
 			else if (Player.list[playerId].multikill >= 6){
 				Player.list[playerId].cash+=quadKillCash;
 				Player.list[playerId].cashEarnedThisGame+=quadKillCash;
+				Player.list[playerId].gainMedal("yoDawg");
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"******YO DAWG I HEARD YOU LIKE KILLS SO I PUT KILLS IN YOUR KILLS!!!!******",playerId:playerId});				
+				updateNotificationList.push({text:"******YO DAWG I HEARD YOU LIKE KILLS SO I PUT KILLS IN YOUR KILLS!!!!******", medal:"yoDawg", playerId:playerId});				
 			}
 		}
 		else if (event == "spree"){
 			if (Player.list[playerId].spree == 5){
 				Player.list[playerId].cash+=spreeCash;
 				Player.list[playerId].cashEarnedThisGame+=spreeCash;
+				Player.list[playerId].gainMedal("killingSpree");
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"**KILLING SPREE!!**",playerId:playerId});				
+				updateNotificationList.push({text:"**KILLING SPREE!!**", medal:"killingSpree",playerId:playerId});				
 			}		
 			else if (Player.list[playerId].spree == 10){
 				Player.list[playerId].cash+=frenzyCash;
 				Player.list[playerId].cashEarnedThisGame+=frenzyCash;
+				Player.list[playerId].gainMedal("massacre");
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"****MASSACRE!!***",playerId:playerId});				
-			}		
+				updateNotificationList.push({text:"****MASSACRE!!***", medal:"massacre",playerId:playerId});				
+			}
 			else if (Player.list[playerId].spree == 15){
 				Player.list[playerId].cash+=rampageCash;
 				Player.list[playerId].cashEarnedThisGame+=rampageCash;
+				Player.list[playerId].gainMedal("genocide");
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"****GENOCIDE!!!****",playerId:playerId});				
+				updateNotificationList.push({text:"****GENOCIDE!!!****", medal:"genocide",playerId:playerId});				
 			}		
-			else if (Player.list[playerId].spree == 20){
+			else if (Player.list[playerId].spree >= 20){
 				Player.list[playerId].cash+=unbelievableCash;
 				Player.list[playerId].cashEarnedThisGame+=unbelievableCash;
+				Player.list[playerId].gainMedal("annihilation");
 				updatePlayerList.push({id:playerId,property:"cash",value:Player.list[playerId].cash});
 				updatePlayerList.push({id:playerId,property:"cashEarnedThisGame",value:Player.list[playerId].cashEarnedThisGame});
-				updateNotificationList.push({text:"*****ANNIHILATION!!!*****",playerId:playerId});				
+				updateNotificationList.push({text:"*****ANNIHILATION!!!*****", medal:"annihilation",playerId:playerId});				
 			}		
 		}
 		else if (event == "killThug"){
@@ -3032,6 +3092,8 @@ function playerEvent(playerId, event){
 				updateNotificationList.push({text:"+$" + captureCash + " - BAG CAPTURED!!",playerId:playerId});
 			}
 		}
+		console.log("MEDALS");
+		console.log(Player.list[playerId].medals);
 	}
 }
 

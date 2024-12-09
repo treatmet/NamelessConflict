@@ -88,7 +88,6 @@ var validateTokenOrRefresh = async function(tokens){
 			delete validationResponse.refresh_token;
 		}
 	}
-
 	return validationResponse;
 }
 

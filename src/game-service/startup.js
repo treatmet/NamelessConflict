@@ -28,6 +28,8 @@ console.log("getRootPath('.')");
 console.log(getRootPath('.'));
 console.log("getClientPath('.')");
 console.log(getClientPath('.'));
+
+require("../shared/obfuscate.js");
 app.use("/src", express.static(getRootPath('.')));
 app.use(express.urlencoded({extended: true})); //To support URL-encoded bodies
 
