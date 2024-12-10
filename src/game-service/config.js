@@ -70,7 +70,7 @@ global.voteGametypeIds = [];
 global.voteGametype = true;
 global.voteMap = true;
 global.voteRebalance = true;
-global.pregameIsHorde = true;
+global.pregameIsHorde = false;
 
 //Horde settings
 global.hordeKills = 0;
@@ -111,9 +111,15 @@ global.elimRespawnTimeLimit = 2 * 60; //seconds (translated to frames)
 global.bagDrag = 0.85;
 global.playerMaxHealth = 175;
 global.assistDamageThreshold = 30;
-global.grappleSpeed = 20;
-global.grappleStrength = 3;
-global.grappleLength = 5 * 75; //Tiles * 75
+
+//Grapple
+global.grappleEnergy = 10;
+global.grappleSpeed = 60;
+global.grappleLength = 6 * 75; //Tiles * 75
+global.grappleStrength = 1.3;
+global.grappleReleaseSpeed = 18;
+global.grappleMaxLife = 90;
+global.grappleWhileGrappling = false;
 
 global.grenadeEnergyCost = 30;
 global.grenadeTimer = 2 * 60; //Seconds (translated to frames)

@@ -106,6 +106,8 @@ Img.smashGreen.src = "/src/client/img/smash-green.png";
 
 Img.grappleChain = new Image();
 Img.grappleChain.src = "/src/client/img/grappleChain.png";
+Img.grappleChainStraight = new Image();
+Img.grappleChainStraight.src = "/src/client/img/grappleChainStraight.png";
 
 Img.boostBlast = new Image();
 Img.boostBlast.src = "/src/client/img/shot-flash.png";

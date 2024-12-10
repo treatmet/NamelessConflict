@@ -801,10 +801,10 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	}
 
 	self.shootGrapple = function(){
-		console.log("SHOT");
 		self.updatePropAndSend("grapple", {
 			firing:true,
 			dir:self.walkingDir,
+			life:0,
 			x:self.x,
 			y:self.y
 		});
@@ -812,22 +812,25 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 	self.releaseGrapple = function(){
 		self.updatePropAndSend("grapple", {});
-		var releaseSpeed = grappleStrength * 2;
-		if (self.walkingDir == 1){self.speedY -= releaseSpeed;}
-		if (self.walkingDir == 2){self.speedY -= releaseSpeed * (2/3); self.speedX += releaseSpeed * (2/3);}
-		if (self.walkingDir == 3){self.speedX += releaseSpeed;}
-		if (self.walkingDir == 4){self.speedY += releaseSpeed * (2/3); self.speedX += releaseSpeed * (2/3);}
-		if (self.walkingDir == 5){self.speedY += releaseSpeed;}
-		if (self.walkingDir == 6){self.speedY += releaseSpeed * (2/3); self.speedX -= releaseSpeed * (2/3);}
-		if (self.walkingDir == 7){self.speedX -= releaseSpeed;}
-		if (self.walkingDir== 8){self.speedY -= releaseSpeed * (2/3); self.speedX -= releaseSpeed * (2/3);}
-
+		
+		if (self.walkingDir == 1){self.speedY -= grappleReleaseSpeed;}
+		if (self.walkingDir == 2){self.speedY -= grappleReleaseSpeed * (2/3); self.speedX += grappleReleaseSpeed * (2/3);}
+		if (self.walkingDir == 3){self.speedX += grappleReleaseSpeed;}
+		if (self.walkingDir == 4){self.speedY += grappleReleaseSpeed * (2/3); self.speedX += grappleReleaseSpeed * (2/3);}
+		if (self.walkingDir == 5){self.speedY += grappleReleaseSpeed;}
+		if (self.walkingDir == 6){self.speedY += grappleReleaseSpeed * (2/3); self.speedX -= grappleReleaseSpeed * (2/3);}
+		if (self.walkingDir == 7){self.speedX -= grappleReleaseSpeed;}
+		if (self.walkingDir== 8){self.speedY -= grappleReleaseSpeed * (2/3); self.speedX -= grappleReleaseSpeed * (2/3);}
 	}
 
 	self.processGrapple = function(){
 		if (!self.grapple || typeof self.grapple.x === 'undefined'){return;}
 		//console.log("x:" + self.x + " y:" + self.y + " Gx:" + self.grapple.x + " Gy:" + self.grapple.y);
-		if (getDistance(self, self.grapple) > grappleLength){self.grapple = {}; console.log("HALT");}
+		if (getDistance(self, self.grapple) > grappleLength){self.updatePropAndSend("grapple", {}); return;} //Grapple reached chain length without hitting any target
+		if (self.grapple.life > grappleMaxLife) {self.updatePropAndSend("grapple", {}); return;}
+		self.grapple.life++;
+		//Everything past here, grapple is active
+		//Calculate grapple trajectory
 		if (self.grapple.firing){
 			if (self.grapple.dir == 1){self.grapple.y -= grappleSpeed;}
 			if (self.grapple.dir == 2){self.grapple.y -= grappleSpeed * (2/3); self.grapple.x += grappleSpeed * (2/3);}
@@ -837,23 +840,48 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			if (self.grapple.dir == 6){self.grapple.y += grappleSpeed * (2/3); self.grapple.x -= grappleSpeed * (2/3);}
 			if (self.grapple.dir == 7){self.grapple.x -= grappleSpeed;}
 			if (self.grapple.dir == 8){self.grapple.y -= grappleSpeed * (2/3); self.grapple.x -= grappleSpeed * (2/3);}
+			
+			//COLLISION MOMENT
 			if (block.checkCollision(self.grapple)){
 				self.grapple.firing = false;
 			}	
 			// if (checkEntityCollision(self.grapple)){
 			// 	self.grapple.firing = false;		
 			// }	
+			if (self.grapple.firing == false) { // General collision behavior
+				self.expendEnergy(grappleEnergy);
+			}
+			// END COLLISION
+
+
 		}
+		//Calculate player pulling physics
 		if (!self.grapple.firing){
+
 			let dx = self.x - self.grapple.x;  // Compute distance between centers of objects
 			let dy = self.y - self.grapple.y;
-			let r = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+			//Compute grapple pull vector (currently set permanently at contact, remove conditional below to pull to center of grapple point)
+			if (!self.grapple.pullX && !self.grapple.pullY) {
+				//let r = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2)); //deltaX : deltaY ratio
 
-			if (Math.abs(self.grapple.x - self.x) + Math.abs(self.grapple.y - self.y) > 30){
-				self.speedX -= grappleStrength * dx / r;
-				self.speedY -= grappleStrength * dy / r;
+				// Normalize the direction vector
+				let magnitude = Math.sqrt(dx * dx + dy * dy);
+				let normalizedDx = dx / magnitude;
+				let normalizedDy = dy / magnitude;
+				self.grapple.pullX = grappleStrength * normalizedDx;
+				self.grapple.pullY = grappleStrength * normalizedDy;
 			}
-			else if (self.grapple.x != self.x || self.grapple.y != self.y){
+
+			// Only pull the player if the distance is greater than 60
+			if (Math.abs(dx) + Math.abs(dy) > 60) { 
+				//Lauch player with attached grapple physics
+				//Grapple influences speed stronger based on how far
+				self.speedX -= self.grapple.pullX;
+				self.speedY -= self.grapple.pullY;
+				/* self.speedX -= grappleStrength * (dx / r);
+				self.speedY -= grappleStrength * (dy / r); */
+			}
+			else if (self.grapple.x != self.x || self.grapple.y != self.y){ //Disconnect attached grapple
 				self.updatePropAndSend("grapple", {});
 			}
 		}
@@ -903,7 +931,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.healDelay = healDelayTime;
 		entityHelpers.sprayBloodOntoTarget(direction, self.x, self.y, self.id);
 		if (self.health <= 0){
-			console.log("UPDATE");
 			player.updatePropAndSend("energy", player.energy+50, true);
 			self.kill(player);
 		}		
@@ -1741,7 +1768,15 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 								player.cloakEngaged = false;						
 								updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});	
 							}
-							player.boost();
+
+							//BOOST VS GRAPPLE!!!
+							//player.boost();
+							if (!player.grapple || player.grapple.firing || typeof player.grapple.x === 'undefined' || grappleWhileGrappling){
+								player.shootGrapple();
+							} 
+							else {
+								player.releaseGrapple();
+							}
 							updateEffectList.push({type:3,playerId:player.id});
 							updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
 						}
@@ -2130,13 +2165,13 @@ function evalServer(socket, data){
 		socket.emit('addToChat', "Server commands disabled");
 		allowServerCommands = false;
 	}
-	else if (data == "startt" || data == "restartt"){
+	else if (data == "start" || data == "startt" || data == "restartt"){
 		gameEngine.restartGame();
 	}
 	else if (data == "spawn" || data == "respawn"){
 		gameEngine.spawnSafely(getPlayerById(socket.id));
 	}
-	else if (data == "me"){
+	else if (data == "banme"){
 		logg("BANNED: " + getPlayerById(socket.id).cognitoSub);
 		bannedCognitoSubs.push({cognitoSub:getPlayerById(socket.id).cognitoSub, reason:"asking for it"});
 		console.log(bannedCognitoSubs);

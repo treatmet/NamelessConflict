@@ -364,16 +364,21 @@ function checkIfClosestToThug(thug, target){
 
 
 function respawnThug(thug){
-	thug.attacking = 0;
-	thug.targetId = 0;
-	thug.pushSpeed = 0;
-    thug.lastEnemyToHit = 0;
-	gameEngine.spawnSafely(thug);
-	thug.health = thugHealth;
-	updateThugList.push({id:thug.id,property:"x",value:thug.x});
-	updateThugList.push({id:thug.id,property:"y",value:thug.y});
-	updateThugList.push({id:thug.id,property:"health",value:thug.health});
-	thug.respawnTimer = 600;
+	if (gametype == "horde" || (pregame && pregameIsHorde)){
+		thug.attacking = 0;
+		thug.targetId = 0;
+		thug.pushSpeed = 0;
+		thug.lastEnemyToHit = 0;
+		gameEngine.spawnSafely(thug);
+		thug.health = thugHealth;
+		updateThugList.push({id:thug.id,property:"x",value:thug.x});
+		updateThugList.push({id:thug.id,property:"y",value:thug.y});
+		updateThugList.push({id:thug.id,property:"health",value:thug.health});
+		thug.respawnTimer = 600;
+	}
+	else {
+		delete Thug.list[thug.id];
+	}
 }
 
 var getThugList = function(){

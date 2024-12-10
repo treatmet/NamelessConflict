@@ -1952,7 +1952,7 @@ var secondIntervalFunction = function(){
 	//Horde Stuff
 	if (gametype == "horde" || (pregame && pregameIsHorde)){
 		if (player.getPlayerListLength() > 0){
-			if (!isEveryoneDead()){
+			if (!isEveryoneDead() && !isLocal){
 				spawnHordeThugs();
 				spawnHordeThugs();
 				spawnHordePickup();

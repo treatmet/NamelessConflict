@@ -177,7 +177,7 @@ var noShadows = false;
 //Initialize client-side code variables
 
 //Shared settings
-var grappleSpeed = 20;
+var grappleSpeed = 0;
 var pushStrength = 0; //14
 var blockPushSpeed = 0; //4
 var speedCap = 0;
@@ -7068,29 +7068,32 @@ Line.prototype.step = function() {
 
 
 function drawGrapples(){
+	//log("draing grapples");
 	for (var p in Player.list){
 		if (!Player.list[p].grapple || typeof Player.list[p].grapple.x === 'undefined'){return;}
-		processGrapple(Player.list[p]);
-		bgCtx.save();
-		bgCtx.translate(centerX - myPlayer.x * zoom + Player.list[p].x * zoom, centerY - myPlayer.y * zoom + Player.list[p].y * zoom); //Center camera on controlled player
-		bgCtx.rotate(180 * Math.PI / 180);
-		bgCtx.rotate((Math.atan2(Player.list[p].y - Player.list[p].grapple.y, Player.list[p].x - Player.list[p].grapple.x) - (90 * Math.PI / 180) ));
+		ctx.save();
+		ctx.translate(centerX - myPlayer.x * zoom + Player.list[p].x * zoom, centerY - myPlayer.y * zoom + Player.list[p].y * zoom); //Center camera on controlled player
+		ctx.rotate(180 * Math.PI / 180);
+		ctx.rotate((Math.atan2(Player.list[p].y - Player.list[p].grapple.y, Player.list[p].x - Player.list[p].grapple.x) - (90 * Math.PI / 180) ));
 			//drawImage(Img.shot,(-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
 			var grappleDist = getDistance(Player.list[p].grapple, Player.list[p]);
-			var x = {
+/* 			var x = {
 				firing:true,
 				dir:self.walkingDir,
 				x:self.x,
 				y:self.y
+			} */
+			if (Player.list[p].grapple.firing) {
+				drawImage(Img.grappleChain, -Img.grappleChain.width/2 * zoom, 0, Img.grappleChain.width * zoom, grappleDist * zoom);
+			} else {
+				drawImage(Img.grappleChainStraight, -Img.grappleChainStraight.width/2 * zoom, 0, Img.grappleChainStraight.width * zoom, grappleDist * zoom);
 			}
-			drawImage(Img.grappleChain, -Img.grappleChain.width/2 * zoom, 0, Img.grappleChain.width * zoom, grappleDist * zoom);
-
-		bgCtx.restore();
+			ctx.restore();
+			processGrapple(Player.list[p]);
 	}
 }
 
 function processGrapple(player){
-	if (getDistance(player, player.grapple) > 500){player.grapple = {};}
 	if (player.grapple.firing){
 		if (player.grapple.dir == 1){player.grapple.y -= grappleSpeed;}
 		if (player.grapple.dir == 2){player.grapple.y -= grappleSpeed * (2/3); player.grapple.x += grappleSpeed * (2/3);}
