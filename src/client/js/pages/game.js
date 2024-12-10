@@ -1,3 +1,4 @@
+//const { log } = require("winston");
 
 page = "game";
 //document.oncontextmenu =new Function("return false;")
@@ -1382,10 +1383,11 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 
 		//Grapple Sfx
 		if (playerDataPack[i].property == "grapple"){
-			if (playerDataPack[i].value.firing == true){
-				sfx.GrappleShot.play();
+			if (playerDataPack[i].value.firing == false){
+				sfx.GrappleHit.play();
 			}
-			else {
+			else if (playerDataPack[i].value.firing == undefined) {
+				sfx.GrappleHit.stop();
 				sfx.GrappleShot.stop();
 			}
 		}
@@ -7066,30 +7068,28 @@ Line.prototype.step = function() {
 }
 
 
-
 function drawGrapples(){
-	//log("draing grapples");
+	noShadow();
 	for (var p in Player.list){
 		if (!Player.list[p].grapple || typeof Player.list[p].grapple.x === 'undefined'){return;}
+		processGrapple(Player.list[p]);
 		ctx.save();
 		ctx.translate(centerX - myPlayer.x * zoom + Player.list[p].x * zoom, centerY - myPlayer.y * zoom + Player.list[p].y * zoom); //Center camera on controlled player
-		ctx.rotate(180 * Math.PI / 180);
+		ctx.rotate(Math.PI);
 		ctx.rotate((Math.atan2(Player.list[p].y - Player.list[p].grapple.y, Player.list[p].x - Player.list[p].grapple.x) - (90 * Math.PI / 180) ));
-			//drawImage(Img.shot,(-4 + xOffset) * zoom, (-shot.distance - 40 + yOffset) * zoom, Img.shot.width * zoom, shot.distance * zoom);
 			var grappleDist = getDistance(Player.list[p].grapple, Player.list[p]);
-/* 			var x = {
+/* 			var x = { !!!//deleteme?
 				firing:true,
 				dir:self.walkingDir,
 				x:self.x,
 				y:self.y
 			} */
 			if (Player.list[p].grapple.firing) {
-				drawImage(Img.grappleChain, -Img.grappleChain.width/2 * zoom, 0, Img.grappleChain.width * zoom, grappleDist * zoom);
+				drawImage(Img.grappleChain, (-Img.grappleChain.width/2 - 10) * zoom, 0, (Img.grappleChain.width + 20) * zoom, grappleDist * zoom);
 			} else {
 				drawImage(Img.grappleChainStraight, -Img.grappleChainStraight.width/2 * zoom, 0, Img.grappleChainStraight.width * zoom, grappleDist * zoom);
 			}
 			ctx.restore();
-			processGrapple(Player.list[p]);
 	}
 }
 
@@ -7775,7 +7775,7 @@ var hidePlayers = false;
 var hideBlocks = false;
 var showTestSquare = false;
 
-document.onkeydown = function(event){
+document.onkeydown = function(event){ //SendInput
 	var hitKeyCode = event.keyCode;
 	if (chatInput.style.display == "none" && hitKeyCode != 123 && hitKeyCode != 122){
 		event.preventDefault();

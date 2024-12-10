@@ -843,13 +843,20 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			
 			//COLLISION MOMENT
 			if (block.checkCollision(self.grapple)){
-				self.grapple.firing = false;
+				self.updatePropAndSend("grapple", {
+					firing:false,
+					dir:self.grapple.dir,
+					life:self.grapple.life,
+					x:self.grapple.x,
+					y:self.grapple.y
+				});
 			}	
 			// if (checkEntityCollision(self.grapple)){
 			// 	self.grapple.firing = false;		
 			// }	
 			if (self.grapple.firing == false) { // General collision behavior
 				self.expendEnergy(grappleEnergy);
+				console.log(self.grapple);
 			}
 			// END COLLISION
 
@@ -1763,13 +1770,13 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						player.pressingLeft = data.state;
 					}	
 					else if(data.inputId === 32){ //SPACE
-						if ((player.pressingW || player.pressingD || player.pressingS || player.pressingA) && !player.energyExhausted && player.boosting == 0 && player.holdingBag == false){
+						if ((player.pressingW || player.pressingD || player.pressingS || player.pressingA) && !player.energyExhausted && player.boosting == 0 && player.holdingBag == false){						
 							if (player.cloakEngaged){
 								player.cloakEngaged = false;						
 								updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});	
 							}
 
-							//BOOST VS GRAPPLE!!!
+							//BOOST VS GRAPPLE VS BOOST!!!
 							//player.boost();
 							if (!player.grapple || player.grapple.firing || typeof player.grapple.x === 'undefined' || grappleWhileGrappling){
 								player.shootGrapple();

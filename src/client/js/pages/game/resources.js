@@ -509,6 +509,7 @@ sfx.Cloak = new Howl({src: ['/src/client/sfx/cloak2.mp3']});
 sfx.Cloak.volume(.6);
 sfx.Warp = new Howl({src: ['/src/client/sfx/warp.mp3']});
 sfx.GrappleShot = new Howl({src: ['/src/client/sfx/grappleShot.mp3']});
+sfx.GrappleHit = new Howl({src: ['/src/client/sfx/grappleHit.mp3']});
 
 sfx.NextGameTimer = new Howl({src: ['/src/client/sfx/haloStartBeeps.mp3']});
 sfx.LevelUp = new Howl({src: ['/src/client/sfx/gsLevelUp.mp3']});
