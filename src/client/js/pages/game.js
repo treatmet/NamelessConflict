@@ -7790,6 +7790,7 @@ document.onkeydown = function(event){
 	if(hitKeyCode === 87 && chatInput.style.display == "none"){ //W 
 		if (!myPlayer.pressingW && !shop.active){
 			keyPress(87, true);
+			keyPress(83, false);
 		}
 		myPlayer.pressingW = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
@@ -7800,6 +7801,7 @@ document.onkeydown = function(event){
 	else if(hitKeyCode === 68 && chatInput.style.display == "none"){ //D 
 		if (!myPlayer.pressingD && !shop.active){
 			keyPress(68, true);
+			keyPress(65, false);
 		}
 		myPlayer.pressingD = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
@@ -7810,6 +7812,7 @@ document.onkeydown = function(event){
 	else if(hitKeyCode === 83 && chatInput.style.display == "none"){ //S 
 		if (!myPlayer.pressingS && !shop.active){
 			keyPress(83, true);
+			keyPress(87, false);
 		}
 		myPlayer.pressingS = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
@@ -7820,6 +7823,7 @@ document.onkeydown = function(event){
 	else if(hitKeyCode === 65 && chatInput.style.display == "none"){ //A 
 		if (!myPlayer.pressingA && !shop.active){
 			keyPress(65, true);
+			keyPress(68, false);
 		}
 		myPlayer.pressingA = true;
 		if (myPlayer.team == 0 || myPlayer.eliminationSpectate == true){
