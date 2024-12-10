@@ -2,7 +2,7 @@ const path = require("path");
 const obfuscator = require("javascript-obfuscator");
 var obfuscated_code = {};
 
-if (config["obfuscate"]) {
+if (config["obfuscate"] && false) {
     app.get(/^\/src\/(.*)\.js$/, (req, res)  => {
         let file = path.join(__dirname, "../", "client/", req.path.substring(11));
         if (!fs.existsSync(file)) {
