@@ -826,12 +826,14 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	self.processGrapple = function(){
 		if (!self.grapple || typeof self.grapple.x === 'undefined'){return;}
 		//console.log("x:" + self.x + " y:" + self.y + " Gx:" + self.grapple.x + " Gy:" + self.grapple.y);
-		if (getDistance(self, self.grapple) > grappleLength){self.updatePropAndSend("grapple", {}); return;} //Grapple reached chain length without hitting any target
+		if (getDistance(self, self.grapple) >= grappleLength){self.updatePropAndSend("grapple", {}); return;} //Grapple reached chain length without hitting any target
 		if (self.grapple.life > grappleMaxLife) {self.updatePropAndSend("grapple", {}); return;}
 		self.grapple.life++;
 		//Everything past here, grapple is active
 		//Calculate grapple trajectory
 		if (self.grapple.firing){
+			var prevX = self.grapple.x;
+			var prevY = self.grapple.y;
 			if (self.grapple.dir == 1){self.grapple.y -= grappleSpeed;}
 			if (self.grapple.dir == 2){self.grapple.y -= grappleSpeed * (2/3); self.grapple.x += grappleSpeed * (2/3);}
 			if (self.grapple.dir == 3){self.grapple.x += grappleSpeed;}
@@ -842,9 +844,30 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			if (self.grapple.dir == 8){self.grapple.y -= grappleSpeed * (2/3); self.grapple.x -= grappleSpeed * (2/3);}
 			
 			//COLLISION MOMENT
-			if (block.checkCollision(self.grapple)){
+			var playerHit = entityHelpers.getPlayerCollided({
+				prevX: prevX,
+				prevY: prevY,
+				x: self.grapple.x,
+				y: self.grapple.y,
+				width: 10,
+				height: 10,
+				id: self.id
+			})
+			if (playerHit){
 				self.updatePropAndSend("grapple", {
 					firing:false,
+					targetType: "player",
+					targetId: playerHit.id,
+					dir:self.grapple.dir,
+					life:self.grapple.life,
+					x:playerHit.x,
+					y:playerHit.y
+				});
+			}	
+			else if (block.checkCollision(self.grapple)){
+				self.updatePropAndSend("grapple", {
+					firing:false,
+					targetType: "block",
 					dir:self.grapple.dir,
 					life:self.grapple.life,
 					x:self.grapple.x,
@@ -864,31 +887,49 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		//Calculate player pulling physics
 		if (!self.grapple.firing){
 
+			if (self.grapple.targetType == "player") {
+				self.grapple.x = Player.list[self.grapple.targetId].x;
+				self.grapple.y = Player.list[self.grapple.targetId].y;
+			}
+
 			let dx = self.x - self.grapple.x;  // Compute distance between centers of objects
 			let dy = self.y - self.grapple.y;
-			//Compute grapple pull vector (currently set permanently at contact, remove conditional below to pull to center of grapple point)
-			if (!self.grapple.pullX && !self.grapple.pullY) {
-				//let r = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2)); //deltaX : deltaY ratio
+			let r = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2)); //deltaX : deltaY ratio
 
-				// Normalize the direction vector
-				let magnitude = Math.sqrt(dx * dx + dy * dy);
-				let normalizedDx = dx / magnitude;
-				let normalizedDy = dy / magnitude;
-				self.grapple.pullX = grappleStrength * normalizedDx;
-				self.grapple.pullY = grappleStrength * normalizedDy;
-			}
+			if (self.grapple.targetType == "player") {
+				//Compute grapple pull vector (currently set permanently at contact, remove conditional below to pull to center of grapple point)
 
-			// Only pull the player if the distance is greater than 60
-			if (Math.abs(dx) + Math.abs(dy) > 60) { 
-				//Lauch player with attached grapple physics
-				//Grapple influences speed stronger based on how far
-				self.speedX -= self.grapple.pullX;
-				self.speedY -= self.grapple.pullY;
-				/* self.speedX -= grappleStrength * (dx / r);
-				self.speedY -= grappleStrength * (dy / r); */
+				// Only pull the player if the distance is greater than 60
+				if (Math.abs(dx) + Math.abs(dy) > 60) { 
+					//Lauch player with attached grapple physics
+					//Grapple influences speed stronger based on how far
+					self.speedX -= grappleStrength * (dx / r);
+					self.speedY -= grappleStrength * (dy / r);
+				}
+				else if (self.grapple.x != self.x || self.grapple.y != self.y){ //Disconnect attached grapple
+					self.updatePropAndSend("grapple", {});
+				}
 			}
-			else if (self.grapple.x != self.x || self.grapple.y != self.y){ //Disconnect attached grapple
-				self.updatePropAndSend("grapple", {});
+			else if (self.grapple.targetType == "block") {
+				//Compute grapple pull vector (currently set permanently at contact, remove conditional below to pull to center of grapple point)
+				if (!self.grapple.pullX && !self.grapple.pullY) {
+					// Normalize the direction vector
+					let magnitude = Math.sqrt(dx * dx + dy * dy);
+					let normalizedDx = dx / magnitude;
+					let normalizedDy = dy / magnitude;
+					self.grapple.pullX = grappleStrength * normalizedDx;
+					self.grapple.pullY = grappleStrength * normalizedDy;
+				}
+				// Only pull the player if the distance is greater than 60
+				if (Math.abs(dx) + Math.abs(dy) > 60) { 
+					//Lauch player with attached grapple physics
+					//Grapple influences speed stronger based on how far
+					self.speedX -= self.grapple.pullX;
+					self.speedY -= self.grapple.pullY;
+				}
+				else if (self.grapple.x != self.x || self.grapple.y != self.y){ //Disconnect attached grapple
+					self.updatePropAndSend("grapple", {});
+				}
 			}
 		}
 	}
@@ -920,18 +961,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (gametype == "ffa"){sameTeam = false;}
 		if (!sameTeam && !bagSlam){
 			self.health -= boostDamage;
-		}
-		//player.pushSpeed = pushSpeed;
-		player.boosting = 0;
-		updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
-		updateEffectList.push({type:4,playerId:player.id});
-		
+		}		
 	
 		//Assassinations
-		if (!sameTeam && bagSlam == false && entityHelpers.getDirDif(player.walkingDir, self.shootingDir) <= 1){
+		if (!sameTeam && bagSlam == false && entityHelpers.getDirDif(player.walkingDir, self.shootingDir) <= 1 && !(player.grapple && player.grapple.firing === false)){ //disabled assisnations for grappling
 			self.health = 0;	
 			playerEvent(playerId, "assassination");		
 		}
+
+		player.updatePropAndSend("grapple", {});
+		player.updatePropAndSend("boosting", 0);
+		updateEffectList.push({type:4,playerId:player.id});
 
 		updatePlayerList.push({id:self.id,property:"health",value:self.health})
 		self.healDelay = healDelayTime;

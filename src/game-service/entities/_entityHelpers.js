@@ -374,10 +374,10 @@ var checkBodyCollisionWithGroupOfBodies = function(self, list){
 			var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
 			var ax1 = dx1/dist1;
 			var ay1 = dy1/dist1;
-			if (dist1 < meleeRange){				
-				if (typeof self.boosting != 'undefined' && self.boosting > 0){  //melee boost collision bash smash
+			if (dist1 < meleeRange){
+				if ((typeof self.boosting != 'undefined' && self.boosting > 0) || (self.grapple && self.grapple.firing === false)){  //melee boost collision bash smash
 
-					if(self.throwingObject == 0){ 
+					if(self.throwingObject == 0 && !(self.grapple && self.grapple.firing === false)){ 
 						self.updatePropAndSend("throwingObject", 20);
 						self.updatePropAndSend("shootingDir", self.walkingDir);
 					}
@@ -404,6 +404,109 @@ var checkBodyCollisionWithGroupOfBodies = function(self, list){
 	}
 	if (posUpdated){return true;}
 	else {return false;}
+}
+/* 
+var getPlayerCollided = function(self, margin = 0){
+	var list = Player.list;
+	if (!self.width) {self.width = 0;}
+	if (!self.height) {self.height = 0;}
+	//Check collision with players
+	for (var i in list){
+		entity = list[i];
+		if (typeof entity === 'undefined'){continue;}
+		if (entity.id == self.id ){continue;}
+		if (typeof entity.team != "undefined" && entity.team == 0){continue;}
+		if (typeof entity.health != "undefined" && entity.health <= 0){continue;}
+
+		if (self.x + self.width/2 > entity.x - entity.width/2 &&
+		self.x - self.width/2 < entity.x + entity.width/2 &&
+		self.y + self.height/2 > entity.y - entity.width/2 &&
+		self.y - self.height/2 < entity.y + entity.height/2){								
+			var dx1 = self.x - entity.x;
+			var dy1 = self.y - entity.y;
+			var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+			var ax1 = dx1/dist1;
+			var ay1 = dy1/dist1;
+			if (dist1 < margin){				
+				console.log("HIT PLAYER:" + entity.id);
+				return entity;
+			}
+		}
+	}
+	return false;
+}
+ */
+
+var getPlayerCollided = function(self, margin = 0) {
+    var list = player.getPlayerList();
+	if (!self.width) {self.width = 0;}
+	if (!self.height) {self.height = 0;}
+	// Create line segment for the bullet's path
+    var bulletStart = { x: self.prevX, y: self.prevY };
+    var bulletEnd = { x: self.x, y: self.y };
+
+    for (var i in list) {
+        var entity = list[i];
+		if (typeof entity === 'undefined'){continue;}
+		if (entity.id == self.id ){continue;}
+		if (typeof entity.team != "undefined" && entity.team == 0){continue;}
+		if (typeof entity.health != "undefined" && entity.health <= 0){continue;}
+
+        // Player hitbox
+        var entityMinX = entity.x - entity.width / 2;
+        var entityMaxX = entity.x + entity.width / 2;
+        var entityMinY = entity.y - entity.height / 2;
+        var entityMaxY = entity.y + entity.height / 2;
+
+        // Define the four corners of the player's hitbox
+        var topLeft = { x: entityMinX, y: entityMinY };
+        var topRight = { x: entityMaxX, y: entityMinY };
+        var bottomLeft = { x: entityMinX, y: entityMaxY };
+        var bottomRight = { x: entityMaxX, y: entityMaxY };
+
+        // Check for intersection with each edge of the player hitbox
+        var intersects = 
+            doLineSegmentsIntersect(bulletStart, bulletEnd, topLeft, topRight) ||
+            doLineSegmentsIntersect(bulletStart, bulletEnd, topRight, bottomRight) ||
+            doLineSegmentsIntersect(bulletStart, bulletEnd, bottomRight, bottomLeft) ||
+            doLineSegmentsIntersect(bulletStart, bulletEnd, bottomLeft, topLeft);
+
+        if (intersects) {
+            console.log("HIT PLAYER:" + entity.id);
+            return entity;
+        }
+    }
+    return false;
+}
+
+// Helper function to check if two line segments (p1, p2) and (q1, q2) intersect
+function doLineSegmentsIntersect(p1, p2, q1, q2) {
+	function orientation(a, b, c) {
+		var val = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
+		if (val === 0) return 0;  // collinear
+		return (val > 0) ? 1 : 2; // clock or counterclock wise
+	}
+
+	function onSegment(p, q, r) {
+		return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && 
+				q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+	}
+
+	var o1 = orientation(p1, p2, q1);
+	var o2 = orientation(p1, p2, q2);
+	var o3 = orientation(q1, q2, p1);
+	var o4 = orientation(q1, q2, p2);
+
+	// General case
+	if (o1 !== o2 && o3 !== o4) return true;
+
+	// Special cases (collinear points on segment)
+	if (o1 === 0 && onSegment(p1, q1, p2)) return true;
+	if (o2 === 0 && onSegment(p1, q2, p2)) return true;
+	if (o3 === 0 && onSegment(q1, p1, q2)) return true;
+	if (o4 === 0 && onSegment(q1, p2, q2)) return true;
+
+	return false; // No intersection
 }
 
 var sprayBloodOntoTarget = function(shootingDir, targetX, targetY, targetId) {
@@ -546,3 +649,4 @@ module.exports.calculateDrag = calculateDrag;
 module.exports.checkPointCollisionWithGroup = checkPointCollisionWithGroup;
 module.exports.checkPointCollisionWithGroupAndMove = checkPointCollisionWithGroupAndMove;
 module.exports.checkBodyCollisionWithGroupOfBodies = checkBodyCollisionWithGroupOfBodies;
+module.exports.getPlayerCollided = getPlayerCollided;
