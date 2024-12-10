@@ -856,7 +856,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			// }	
 			if (self.grapple.firing == false) { // General collision behavior
 				self.expendEnergy(grappleEnergy);
-				console.log(self.grapple);
 			}
 			// END COLLISION
 
