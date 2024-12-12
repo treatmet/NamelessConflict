@@ -1245,6 +1245,9 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 
 		if (playerDataPack[i].property == "grapple"){
+			if (playerDataPack[i].value.firing == true){
+				sfx.Whoosh.play();
+			}
 			//log(playerDataPack[i].value);
 		}
 

@@ -812,8 +812,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 	self.releaseGrapple = function(){
 		self.updatePropAndSend("grapple", {});
-		
-		if (self.walkingDir == 1){self.speedY -= grappleReleaseSpeed;}
+		self.boost();
+/* 		if (self.walkingDir == 1){self.speedY -= grappleReleaseSpeed;}
 		if (self.walkingDir == 2){self.speedY -= grappleReleaseSpeed * (2/3); self.speedX += grappleReleaseSpeed * (2/3);}
 		if (self.walkingDir == 3){self.speedX += grappleReleaseSpeed;}
 		if (self.walkingDir == 4){self.speedY += grappleReleaseSpeed * (2/3); self.speedX += grappleReleaseSpeed * (2/3);}
@@ -821,7 +821,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		if (self.walkingDir == 6){self.speedY += grappleReleaseSpeed * (2/3); self.speedX -= grappleReleaseSpeed * (2/3);}
 		if (self.walkingDir == 7){self.speedX -= grappleReleaseSpeed;}
 		if (self.walkingDir== 8){self.speedY -= grappleReleaseSpeed * (2/3); self.speedX -= grappleReleaseSpeed * (2/3);}
-	}
+ */	}
 
 	self.processGrapple = function(){
 		if (!self.grapple || typeof self.grapple.x === 'undefined'){return;}
@@ -1183,6 +1183,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 	self.boost = function(){
 		self.expendEnergy(boostEnergyCost);
+		updateEffectList.push({type:3,playerId:self.id});
+		updatePlayerList.push({id:self.id,property:"boosting",value:self.boosting});
+
 		self.boosting = 1;
 		if(self.walkingDir == 1){
 			self.speedY -= boostAmount;
@@ -1809,22 +1812,23 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						player.pressingLeft = data.state;
 					}	
 					else if(data.inputId === 32){ //SPACE
-						if ((player.pressingW || player.pressingD || player.pressingS || player.pressingA) && !player.energyExhausted && player.boosting == 0 && player.holdingBag == false){						
+						if ((player.pressingW || player.pressingD || player.pressingS || player.pressingA) && !player.energyExhausted && (grappleInsteadOfBoost == true || player.boosting == 0) && player.holdingBag == false){						
 							if (player.cloakEngaged){
 								player.cloakEngaged = false;						
 								updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});	
 							}
 
-							//BOOST VS GRAPPLE VS BOOST!!!
-							//player.boost();
-							if (!player.grapple || player.grapple.firing || typeof player.grapple.x === 'undefined' || grappleWhileGrappling){
-								player.shootGrapple();
-							} 
-							else {
-								player.releaseGrapple();
-							}
-							updateEffectList.push({type:3,playerId:player.id});
-							updatePlayerList.push({id:player.id,property:"boosting",value:player.boosting});
+							
+							if (grappleInsteadOfBoost) { //BOOST VS GRAPPLE VS BOOST!!!
+								if (!player.grapple || player.grapple.firing || typeof player.grapple.x === 'undefined' || grappleWhileGrappling){
+									player.shootGrapple();
+								} 
+								else {
+									player.releaseGrapple();
+								}
+							} else {
+								player.boost();
+							}							
 						}
 						else if (player.holdingBag == true && player.walkingDir != 0){
 							player.holdingBag = false;

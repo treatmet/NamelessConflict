@@ -112,14 +112,22 @@ global.bagDrag = 0.85;
 global.playerMaxHealth = 175;
 global.assistDamageThreshold = 30;
 
+//Boost config
+global.boostDamage = 34;
+global.boostEnergyCost = 15;
+global.meleeRange = 50;
+
+global.grappleInsteadOfBoost = true;
+
 //Grapple
-global.grappleEnergy = 10;
+global.grappleEnergy = 0;
 global.grappleSpeed = 60;
 global.grappleLength = 6 * 75; //Tiles * 75
 global.grappleStrength = 1.3;
 global.grappleReleaseSpeed = 18;
 global.grappleMaxLife = 90;
 global.grappleWhileGrappling = false;
+
 
 global.grenadeEnergyCost = 30;
 global.grenadeTimer = 2 * 60; //Seconds (translated to frames)
@@ -134,10 +142,6 @@ global.grenadeResource = true;
 global.grenadeRechargeSpeed = 0.2; // out of 100
 global.maxGrenades = 2;
 
-//Boost config
-global.boostDamage = 34;
-global.boostEnergyCost = 25;
-global.meleeRange = 50;
 
 
 //Block config
