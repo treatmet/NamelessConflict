@@ -1382,7 +1382,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		}
 
 		//Grapple Sfx
-		if (playerDataPack[i].property == "grapple"){
+		if (playerDataPack[i].property == "grapple" && playerDataPack[i].id == myPlayer.id){
 			if (playerDataPack[i].value.firing == false){
 				sfx.GrappleHit.play();
 			}
@@ -7071,7 +7071,9 @@ Line.prototype.step = function() {
 function drawGrapples(){
 	noShadow();
 	for (var p in Player.list){
-		if (!Player.list[p].grapple || typeof Player.list[p].grapple.x === 'undefined'){return;}
+		if (!Player.list[p].grapple || typeof Player.list[p].grapple.x === 'undefined'){continue;}
+
+
 		processGrapple(Player.list[p]);
 		ctx.save();
 		ctx.translate(centerX - myPlayer.x * zoom + Player.list[p].x * zoom, centerY - myPlayer.y * zoom + Player.list[p].y * zoom); //Center camera on controlled player
