@@ -1,5 +1,6 @@
 var player = require('../entities/player.js');
 var pickup = require('../entities/pickup.js');
+var grenade = require('../entities/grenade.js');
 
 var organicDiagLeniency = 13;
 var checkIfInLineOfShot = function(shooter, target, shot){ //hitDetection hit detection
@@ -451,6 +452,7 @@ var getPlayerCollided = function(self, margin = 0) { //Stretched 2 frame hitbox 
     }
     return false;
 }
+
 var getPickupCollided = function(self, margin = 0) { //Stretched 2 frame hitbox logic
     var list = pickup.getPickupList();
 	if (!self.width) {self.width = 0;}
@@ -469,13 +471,13 @@ var getPickupCollided = function(self, margin = 0) { //Stretched 2 frame hitbox 
 		if (entity.type == 1 && player.getPlayerById(self.id).health > 97) {continue;}
 		if (entity.type == 5 && player.getPlayerById(self.id).health >= 101) {continue;}
 
-        // Player hitbox
+        // Pickup hitbox
         var entityMinX = entity.x;
         var entityMaxX = entity.x + entity.width;
         var entityMinY = entity.y;
         var entityMaxY = entity.y + entity.height;
 
-        // Define the four corners of the player's hitbox
+        // Define the four corners of the pickups's hitbox
         var topLeft = { x: entityMinX, y: entityMinY };
         var topRight = { x: entityMaxX, y: entityMinY };
         var bottomLeft = { x: entityMinX, y: entityMaxY };
@@ -491,6 +493,47 @@ var getPickupCollided = function(self, margin = 0) { //Stretched 2 frame hitbox 
         if (intersects) {
 			entity.homeX = entity.x;
 			entity.homeY = entity.y;
+            return entity;
+        }
+    }
+    return false;
+}
+
+var getGrenadeCollided = function(self, margin = 0) { //Stretched 2 frame hitbox logic
+    var list = grenade.getList();
+
+	// Create line segment for the bullet's path
+    var bulletStart = { x: self.prevX, y: self.prevY };
+    var bulletEnd = { x: self.x, y: self.y };
+
+    for (var i in list) {
+        var entity = list[i];
+		if (typeof entity === 'undefined'){continue;}
+		if (!entity.width) {entity.width = entity.radius * 2; entity.height = entity.radius * 2;}
+		
+        // Nade hitbox
+        var entityMinX = entity.x - entity.width;
+        var entityMaxX = entity.x + entity.width;
+        var entityMinY = entity.y - entity.height;
+        var entityMaxY = entity.y + entity.height;
+
+        // Define the four corners of the Nade's hitbox
+        var topLeft = { x: entityMinX, y: entityMinY };
+        var topRight = { x: entityMaxX, y: entityMinY };
+        var bottomLeft = { x: entityMinX, y: entityMaxY };
+        var bottomRight = { x: entityMaxX, y: entityMaxY };
+
+        // Check for intersection with each edge of the player hitbox
+        var intersects = 
+            doLineSegmentsIntersect(bulletStart, bulletEnd, topLeft, topRight) ||
+            doLineSegmentsIntersect(bulletStart, bulletEnd, topRight, bottomRight) ||
+            doLineSegmentsIntersect(bulletStart, bulletEnd, bottomRight, bottomLeft) ||
+            doLineSegmentsIntersect(bulletStart, bulletEnd, bottomLeft, topLeft);
+
+        if (intersects) {
+			var newTime = entity.timer + grenadeGrabAddTime;
+			if (newTime > grenadeTimer) {newTime = grenadeTimer;}
+			entity.updatePropAndSend("timer", newTime);
             return entity;
         }
     }
@@ -597,7 +640,7 @@ var checkPointCollisionWithGroup = function(self, list, margin, move = false){
 		if (typeof entity.health != "undefined" && (entity.health <= 0 || entity.team === 0)){continue;}
 		var encounteredEntityId = false;
 
-		if (self.x == entity.x && self.y == entity.y){self.x -= 5; encounteredEntityId = entity.id; console.log("ON TOP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"); continue;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
+		if (self.x == entity.x && self.y == entity.y){self.x -= 5; encounteredEntityId = entity.id; continue;} //Added to avoid math issues when entities are directly on top of each other (distance = 0)
 		var dx1 = self.x - entity.x;
 		var dy1 = self.y - entity.y;
 		var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
@@ -712,3 +755,4 @@ module.exports.checkBodyCollisionWithGroupOfBodies = checkBodyCollisionWithGroup
 module.exports.getPlayerCollided = getPlayerCollided;
 module.exports.getPickupCollided = getPickupCollided;
 module.exports.getBagCollided = getBagCollided;
+module.exports.getGrenadeCollided = getGrenadeCollided;

@@ -40,6 +40,7 @@ var Grenade = function(throwingPlayerId, holdingPlayerId = false, x=0, y=0, spee
 			self.speedX = 0;
 			self.speedY = 0;
 			if (player.getPlayerById(self.holdingPlayerId)){
+				player.getPlayerById(self.holdingPlayerId).updatePropAndSend("throwingObject", -1);
 				self.x = player.getPlayerById(self.holdingPlayerId).x;
 				self.y = player.getPlayerById(self.holdingPlayerId).y;
 			}
@@ -309,7 +310,7 @@ var clearGrenades = function(){
 
 module.exports.getSpeedAdjust = getSpeedAdjust;
 module.exports.getList = getList;
-module.exports.getById = getById; //onDisconnect
+module.exports.getById = getById;
 module.exports.runEngines = runEngines;
 module.exports.getListLength = getListLength;
 module.exports.create = create;

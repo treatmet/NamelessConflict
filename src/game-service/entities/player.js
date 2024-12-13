@@ -238,7 +238,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 
 		//Auto shooting for holding down button
-		if (self.firing <= 0 && !self.pressingShift && self.throwingObject == 0 && self.fireRate <= 0 && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight) && self.weapon != 5){
+		if (self.firing <= 0 && !self.pressingShift && (self.pressingUp || self.pressingDown || self.pressingLeft || self.pressingRight) && self.weapon != 5){
 			Discharge(self);
 		}
 		if (self.fireRate > 0){
@@ -707,6 +707,13 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				}
 			}
 		}		
+
+		if (self.holdTimer) {
+			self.holdTimer--;
+			if (self.holdTimer <= 0 ) {
+				self.throwGrenade();
+			}
+		}
 		////////////AFK/MISC///////////////////
 		if (typeof self.afk === 'undefined'){
 		 self.afk = AfkFramesAllowed;
@@ -743,6 +750,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			if (floorGrenadeId && grenade.getById(floorGrenadeId) && !grenade.getById(floorGrenadeId).holdingPlayerId){
 				grenade.getById(floorGrenadeId).updatePropAndSend("holdingPlayerId", self.id);
 				grenade.getById(floorGrenadeId).updatePropAndSend("throwingPlayerId", self.id);
+				var newTime = entity.timer + grenadeGrabAddTime;
+				if (newTime > grenadeTimer) {newTime = grenadeTimer;}
+				grenade.getById(floorGrenadeId).updatePropAndSend("timer", newTime);
 				self.updatePropAndSend("throwingObject", -1);
 				self.updatePropAndSend("reloading", 0);
 			}
@@ -763,11 +773,19 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		self.updatePropAndSend("reloading", 0);	
 	}
 
-	self.throwGrenade = function(){
+	self.throwGrenade = function(myNade = false){
 		if (self.throwingObject === -1){
 			self.updatePropAndSend("throwingObject", 30);
-			var myNade = grenade.getPlayerNade(self.id);
+			console.log("throw ");
+			console.log(myNade);
+			if (myNade) {
+				console.log("Throwin nade grap + " + myNade.id);
+				console.log(myNade);
+			}
+			if (!myNade) { myNade = grenade.getPlayerNade(self.id); }
 			if (myNade){
+
+				
 				myNade.updatePropAndSend("holdingPlayerId", false);
 				switch (self.shootingDir){
 					case 1:
@@ -806,12 +824,23 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 						myNade.updatePropAndSend("speedY", self.speedY - grenadeThrowSpeed);
 						break;						
 				}
-
-
-
 			}
 		}
 	}
+
+	self.grappleGrenade = function(grenadeId){
+		var nade = grenade.getById(grenadeId);
+		nade.updatePropAndSend("holdingPlayerId", self.id);
+		nade.updatePropAndSend("throwingPlayerId", self.id);
+
+		self.holdTimer = forceHoldTime;
+		self.updatePropAndSend("reloading", 0);	
+		self.updatePropAndSend("throwingObject", -1);
+		self.updatePropAndSend("reloading", 0);	
+		self.updatePropAndSend("grapple", {});
+	}
+
+
 
 	self.shootGrapple = function(){
 		self.updatePropAndSend("grapple", {
@@ -821,6 +850,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			x:self.x,
 			y:self.y
 		});
+		self.updatePropAndSend("throwingObject", 20);
 	}
 
 	self.releaseGrapple = function(){
@@ -868,6 +898,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			var playerHit = entityHelpers.getPlayerCollided(grappleObj);
 			var bagHit = entityHelpers.getBagCollided(grappleObj);
 			var pickupHit = entityHelpers.getPickupCollided(grappleObj);
+			var grenadeHit = entityHelpers.getGrenadeCollided(grappleObj);
 			if (playerHit){
 				self.updatePropAndSend("grapple", {
 					firing:false,
@@ -887,6 +918,15 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					life:self.grapple.life,
 					x:self.grapple.x,
 					y:self.grapple.y
+				});
+			}				
+			else if (grenadeHit){
+				self.updatePropAndSend("grapple", {
+					firing:false,
+					targetType: "grenade",
+					targetId: grenadeHit.id,
+					dir:self.grapple.dir,
+					life:self.grapple.life
 				});
 			}	
 			else if (pickupHit){
@@ -932,6 +972,11 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				self.grapple.x = bag.x;
 				self.grapple.y = bag.y;
 			}
+			else if (self.grapple.targetType == "grenade") {
+				var nade = grenade.getById(self.grapple.targetId);
+				self.grapple.x = nade.x;
+				self.grapple.y = nade.y;
+			}
 			else if (self.grapple.targetType == "pickup") {
 				var pickup1 = pickup.getPickupById(self.grapple.targetId);
 				self.grapple.x = pickup1.x + pickup1.width/2;
@@ -962,6 +1007,17 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				var bag = bagRed;
 				if (self.team == 1) {updateMisc.bagBlue = bagBlue;}
 				else if (self.team == 2) {updateMisc.bagRed = bagRed;}				
+			}
+			else if (self.grapple.targetType == "grenade") {
+				var nade = grenade.getById(self.grapple.targetId);
+				if (Math.abs(dx) + Math.abs(dy) > grappleMinDist/2) {
+					nade.updatePropAndSend("x", nade.x + grappleStrength * (dx / r) * 20);
+					nade.updatePropAndSend("y", nade.y + grappleStrength * (dy / r) * 20);	
+				}
+				else if (self.grapple.x != self.x || self.grapple.y != self.y){ //Disconnect attached grapple
+					self.grappleGrenade(nade.id);
+				}
+
 			}
 			else if (self.grapple.targetType == "pickup") {
 				pickup.getPickupById(self.grapple.targetId).x += grappleStrength * (dx / r) * 17;
@@ -1599,6 +1655,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			}
 		}
 	}
+
 
 
 	self.respawn = function(newPlayer = false){
@@ -2865,7 +2922,8 @@ function reload(playerId){
 }
 
 function Discharge(player){
-	player.updatePropAndSend("throwingObject", 0);
+	if (player.throwingObject != 0 || (player.grapple && player.grapple.type == "grenade") || player.holdTimer) {return;}
+	//player.updatePropAndSend("throwingObject", 0);
 	if (player.reloading > 0 && player.weapon != 4){return;}	
 	else if (player.weapon == 1 && player.PClip <= 0){
 		reload(player.id);

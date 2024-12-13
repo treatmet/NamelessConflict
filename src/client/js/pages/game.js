@@ -1246,7 +1246,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 
 		if (playerDataPack[i].property == "grapple"){
 			if (playerDataPack[i].value.firing == true){
-				sfx.Whoosh.play();
+				sfx.GrappleShot.play();
 			}
 			//log(playerDataPack[i].value);
 		}
@@ -1388,10 +1388,11 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 		if (playerDataPack[i].property == "grapple" && playerDataPack[i].id == myPlayer.id){
 			if (playerDataPack[i].value.firing == false){
 				sfx.GrappleHit.play();
+				//sfx.GrappleShot.stop();
 			}
 			else if (playerDataPack[i].value.firing == undefined) {
 				sfx.GrappleHit.stop();
-				sfx.GrappleShot.stop();
+				//sfx.GrappleShot.stop();
 			}
 		}
 	}//END Player loop
@@ -7082,6 +7083,10 @@ function drawGrapples(){
 		if (Player.list[p].grapple.targetType == "pickup") {
 			Player.list[p].grapple.x = Pickup.list[Player.list[p].grapple.targetId].x + Pickup.list[Player.list[p].grapple.targetId].width/2;
 			Player.list[p].grapple.y = Pickup.list[Player.list[p].grapple.targetId].y + Pickup.list[Player.list[p].grapple.targetId].height/2;
+		}
+		if (Player.list[p].grapple.targetType == "grenade") {
+			Player.list[p].grapple.x = Grenade.list[Player.list[p].grapple.targetId].x;
+			Player.list[p].grapple.y = Grenade.list[Player.list[p].grapple.targetId].y;
 		}
 		else if (Player.list[p].grapple.targetType == "bag") {
 			if (Player.list[p].team == 1){

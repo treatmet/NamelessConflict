@@ -143,6 +143,8 @@ global.grenadeRaySpeed = 8;
 global.grenadeResource = true;
 global.grenadeRechargeSpeed = 0.2; // out of 100
 global.maxGrenades = 2;
+global.grenadeGrabAddTime = 2 * 60; //[Seconds] * [fps] (translated to frames)
+global.forceHoldTime = 20; //[Seconds] * [fps] (translated to frames)
 
 
 
