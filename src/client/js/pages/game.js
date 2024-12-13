@@ -7121,9 +7121,9 @@ function processGrapple(player){
 		if (player.grapple.dir == 6){player.grapple.y += grappleSpeed * (2/3); player.grapple.x -= grappleSpeed * (2/3);}
 		if (player.grapple.dir == 7){player.grapple.x -= grappleSpeed;}
 		if (player.grapple.dir == 8){player.grapple.y -= grappleSpeed * (2/3); player.grapple.x -= grappleSpeed * (2/3);}
-		if (checkBlockCollision(player.grapple)){
+/* 		if (checkBlockCollision(player.grapple)){
 			player.grapple.firing = false;
-		}	
+		} */	
 	}
 }
 

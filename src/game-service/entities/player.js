@@ -832,7 +832,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	self.processGrapple = function(){
 		if (!self.grapple || typeof self.grapple.x === 'undefined'){return;}
 		//console.log("x:" + self.x + " y:" + self.y + " Gx:" + self.grapple.x + " Gy:" + self.grapple.y);
-		if (getDistance(self, self.grapple) > grappleLength + 50){self.updatePropAndSend("grapple", {}); return;} //Grapple reached chain length without hitting any target
 		if (self.grapple.life > grappleMaxLife) {self.updatePropAndSend("grapple", {}); return;}
 		self.grapple.life++;
 		//Everything past here, grapple is active
@@ -848,6 +847,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			if (self.grapple.dir == 6){self.grapple.y += grappleSpeed * (2/3); self.grapple.x -= grappleSpeed * (2/3);}
 			if (self.grapple.dir == 7){self.grapple.x -= grappleSpeed;}
 			if (self.grapple.dir == 8){self.grapple.y -= grappleSpeed * (2/3); self.grapple.x -= grappleSpeed * (2/3);}
+			if (getDistance(self, self.grapple) > grappleLength){self.updatePropAndSend("grapple", {}); return;} //Grapple reached chain length without hitting any target
 
 			var grappleObj = {
 				prevX: prevX,
@@ -913,6 +913,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		//Calculate player pulling physics
 		if (!self.grapple.firing){
+			if (getDistance(self, self.grapple) > grappleLength + 50){self.updatePropAndSend("grapple", {}); return;} //Grapple reached chain length without hitting any target
 			var bag = bagRed;
 			if (self.team == 1) {bag = bagBlue;}
 
@@ -944,6 +945,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.speedY += grappleStrength * (dy / r);
 				}
 				else if (self.grapple.x != self.x || self.grapple.y != self.y){ //Disconnect attached grapple
+					console.log("minimum");
 					self.updatePropAndSend("grapple", {});
 				}
 			}
