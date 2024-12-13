@@ -2922,7 +2922,7 @@ function reload(playerId){
 }
 
 function Discharge(player){
-	if (player.throwingObject != 0 || (player.grapple && player.grapple.type == "grenade") || player.holdTimer) {return;}
+	if (player.throwingObject != 0 || (player.grapple && player.grapple.targetType == "grenade") || player.holdTimer) {return;}
 	//player.updatePropAndSend("throwingObject", 0);
 	if (player.reloading > 0 && player.weapon != 4){return;}	
 	else if (player.weapon == 1 && player.PClip <= 0){
