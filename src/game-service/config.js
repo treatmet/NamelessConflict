@@ -166,7 +166,7 @@ global.clientSideMovement = true;
 */
 
 //Cloaking config
-global.cloakingEnabled = true;
+global.cloakingEnabled = false;
 global.cloakDrainSpeed = 0.12;
 global.cloakDrag = 0.5; //Walking speed multiplier when cloaked
 global.cloakInitializeSpeed = 0.02;

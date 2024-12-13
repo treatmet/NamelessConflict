@@ -83,6 +83,13 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 
 	self.shotList = [];
 
+	self.isWalking = function(){
+		if (self.pressingW || self.pressingA || self.pressingS || self.pressingD) {
+			return true;
+		}
+		return false;
+	}
+
 	//Player Update (Timer1 for player - Happens every frame)	
 	self.engine = function(){	
 		self.processChargingLaser();
@@ -809,7 +816,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	self.shootGrapple = function(){
 		self.updatePropAndSend("grapple", {
 			firing:true,
-			dir:self.walkingDir,
+			dir:self.walkingDir ? self.walkingDir : self.shootingDir,
 			life:0,
 			x:self.x,
 			y:self.y
@@ -926,8 +933,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				self.grapple.y = bag.y;
 			}
 			else if (self.grapple.targetType == "pickup") {
-				self.grapple.x = Pickup.list[self.grapple.targetId].x;
-				self.grapple.y = Pickup.list[self.grapple.targetId].y;
+				var pickup1 = pickup.getPickupById(self.grapple.targetId);
+				self.grapple.x = pickup1.x + pickup1.width/2;
+				self.grapple.y = pickup1.y + pickup1.height/2;
 			}
 
 			let dx = self.x - self.grapple.x;  // Compute distance between centers of objects
@@ -945,7 +953,6 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.speedY += grappleStrength * (dy / r);
 				}
 				else if (self.grapple.x != self.x || self.grapple.y != self.y){ //Disconnect attached grapple
-					console.log("minimum");
 					self.updatePropAndSend("grapple", {});
 				}
 			}
@@ -957,9 +964,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				else if (self.team == 2) {updateMisc.bagRed = bagRed;}				
 			}
 			else if (self.grapple.targetType == "pickup") {
-				Pickup.list[self.grapple.targetId].x += grappleStrength * (dx / r) * 17;
-				Pickup.list[self.grapple.targetId].y += grappleStrength * (dy / r) * 17;
-				updatePickupList.push(Pickup.list[self.grapple.targetId]);			
+				pickup.getPickupById(self.grapple.targetId).x += grappleStrength * (dx / r) * 17;
+				pickup.getPickupById(self.grapple.targetId).y += grappleStrength * (dy / r) * 17;
+				updatePickupList.push(pickup.getPickupById(self.grapple.targetId));			
 			}
 			else if (self.grapple.targetType == "block") {
 				//Compute grapple pull vector (currently set permanently at contact, remove conditional below to pull to center of grapple point)
@@ -1863,7 +1870,7 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 						player.pressingLeft = data.state;
 					}	
 					else if(data.inputId === 32){ //SPACE
-						if ((player.pressingW || player.pressingD || player.pressingS || player.pressingA) && !player.energyExhausted && (grappleInsteadOfBoost == true || player.boosting == 0) && player.holdingBag == false){						
+						if ((player.isWalking() || !cloakingEnabled) && !player.energyExhausted && (grappleInsteadOfBoost == true || player.boosting == 0) && player.holdingBag == false){						
 							if (player.cloakEngaged){
 								player.cloakEngaged = false;						
 								updatePlayerList.push({id:player.id,property:"cloakEngaged",value:player.cloakEngaged});	
@@ -3254,6 +3261,8 @@ var getTeamPlayerList = function(){ //all team players
 	return teamPlayers;
 }
 
+
+
 var getEligiblePlayerList = function(){ //All team playres plus abandoning cognito subs
 	var eligiblePlayers = getTeamPlayerList();
 	for (var a in abandoningCognitoSubs){
@@ -3409,3 +3418,4 @@ module.exports.getTeamPlayerList = getTeamPlayerList;
 module.exports.getEligiblePlayerList = getEligiblePlayerList;
 module.exports.getAverageTeamPlayersCash = getAverageTeamPlayersCash;
 module.exports.getActivePlayerListLength = getActivePlayerListLength;
+

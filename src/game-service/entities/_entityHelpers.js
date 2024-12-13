@@ -465,12 +465,15 @@ var getPickupCollided = function(self, margin = 0) { //Stretched 2 frame hitbox 
     for (var i in list) {
         var entity = list[i];
 		if (typeof entity === 'undefined'){continue;}
+		if (entity.respawnTimer != 0){continue;}
+		if (entity.type == 1 && player.getPlayerById(self.id).health > 97) {continue;}
+		if (entity.type == 5 && player.getPlayerById(self.id).health >= 101) {continue;}
 
         // Player hitbox
-        var entityMinX = entity.x - entity.width / 2;
-        var entityMaxX = entity.x + entity.width / 2;
-        var entityMinY = entity.y - entity.height / 2;
-        var entityMaxY = entity.y + entity.height / 2;
+        var entityMinX = entity.x;
+        var entityMaxX = entity.x + entity.width;
+        var entityMinY = entity.y;
+        var entityMaxY = entity.y + entity.height;
 
         // Define the four corners of the player's hitbox
         var topLeft = { x: entityMinX, y: entityMinY };
@@ -486,6 +489,8 @@ var getPickupCollided = function(self, margin = 0) { //Stretched 2 frame hitbox 
             doLineSegmentsIntersect(bulletStart, bulletEnd, bottomLeft, topLeft);
 
         if (intersects) {
+			entity.homeX = entity.x;
+			entity.homeY = entity.y;
             return entity;
         }
     }

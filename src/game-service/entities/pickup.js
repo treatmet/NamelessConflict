@@ -68,8 +68,11 @@ var pickupPickup = function(playerId, pickupId, pickupOverride = false){
 	else {
 		pickup = Pickup.list[pickupId];
 	}
-
 	if (!pickup){return;}
+
+	if (playerPickingUp.grapple && playerPickingUp.grapple.targetId == pickup.id) {
+		playerPickingUp.updatePropAndSend("grapple", {});
+	}
 
 	if (pickup.type == 1){ //MD
 		if (playerPickingUp.health < 100){
@@ -217,6 +220,8 @@ var removePickup = function(pickupId){
 	}
 	else {
 		Pickup.list[pickupId].respawnTimer = Pickup.list[pickupId].respawnTime;
+		if (Pickup.list[pickupId].homeX) {Pickup.list[pickupId].x = Pickup.list[pickupId].homeX; }
+		if (Pickup.list[pickupId].homeY) {Pickup.list[pickupId].y = Pickup.list[pickupId].homeY; }
 	}
 	updatePickupList.push(pickupId);
 }

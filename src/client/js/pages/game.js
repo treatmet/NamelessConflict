@@ -7079,6 +7079,10 @@ function drawGrapples(){
 			Player.list[p].grapple.x = Player.list[targetId].x;
 			Player.list[p].grapple.y = Player.list[targetId].y;
 		}
+		if (Player.list[p].grapple.targetType == "pickup") {
+			Player.list[p].grapple.x = Pickup.list[Player.list[p].grapple.targetId].x + Pickup.list[Player.list[p].grapple.targetId].width/2;
+			Player.list[p].grapple.y = Pickup.list[Player.list[p].grapple.targetId].y + Pickup.list[Player.list[p].grapple.targetId].height/2;
+		}
 		else if (Player.list[p].grapple.targetType == "bag") {
 			if (Player.list[p].team == 1){
 				Player.list[p].grapple.x = bagBlue.x;
