@@ -860,6 +860,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			//COLLISION MOMENT
 			var playerHit = entityHelpers.getPlayerCollided(grappleObj);
 			var bagHit = entityHelpers.getBagCollided(grappleObj);
+			var pickupHit = entityHelpers.getPickupCollided(grappleObj);
 			if (playerHit){
 				self.updatePropAndSend("grapple", {
 					firing:false,
@@ -879,6 +880,15 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					life:self.grapple.life,
 					x:self.grapple.x,
 					y:self.grapple.y
+				});
+			}	
+			else if (pickupHit){
+				self.updatePropAndSend("grapple", {
+					firing:false,
+					targetType: "pickup",
+					targetId: pickupHit.id,
+					dir:self.grapple.dir,
+					life:self.grapple.life
 				});
 			}	
 			else if (block.checkCollision(self.grapple)){
@@ -910,9 +920,13 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				self.grapple.x = Player.list[self.grapple.targetId].x;
 				self.grapple.y = Player.list[self.grapple.targetId].y;
 			}
-			if (self.grapple.targetType == "bag") {
+			else if (self.grapple.targetType == "bag") {
 				self.grapple.x = bag.x;
 				self.grapple.y = bag.y;
+			}
+			else if (self.grapple.targetType == "pickup") {
+				self.grapple.x = Pickup.list[self.grapple.targetId].x;
+				self.grapple.y = Pickup.list[self.grapple.targetId].y;
 			}
 
 			let dx = self.x - self.grapple.x;  // Compute distance between centers of objects
@@ -938,8 +952,12 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				bag.y += grappleStrength * (dy / r) * 17;
 				var bag = bagRed;
 				if (self.team == 1) {updateMisc.bagBlue = bagBlue;}
-				else if (self.team == 2) {updateMisc.bagRed = bagRed;}
-				
+				else if (self.team == 2) {updateMisc.bagRed = bagRed;}				
+			}
+			else if (self.grapple.targetType == "pickup") {
+				Pickup.list[self.grapple.targetId].x += grappleStrength * (dx / r) * 17;
+				Pickup.list[self.grapple.targetId].y += grappleStrength * (dy / r) * 17;
+				updatePickupList.push(Pickup.list[self.grapple.targetId]);			
 			}
 			else if (self.grapple.targetType == "block") {
 				//Compute grapple pull vector (currently set permanently at contact, remove conditional below to pull to center of grapple point)

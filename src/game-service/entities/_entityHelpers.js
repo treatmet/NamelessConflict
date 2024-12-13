@@ -1,4 +1,5 @@
 var player = require('../entities/player.js');
+var pickup = require('../entities/pickup.js');
 
 var organicDiagLeniency = 13;
 var checkIfInLineOfShot = function(shooter, target, shot){ //hitDetection hit detection
@@ -450,6 +451,46 @@ var getPlayerCollided = function(self, margin = 0) { //Stretched 2 frame hitbox 
     }
     return false;
 }
+var getPickupCollided = function(self, margin = 0) { //Stretched 2 frame hitbox logic
+    var list = pickup.getPickupList();
+	if (!self.width) {self.width = 0;}
+	if (!self.height) {self.height = 0;}
+	self.width += margin;
+	self.height += margin;
+
+	// Create line segment for the bullet's path
+    var bulletStart = { x: self.prevX, y: self.prevY };
+    var bulletEnd = { x: self.x, y: self.y };
+
+    for (var i in list) {
+        var entity = list[i];
+		if (typeof entity === 'undefined'){continue;}
+
+        // Player hitbox
+        var entityMinX = entity.x - entity.width / 2;
+        var entityMaxX = entity.x + entity.width / 2;
+        var entityMinY = entity.y - entity.height / 2;
+        var entityMaxY = entity.y + entity.height / 2;
+
+        // Define the four corners of the player's hitbox
+        var topLeft = { x: entityMinX, y: entityMinY };
+        var topRight = { x: entityMaxX, y: entityMinY };
+        var bottomLeft = { x: entityMinX, y: entityMaxY };
+        var bottomRight = { x: entityMaxX, y: entityMaxY };
+
+        // Check for intersection with each edge of the player hitbox
+        var intersects = 
+            doLineSegmentsIntersect(bulletStart, bulletEnd, topLeft, topRight) ||
+            doLineSegmentsIntersect(bulletStart, bulletEnd, topRight, bottomRight) ||
+            doLineSegmentsIntersect(bulletStart, bulletEnd, bottomRight, bottomLeft) ||
+            doLineSegmentsIntersect(bulletStart, bulletEnd, bottomLeft, topLeft);
+
+        if (intersects) {
+            return entity;
+        }
+    }
+    return false;
+}
 
 var getBagCollided = function(self, margin = 0) { //Stretched 2 frame hitbox logic
 	if (gametype != "ctf") {return;}
@@ -664,4 +705,5 @@ module.exports.checkPointCollisionWithGroup = checkPointCollisionWithGroup;
 module.exports.checkPointCollisionWithGroupAndMove = checkPointCollisionWithGroupAndMove;
 module.exports.checkBodyCollisionWithGroupOfBodies = checkBodyCollisionWithGroupOfBodies;
 module.exports.getPlayerCollided = getPlayerCollided;
+module.exports.getPickupCollided = getPickupCollided;
 module.exports.getBagCollided = getBagCollided;
