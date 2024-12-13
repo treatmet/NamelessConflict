@@ -994,8 +994,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 				if (Math.abs(dx) + Math.abs(dy) > grappleMinDist) { 
 					//Lauch player with attached grapple physics
 					//Grapple influences speed stronger based on how far
-					self.speedX += grappleStrength * (dx / r);
-					self.speedY += grappleStrength * (dy / r);
+					self.speedX -= grappleStrength * (dx / r);
+					self.speedY -= grappleStrength * (dy / r);
 				}
 				else if (self.grapple.x != self.x || self.grapple.y != self.y){ //Disconnect attached grapple
 					self.updatePropAndSend("grapple", {});

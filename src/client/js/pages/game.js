@@ -1411,7 +1411,7 @@ function updateFunction(playerDataPack, thugDataPack, pickupDataPack, notificati
 			if (debugUpdates){
 				logg("Update pickup:" + pickupDataPack[i].id + " x:" + pickupDataPack[i].x + " y:" + pickupDataPack[i].y + " type:" + pickupDataPack[i].type + " amount:" + pickupDataPack[i].amount + " width:" + pickupDataPack[i].width + " height:" + pickupDataPack[i].height);
 			}
-			if (pickupDataPack[i].respawnTimer == 0 && !mute){
+			if (pickupDataPack[i].respawnTimer === 0 && !mute){
 				sfx.WeaponDrop.play();
 			}
 				
@@ -7077,8 +7077,8 @@ function drawGrapples(){
 	for (var p in Player.list){
 		if (!Player.list[p].grapple || typeof Player.list[p].grapple.x === 'undefined'){continue;}
 		if (Player.list[p].grapple.targetType == "player") {
-			Player.list[p].grapple.x = Player.list[targetId].x;
-			Player.list[p].grapple.y = Player.list[targetId].y;
+			Player.list[p].grapple.x = Player.list[Player.list[p].grapple.targetId].x;
+			Player.list[p].grapple.y = Player.list[Player.list[p].grapple.targetId].y;
 		}
 		if (Player.list[p].grapple.targetType == "pickup") {
 			Player.list[p].grapple.x = Pickup.list[Player.list[p].grapple.targetId].x + Pickup.list[Player.list[p].grapple.targetId].width/2;
