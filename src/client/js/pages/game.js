@@ -3595,7 +3595,7 @@ function drawPersonalInstructions(){
 	}
 	else if (personalInstructions["cloak"].life > 0 && myPlayer.health > 0){
 		instructionName = "cloak";
-		if (myPlayer.cloakEngaged){personalInstructions[instructionName].life--;}
+		if (myPlayer.cloakEngaged || (myPlayer.grapple && myPlayer.grapple.x)){personalInstructions[instructionName].life--;}
 	}
 	else if (personalInstructions["boost"].life > 0 && myPlayer.health > 0){
 		instructionName = "boost";
