@@ -88,7 +88,7 @@ var localGame = false;
 
 
 //-----------------Config----------------------
-var version = "v 0.6.1 - the medals update"; //Scalable + customizations
+var version = "v 0.7.0 - the grapple update";
 
 const spectateMoveSpeed = 10;
 var screenShakeScale = 0.5;
@@ -7075,7 +7075,20 @@ function drawGrapples(){
 	noShadow();
 	for (var p in Player.list){
 		if (!Player.list[p].grapple || typeof Player.list[p].grapple.x === 'undefined'){continue;}
-
+		if (Player.list[p].grapple.targetType == "player") {
+			Player.list[p].grapple.x = Player.list[targetId].x;
+			Player.list[p].grapple.y = Player.list[targetId].y;
+		}
+		else if (Player.list[p].grapple.targetType == "bag") {
+			if (Player.list[p].team == 1){
+				Player.list[p].grapple.x = bagBlue.x;
+				Player.list[p].grapple.y = bagBlue.y;
+			}
+			else {
+				Player.list[p].grapple.x = bagRed.x;
+				Player.list[p].grapple.y = bagRed.y;
+			}
+		}
 
 		processGrapple(Player.list[p]);
 		ctx.save();

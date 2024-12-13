@@ -102,6 +102,7 @@ global.playerAcceleration = 1;
 global.diagMovementScale = (2/3);
 global.maxEnergyMultiplier = 1;
 global.rechargeDelayTime = 120; //Double for breaking under zero energy
+global.playerMaxHealth = 175;
 global.healDelayTime = 300;
 global.healRate = 5; //Milisecond delay between heal tick after player already started healing (Higher number is slower heal) //regenSpeed healthRegenSpeed
 global.respawnTimeLimit = 3 * 60;
@@ -109,20 +110,21 @@ global.slayerRespawnTimeLimit = 3 * 60; //seconds (translated to frames)
 global.ctfRespawnTimeLimit = 5 * 60; //seconds (translated to frames)
 global.elimRespawnTimeLimit = 2 * 60; //seconds (translated to frames)
 global.bagDrag = 0.85;
-global.playerMaxHealth = 175;
 global.assistDamageThreshold = 30;
 
 //Boost config
 global.boostDamage = 34;
-global.boostEnergyCost = 15;
+global.boostEnergyCost = 0;
 global.meleeRange = 50;
 
 global.grappleInsteadOfBoost = true;
+global.drainEnergyOnThrow = !grappleInsteadOfBoost;
 
 //Grapple
-global.grappleEnergy = 0;
+global.grappleEnergy = 10;
 global.grappleSpeed = 60;
 global.grappleLength = 6 * 75; //Tiles * 75
+global.grappleMinDist = 30; 
 global.grappleStrength = 1.3;
 global.grappleReleaseSpeed = 18;
 global.grappleMaxLife = 90;

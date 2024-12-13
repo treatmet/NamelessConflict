@@ -545,6 +545,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.holdingBag = true;
 					self.previousWeapon = self.weapon;
 					updatePlayerList.push({id:self.id,property:"holdingBag",value:self.holdingBag});
+					if (self.grapple != undefined && self.grapple.targetType == "bag") {
+						self.updatePropAndSend("grapple", {});
+					}
 					if (!allowBagWeapons){
 						self.weapon = 1;
 						updatePlayerList.push({id:self.id,property:"weapon",value:self.weapon});
@@ -566,6 +569,9 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.holdingBag = true;
 					self.previousWeapon = self.weapon;
 					updatePlayerList.push({id:self.id,property:"holdingBag",value:self.holdingBag});
+					if (self.grapple != undefined && self.grapple.targetType == "bag") {
+						self.updatePropAndSend("grapple", {});
+					}
 					if (!allowBagWeapons){
 						self.weapon = 1;
 						updatePlayerList.push({id:self.id,property:"weapon",value:self.weapon});
@@ -826,7 +832,7 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 	self.processGrapple = function(){
 		if (!self.grapple || typeof self.grapple.x === 'undefined'){return;}
 		//console.log("x:" + self.x + " y:" + self.y + " Gx:" + self.grapple.x + " Gy:" + self.grapple.y);
-		if (getDistance(self, self.grapple) >= grappleLength){self.updatePropAndSend("grapple", {}); return;} //Grapple reached chain length without hitting any target
+		if (getDistance(self, self.grapple) > grappleLength + 50){self.updatePropAndSend("grapple", {}); return;} //Grapple reached chain length without hitting any target
 		if (self.grapple.life > grappleMaxLife) {self.updatePropAndSend("grapple", {}); return;}
 		self.grapple.life++;
 		//Everything past here, grapple is active
@@ -842,17 +848,18 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			if (self.grapple.dir == 6){self.grapple.y += grappleSpeed * (2/3); self.grapple.x -= grappleSpeed * (2/3);}
 			if (self.grapple.dir == 7){self.grapple.x -= grappleSpeed;}
 			if (self.grapple.dir == 8){self.grapple.y -= grappleSpeed * (2/3); self.grapple.x -= grappleSpeed * (2/3);}
-			
-			//COLLISION MOMENT
-			var playerHit = entityHelpers.getPlayerCollided({
+
+			var grappleObj = {
 				prevX: prevX,
 				prevY: prevY,
 				x: self.grapple.x,
 				y: self.grapple.y,
-				width: 10,
-				height: 10,
 				id: self.id
-			})
+			};
+			
+			//COLLISION MOMENT
+			var playerHit = entityHelpers.getPlayerCollided(grappleObj);
+			var bagHit = entityHelpers.getBagCollided(grappleObj);
 			if (playerHit){
 				self.updatePropAndSend("grapple", {
 					firing:false,
@@ -862,6 +869,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					life:self.grapple.life,
 					x:playerHit.x,
 					y:playerHit.y
+				});
+			}	
+			else if (bagHit){
+				self.updatePropAndSend("grapple", {
+					firing:false,
+					targetType: "bag",
+					dir:self.grapple.dir,
+					life:self.grapple.life,
+					x:self.grapple.x,
+					y:self.grapple.y
 				});
 			}	
 			else if (block.checkCollision(self.grapple)){
@@ -886,10 +903,16 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 		}
 		//Calculate player pulling physics
 		if (!self.grapple.firing){
+			var bag = bagRed;
+			if (self.team == 1) {bag = bagBlue;}
 
 			if (self.grapple.targetType == "player") {
 				self.grapple.x = Player.list[self.grapple.targetId].x;
 				self.grapple.y = Player.list[self.grapple.targetId].y;
+			}
+			if (self.grapple.targetType == "bag") {
+				self.grapple.x = bag.x;
+				self.grapple.y = bag.y;
 			}
 
 			let dx = self.x - self.grapple.x;  // Compute distance between centers of objects
@@ -899,16 +922,24 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 			if (self.grapple.targetType == "player") {
 				//Compute grapple pull vector (currently set permanently at contact, remove conditional below to pull to center of grapple point)
 
-				// Only pull the player if the distance is greater than 60
-				if (Math.abs(dx) + Math.abs(dy) > 60) { 
+				// Disconnect at min dist
+				if (Math.abs(dx) + Math.abs(dy) > grappleMinDist) { 
 					//Lauch player with attached grapple physics
 					//Grapple influences speed stronger based on how far
-					self.speedX -= grappleStrength * (dx / r);
-					self.speedY -= grappleStrength * (dy / r);
+					self.speedX += grappleStrength * (dx / r);
+					self.speedY += grappleStrength * (dy / r);
 				}
 				else if (self.grapple.x != self.x || self.grapple.y != self.y){ //Disconnect attached grapple
 					self.updatePropAndSend("grapple", {});
 				}
+			}
+			else if (self.grapple.targetType == "bag") {
+				bag.x += grappleStrength * (dx / r) * 17;
+				bag.y += grappleStrength * (dy / r) * 17;
+				var bag = bagRed;
+				if (self.team == 1) {updateMisc.bagBlue = bagBlue;}
+				else if (self.team == 2) {updateMisc.bagRed = bagRed;}
+				
 			}
 			else if (self.grapple.targetType == "block") {
 				//Compute grapple pull vector (currently set permanently at contact, remove conditional below to pull to center of grapple point)
@@ -920,8 +951,8 @@ var Player = function(id, cognitoSub, name, team, customizations, settings, part
 					self.grapple.pullX = grappleStrength * normalizedDx;
 					self.grapple.pullY = grappleStrength * normalizedDy;
 				}
-				// Only pull the player if the distance is greater than 60
-				if (Math.abs(dx) + Math.abs(dy) > 60) { 
+				// Disconnect at min dist
+				if (Math.abs(dx) + Math.abs(dy) > grappleMinDist) { 
 					//Lauch player with attached grapple physics
 					//Grapple influences speed stronger based on how far
 					self.speedX -= self.grapple.pullX;
@@ -1838,8 +1869,10 @@ Player.onConnect = function(socket, cognitoSub, name, team, partyId){
 							}
 							if (player.energy > 0){
 								player.rechargeDelay = rechargeDelayTime;
-								player.energy = 1;
-								updatePlayerList.push({id:player.id,property:"energy",value:player.energy,single:true});
+								if (drainEnergyOnThrow == true) {
+									player.energy = 1;
+									updatePlayerList.push({id:player.id,property:"energy",value:player.energy,single:true});
+								}
 							}
 							if (player.cloakEngaged){
 								player.cloakEngaged = false;						
