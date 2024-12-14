@@ -1,4 +1,4 @@
-var logOverflowThresh = 1;
+var logOverflowThresh = 1000;
 var lastDateLogged = new Date();
 
 //Temporary log (deleteme if you see these messages)

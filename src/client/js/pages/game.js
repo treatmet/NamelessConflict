@@ -3600,7 +3600,7 @@ function drawPersonalInstructions(){
 	}
 	else if (personalInstructions["boost"].life > 0 && myPlayer.health > 0){
 		instructionName = "boost";
-		if (myPlayer.boosting){personalInstructions[instructionName].life--;}
+		if (myPlayer.boosting || (myPlayer.grapple && myPlayer.grapple.x)){personalInstructions[instructionName].life--;}
 	}
 	else if (personalInstructions["utility"].life > 0 && myPlayer.health > 0){
 		instructionName = "utility";
@@ -7430,8 +7430,6 @@ socket.on('endGameProgressResults', function(endGameProgressResults){
 });
 
 function endGameProgressResultsFunction(endGameProgressResults){
-	log("endGameProgressResults");
-	console.log(endGameProgressResults);
 	//Player.list[myPlayer.id].cashEarnedThisGame = endGameProgressResults.expDif;
 	postGameProgressInfo.originalRating = endGameProgressResults.originalRating;
 	postGameProgressInfo.ratingDif = endGameProgressResults.ratingDif;

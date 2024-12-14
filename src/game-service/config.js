@@ -260,7 +260,7 @@ global.shop = {
 
 
 //thug Config
-global.spawnOpposingThug = true; //Whether or not to spawn an opposing thug for each player who enters the game
+global.spawnOpposingThug = false; //Whether or not to spawn an opposing thug for each player who enters the game
 global.thugSightDistance = 600;
 global.thugHealth = 80;
 global.hordeThugHealth = 15;
