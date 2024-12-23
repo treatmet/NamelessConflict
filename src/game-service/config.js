@@ -123,7 +123,7 @@ global.drainEnergyOnThrow = !grappleInsteadOfBoost;
 //Grapple
 global.grappleEnergy = 10;
 global.grappleSpeed = 60;
-global.grappleLength = 6 * 75; //Tiles * 75
+global.grappleLength = 8 * 75; //Tiles * 75
 global.grappleMinDist = 30; 
 global.grappleStrength = 1.3;
 global.grappleReleaseSpeed = 18;

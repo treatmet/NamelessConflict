@@ -4032,12 +4032,7 @@ function drawPlayerTags(){
 
 					//Custom namecolor, if accessible
 					if (Player.list[i].customizations && Player.list[i].customizations[Player.list[i].team]) {
-						if (Player.list[i].id == myPlayer.id){
-						}
-						if (myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true){
-							nameColor = Player.list[i].team == 1 ? "#9d0000" : "#00259d";
-						}
-						
+						nameColor = Player.list[i].customizations[Player.list[i].team].nameColor;						
 
 						if (gametype != "ffa" && myPlayer.settings && myPlayer.settings.display.find(setting => setting.key == "forceTeamNameColors").value == true && Player.list[i].id != myPlayer.id){
 							nameColor = Player.list[i].team == 1 ? "#9d0000" : "#00259d";
